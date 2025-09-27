@@ -127,79 +127,105 @@
                             <p class="text-gray-500 dark:text-gray-400">Gerenciamento de consultores e equipe.</p>
                         </div>
 
-                        <div class="flex justify-between items-center mb-4">
-                            <div class="relative w-full max-w-xs">
-                                <input type="text" id="rh-search" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Buscar consultor...">
-                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <i class="fas fa-search text-gray-400"></i>
+                        <!-- Abas da tela de RH -->
+                        <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+                            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="rh-tabs">
+                                <li class="mr-2"><button class="rh-tab-btn inline-block p-4 border-b-2 rounded-t-lg border-brand-gold text-brand-gold" data-target="consultores-content">Consultores <span id="consultores-count-badge" class="ml-2 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-semibold px-2 py-0.5 rounded-full">0</span></button></li>
+                                <li class="mr-2"><button class="rh-tab-btn inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" data-target="aniversariantes-content">Aniversariantes <span id="birthday-count-badge" class="ml-2 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-semibold px-2 py-0.5 rounded-full">0</span></button></li>
+                                <li class="mr-2"><button class="rh-tab-btn inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" data-target="ferias-content">Férias <span id="ferias-count-badge" class="ml-2 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-semibold px-2 py-0.5 rounded-full">0</span></button></li>
+                                <li class="mr-2"><button class="rh-tab-btn inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" data-target="atestados-content">Atestados <span id="atestados-count-badge" class="ml-2 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-semibold px-2 py-0.5 rounded-full">0</span></button></li>
+                                 <li class="mr-2"><button class="rh-tab-btn inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" data-target="epis-content">EPIs <span id="epis-count-badge" class="ml-2 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-semibold px-2 py-0.5 rounded-full">0</span></button></li>
+                                <li class="mr-2"><button class="rh-tab-btn inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" data-target="ativos-content">Ativos <span id="ativos-count-badge" class="ml-2 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-semibold px-2 py-0.5 rounded-full">0</span></button></li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Conteúdo da Aba: Consultores -->
+                        <div id="consultores-content" class="rh-tab-content">
+                            <div class="flex justify-between items-center mb-4">
+                                <div class="relative w-full max-w-xs">
+                                    <input type="text" id="rh-search" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Buscar consultor...">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <i class="fas fa-search text-gray-400"></i>
+                                    </div>
+                                </div>
+                                <button id="show-rh-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Consultor</button>
+                            </div>
+                            <div id="rh-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                <div class="rh-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" data-name="Ana Silva" data-nascimento="1990-05-15" data-telefone="+5583912345678" data-email="ana.silva@email.com" data-endereco="R. das Acácias, 123, João Pessoa, PB" data-login="ana.silva" data-cnpj="11.222.333/0001-44" data-razao="Ana Silva MEI" data-valor="150" data-inicio="2022-01-10" data-fim="" data-obs="Especialista em laticínios.">
+                                    <img src="https://i.pravatar.cc/150?u=ana" class="w-24 h-24 rounded-full object-cover mb-4">
+                                    <h4 class="font-bold text-lg text-gray-800 dark:text-white">Ana Silva</h4>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">ana.silva@email.com</p>
+                                    <div class="flex space-x-4 mt-4">
+                                        <a href="https://wa.me/5583912345678" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a>
+                                    </div>
+                                </div>
+                                <div class="rh-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" data-name="Bruno Costa" data-nascimento="1985-10-20" data-telefone="+5583987654321" data-email="bruno.costa@email.com" data-endereco="Av. Epitácio Pessoa, 456, João Pessoa, PB" data-login="bruno.costa" data-cnpj="44.555.666/0001-77" data-razao="Bruno Costa Consultoria" data-valor="180" data-inicio="2021-11-20" data-fim="" data-obs="Especialista em panificação.">
+                                    <img src="https://i.pravatar.cc/150?u=bruno" class="w-24 h-24 rounded-full object-cover mb-4">
+                                    <h4 class="font-bold text-lg text-gray-800 dark:text-white">Bruno Costa</h4>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">bruno.costa@email.com</p>
+                                    <div class="flex space-x-4 mt-4">
+                                        <a href="https://wa.me/5583987654321" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a>
+                                    </div>
+                                </div>
+                                 <div class="rh-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" data-name="Carlos Pereira" data-nascimento="1992-09-28" data-telefone="+5583988887777" data-email="carlos.pereira@email.com" data-endereco="R. das Flores, 789, João Pessoa, PB" data-login="carlos.p" data-cnpj="77.888.999/0001-00" data-razao="Carlos Pereira Serviços" data-valor="160" data-inicio="2023-03-15" data-fim="" data-obs="">
+                                    <img src="https://i.pravatar.cc/150?u=carlos" class="w-24 h-24 rounded-full object-cover mb-4">
+                                    <h4 class="font-bold text-lg text-gray-800 dark:text-white">Carlos Pereira</h4>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">carlos.pereira@email.com</p>
+                                    <div class="flex space-x-4 mt-4">
+                                        <a href="https://wa.me/5583988887777" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a>
+                                    </div>
                                 </div>
                             </div>
-                            <button id="show-rh-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Consultor</button>
+                            <div id="rh-form-container" class="hidden mt-6">
+                                <div class="p-6 bg-white rounded-lg shadow-md dark:bg-gray-800">
+                                <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Cadastro de Consultor</h3>
+                                <form id="rh-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div class="md:col-span-2 lg:col-span-3 flex items-center space-x-4">
+                                        <img src="https://placehold.co/100x100/e2e8f0/cbd5e0?text=Foto" class="w-24 h-24 rounded-full object-cover">
+                                        <input type="file" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-gold file:text-white hover:file:bg-brand-gold-dark">
+                                    </div>
+                                    <div><label for="rh-nome" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nome Completo</label><input type="text" id="rh-nome" name="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required></div>
+                                    <div><label for="rh-nasc" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Nascimento</label><input type="date" id="rh-nasc" name="nascimento" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
+                                    <div><label for="rh-tel" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Telefone</label><input type="tel" id="rh-tel" name="telefone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
+                                    <div><label for="rh-email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">E-mail</label><input type="email" id="rh-email" name="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
+                                    <div><label for="rh-login" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Login</label><input type="text" id="rh-login" name="login" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
+                                    <div><label for="rh-senha" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Senha</label><input type="password" id="rh-senha" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
+                                    <div><label for="rh-inicio" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data Início Vínculo</label><input type="date" id="rh-inicio" name="inicio" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
+                                    <div><label for="rh-fim" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data Fim Vínculo</label><input type="date" id="rh-fim" name="fim" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
+                                    <div><label for="rh-cnpj" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">CNPJ</label><input type="text" id="rh-cnpj" name="cnpj" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
+                                    <div><label for="rh-razao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Razão Social</label><input type="text" id="rh-razao" name="razao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
+                                    <div><label for="rh-valor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor por Hora</label><input type="number" id="rh-valor" name="valor" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
+                                    <div class="flex items-center"><input id="rh-admin" type="checkbox" class="w-4 h-4 text-brand-gold bg-gray-100 border-gray-300 rounded focus:ring-brand-gold dark:focus:ring-brand-gold dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"><label for="rh-admin" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">É administrador?</label></div>
+                                    <div class="md:col-span-2 lg:col-span-3"><label for="rh-endereco" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Endereço</label><input type="text" name="endereco" id="rh-endereco" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
+                                    <div class="md:col-span-2 lg:col-span-3"><label for="rh-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label><textarea id="rh-obs" name="obs" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></textarea></div>
+                                    <div class="md:col-span-2 lg:col-span-3 flex justify-end space-x-4">
+                                        <button type="button" id="cancel-rh-form" class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+                                        <button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button>
+                                    </div>
+                                </form>
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Cards de Consultores -->
-                        <div id="rh-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            <!-- Card de Exemplo 1 -->
-                            <div class="rh-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" data-name="Ana Silva" data-nascimento="1990-05-15" data-telefone="+5583912345678" data-email="ana.silva@email.com" data-endereco="R. das Acácias, 123, João Pessoa, PB" data-login="ana.silva" data-cnpj="11.222.333/0001-44" data-razao="Ana Silva MEI" data-valor="150" data-inicio="2022-01-10" data-fim="" data-obs="Especialista em laticínios.">
-                                <img src="https://i.pravatar.cc/150?u=ana" class="w-24 h-24 rounded-full object-cover mb-4">
-                                <h4 class="font-bold text-lg text-gray-800 dark:text-white">Ana Silva</h4>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">ana.silva@email.com</p>
-                                <div class="flex space-x-4 mt-4">
-                                    <a href="https://wa.me/5583912345678" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a>
-                                </div>
-                            </div>
-                            <!-- Card de Exemplo 2 -->
-                            <div class="rh-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" data-name="Bruno Costa" data-nascimento="1985-10-20" data-telefone="+5583987654321" data-email="bruno.costa@email.com" data-endereco="Av. Epitácio Pessoa, 456, João Pessoa, PB" data-login="bruno.costa" data-cnpj="44.555.666/0001-77" data-razao="Bruno Costa Consultoria" data-valor="180" data-inicio="2021-11-20" data-fim="" data-obs="Especialista em panificação.">
-                                <img src="https://i.pravatar.cc/150?u=bruno" class="w-24 h-24 rounded-full object-cover mb-4">
-                                <h4 class="font-bold text-lg text-gray-800 dark:text-white">Bruno Costa</h4>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">bruno.costa@email.com</p>
-                                <div class="flex space-x-4 mt-4">
-                                    <a href="https://wa.me/5583987654321" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a>
-                                </div>
-                            </div>
+                        <!-- Conteúdo da Aba: Aniversariantes -->
+                        <div id="aniversariantes-content" class="rh-tab-content hidden">
+                            <h3 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Aniversariantes do Mês</h3>
+                            <div id="birthday-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
                         </div>
 
-                        <!-- Formulário de Consultor (Oculto) -->
-                        <div id="rh-form-container" class="hidden mt-6">
-                            <div class="p-6 bg-white rounded-lg shadow-md dark:bg-gray-800">
-                            <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Cadastro de Consultor</h3>
-                            <form id="rh-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <div class="md:col-span-2 lg:col-span-3 flex items-center space-x-4">
-                                    <img src="https://placehold.co/100x100/e2e8f0/cbd5e0?text=Foto" class="w-24 h-24 rounded-full object-cover">
-                                    <input type="file" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-gold file:text-white hover:file:bg-brand-gold-dark">
-                                </div>
-                                <!-- Campos do formulário -->
-                                <div><label for="rh-nome" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nome Completo</label><input type="text" id="rh-nome" name="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required></div>
-                                <div><label for="rh-nasc" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Nascimento</label><input type="date" id="rh-nasc" name="nascimento" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
-                                <div><label for="rh-tel" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Telefone</label><input type="tel" id="rh-tel" name="telefone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
-                                <div><label for="rh-email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">E-mail</label><input type="email" id="rh-email" name="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
-                                <div><label for="rh-login" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Login</label><input type="text" id="rh-login" name="login" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
-                                <div><label for="rh-senha" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Senha</label><input type="password" id="rh-senha" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
-                                <div><label for="rh-inicio" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data Início Vínculo</label><input type="date" id="rh-inicio" name="inicio" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
-                                <div><label for="rh-fim" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data Fim Vínculo</label><input type="date" id="rh-fim" name="fim" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
-                                <div><label for="rh-cnpj" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">CNPJ</label><input type="text" id="rh-cnpj" name="cnpj" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
-                                <div><label for="rh-razao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Razão Social</label><input type="text" id="rh-razao" name="razao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
-                                <div><label for="rh-valor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor por Hora</label><input type="number" id="rh-valor" name="valor" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
-                                <div class="flex items-center">
-                                    <input id="rh-admin" type="checkbox" class="w-4 h-4 text-brand-gold bg-gray-100 border-gray-300 rounded focus:ring-brand-gold dark:focus:ring-brand-gold dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                                    <label for="rh-admin" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">É administrador?</label>
-                                </div>
-                                <div class="md:col-span-2 lg:col-span-3"><label for="rh-endereco" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Endereço</label><input type="text" name="endereco" id="rh-endereco" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
-                                <div class="md:col-span-2 lg:col-span-3">
-                                    <label for="rh-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label>
-                                    <textarea id="rh-obs" name="obs" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></textarea>
-                                </div>
-                                <div class="md:col-span-2 lg:col-span-3 text-right">
-                                    <button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button>
-                                </div>
-                            </form>
-                        </div>
-                        </div>
+                        <!-- Conteúdo da Aba: Controle de Férias -->
+                        <div id="ferias-content" class="rh-tab-content hidden"><div class="flex justify-between items-center mb-4"><h3 class="text-2xl font-semibold text-gray-800 dark:text-white">Controle de Férias</h3><button id="show-ferias-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Agendar Férias</button></div><div id="ferias-history-container"><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow"><div><label for="ferias-filter-name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><input type="text" id="ferias-filter-name" placeholder="Buscar por nome..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div><div><label for="ferias-filter-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período De</label><input type="date" id="ferias-filter-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div><label for="ferias-filter-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período Até</label><input type="date" id="ferias-filter-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div></div><div class="relative overflow-x-auto shadow-md sm:rounded-lg"><table class="w-full text-sm text-left text-gray-500 dark:text-gray-400"><thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"><tr><th scope="col" class="px-6 py-3">Consultor</th><th scope="col" class="px-6 py-3">Início</th><th scope="col" class="px-6 py-3">Retorno</th><th scope="col" class="px-6 py-3">Dias</th><th scope="col" class="px-6 py-3">Ações</th></tr></thead><tbody id="ferias-table-body"><tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-consultor="Ana Silva" data-inicio="2025-08-01" data-retorno="2025-08-31"><td class="px-6 py-4">Ana Silva</td><td class="px-6 py-4">01/08/2025</td><td class="px-6 py-4">31/08/2025</td><td class="px-6 py-4">30</td><td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td></tr></tbody></table></div></div><div id="ferias-form-container" class="hidden mt-6 p-6 bg-white rounded-lg shadow-md dark:bg-gray-800"><h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Agendar Novas Férias</h3><form id="ferias-form" class="grid grid-cols-1 md:grid-cols-3 gap-6"><div><label for="ferias-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><select id="ferias-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></select></div><div><label for="ferias-inicio" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Início</label><input type="date" id="ferias-inicio" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div><label for="ferias-retorno" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Retorno</label><input type="date" id="ferias-retorno" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div class="md:col-span-3 flex justify-end space-x-4"><button type="button" class="cancel-sub-form px-6 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" data-form="ferias-form-container" data-history="ferias-history-container">Cancelar</button><button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button></div></form></div></div>
+                        <!-- Conteúdo da Aba: Atestados -->
+                        <div id="atestados-content" class="rh-tab-content hidden"><div class="flex justify-between items-center mb-4"><h3 class="text-2xl font-semibold text-gray-800 dark:text-white">Atestados Médicos</h3><button id="show-atestados-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Atestado</button></div><div id="atestados-history-container"><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow"><div><label for="atestados-filter-name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><input type="text" id="atestados-filter-name" placeholder="Buscar por nome..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div><div><label for="atestados-filter-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período De</label><input type="date" id="atestados-filter-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div><label for="atestados-filter-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período Até</label><input type="date" id="atestados-filter-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div></div><div class="relative overflow-x-auto shadow-md sm:rounded-lg"><table class="w-full text-sm text-left text-gray-500 dark:text-gray-400"><thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"><tr><th scope="col" class="px-6 py-3">Consultor</th><th scope="col" class="px-6 py-3">Início</th><th scope="col" class="px-6 py-3">Retorno</th><th scope="col" class="px-6 py-3">Anexo</th><th scope="col" class="px-6 py-3">Ações</th></tr></thead><tbody id="atestados-table-body"><tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-consultor="Bruno Costa" data-inicio="2025-09-15" data-retorno="2025-09-17"><td class="px-6 py-4">Bruno Costa</td><td class="px-6 py-4">15/09/2025</td><td class="px-6 py-4">17/09/2025</td><td class="px-6 py-4"><a href="#" class="font-medium text-brand-gold hover:underline">Ver</a></td><td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td></tr></tbody></table></div></div><div id="atestados-form-container" class="hidden mt-6 p-6 bg-white rounded-lg shadow-md dark:bg-gray-800"><h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Lançar Atestado</h3><form id="atestados-form" class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="atestados-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><select id="atestados-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select></div><div><label for="atestados-inicio" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Início</label><input type="date" id="atestados-inicio" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div><label for="atestados-retorno" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Retorno</label><input type="date" id="atestados-retorno" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div><label for="atestados-anexo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Anexar Documento</label><input type="file" id="atestados-anexo" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"></div><div class="md:col-span-2 flex justify-end space-x-4"><button type="button" class="cancel-sub-form px-6 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" data-form="atestados-form-container" data-history="atestados-history-container">Cancelar</button><button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button></div></form></div></div>
+                        <!-- Conteúdo da Aba: Ficha de EPIs -->
+                        <div id="epis-content" class="rh-tab-content hidden"><div class="flex justify-between items-center mb-4"><h3 class="text-2xl font-semibold text-gray-800 dark:text-white">Controle de EPIs</h3><button id="show-epis-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Nova Entrega</button></div><div id="epis-history-container"><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow"><div><label for="epis-filter-name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><input type="text" id="epis-filter-name" placeholder="Buscar por nome..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div><div><label for="epis-filter-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período De</label><input type="date" id="epis-filter-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div><label for="epis-filter-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período Até</label><input type="date" id="epis-filter-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div></div><div class="relative overflow-x-auto shadow-md sm:rounded-lg"><table class="w-full text-sm text-left text-gray-500 dark:text-gray-400"><thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"><tr><th scope="col" class="px-6 py-3">Consultor</th><th scope="col" class="px-6 py-3">Item</th><th scope="col" class="px-6 py-3">Qtd</th><th scope="col" class="px-6 py-3">Data</th><th scope="col" class="px-6 py-3">Ações</th></tr></thead><tbody id="epis-table-body"><tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-consultor="Ana Silva" data-date="2022-01-10" data-item="Botina" data-qtd="1"><td class="px-6 py-4">Ana Silva</td><td class="px-6 py-4">Botina</td><td class="px-6 py-4">1</td><td class="px-6 py-4">10/01/2022</td><td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td></tr></tbody></table></div></div><div id="epis-form-container" class="hidden mt-6 p-6 bg-white rounded-lg shadow-md dark:bg-gray-800"><h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Registrar Entrega de EPI</h3><form id="epis-form" class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="epis-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><select id="epis-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select></div><div><label for="epis-item" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Item</label><select id="epis-item" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"><option>Camisa</option><option>Botina</option><option>Óculos de Segurança</option></select></div><div><label for="epis-qtd" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Quantidade</label><input type="number" id="epis-qtd" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" value="1" min="1"></div><div><label for="epis-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Entrega</label><input type="date" id="epis-data" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div class="md:col-span-2"><label for="epis-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label><textarea id="epis-obs" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600"></textarea></div><div class="md:col-span-2 flex justify-end space-x-4"><button type="button" class="cancel-sub-form px-6 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" data-form="epis-form-container" data-history="epis-history-container">Cancelar</button><button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button></div></form></div></div>
+                        <!-- Conteúdo da Aba: Ficha de Ativos -->
+                        <div id="ativos-content" class="rh-tab-content hidden"><div class="flex justify-between items-center mb-4"><h3 class="text-2xl font-semibold text-gray-800 dark:text-white">Controle de Ativos</h3><button id="show-ativos-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Ativo</button></div><div id="ativos-history-container"><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow"><div><label for="ativos-filter-name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><input type="text" id="ativos-filter-name" placeholder="Buscar por nome..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div><div><label for="ativos-filter-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período De</label><input type="date" id="ativos-filter-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div><label for="ativos-filter-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período Até</label><input type="date" id="ativos-filter-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div></div><div class="relative overflow-x-auto shadow-md sm:rounded-lg"><table class="w-full text-sm text-left text-gray-500 dark:text-gray-400"><thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"><tr><th scope="col" class="px-6 py-3">Consultor</th><th scope="col" class="px-6 py-3">Item</th><th scope="col" class="px-6 py-3">Entrega</th><th scope="col" class="px-6 py-3">Devolução</th><th scope="col" class="px-6 py-3">Ações</th></tr></thead><tbody id="ativos-table-body"><tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-consultor="Bruno Costa" data-date="2021-11-20" data-item="Notebook Dell" data-devolucao=""><td class="px-6 py-4">Bruno Costa</td><td class="px-6 py-4">Notebook Dell</td><td class="px-6 py-4">20/11/2021</td><td class="px-6 py-4">-</td><td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td></tr></tbody></table></div></div><div id="ativos-form-container" class="hidden mt-6 p-6 bg-white rounded-lg shadow-md dark:bg-gray-800"><h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Registrar Ativo</h3><form id="ativos-form" class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="ativos-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><select id="ativos-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select></div><div><label for="ativos-item" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Item</label><select id="ativos-item" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"><option>Notebook</option><option>Celular</option><option>Tablet</option></select></div><div><label for="ativos-entrega" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Entrega</label><input type="date" id="ativos-entrega" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div><label for="ativos-devolucao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Devolução</label><input type="date" id="ativos-devolucao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div class="md:col-span-2"><label for="ativos-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label><textarea id="ativos-obs" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600"></textarea></div><div class="md:col-span-2 flex justify-end space-x-4"><button type="button" class="cancel-sub-form px-6 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" data-form="ativos-form-container" data-history="ativos-history-container">Cancelar</button><button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button></div></form></div></div>
                     </div>
 
                     <!-- Tela de Clientes -->
                     <div id="clientes" class="page hidden">
-                         <div class="mb-4">
+                       <div class="mb-4">
                             <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Clientes</h2>
                             <p class="text-gray-500 dark:text-gray-400">Gerenciamento de clientes e parceiros.</p>
                         </div>
@@ -212,7 +238,6 @@
                             </div>
                             <button id="show-cliente-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Cliente</button>
                         </div>
-                        <!-- Cards de Clientes -->
                          <div id="cliente-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                             <div class="cliente-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" data-name="Padaria Pão Quente" data-responsavel="João da Silva" data-telefone="+5583999998888" data-email="contato@paoquente.com" data-endereco="R. dos Comerciantes, 789, João Pessoa, PB" data-razao="Padaria Pão Quente Ltda." data-cnpj="22.333.444/0001-55" data-horas="20" data-cpf="123.456.789-00" data-iptu="987654" data-senhaPortal="portal123">
                                 <img src="https://picsum.photos/seed/paoquente/100/100" class="w-24 h-24 rounded-lg object-cover mb-4">
@@ -234,7 +259,6 @@
                             </div>
                          </div>
 
-                         <!-- Formulário de Cliente (Oculto) -->
                         <div id="cliente-form-container" class="hidden mt-6">
                             <div class="p-6 bg-white rounded-lg shadow-md dark:bg-gray-800">
                             <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Cadastro de Cliente</h3>
@@ -243,7 +267,6 @@
                                     <img src="https://placehold.co/100x100/e2e8f0/cbd5e0?text=Foto" class="w-24 h-24 rounded-lg object-cover">
                                     <input type="file" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-gold file:text-white hover:file:bg-brand-gold-dark">
                                 </div>
-                                <!-- Campos do formulário -->
                                 <div><label for="cliente-nome" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nome do Cliente</label><input type="text" id="cliente-nome" name="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required></div>
                                 <div><label for="cliente-razao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Razão Social</label><input type="text" id="cliente-razao" name="razao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
                                 <div><label for="cliente-cnpj" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">CNPJ</label><input type="text" id="cliente-cnpj" name="cnpj" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
@@ -255,18 +278,15 @@
                                 <div><label for="cliente-iptu" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">IPTU</label><input type="text" id="cliente-iptu" name="iptu" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
                                 <div><label for="cliente-senha-portal" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Senha do Portal</label><input type="text" id="cliente-senha-portal" name="senhaPortal" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
                                 <div class="md:col-span-2 lg:col-span-3"><label for="cliente-endereco" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Endereço</label><input type="text" id="cliente-endereco" name="endereco" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
-                                 <div class="md:col-span-2 lg:col-span-3">
-                                    <label for="cliente-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label>
-                                    <textarea id="cliente-obs" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></textarea>
-                                </div>
-                                <div class="md:col-span-2 lg:col-span-3 text-right">
+                                 <div class="md:col-span-2 lg:col-span-3"><label for="cliente-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label><textarea id="cliente-obs" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></textarea></div>
+                                <div class="md:col-span-2 lg:col-span-3 flex justify-end space-x-4">
+                                    <button type="button" id="cancel-cliente-form" class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
                                     <button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button>
                                 </div>
                             </form>
-                        </div>
+                            </div>
                         </div>
                     </div>
-
                 </main>
             </div>
         </div>
@@ -279,9 +299,7 @@
                  <h2 id="modal-title" class="text-2xl font-bold text-gray-900 dark:text-white">Detalhes</h2>
                  <button id="close-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-3xl leading-none">&times;</button>
             </div>
-            <div id="modal-content" class="mt-4 space-y-2 text-gray-700 dark:text-gray-300">
-                <!-- Conteúdo do modal será inserido aqui -->
-            </div>
+            <div id="modal-content" class="mt-4 space-y-2 text-gray-700 dark:text-gray-300"></div>
              <div class="flex justify-end mt-6 space-x-4">
                 <button id="delete-btn" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Apagar</button>
                 <button id="edit-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Editar</button>
@@ -305,7 +323,9 @@
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         let activeCard = null;
+        let activeTableRow = null;
 
+        // Seletores de Elementos Globais
         const loginScreen = document.getElementById('login-screen');
         const mainApp = document.getElementById('main-app');
         const loginForm = document.getElementById('login-form');
@@ -325,183 +345,307 @@
         const editBtn = document.getElementById('edit-btn');
         const deleteBtn = document.getElementById('delete-btn');
 
-        // Forms
+        // Forms and Form Buttons
         const rhForm = document.getElementById('rh-form');
         const clienteForm = document.getElementById('cliente-form');
+        const feriasForm = document.getElementById('ferias-form');
+        const atestadosForm = document.getElementById('atestados-form');
+        const episForm = document.getElementById('epis-form');
+        const ativosForm = document.getElementById('ativos-form');
+        const cancelRhFormBtn = document.getElementById('cancel-rh-form');
+        const cancelClienteFormBtn = document.getElementById('cancel-cliente-form');
 
-        // Lógica de Login
-        if(loginForm) {
-            loginForm.addEventListener('submit', function(e) { 
-                e.preventDefault();
-                loginScreen.classList.add('hidden');
-                mainApp.classList.remove('hidden');
-            });
-        }
+        loginForm?.addEventListener('submit', (e) => { 
+            e.preventDefault();
+            loginScreen.classList.add('hidden');
+            mainApp.classList.remove('hidden');
+            populateConsultantSelects();
+            updateAllCounters();
+        });
         
-        // Lógica para alternar tema
-        if(themeToggle) {
-            themeToggle.addEventListener('click', () => {
-                document.documentElement.classList.toggle('dark');
-                const isDark = document.documentElement.classList.contains('dark');
-                localStorage.setItem('theme', isDark ? 'dark' : 'light');
-                themeToggle.querySelector('i').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
-            });
-        }
+        themeToggle?.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            themeToggle.querySelector('i').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        });
 
-        // Verifica o tema salvo
         if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.classList.add('dark');
             if(themeToggle) themeToggle.querySelector('i').className = 'fas fa-sun';
         }
 
-        // Lógica para Sidebar móvel
-        if(sidebarToggle) {
-            sidebarToggle.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if(sidebar) sidebar.classList.toggle('hidden');
-            });
-        }
+        sidebarToggle?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            sidebar?.classList.toggle('hidden');
+        });
 
-        // Lógica de Navegação
         navLinks.forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
                 const targetId = this.dataset.target;
-
                 pages.forEach(page => page.classList.add('hidden'));
                 document.getElementById(targetId)?.classList.remove('hidden');
-
-                navLinks.forEach(l => l.classList.replace('bg-brand-gold','text-gray-400'));
+                navLinks.forEach(l => l.classList.replace('bg-brand-gold', 'text-gray-400'));
                 this.classList.replace('text-gray-400', 'bg-brand-gold');
-                
-                pageTitle.textContent = this.title;
+                if(pageTitle) pageTitle.textContent = this.title;
             });
         });
 
-        // Filtro de pesquisa
-        const setupSearch = (inputId, cardSelector) => {
-            const searchInput = document.getElementById(inputId);
-            if(searchInput) {
-                searchInput.addEventListener('input', (e) => {
-                    const searchTerm = e.target.value.toLowerCase();
-                    document.querySelectorAll(cardSelector).forEach(card => {
-                        const name = card.dataset.name.toLowerCase();
-                        card.style.display = name.includes(searchTerm) ? 'flex' : 'none';
-                    });
+        const rhTabs = document.getElementById('rh-tabs');
+        const rhTabContents = document.querySelectorAll('.rh-tab-content');
+        rhTabs?.addEventListener('click', (e) => {
+            const button = e.target.closest('.rh-tab-btn');
+            if (button) {
+                rhTabs.querySelectorAll('.rh-tab-btn').forEach(btn => {
+                    btn.classList.remove('border-brand-gold', 'text-brand-gold');
+                    btn.classList.add('border-transparent');
                 });
+                button.classList.add('border-brand-gold', 'text-brand-gold');
+                rhTabContents.forEach(content => content.classList.add('hidden'));
+                const targetContent = document.getElementById(button.dataset.target);
+                if (targetContent) {
+                    targetContent.classList.remove('hidden');
+                    updateAllCounters();
+                }
             }
+        });
+        
+        function updateAllCounters() {
+            // Aniversariantes
+            const currentMonth = new Date().getMonth();
+            const allConsultants = document.querySelectorAll('#rh-cards-container .rh-card');
+            let birthdayCount = 0;
+            allConsultants.forEach(consultant => {
+                const birthDateStr = consultant.dataset.nascimento;
+                if (birthDateStr && new Date(birthDateStr + 'T00:00:00').getMonth() === currentMonth) {
+                    birthdayCount++;
+                }
+            });
+            document.getElementById('birthday-count-badge').textContent = birthdayCount;
+            populateBirthdayCards(); // Re-popula a view caso esteja visível
+
+            // Outros contadores
+            document.getElementById('consultores-count-badge').textContent = document.querySelectorAll('#rh-cards-container .rh-card').length;
+            document.getElementById('ferias-count-badge').textContent = document.querySelectorAll('#ferias-table-body tr').length;
+            document.getElementById('atestados-count-badge').textContent = document.querySelectorAll('#atestados-table-body tr').length;
+            document.getElementById('epis-count-badge').textContent = document.querySelectorAll('#epis-table-body tr').length;
+            document.getElementById('ativos-count-badge').textContent = document.querySelectorAll('#ativos-table-body tr').length;
+        }
+
+        function populateBirthdayCards() {
+             const container = document.getElementById('birthday-cards-container');
+            if (!container) return;
+            container.innerHTML = '';
+            const currentMonth = new Date().getMonth();
+            const allConsultants = document.querySelectorAll('#rh-cards-container .rh-card');
+            let hasBirthdays = false;
+
+            allConsultants.forEach(consultant => {
+                const birthDateStr = consultant.dataset.nascimento;
+                if (birthDateStr) {
+                    const birthDate = new Date(birthDateStr + 'T00:00:00');
+                    if (birthDate.getMonth() === currentMonth) {
+                        hasBirthdays = true;
+                        const cardClone = consultant.cloneNode(true);
+                        const dateP = document.createElement('p');
+                        dateP.className = 'text-brand-gold font-semibold mt-2';
+                        dateP.textContent = birthDate.toLocaleDateString('pt-BR');
+                        cardClone.querySelector('div').insertAdjacentElement('beforebegin', dateP);
+                        container.appendChild(cardClone);
+                    }
+                }
+            });
+
+            if (!hasBirthdays) {
+                container.innerHTML = `<p class="text-gray-500 dark:text-gray-400 col-span-full">Nenhum aniversariante este mês.</p>`;
+            }
+        }
+
+        function populateConsultantSelects() {
+            const selects = document.querySelectorAll('.consultor-select');
+            const consultants = document.querySelectorAll('#rh-cards-container .rh-card');
+            let options = '<option value="">Selecione...</option>';
+            consultants.forEach(c => {
+                options += `<option value="${c.dataset.name}">${c.dataset.name}</option>`;
+            });
+            selects.forEach(select => select.innerHTML = options);
+        }
+
+        const setupSearch = (inputId, cardSelector) => {
+            document.getElementById(inputId)?.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                document.querySelectorAll(cardSelector).forEach(card => {
+                    card.style.display = card.dataset.name.toLowerCase().includes(searchTerm) ? 'flex' : 'none';
+                });
+            });
         };
         setupSearch('rh-search', '.rh-card');
         setupSearch('cliente-search', '.cliente-card');
 
-        // Função para mostrar/esconder formulários
-        const setupFormToggle = (buttonId, cardsContainerId, formContainerId, formId, type) => {
-            const button = document.getElementById(buttonId);
-            const cardsContainer = document.getElementById(cardsContainerId);
-            const formContainer = document.getElementById(formContainerId);
-            const form = document.getElementById(formId);
-            if(button && cardsContainer && formContainer) {
-                button.addEventListener('click', () => {
-                    activeCard = null;
-                    form.reset(); 
-                    cardsContainer.classList.add('hidden');
-                    formContainer.classList.remove('hidden');
-                    button.textContent = `Novo ${type}`;
-                });
-            }
-        }
-        setupFormToggle('show-rh-form', 'rh-cards-container', 'rh-form-container', 'rh-form', 'Consultor');
-        setupFormToggle('show-cliente-form', 'cliente-cards-container', 'cliente-form-container', 'cliente-form', 'Cliente');
+        const setupFormToggle = (buttonId, cardsId, formContainerId) => {
+            document.getElementById(buttonId)?.addEventListener('click', () => {
+                activeCard = null;
+                const form = document.getElementById(formContainerId.replace('-container', ''));
+                if (form) form.reset();
+                document.getElementById(cardsId)?.classList.add('hidden');
+                document.getElementById(formContainerId)?.classList.remove('hidden');
+            });
+        };
+        setupFormToggle('show-rh-form', 'rh-cards-container', 'rh-form-container');
+        setupFormToggle('show-cliente-form', 'cliente-cards-container', 'cliente-form-container');
 
-        // Lógica para Modals
+        cancelRhFormBtn?.addEventListener('click', () => {
+            document.getElementById('rh-form-container').classList.add('hidden');
+            document.getElementById('rh-cards-container').classList.remove('hidden');
+        });
+        cancelClienteFormBtn?.addEventListener('click', () => {
+            document.getElementById('cliente-form-container').classList.add('hidden');
+            document.getElementById('cliente-cards-container').classList.remove('hidden');
+        });
+
+        const setupSubFormToggle = (buttonId, historyId, formId) => {
+             document.getElementById(buttonId)?.addEventListener('click', () => {
+                document.getElementById(historyId)?.classList.add('hidden');
+                document.getElementById(formId)?.classList.remove('hidden');
+            });
+        };
+        setupSubFormToggle('show-ferias-form', 'ferias-history-container', 'ferias-form-container');
+        setupSubFormToggle('show-atestados-form', 'atestados-history-container', 'atestados-form-container');
+        setupSubFormToggle('show-epis-form', 'epis-history-container', 'epis-form-container');
+        setupSubFormToggle('show-ativos-form', 'ativos-history-container', 'ativos-form-container');
+        
+        document.querySelectorAll('.cancel-sub-form').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const formId = btn.dataset.form;
+                const historyId = btn.dataset.history;
+                document.getElementById(formId).classList.add('hidden');
+                document.getElementById(historyId).classList.remove('hidden');
+            });
+        });
+
         const hideModal = (modal) => modal?.classList.replace('flex', 'hidden');
         const showModal = (modal) => modal?.classList.replace('hidden', 'flex');
 
         const openDetailsModal = (card) => {
             activeCard = card;
-            const modalTitle = document.getElementById('modal-title');
-            const modalContent = document.getElementById('modal-content');
-
             const formatters = {
-                nascimento: (val) => val ? val.split('-').reverse().join('/') : 'N/A',
+                nascimento: (val) => val ? new Date(val + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A',
                 valor: (val) => val ? parseFloat(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'N/A',
-                inicio: (val) => val ? val.split('-').reverse().join('/') : 'N/A',
-                fim: (val) => val ? val.split('-').reverse().join('/') : 'N/A',
+                inicio: (val) => val ? new Date(val + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A',
+                fim: (val) => val ? new Date(val + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A',
             };
-
-            if(modalTitle) modalTitle.textContent = card.dataset.name;
-            if(modalContent) {
-                 modalContent.innerHTML = Object.entries(card.dataset)
-                    .map(([key, value]) => {
-                        const formattedValue = formatters[key] ? formatters[key](value) : (value || 'N/A');
-                        return `<p><strong class="capitalize">${key.replace(/([A-Z])/g, ' $1')}:</strong> ${formattedValue}</p>`;
-                    })
+            if(detailsModal) {
+                document.getElementById('modal-title').textContent = card.dataset.name;
+                document.getElementById('modal-content').innerHTML = Object.entries(card.dataset)
+                    .map(([key, value]) => `<p><strong class="capitalize">${key.replace(/([A-Z])/g, ' $1')}:</strong> ${formatters[key] ? formatters[key](value) : (value || 'N/A')}</p>`)
                     .join('');
+                showModal(detailsModal);
             }
-            showModal(detailsModal);
-        }
+        };
 
-        document.querySelectorAll('.rh-card, .cliente-card').forEach(card => {
-            card.addEventListener('click', (e) => {
-                 if (e.target.closest('a')) return;
-                openDetailsModal(card);
-            });
-        });
+        document.querySelectorAll('.rh-card, .cliente-card').forEach(card => card.addEventListener('click', (e) => !e.target.closest('a') && openDetailsModal(card)));
         
         closeModal?.addEventListener('click', () => hideModal(detailsModal));
         detailsModal?.addEventListener('click', (e) => e.target === detailsModal && hideModal(detailsModal));
         
-        // Ações do Modal de Detalhes
-        deleteBtn?.addEventListener('click', () => {
-            hideModal(detailsModal);
-            showModal(deleteConfirmModal);
+        deleteBtn?.addEventListener('click', () => { hideModal(detailsModal); showModal(deleteConfirmModal); });
+        cancelDeleteBtn?.addEventListener('click', () => { hideModal(deleteConfirmModal); if(activeCard) { showModal(detailsModal); } activeTableRow = null; });
+        
+        confirmDeleteBtn?.addEventListener('click', () => {
+            if (activeCard) {
+                activeCard.remove();
+                activeCard = null;
+            }
+            if (activeTableRow) {
+                activeTableRow.remove();
+                activeTableRow = null;
+            }
+            hideModal(deleteConfirmModal);
+            updateAllCounters();
         });
 
         editBtn?.addEventListener('click', () => {
             if(!activeCard) return;
             hideModal(detailsModal);
-
             const isConsultor = activeCard.classList.contains('rh-card');
-            const formId = isConsultor ? 'rh-form' : 'cliente-form';
-            const form = document.getElementById(formId);
+            const formContainer = document.getElementById(isConsultor ? 'rh-form-container' : 'cliente-form-container');
+            const cardsContainer = document.getElementById(isConsultor ? 'rh-cards-container' : 'cliente-cards-container');
+            const form = formContainer.querySelector('form');
             
             Object.keys(activeCard.dataset).forEach(key => {
                 const input = form.querySelector(`[name="${key}"]`);
                 if(input) input.value = activeCard.dataset[key];
             });
+            
+            cardsContainer.classList.add('hidden');
+            formContainer.classList.remove('hidden');
+        });
+        
+        document.querySelector('#rh')?.addEventListener('click', (e) => {
+            const button = e.target.closest('button.table-delete-btn, button.table-edit-btn');
+            if (!button) return;
 
-            const cardsContainerId = isConsultor ? 'rh-cards-container' : 'cliente-cards-container';
-            const formContainerId = isConsultor ? 'rh-form-container' : 'cliente-form-container';
-            document.getElementById(cardsContainerId).classList.add('hidden');
-            document.getElementById(formContainerId).classList.remove('hidden');
+            const row = button.closest('tr');
+            if (!row) return;
+            
+            if (button.classList.contains('table-delete-btn')) {
+                activeTableRow = row;
+                activeCard = null;
+                showModal(deleteConfirmModal);
+            }
+            if (button.classList.contains('table-edit-btn')) {
+                // Lógica de edição para tabelas aqui
+                 console.log('Botão de editar da tabela clicado', row.dataset);
+                const formContainer = row.closest('.rh-tab-content').querySelector('div[id$="-form-container"]');
+                const historyContainer = row.closest('div[id$="-history-container"]');
+                if (formContainer && historyContainer) {
+                    historyContainer.classList.add('hidden');
+                    formContainer.classList.remove('hidden');
+                    // pré-popular formulário
+                    const form = formContainer.querySelector('form');
+                     Object.keys(row.dataset).forEach(key => {
+                        const input = form.querySelector(`[id$="-${key}"]`);
+                        if(input) {
+                            if(input.tagName === 'SELECT') {
+                                // Tenta encontrar a opção pelo valor (nome do consultor)
+                                const option = Array.from(input.options).find(opt => opt.value === row.dataset[key]);
+                                if (option) input.value = option.value;
+                            } else {
+                                input.value = row.dataset[key];
+                            }
+                        }
+                    });
+                }
+            }
         });
 
-        // Ações do Modal de Confirmação de Exclusão
-        cancelDeleteBtn?.addEventListener('click', () => {
-            hideModal(deleteConfirmModal);
-            showModal(detailsModal);
-        });
-
-        confirmDeleteBtn?.addEventListener('click', () => {
-            activeCard?.remove();
-            hideModal(deleteConfirmModal);
-            activeCard = null;
-        });
-
-        // Lógica para Salvar Formulários
-        const handleFormSubmit = (form, cardsContainerId, formContainerId) => {
-            form.addEventListener('submit', (e) => {
+        const handleMainFormSubmit = (form, cardsId) => {
+            form?.addEventListener('submit', (e) => {
                 e.preventDefault();
-                // Aqui entraria a lógica para salvar os dados (novo ou edição)
-                // Por enquanto, apenas esconde o formulário e mostra os cards
-                document.getElementById(cardsContainerId).classList.remove('hidden');
-                document.getElementById(formContainerId).classList.add('hidden');
                 console.log('Dados salvos (simulação)');
+                document.getElementById(cardsId).classList.remove('hidden');
+                form.parentElement.parentElement.classList.add('hidden');
+                activeCard = null;
+                updateAllCounters();
             });
         };
+        handleMainFormSubmit(rhForm, 'rh-cards-container');
+        handleMainFormSubmit(clienteForm, 'cliente-cards-container');
 
-        if(rhForm) handleFormSubmit(rhForm, 'rh-cards-container', 'rh-form-container');
-        if(clienteForm) handleFormSubmit(clienteForm, 'cliente-cards-container', 'cliente-form-container');
+        const handleSubFormSubmit = (form, historyId) => {
+            form?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                console.log('Dados salvos (simulação)');
+                document.getElementById(historyId).classList.remove('hidden');
+                form.parentElement.classList.add('hidden');
+                updateAllCounters();
+            });
+        };
+        handleSubFormSubmit(feriasForm, 'ferias-history-container');
+        handleSubFormSubmit(atestadosForm, 'atestados-history-container');
+        handleSubFormSubmit(episForm, 'epis-history-container');
+        handleSubFormSubmit(ativosForm, 'ativos-history-container');
     });
     </script>
 </body>
