@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <style>
         :root {
             --brand-gold: #BFA16A;
@@ -46,6 +47,18 @@
         @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .modal-bg-animate { animation: fadeIn 0.3s ease-out forwards; }
         .modal-content-animate { animation: slideIn 0.3s ease-out forwards; }
+
+        /* Estilos Kanban */
+        .kanban-column { min-height: 400px; }
+        .kanban-card { cursor: grab; }
+        .kanban-card:active { cursor: grabbing; }
+        .dragging { opacity: 0.5; transform: rotate(2deg); }
+        .drag-over { border: 2px dashed var(--brand-gold); }
+
+        /* FullCalendar dark mode */
+        .dark .fc-daygrid-day-number, .dark .fc-col-header-cell-cushion, .dark .fc-list-day-text, .dark .fc-list-day-side-text { color: #e5e7eb; }
+        .dark .fc-theme-standard .fc-list-day-cushion { background-color: #1f2937; }
+        .dark .fc-theme-standard td, .dark .fc-theme-standard th { border-color: #374151; }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
@@ -55,36 +68,18 @@
         <div class="w-full max-w-md p-8 space-y-8 bg-white rounded-xl shadow-lg dark:bg-gray-800">
             <div class="flex flex-col items-center">
                 <div class="flex items-center mb-4">
-                    <!-- Logo SVG inspirado na imagem -->
-                    <svg class="w-16 h-16 text-brand-gold" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M100 25C100 25 50 40 50 100V150H75V100C75 75 100 60 100 60V25Z" fill="#BFA16A"/>
-                        <path d="M100 60C100 60 125 75 125 100V150H150V100C150 40 100 25 100 25V60Z" fill="#BFA16A"/>
-                        <path d="M125 60C140 60 150 70 150 85C150 100 140 110 125 110" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" class="dark:stroke-gray-800"/>
-                        <path d="M135 70C155 70 165 85 165 100C165 115 155 130 135 130" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" class="dark:stroke-gray-800"/>
-                    </svg>
+                    <svg class="w-16 h-16 text-brand-gold" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 25C100 25 50 40 50 100V150H75V100C75 75 100 60 100 60V25Z" fill="#BFA16A"/><path d="M100 60C100 60 125 75 125 100V150H150V100C150 40 100 25 100 25V60Z" fill="#BFA16A"/><path d="M125 60C140 60 150 70 150 85C150 100 140 110 125 110" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" class="dark:stroke-gray-800"/><path d="M135 70C155 70 165 85 165 100C165 115 155 130 135 130" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" class="dark:stroke-gray-800"/></svg>
                     <div class="ml-2">
                         <h1 class="text-3xl font-bold text-brand-dark dark:text-gray-200">pontes</h1>
                         <p class="text-sm text-gray-500 dark:text-gray-400 -mt-1">CONSULTORIA DE ALIMENTOS</p>
                     </div>
                 </div>
-                <h2 class="text-2xl font-bold text-center text-gray-900 dark:text-white">
-                    Acesse o sistema
-                </h2>
+                <h2 class="text-2xl font-bold text-center text-gray-900 dark:text-white">Acesse o sistema</h2>
             </div>
             <form id="login-form" class="mt-8 space-y-6">
-                <div class="rounded-md shadow-sm -space-y-px">
-                    <div>
-                        <input id="username" name="username" type="text" autocomplete="username" class="relative block w-full px-3 py-2 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-t-md focus:outline-none focus:ring-brand-gold focus:border-brand-gold focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-500 dark:text-white" placeholder="Usuário">
-                    </div>
-                    <div>
-                        <input id="password" name="password" type="password" autocomplete="current-password" class="relative block w-full px-3 py-2 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-b-md focus:outline-none focus:ring-brand-gold focus:border-brand-gold focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-500 dark:text-white" placeholder="Senha">
-                    </div>
-                </div>
-                <div>
-                    <button type="submit" class="relative flex justify-center w-full px-4 py-2 text-sm font-medium text-white border border-transparent rounded-md group bg-brand-dark hover:bg-brand-gold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-gold transition-colors">
-                        Entrar
-                    </button>
-                </div>
+                <div><input id="username" name="username" type="text" value="Admin Pontes" autocomplete="username" class="relative block w-full px-3 py-2 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-t-md focus:outline-none focus:ring-brand-gold focus:border-brand-gold focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-500 dark:text-white" placeholder="Usuário"></div>
+                <div><input id="password" name="password" type="password" autocomplete="current-password" class="relative block w-full px-3 py-2 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-b-md focus:outline-none focus:ring-brand-gold focus:border-brand-gold focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-500 dark:text-white" placeholder="Senha"></div>
+                <div><button type="submit" class="relative flex justify-center w-full px-4 py-2 text-sm font-medium text-white border border-transparent rounded-md group bg-brand-dark hover:bg-brand-gold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-gold transition-colors">Entrar</button></div>
             </form>
         </div>
     </div>
@@ -92,42 +87,39 @@
     <!-- Sistema Principal -->
     <div id="main-app" class="hidden">
         <div class="flex h-screen bg-gray-100 dark:bg-gray-900">
-            <!-- Sidebar (começa oculta em telas pequenas) -->
             <aside id="sidebar" class="absolute z-30 flex-col items-center hidden w-20 text-white transform -translate-x-full lg:relative lg:flex lg:translate-x-0 transition-transform duration-200 ease-in-out bg-brand-dark dark:bg-gray-800">
                 <div class="flex items-center justify-center w-full h-20 border-b border-gray-700">
                     <svg class="w-10 h-10 text-brand-gold" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 25C100 25 50 40 50 100V150H75V100C75 75 100 60 100 60V25Z" fill="#BFA16A"/><path d="M100 60C100 60 125 75 125 100V150H150V100C150 40 100 25 100 25V60Z" fill="#BFA16A"/><path d="M125 60C140 60 150 70 150 85C150 100 140 110 125 110" stroke="#373737" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M135 70C155 70 165 85 165 100C165 115 155 130 135 130" stroke="#373737" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </div>
                 <nav class="flex-1 mt-6">
-                    <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg bg-brand-gold text-white" data-target="rh" title="RH">
-                        <i class="fas fa-briefcase"></i>
-                    </a>
-                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="clientes" title="Clientes">
-                        <i class="fas fa-handshake"></i>
-                    </a>
+                    <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg bg-brand-gold text-white" data-target="rh" title="RH"><i class="fas fa-briefcase"></i></a>
+                    <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="clientes" title="Clientes"><i class="fas fa-handshake"></i></a>
+                    <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="visitas" title="Visitas"><i class="fas fa-calendar-check"></i></a>
                 </nav>
             </aside>
-
-            <!-- Conteúdo Principal -->
             <div class="flex flex-col flex-1">
                 <header class="flex items-center justify-between h-20 px-6 bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                    <button id="sidebar-toggle" class="text-gray-500 dark:text-gray-400 focus:outline-none lg:hidden">
-                        <i class="fas fa-bars fa-lg"></i>
-                    </button>
-                    <h1 id="page-title" class="text-2xl font-semibold text-gray-800 dark:text-white">RH</h1>
-                    <button id="theme-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" title="Alterar Tema">
-                        <i class="fas fa-moon"></i>
-                    </button>
+                    <div class="flex items-center">
+                        <button id="sidebar-toggle" class="text-gray-500 dark:text-gray-400 focus:outline-none lg:hidden"><i class="fas fa-bars fa-lg"></i></button>
+                        <h1 id="page-title" class="text-2xl font-semibold text-gray-800 dark:text-white ml-4 lg:ml-0">RH</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-right">
+                             <p id="logged-user-name" class="text-sm font-semibold text-gray-700 dark:text-gray-200"></p>
+                             <p class="text-xs text-gray-500 dark:text-gray-400">Administrador</p>
+                        </div>
+                        <img class="w-10 h-10 rounded-full" src="https://i.pravatar.cc/150?u=admin" alt="Avatar">
+                        <button id="theme-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" title="Alterar Tema"><i class="fas fa-moon"></i></button>
+                        <button id="logout-button" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" title="Sair"><i class="fas fa-sign-out-alt fa-lg"></i></button>
+                    </div>
                 </header>
                 <main class="flex-1 p-6 overflow-y-auto">
                     
-                    <!-- Tela de RH -->
                     <div id="rh" class="page">
                          <div class="mb-4">
                             <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Recursos Humanos</h2>
                             <p class="text-gray-500 dark:text-gray-400">Gerenciamento de consultores e equipe.</p>
                         </div>
-
-                        <!-- Abas da tela de RH -->
                         <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
                             <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="rh-tabs">
                                 <li class="mr-2"><button class="rh-tab-btn inline-block p-4 border-b-2 rounded-t-lg border-brand-gold text-brand-gold" data-target="consultores-content">Consultores <span id="consultores-count-badge" class="ml-2 bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs font-semibold px-2 py-0.5 rounded-full">0</span></button></li>
@@ -139,14 +131,11 @@
                             </ul>
                         </div>
                         
-                        <!-- Conteúdo da Aba: Consultores -->
                         <div id="consultores-content" class="rh-tab-content">
                             <div class="flex justify-between items-center mb-4">
                                 <div class="relative w-full max-w-xs">
                                     <input type="text" id="rh-search" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Buscar consultor...">
-                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                        <i class="fas fa-search text-gray-400"></i>
-                                    </div>
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><i class="fas fa-search text-gray-400"></i></div>
                                 </div>
                                 <button id="show-rh-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Consultor</button>
                             </div>
@@ -155,35 +144,26 @@
                                     <img src="https://i.pravatar.cc/150?u=ana" class="w-24 h-24 rounded-full object-cover mb-4">
                                     <h4 class="font-bold text-lg text-gray-800 dark:text-white">Ana Silva</h4>
                                     <p class="text-sm text-gray-500 dark:text-gray-400">ana.silva@email.com</p>
-                                    <div class="flex space-x-4 mt-4">
-                                        <a href="https://wa.me/5583912345678" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a>
-                                    </div>
+                                    <div class="flex space-x-4 mt-4"><a href="https://wa.me/5583912345678" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a></div>
                                 </div>
                                 <div class="rh-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" data-name="Bruno Costa" data-nascimento="1985-10-20" data-telefone="+5583987654321" data-email="bruno.costa@email.com" data-endereco="Av. Epitácio Pessoa, 456, João Pessoa, PB" data-login="bruno.costa" data-cnpj="44.555.666/0001-77" data-razao="Bruno Costa Consultoria" data-valor="180" data-inicio="2021-11-20" data-fim="" data-obs="Especialista em panificação.">
                                     <img src="https://i.pravatar.cc/150?u=bruno" class="w-24 h-24 rounded-full object-cover mb-4">
                                     <h4 class="font-bold text-lg text-gray-800 dark:text-white">Bruno Costa</h4>
                                     <p class="text-sm text-gray-500 dark:text-gray-400">bruno.costa@email.com</p>
-                                    <div class="flex space-x-4 mt-4">
-                                        <a href="https://wa.me/5583987654321" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a>
-                                    </div>
+                                    <div class="flex space-x-4 mt-4"><a href="https://wa.me/5583987654321" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a></div>
                                 </div>
                                  <div class="rh-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" data-name="Carlos Pereira" data-nascimento="1992-09-28" data-telefone="+5583988887777" data-email="carlos.pereira@email.com" data-endereco="R. das Flores, 789, João Pessoa, PB" data-login="carlos.p" data-cnpj="77.888.999/0001-00" data-razao="Carlos Pereira Serviços" data-valor="160" data-inicio="2023-03-15" data-fim="" data-obs="">
                                     <img src="https://i.pravatar.cc/150?u=carlos" class="w-24 h-24 rounded-full object-cover mb-4">
                                     <h4 class="font-bold text-lg text-gray-800 dark:text-white">Carlos Pereira</h4>
                                     <p class="text-sm text-gray-500 dark:text-gray-400">carlos.pereira@email.com</p>
-                                    <div class="flex space-x-4 mt-4">
-                                        <a href="https://wa.me/5583988887777" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a>
-                                    </div>
+                                    <div class="flex space-x-4 mt-4"><a href="https://wa.me/5583988887777" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a></div>
                                 </div>
                             </div>
                             <div id="rh-form-container" class="hidden mt-6">
                                 <div class="p-6 bg-white rounded-lg shadow-md dark:bg-gray-800">
                                 <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Cadastro de Consultor</h3>
                                 <form id="rh-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    <div class="md:col-span-2 lg:col-span-3 flex items-center space-x-4">
-                                        <img src="https://placehold.co/100x100/e2e8f0/cbd5e0?text=Foto" class="w-24 h-24 rounded-full object-cover">
-                                        <input type="file" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-gold file:text-white hover:file:bg-brand-gold-dark">
-                                    </div>
+                                    <div class="md:col-span-2 lg:col-span-3 flex items-center space-x-4"><img src="https://placehold.co/100x100/e2e8f0/cbd5e0?text=Foto" class="w-24 h-24 rounded-full object-cover"><input type="file" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-gold file:text-white hover:file:bg-brand-gold-dark"></div>
                                     <div><label for="rh-nome" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nome Completo</label><input type="text" id="rh-nome" name="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required></div>
                                     <div><label for="rh-nasc" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Nascimento</label><input type="date" id="rh-nasc" name="nascimento" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
                                     <div><label for="rh-tel" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Telefone</label><input type="tel" id="rh-tel" name="telefone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
@@ -206,24 +186,13 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Conteúdo da Aba: Aniversariantes -->
-                        <div id="aniversariantes-content" class="rh-tab-content hidden">
-                            <h3 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Aniversariantes do Mês</h3>
-                            <div id="birthday-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
-                        </div>
-
-                        <!-- Conteúdo da Aba: Controle de Férias -->
+                        <div id="aniversariantes-content" class="rh-tab-content hidden"><h3 class="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Aniversariantes do Mês</h3><div id="birthday-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div></div>
                         <div id="ferias-content" class="rh-tab-content hidden"><div class="flex justify-between items-center mb-4"><h3 class="text-2xl font-semibold text-gray-800 dark:text-white">Controle de Férias</h3><button id="show-ferias-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Agendar Férias</button></div><div id="ferias-history-container"><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow"><div><label for="ferias-filter-name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><input type="text" id="ferias-filter-name" placeholder="Buscar por nome..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div><div><label for="ferias-filter-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período De</label><input type="date" id="ferias-filter-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div><label for="ferias-filter-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período Até</label><input type="date" id="ferias-filter-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div></div><div class="relative overflow-x-auto shadow-md sm:rounded-lg"><table class="w-full text-sm text-left text-gray-500 dark:text-gray-400"><thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"><tr><th scope="col" class="px-6 py-3">Consultor</th><th scope="col" class="px-6 py-3">Início</th><th scope="col" class="px-6 py-3">Retorno</th><th scope="col" class="px-6 py-3">Dias</th><th scope="col" class="px-6 py-3">Ações</th></tr></thead><tbody id="ferias-table-body"><tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-consultor="Ana Silva" data-inicio="2025-08-01" data-retorno="2025-08-31"><td class="px-6 py-4">Ana Silva</td><td class="px-6 py-4">01/08/2025</td><td class="px-6 py-4">31/08/2025</td><td class="px-6 py-4">30</td><td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td></tr></tbody></table></div></div><div id="ferias-form-container" class="hidden mt-6 p-6 bg-white rounded-lg shadow-md dark:bg-gray-800"><h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Agendar Novas Férias</h3><form id="ferias-form" class="grid grid-cols-1 md:grid-cols-3 gap-6"><div><label for="ferias-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><select id="ferias-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></select></div><div><label for="ferias-inicio" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Início</label><input type="date" id="ferias-inicio" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div><label for="ferias-retorno" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Retorno</label><input type="date" id="ferias-retorno" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div class="md:col-span-3 flex justify-end space-x-4"><button type="button" class="cancel-sub-form px-6 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" data-form="ferias-form-container" data-history="ferias-history-container">Cancelar</button><button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button></div></form></div></div>
-                        <!-- Conteúdo da Aba: Atestados -->
                         <div id="atestados-content" class="rh-tab-content hidden"><div class="flex justify-between items-center mb-4"><h3 class="text-2xl font-semibold text-gray-800 dark:text-white">Atestados Médicos</h3><button id="show-atestados-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Atestado</button></div><div id="atestados-history-container"><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow"><div><label for="atestados-filter-name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><input type="text" id="atestados-filter-name" placeholder="Buscar por nome..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div><div><label for="atestados-filter-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período De</label><input type="date" id="atestados-filter-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div><label for="atestados-filter-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período Até</label><input type="date" id="atestados-filter-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div></div><div class="relative overflow-x-auto shadow-md sm:rounded-lg"><table class="w-full text-sm text-left text-gray-500 dark:text-gray-400"><thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"><tr><th scope="col" class="px-6 py-3">Consultor</th><th scope="col" class="px-6 py-3">Início</th><th scope="col" class="px-6 py-3">Retorno</th><th scope="col" class="px-6 py-3">Anexo</th><th scope="col" class="px-6 py-3">Ações</th></tr></thead><tbody id="atestados-table-body"><tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-consultor="Bruno Costa" data-inicio="2025-09-15" data-retorno="2025-09-17"><td class="px-6 py-4">Bruno Costa</td><td class="px-6 py-4">15/09/2025</td><td class="px-6 py-4">17/09/2025</td><td class="px-6 py-4"><a href="#" class="font-medium text-brand-gold hover:underline">Ver</a></td><td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td></tr></tbody></table></div></div><div id="atestados-form-container" class="hidden mt-6 p-6 bg-white rounded-lg shadow-md dark:bg-gray-800"><h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Lançar Atestado</h3><form id="atestados-form" class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="atestados-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><select id="atestados-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select></div><div><label for="atestados-inicio" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Início</label><input type="date" id="atestados-inicio" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div><label for="atestados-retorno" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Retorno</label><input type="date" id="atestados-retorno" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div><label for="atestados-anexo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Anexar Documento</label><input type="file" id="atestados-anexo" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"></div><div class="md:col-span-2 flex justify-end space-x-4"><button type="button" class="cancel-sub-form px-6 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" data-form="atestados-form-container" data-history="atestados-history-container">Cancelar</button><button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button></div></form></div></div>
-                        <!-- Conteúdo da Aba: Ficha de EPIs -->
                         <div id="epis-content" class="rh-tab-content hidden"><div class="flex justify-between items-center mb-4"><h3 class="text-2xl font-semibold text-gray-800 dark:text-white">Controle de EPIs</h3><button id="show-epis-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Nova Entrega</button></div><div id="epis-history-container"><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow"><div><label for="epis-filter-name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><input type="text" id="epis-filter-name" placeholder="Buscar por nome..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div><div><label for="epis-filter-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período De</label><input type="date" id="epis-filter-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div><label for="epis-filter-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período Até</label><input type="date" id="epis-filter-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div></div><div class="relative overflow-x-auto shadow-md sm:rounded-lg"><table class="w-full text-sm text-left text-gray-500 dark:text-gray-400"><thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"><tr><th scope="col" class="px-6 py-3">Consultor</th><th scope="col" class="px-6 py-3">Item</th><th scope="col" class="px-6 py-3">Qtd</th><th scope="col" class="px-6 py-3">Data</th><th scope="col" class="px-6 py-3">Ações</th></tr></thead><tbody id="epis-table-body"><tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-consultor="Ana Silva" data-date="2022-01-10" data-item="Botina" data-qtd="1"><td class="px-6 py-4">Ana Silva</td><td class="px-6 py-4">Botina</td><td class="px-6 py-4">1</td><td class="px-6 py-4">10/01/2022</td><td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td></tr></tbody></table></div></div><div id="epis-form-container" class="hidden mt-6 p-6 bg-white rounded-lg shadow-md dark:bg-gray-800"><h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Registrar Entrega de EPI</h3><form id="epis-form" class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="epis-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><select id="epis-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select></div><div><label for="epis-item" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Item</label><select id="epis-item" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"><option>Camisa</option><option>Botina</option><option>Óculos de Segurança</option></select></div><div><label for="epis-qtd" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Quantidade</label><input type="number" id="epis-qtd" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" value="1" min="1"></div><div><label for="epis-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Entrega</label><input type="date" id="epis-data" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div class="md:col-span-2"><label for="epis-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label><textarea id="epis-obs" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600"></textarea></div><div class="md:col-span-2 flex justify-end space-x-4"><button type="button" class="cancel-sub-form px-6 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" data-form="epis-form-container" data-history="epis-history-container">Cancelar</button><button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button></div></form></div></div>
-                        <!-- Conteúdo da Aba: Ficha de Ativos -->
                         <div id="ativos-content" class="rh-tab-content hidden"><div class="flex justify-between items-center mb-4"><h3 class="text-2xl font-semibold text-gray-800 dark:text-white">Controle de Ativos</h3><button id="show-ativos-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Ativo</button></div><div id="ativos-history-container"><div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow"><div><label for="ativos-filter-name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><input type="text" id="ativos-filter-name" placeholder="Buscar por nome..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div><div><label for="ativos-filter-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período De</label><input type="date" id="ativos-filter-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div><label for="ativos-filter-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período Até</label><input type="date" id="ativos-filter-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div></div><div class="relative overflow-x-auto shadow-md sm:rounded-lg"><table class="w-full text-sm text-left text-gray-500 dark:text-gray-400"><thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"><tr><th scope="col" class="px-6 py-3">Consultor</th><th scope="col" class="px-6 py-3">Item</th><th scope="col" class="px-6 py-3">Entrega</th><th scope="col" class="px-6 py-3">Devolução</th><th scope="col" class="px-6 py-3">Ações</th></tr></thead><tbody id="ativos-table-body"><tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-consultor="Bruno Costa" data-date="2021-11-20" data-item="Notebook Dell" data-devolucao=""><td class="px-6 py-4">Bruno Costa</td><td class="px-6 py-4">Notebook Dell</td><td class="px-6 py-4">20/11/2021</td><td class="px-6 py-4">-</td><td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td></tr></tbody></table></div></div><div id="ativos-form-container" class="hidden mt-6 p-6 bg-white rounded-lg shadow-md dark:bg-gray-800"><h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Registrar Ativo</h3><form id="ativos-form" class="grid grid-cols-1 md:grid-cols-2 gap-6"><div><label for="ativos-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><select id="ativos-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select></div><div><label for="ativos-item" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Item</label><select id="ativos-item" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"><option>Notebook</option><option>Celular</option><option>Tablet</option></select></div><div><label for="ativos-entrega" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Entrega</label><input type="date" id="ativos-entrega" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div><label for="ativos-devolucao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Devolução</label><input type="date" id="ativos-devolucao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div><div class="md:col-span-2"><label for="ativos-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label><textarea id="ativos-obs" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600"></textarea></div><div class="md:col-span-2 flex justify-end space-x-4"><button type="button" class="cancel-sub-form px-6 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" data-form="ativos-form-container" data-history="ativos-history-container">Cancelar</button><button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button></div></form></div></div>
                     </div>
-
-                    <!-- Tela de Clientes -->
+                    
                     <div id="clientes" class="page hidden">
                        <div class="mb-4">
                             <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Clientes</h2>
@@ -232,9 +201,7 @@
                          <div class="flex justify-between items-center mb-4">
                             <div class="relative w-full max-w-xs">
                                 <input type="text" id="cliente-search" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Buscar cliente...">
-                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                    <i class="fas fa-search text-gray-400"></i>
-                                </div>
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><i class="fas fa-search text-gray-400"></i></div>
                             </div>
                             <button id="show-cliente-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Cliente</button>
                         </div>
@@ -258,15 +225,11 @@
                                 </div>
                             </div>
                          </div>
-
                         <div id="cliente-form-container" class="hidden mt-6">
                             <div class="p-6 bg-white rounded-lg shadow-md dark:bg-gray-800">
                             <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Cadastro de Cliente</h3>
                             <form id="cliente-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                <div class="md:col-span-2 lg:col-span-3 flex items-center space-x-4">
-                                    <img src="https://placehold.co/100x100/e2e8f0/cbd5e0?text=Foto" class="w-24 h-24 rounded-lg object-cover">
-                                    <input type="file" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-gold file:text-white hover:file:bg-brand-gold-dark">
-                                </div>
+                                <div class="md:col-span-2 lg:col-span-3 flex items-center space-x-4"><img src="https://placehold.co/100x100/e2e8f0/cbd5e0?text=Foto" class="w-24 h-24 rounded-lg object-cover"><input type="file" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-gold file:text-white hover:file:bg-brand-gold-dark"></div>
                                 <div><label for="cliente-nome" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nome do Cliente</label><input type="text" id="cliente-nome" name="name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required></div>
                                 <div><label for="cliente-razao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Razão Social</label><input type="text" id="cliente-razao" name="razao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
                                 <div><label for="cliente-cnpj" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">CNPJ</label><input type="text" id="cliente-cnpj" name="cnpj" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
@@ -287,12 +250,72 @@
                             </div>
                         </div>
                     </div>
+
+                    <div id="visitas" class="page hidden">
+                        <div class="flex flex-col md:flex-row justify-between md:items-center mb-4">
+                            <div>
+                                <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Visitas</h2>
+                                <p class="text-gray-500 dark:text-gray-400">Agenda, histórico e status das visitas.</p>
+                            </div>
+                            <div class="flex items-center space-x-2 mt-4 md:mt-0">
+                                <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-lg">
+                                    <button class="view-toggle-btn bg-white dark:bg-gray-800 px-3 py-1 rounded-md shadow-sm" data-view="calendar-view"><i class="fas fa-calendar-alt"></i></button>
+                                    <button class="view-toggle-btn px-3 py-1 rounded-md" data-view="list-view"><i class="fas fa-list"></i></button>
+                                    <button class="view-toggle-btn px-3 py-1 rounded-md" data-view="kanban-view"><i class="fas fa-columns"></i></button>
+                                </div>
+                                <button id="show-visita-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Nova Visita</button>
+                            </div>
+                        </div>
+
+                        <div id="calendar-view" class="visitas-view">
+                            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow">
+                                <div id="calendar"></div>
+                            </div>
+                        </div>
+
+                        <div id="list-view" class="visitas-view hidden">
+                            <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"><tr><th scope="col" class="px-6 py-3">Cliente</th><th scope="col" class="px-6 py-3">Consultor</th><th scope="col" class="px-6 py-3">Data</th><th scope="col" class="px-6 py-3">Horário</th><th scope="col" class="px-6 py-3">Status</th><th scope="col" class="px-6 py-3">Ações</th></tr></thead>
+                                    <tbody id="visitas-table-body">
+                                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="1" data-consultor="Ana Silva" data-cliente="Padaria Pão Quente" data-data="2025-10-20" data-inicio="09:00" data-fim="11:00" data-status="Agendada" data-descricao="Visita de rotina.">
+                                            <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">Padaria Pão Quente</td>
+                                            <td class="px-6 py-4">Ana Silva</td>
+                                            <td class="px-6 py-4">20/10/2025</td>
+                                            <td class="px-6 py-4">09:00 - 11:00</td>
+                                            <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-200 text-blue-800">Agendada</span></td>
+                                            <td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="kanban-view" class="visitas-view hidden">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <div class="kanban-column bg-gray-200 dark:bg-gray-800 rounded-lg p-4" data-status="Agendada">
+                                    <h3 class="font-bold text-lg mb-4 text-gray-800 dark:text-white">Agendada</h3>
+                                    <div class="space-y-4">
+                                        <div class="kanban-card bg-white dark:bg-gray-700 p-4 rounded-lg shadow" draggable="true" data-id="1">
+                                            <div class="flex justify-between items-center mb-2"><h4 class="font-bold">Padaria Pão Quente</h4><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-200 text-blue-800">Agendada</span></div>
+                                            <p class="text-sm text-gray-600 dark:text-gray-300">Consultor: Ana Silva</p>
+                                            <p class="text-sm text-gray-600 dark:text-gray-300">28/09/2025 - 09:00h</p>
+                                            <div class="mt-4 border-t pt-2 dark:border-gray-600"><button class="iniciar-visita-btn w-full bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Iniciar Visita</button></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="kanban-column bg-gray-200 dark:bg-gray-800 rounded-lg p-4" data-status="Em Andamento"> <h3 class="font-bold text-lg mb-4 text-gray-800 dark:text-white">Em Andamento</h3> <div class="space-y-4"></div></div>
+                                <div class="kanban-column bg-gray-200 dark:bg-gray-800 rounded-lg p-4" data-status="Concluída"> <h3 class="font-bold text-lg mb-4 text-gray-800 dark:text-white">Concluída</h3> <div class="space-y-4"></div></div>
+                                <div class="kanban-column bg-gray-200 dark:bg-gray-800 rounded-lg p-4" data-status="Remarcada"> <h3 class="font-bold text-lg mb-4 text-gray-800 dark:text-white">Remarcada</h3> <div class="space-y-4"></div></div>
+                            </div>
+                        </div>
+                    </div>
                 </main>
             </div>
         </div>
     </div>
     
-    <!-- Modal de Detalhes -->
+    <!-- Modals -->
     <div id="details-modal" class="fixed inset-0 z-40 items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
         <div class="w-full max-w-lg p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
             <div class="flex justify-between items-center border-b pb-3 dark:border-gray-700">
@@ -306,8 +329,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Modal de Confirmação de Exclusão -->
     <div id="delete-confirm-modal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
         <div class="w-full max-w-sm p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
             <h2 class="text-xl font-bold text-gray-900 dark:text-white">Confirmar Exclusão</h2>
@@ -318,25 +339,58 @@
             </div>
         </div>
     </div>
+    <div id="logout-confirm-modal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
+        <div class="w-full max-w-sm p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Confirmar Saída</h2>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Você tem certeza que deseja sair do sistema?</p>
+            <div class="flex justify-end mt-6 space-x-4">
+                <button id="cancel-logout-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+                <button id="confirm-logout-btn" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button>
+            </div>
+        </div>
+    </div>
+    <div id="visita-form-modal" class="fixed inset-0 z-40 items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
+        <div class="w-full max-w-lg p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Agendar Nova Visita</h2>
+            <form id="visita-form">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label for="visita-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><select id="visita-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select></div>
+                    <div><label for="visita-cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label><select id="visita-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select></div>
+                    <div><label for="visita-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data da Visita</label><input type="date" id="visita-data" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div>
+                    <div><label for="visita-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label><select id="visita-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"><option>Agendada</option><option>Em Andamento</option><option>Concluída</option><option>Remarcada</option></select></div>
+                    <div><label for="visita-inicio" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hora Início</label><input type="time" id="visita-inicio" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div>
+                    <div><label for="visita-fim" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hora Fim</label><input type="time" id="visita-fim" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div>
+                    <div class="md:col-span-2"><label for="visita-descricao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descrição</label><textarea id="visita-descricao" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600"></textarea></div>
+                </div>
+                <div class="flex justify-end mt-6 space-x-4">
+                    <button type="button" id="cancel-visita-form" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Agendar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         let activeCard = null;
         let activeTableRow = null;
+        let calendar;
 
-        // Seletores de Elementos Globais
+        // Seletores Globais
         const loginScreen = document.getElementById('login-screen');
         const mainApp = document.getElementById('main-app');
         const loginForm = document.getElementById('login-form');
-        const themeToggle = document.getElementById('theme-toggle');
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebar-toggle');
         const navLinks = document.querySelectorAll('.nav-link');
         const pages = document.querySelectorAll('.page');
         const pageTitle = document.getElementById('page-title');
-        
-        // Modals
+        const logoutButton = document.getElementById('logout-button');
+        const logoutConfirmModal = document.getElementById('logout-confirm-modal');
+        const cancelLogoutBtn = document.getElementById('cancel-logout-btn');
+        const confirmLogoutBtn = document.getElementById('confirm-logout-btn');
+        const themeToggle = document.getElementById('theme-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
         const detailsModal = document.getElementById('details-modal');
         const closeModal = document.getElementById('close-modal');
         const deleteConfirmModal = document.getElementById('delete-confirm-modal');
@@ -344,23 +398,32 @@
         const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
         const editBtn = document.getElementById('edit-btn');
         const deleteBtn = document.getElementById('delete-btn');
-
-        // Forms and Form Buttons
+        const visitaFormModal = document.getElementById('visita-form-modal');
+        const showVisitaFormBtn = document.getElementById('show-visita-form');
+        const cancelVisitaFormBtn = document.getElementById('cancel-visita-form');
         const rhForm = document.getElementById('rh-form');
         const clienteForm = document.getElementById('cliente-form');
         const feriasForm = document.getElementById('ferias-form');
         const atestadosForm = document.getElementById('atestados-form');
         const episForm = document.getElementById('epis-form');
         const ativosForm = document.getElementById('ativos-form');
+        const visitaForm = document.getElementById('visita-form');
         const cancelRhFormBtn = document.getElementById('cancel-rh-form');
         const cancelClienteFormBtn = document.getElementById('cancel-cliente-form');
 
         loginForm?.addEventListener('submit', (e) => { 
             e.preventDefault();
+            const usernameInput = document.getElementById('username');
+            const loggedUserName = document.getElementById('logged-user-name');
+            if (usernameInput && loggedUserName) {
+                loggedUserName.textContent = usernameInput.value || "Admin Pontes";
+            }
             loginScreen.classList.add('hidden');
             mainApp.classList.remove('hidden');
             populateConsultantSelects();
+            populateClientSelects();
             updateAllCounters();
+            initializeCalendar();
         });
         
         themeToggle?.addEventListener('click', () => {
@@ -368,6 +431,7 @@
             const isDark = document.documentElement.classList.contains('dark');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
             themeToggle.querySelector('i').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            if(calendar) calendar.render(); // Re-render calendar on theme change
         });
 
         if (localStorage.getItem('theme') === 'dark') {
@@ -412,7 +476,6 @@
         });
         
         function updateAllCounters() {
-            // Aniversariantes
             const currentMonth = new Date().getMonth();
             const allConsultants = document.querySelectorAll('#rh-cards-container .rh-card');
             let birthdayCount = 0;
@@ -423,10 +486,8 @@
                 }
             });
             document.getElementById('birthday-count-badge').textContent = birthdayCount;
-            populateBirthdayCards(); // Re-popula a view caso esteja visível
-
-            // Outros contadores
-            document.getElementById('consultores-count-badge').textContent = document.querySelectorAll('#rh-cards-container .rh-card').length;
+            populateBirthdayCards();
+            document.getElementById('consultores-count-badge').textContent = allConsultants.length;
             document.getElementById('ferias-count-badge').textContent = document.querySelectorAll('#ferias-table-body tr').length;
             document.getElementById('atestados-count-badge').textContent = document.querySelectorAll('#atestados-table-body tr').length;
             document.getElementById('epis-count-badge').textContent = document.querySelectorAll('#epis-table-body tr').length;
@@ -460,6 +521,16 @@
             if (!hasBirthdays) {
                 container.innerHTML = `<p class="text-gray-500 dark:text-gray-400 col-span-full">Nenhum aniversariante este mês.</p>`;
             }
+        }
+        
+        function populateClientSelects() {
+            const selects = document.querySelectorAll('.cliente-select');
+            const clientes = document.querySelectorAll('#cliente-cards-container .cliente-card');
+            let options = '<option value="">Selecione...</option>';
+            clientes.forEach(c => {
+                options += `<option value="${c.dataset.name}">${c.dataset.name}</option>`;
+            });
+            selects.forEach(select => select.innerHTML = options);
         }
 
         function populateConsultantSelects() {
@@ -582,34 +653,28 @@
             formContainer.classList.remove('hidden');
         });
         
-        document.querySelector('#rh')?.addEventListener('click', (e) => {
+        mainApp?.addEventListener('click', (e) => {
             const button = e.target.closest('button.table-delete-btn, button.table-edit-btn');
             if (!button) return;
-
             const row = button.closest('tr');
             if (!row) return;
-            
             if (button.classList.contains('table-delete-btn')) {
                 activeTableRow = row;
                 activeCard = null;
                 showModal(deleteConfirmModal);
             }
             if (button.classList.contains('table-edit-btn')) {
-                // Lógica de edição para tabelas aqui
-                 console.log('Botão de editar da tabela clicado', row.dataset);
-                const formContainer = row.closest('.rh-tab-content').querySelector('div[id$="-form-container"]');
-                const historyContainer = row.closest('div[id$="-history-container"]');
+                const formContainer = row.closest('.rh-tab-content, .page').querySelector('div[id$="-form-container"]');
+                const historyContainer = row.closest('div[id$="-history-container"], #list-view');
                 if (formContainer && historyContainer) {
                     historyContainer.classList.add('hidden');
                     formContainer.classList.remove('hidden');
-                    // pré-popular formulário
                     const form = formContainer.querySelector('form');
                      Object.keys(row.dataset).forEach(key => {
-                        const input = form.querySelector(`[id$="-${key}"]`);
+                        const input = form.querySelector(`[id$="-${key}"], [id*="${key.toLowerCase()}"]`);
                         if(input) {
-                            if(input.tagName === 'SELECT') {
-                                // Tenta encontrar a opção pelo valor (nome do consultor)
-                                const option = Array.from(input.options).find(opt => opt.value === row.dataset[key]);
+                             if(input.tagName === 'SELECT') {
+                                const option = Array.from(input.options).find(opt => opt.value === row.dataset[key] || opt.textContent === row.dataset[key]);
                                 if (option) input.value = option.value;
                             } else {
                                 input.value = row.dataset[key];
@@ -620,32 +685,124 @@
             }
         });
 
-        const handleMainFormSubmit = (form, cardsId) => {
+        function handleFormSubmit(form, historyContainerId, cardsContainerId) {
             form?.addEventListener('submit', (e) => {
                 e.preventDefault();
-                console.log('Dados salvos (simulação)');
-                document.getElementById(cardsId).classList.remove('hidden');
-                form.parentElement.parentElement.classList.add('hidden');
-                activeCard = null;
-                updateAllCounters();
-            });
-        };
-        handleMainFormSubmit(rhForm, 'rh-cards-container');
-        handleMainFormSubmit(clienteForm, 'cliente-cards-container');
+                console.log('Dados salvos (simulação) para o formulário:', form.id);
+                const formContainer = form.parentElement.tagName === 'DIV' ? form.parentElement : form.parentElement.parentElement;
+                
+                document.getElementById(historyContainerId)?.classList.remove('hidden');
+                document.getElementById(cardsContainerId)?.classList.remove('hidden'); // Para RH e Clientes
+                formContainer.classList.add('hidden');
+                
+                if (formContainer.id.includes('visita')) hideModal(visitaFormModal);
 
-        const handleSubFormSubmit = (form, historyId) => {
-            form?.addEventListener('submit', (e) => {
-                e.preventDefault();
-                console.log('Dados salvos (simulação)');
-                document.getElementById(historyId).classList.remove('hidden');
-                form.parentElement.classList.add('hidden');
+                activeCard = null;
+                activeTableRow = null;
                 updateAllCounters();
             });
-        };
-        handleSubFormSubmit(feriasForm, 'ferias-history-container');
-        handleSubFormSubmit(atestadosForm, 'atestados-history-container');
-        handleSubFormSubmit(episForm, 'epis-history-container');
-        handleSubFormSubmit(ativosForm, 'ativos-history-container');
+        }
+        handleFormSubmit(rhForm, 'rh-cards-container', 'rh-cards-container');
+        handleFormSubmit(clienteForm, 'cliente-cards-container', 'cliente-cards-container');
+        handleFormSubmit(feriasForm, 'ferias-history-container');
+        handleFormSubmit(atestadosForm, 'atestados-history-container');
+        handleFormSubmit(episForm, 'epis-history-container');
+        handleFormSubmit(ativosForm, 'ativos-history-container');
+        handleFormSubmit(visitaForm, 'list-view');
+        
+        logoutButton?.addEventListener('click', () => showModal(logoutConfirmModal));
+        cancelLogoutBtn?.addEventListener('click', () => hideModal(logoutConfirmModal));
+        confirmLogoutBtn?.addEventListener('click', () => location.reload());
+
+        // --- Lógica de Visitas ---
+        document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.remove('bg-white', 'dark:bg-gray-800', 'shadow-sm'));
+                btn.classList.add('bg-white', 'dark:bg-gray-800', 'shadow-sm');
+                document.querySelectorAll('.visitas-view').forEach(view => view.classList.add('hidden'));
+                document.getElementById(btn.dataset.view).classList.remove('hidden');
+                if (btn.dataset.view === 'calendar-view' && calendar) {
+                    calendar.render();
+                }
+            });
+        });
+
+        showVisitaFormBtn?.addEventListener('click', () => showModal(visitaFormModal));
+        cancelVisitaFormBtn?.addEventListener('click', () => hideModal(visitaFormModal));
+        
+        function initializeCalendar() {
+            const calendarEl = document.getElementById('calendar');
+            if (calendarEl && typeof FullCalendar !== 'undefined') {
+                calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    locale: 'pt-br',
+                    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
+                    events: [
+                        { title: 'Visita: Padaria Pão Quente', date: '2025-09-28' },
+                        { title: 'Visita: Sabor Divino', start: '2025-09-29T10:00:00', end: '2025-09-29T12:00:00' }
+                    ]
+                });
+                calendar.render();
+            }
+        }
+        
+        const kanbanCards = document.querySelectorAll('.kanban-card');
+        const kanbanColumns = document.querySelectorAll('.kanban-column');
+        let draggedCard = null;
+
+        kanbanCards.forEach(card => {
+            card.addEventListener('dragstart', () => { draggedCard = card; setTimeout(() => card.classList.add('hidden'), 0); });
+            card.addEventListener('dragend', () => { draggedCard.classList.remove('hidden'); draggedCard = null; });
+        });
+
+        kanbanColumns.forEach(column => {
+            column.addEventListener('dragover', e => { e.preventDefault(); column.classList.add('drag-over'); });
+            column.addEventListener('dragleave', () => column.classList.remove('drag-over'));
+            column.addEventListener('drop', e => {
+                e.preventDefault();
+                column.classList.remove('drag-over');
+                const contentArea = column.querySelector('.space-y-4');
+                if (draggedCard && contentArea) { contentArea.appendChild(draggedCard); }
+            });
+        });
+
+        document.getElementById('visitas')?.addEventListener('click', (e) => {
+            if (e.target.matches('.iniciar-visita-btn')) {
+                const card = e.target.closest('.kanban-card');
+                if (card) {
+                    recordVisitAction(card, 'Início');
+                    e.target.textContent = 'Encerrar Visita';
+                    e.target.classList.replace('bg-green-500', 'bg-red-500');
+                    e.target.classList.replace('hover:bg-green-600', 'hover:bg-red-600');
+                    e.target.classList.replace('iniciar-visita-btn', 'encerrar-visita-btn');
+                }
+            } else if (e.target.matches('.encerrar-visita-btn')) {
+                const card = e.target.closest('.kanban-card');
+                if (card) {
+                    recordVisitAction(card, 'Fim');
+                    e.target.disabled = true;
+                    e.target.textContent = 'Visita Finalizada';
+                    e.target.classList.replace('bg-red-500', 'bg-gray-400');
+                }
+            }
+        });
+
+        function recordVisitAction(card, action) {
+            const now = new Date();
+            const timestamp = now.toLocaleString('pt-BR');
+            navigator.geolocation.getCurrentPosition(position => {
+                const { latitude, longitude } = position.coords;
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'text-xs text-gray-500 dark:text-gray-400 mt-2 p-2 bg-gray-100 dark:bg-gray-600 rounded';
+                infoDiv.innerHTML = `<strong>${action}:</strong> ${timestamp}<br><strong>Local:</strong> ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+                card.appendChild(infoDiv);
+            }, () => {
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'text-xs text-gray-500 dark:text-gray-400 mt-2 p-2 bg-gray-100 dark:bg-gray-600 rounded';
+                infoDiv.innerHTML = `<strong>${action}:</strong> ${timestamp}<br><strong>Local:</strong> Não foi possível obter.`;
+                card.appendChild(infoDiv);
+            });
+        }
     });
     </script>
 </body>
