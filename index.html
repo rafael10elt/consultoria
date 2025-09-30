@@ -8,6 +8,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <!-- ADICIONADO CHART.JS PARA GRÁFICOS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- ADICIONADO JSPDF PARA RELATÓRIOS PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
     <style>
         :root {
             --brand-gold: #BFA16A;
@@ -19,8 +25,10 @@
         /* Estilos para modo escuro */
         .dark .dark\:bg-gray-800 { background-color: #1f2937; }
         .dark .dark\:bg-gray-900 { background-color: #111827; }
+        .dark .dark\:text-gray-100 { color: #f3f4f6; }
         .dark .dark\:text-gray-200 { color: #e5e7eb; }
-        .dark .dark\:text-gray-400 { color: #9ca3af; }
+        .dark .dark\:text-gray-300 { color: #d1d5db; }
+        .dark .dark\:text-gray-400 { color: #d1d5db; }
         .dark .dark\:border-gray-700 { border-color: #374151; }
         .dark .dark\:hover\:bg-gray-700:hover { background-color: #374151; }
         .dark .dark\:placeholder-gray-500::placeholder { color: #6b7280; }
@@ -55,6 +63,12 @@
         .dark .fc-daygrid-day-number, .dark .fc-col-header-cell-cushion, .dark .fc-list-day-text, .dark .fc-list-day-side-text { color: #e5e7eb; }
         .dark .fc-theme-standard .fc-list-day-cushion { background-color: #1f2937; }
         .dark .fc-theme-standard td, .dark .fc-theme-standard th { border-color: #374151; }
+
+        /* Botão de filtro ativo */
+        .filter-btn-active {
+            background-color: var(--brand-gold) !important;
+            color: white !important;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
@@ -88,22 +102,24 @@
                     <svg class="w-10 h-10 text-brand-gold" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 25C100 25 50 40 50 100V150H75V100C75 75 100 60 100 60V25Z" fill="#BFA16A"/><path d="M100 60C100 60 125 75 125 100V150H150V100C150 40 100 25 100 25V60Z" fill="#BFA16A"/><path d="M125 60C140 60 150 70 150 85C150 100 140 110 125 110" stroke="#373737" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M135 70C155 70 165 85 165 100C165 115 155 130 135 130" stroke="#373737" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </div>
                 <nav class="flex-1 mt-6">
-                    <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg bg-brand-gold text-white" data-target="rh" title="RH"><i class="fas fa-briefcase"></i></a>
-                    <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="clientes" title="Clientes"><i class="fas fa-handshake"></i></a>
+                    <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg bg-brand-gold text-white" data-target="dashboard" title="Dashboard"><i class="fas fa-chart-pie"></i></a>
                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="visitas" title="Visitas"><i class="fas fa-calendar-check"></i></a>
                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="requisicao" title="Requisição"><i class="fas fa-clipboard-list"></i></a>
+                    <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="financeiro" title="Financeiro"><i class="fas fa-wallet"></i></a>
+                    <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="clientes" title="Clientes"><i class="fas fa-handshake"></i></a>
+                    <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="rh" title="RH"><i class="fas fa-briefcase"></i></a>
                 </nav>
             </aside>
             <div class="flex flex-col flex-1">
                 <header class="flex items-center justify-between h-20 px-6 bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                     <div class="flex items-center">
                         <button id="sidebar-toggle" class="text-gray-500 dark:text-gray-400 focus:outline-none lg:hidden"><i class="fas fa-bars fa-lg"></i></button>
-                        <h1 id="page-title" class="text-2xl font-semibold text-gray-800 dark:text-white ml-4 lg:ml-0">RH</h1>
+                        <h1 id="page-title" class="text-xl sm:text-2xl font-semibold text-gray-800 dark:text-white ml-4 lg:ml-0">Dashboard</h1>
                     </div>
-                    <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2 sm:space-x-4">
                         <div class="text-right">
                              <p id="logged-user-name" class="text-sm font-semibold text-gray-700 dark:text-gray-200"></p>
-                             <p class="text-xs text-gray-500 dark:text-gray-400">Administrador</p>
+                             <p class="text-xs text-gray-500 dark:text-gray-400 hidden sm:block">Administrador</p>
                         </div>
                         <img class="w-10 h-10 rounded-full" src="https://i.pravatar.cc/150?u=admin" alt="Avatar">
                         <button id="theme-toggle" class="p-2 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700" title="Alterar Tema"><i class="fas fa-moon"></i></button>
@@ -112,10 +128,95 @@
                 </header>
                 <main class="flex-1 p-6 overflow-y-auto">
                     
-                    <div id="rh" class="page">
+                    <div id="dashboard" class="page">
+                        <div class="flex flex-wrap justify-between items-center mb-4 gap-4">
+                            <div>
+                                <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Dashboard</h2>
+                                <p class="text-gray-600 dark:text-gray-300">Visão geral e métricas chave do sistema.</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button id="show-insights-btn" class="bg-yellow-500 text-white px-4 py-2 rounded-lg shadow hover:bg-yellow-600 transition-colors"><i class="fas fa-lightbulb mr-2"></i>Gerar Insights</button>
+                                <button id="show-report-modal-btn" class="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition-colors"><i class="fas fa-file-pdf mr-2"></i>Gerar Relatório</button>
+                            </div>
+                        </div>
+
+                        <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+                            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
+                                <li class="mr-2"><button class="dashboard-nav-btn inline-block p-4 border-b-2 rounded-t-lg border-brand-gold text-brand-gold" data-target="dashboard-financeiro">Financeiro</button></li>
+                                <li class="mr-2"><button class="dashboard-nav-btn inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" data-target="dashboard-visitas">Visitas</button></li>
+                            </ul>
+                        </div>
+
+                        <div id="dashboard-financeiro" class="dashboard-content">
+                            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 items-end">
+                                    <div class="sm:col-span-2 md:col-span-4 lg:col-span-1"><label for="dash-fin-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label><select id="dash-fin-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"><option value="">Todos</option><option value="Pago">Pago</option><option value="Pendente">Pendente</option></select></div>
+                                    <div><label for="dash-fin-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label><input type="date" id="dash-fin-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div>
+                                    <div><label for="dash-fin-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Até</label><input type="date" id="dash-fin-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div>
+                                    <div class="sm:col-span-2 md:col-span-4 lg:col-span-3 flex items-center justify-end space-x-2">
+                                        <button class="dash-fin-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="week">Semana</button>
+                                        <button class="dash-fin-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="month">Mês</button>
+                                        <button class="dash-fin-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="year">Ano</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+                                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow"><div class="flex items-center"><div class="p-3 rounded-full bg-green-100 dark:bg-green-900 mr-4"><i class="fas fa-balance-scale fa-2x text-green-500"></i></div><div><p class="text-sm font-medium text-gray-600 dark:text-gray-300">Balanço Financeiro</p><p id="dash-balance" class="text-3xl font-bold text-gray-900 dark:text-white">R$ 0,00</p></div></div></div>
+                                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow"><div class="flex items-center"><div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900 mr-4"><i class="fas fa-arrow-up fa-2x text-blue-500"></i></div><div><p class="text-sm font-medium text-gray-600 dark:text-gray-300">Total de Receitas</p><p id="dash-revenue" class="text-3xl font-bold text-gray-900 dark:text-white">R$ 0,00</p></div></div></div>
+                                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow"><div class="flex items-center"><div class="p-3 rounded-full bg-red-100 dark:bg-red-900 mr-4"><i class="fas fa-arrow-down fa-2x text-red-500"></i></div><div><p class="text-sm font-medium text-gray-600 dark:text-gray-300">Total de Custos</p><p id="dash-costs" class="text-3xl font-bold text-gray-900 dark:text-white">R$ 0,00</p></div></div></div>
+                                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div><div class="flex items-center"><div class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900 mr-4"><i class="fas fa-hourglass-half fa-2x text-yellow-500"></i></div><div><p class="text-sm font-medium text-gray-600 dark:text-gray-300">Receitas Pendentes</p><p id="dash-revenue-pending" class="text-2xl font-bold text-gray-900 dark:text-white">R$ 0,00</p></div></div></div>
+                                    <div><div class="flex items-center"><div class="p-3 rounded-full bg-orange-100 dark:bg-orange-900 mr-4"><i class="fas fa-exclamation-circle fa-2x text-orange-500"></i></div><div><p class="text-sm font-medium text-gray-600 dark:text-gray-300">Custos Pendentes</p><p id="dash-costs-pending" class="text-2xl font-bold text-gray-900 dark:text-white">R$ 0,00</p></div></div></div>
+                                </div>
+                            </div>
+                            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Receitas vs. Custos por Mês</h4>
+                                <canvas id="finance-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <div id="dashboard-visitas" class="dashboard-content hidden">
+                             <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end">
+                                    <div><label for="dash-visit-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label><input type="date" id="dash-visit-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div>
+                                    <div><label for="dash-visit-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Até</label><input type="date" id="dash-visit-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div>
+                                    <div class="sm:col-span-2 md:col-span-3 lg:col-span-3 flex items-center justify-end space-x-2">
+                                        <button class="dash-visit-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="week">Semana</button>
+                                        <button class="dash-visit-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="month">Mês</button>
+                                        <button class="dash-visit-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="year">Ano</button>
+                                    </div>
+                                </div>
+                            </div>
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow"><div class="flex items-center"><div class="p-3 rounded-full bg-green-100 dark:bg-green-900 mr-4"><i class="fas fa-clock fa-2x text-green-500"></i></div><div><p class="text-sm font-medium text-gray-600 dark:text-gray-300">Horas Concluídas</p><p id="dash-hours-completed" class="text-3xl font-bold text-gray-900 dark:text-white">0h 0m</p></div></div></div>
+                                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow"><div class="flex items-center"><div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900 mr-4"><i class="far fa-clock fa-2x text-blue-500"></i></div><div><p class="text-sm font-medium text-gray-600 dark:text-gray-300">Horas Agendadas</p><p id="dash-hours-scheduled" class="text-3xl font-bold text-gray-900 dark:text-white">0h 0m</p></div></div></div>
+                            </div>
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div class="lg:col-span-1 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                    <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Visitas por Status</h4>
+                                    <canvas id="visits-status-chart"></canvas>
+                                </div>
+                                <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                     <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Top 3 Consultores (Visitas Concluídas)</h4>
+                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <h5 class="font-semibold text-gray-700 dark:text-gray-200 mb-2">Por Horas Trabalhadas</h5>
+                                            <ul id="dash-top-consultants-hours" class="space-y-2"></ul>
+                                        </div>
+                                        <div>
+                                            <h5 class="font-semibold text-gray-700 dark:text-gray-200 mb-2">Por Nº de Visitas</h5>
+                                            <ul id="dash-top-consultants-count" class="space-y-2"></ul>
+                                        </div>
+                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="rh" class="page hidden">
                          <div class="mb-4">
                             <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Recursos Humanos</h2>
-                            <p class="text-gray-500 dark:text-gray-400">Gerenciamento de consultores e equipe.</p>
+                            <p class="text-gray-600 dark:text-gray-300">Gerenciamento de consultores e equipe.</p>
                         </div>
                         <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
                             <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="rh-tabs">
@@ -193,14 +294,14 @@
                     <div id="clientes" class="page hidden">
                        <div class="mb-4">
                             <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Clientes</h2>
-                            <p class="text-gray-500 dark:text-gray-400">Gerenciamento de clientes e parceiros.</p>
+                            <p class="text-gray-600 dark:text-gray-300">Gerenciamento de clientes e parceiros.</p>
                         </div>
-                         <div class="flex justify-between items-center mb-4">
+                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
                             <div class="relative w-full max-w-xs">
                                 <input type="text" id="cliente-search" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Buscar cliente...">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><i class="fas fa-search text-gray-400"></i></div>
                             </div>
-                            <button id="show-cliente-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Cliente</button>
+                            <button id="show-cliente-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors w-full sm:w-auto">Novo Cliente</button>
                         </div>
                          <div id="cliente-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                             <div class="cliente-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" data-name="Padaria Pão Quente" data-responsavel="João da Silva" data-telefone="+5583999998888" data-email="contato@paoquente.com" data-endereco="R. dos Comerciantes, 789, João Pessoa, PB" data-razao="Padaria Pão Quente Ltda." data-cnpj="22.333.444/0001-55" data-horas="20" data-cpf="123.456.789-00" data-iptu="987654" data-senhaPortal="portal123">
@@ -252,7 +353,7 @@
                         <div class="flex flex-col md:flex-row justify-between md:items-center mb-4">
                             <div>
                                 <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Visitas</h2>
-                                <p class="text-gray-500 dark:text-gray-400">Agenda, histórico e status das visitas.</p>
+                                <p class="text-gray-600 dark:text-gray-300">Agenda, histórico e status das visitas.</p>
                             </div>
                             <div class="flex items-center space-x-2 mt-4 md:mt-0">
                                 <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-lg">
@@ -316,7 +417,7 @@
                         
                         <div id="list-view" class="visitas-view hidden">
                             <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-300">
                                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400"><tr><th scope="col" class="px-6 py-3">Cliente</th><th scope="col" class="px-6 py-3">Consultor</th><th scope="col" class="px-6 py-3">Data</th><th scope="col" class="px-6 py-3">Horário</th><th scope="col" class="px-6 py-3">Status</th><th scope="col" class="px-6 py-3">Ações</th></tr></thead>
                                     <tbody id="visitas-table-body"></tbody>
                                 </table>
@@ -334,7 +435,7 @@
                     <div id="requisicao" class="page hidden">
                         <div class="mb-4">
                             <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Requisições</h2>
-                            <p class="text-gray-500 dark:text-gray-400">Gerenciamento de requisições de EPIs e Consumo.</p>
+                            <p class="text-gray-600 dark:text-gray-300">Gerenciamento de requisições de EPIs e Consumo.</p>
                         </div>
 
                         <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
@@ -388,7 +489,7 @@
                                 <button id="show-requisicao-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Nova Requisição</button>
                             </div>
                             <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-300">
                                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                         <tr>
                                             <th scope="col" class="px-6 py-3">Tipo</th>
@@ -417,6 +518,178 @@
                         </div>
 
                     </div>
+                    
+                     <div id="financeiro" class="page hidden">
+                        <div class="mb-4">
+                            <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Financeiro</h2>
+                            <p class="text-gray-600 dark:text-gray-300">Gerenciamento de Receitas e Custos.</p>
+                        </div>
+                        <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+                            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="financeiro-tabs">
+                                <li class="mr-2"><button class="financeiro-tab-btn inline-block p-4 border-b-2 rounded-t-lg border-brand-gold text-brand-gold" data-target="receitas-content">Receitas</button></li>
+                                <li class="mr-2"><button class="financeiro-tab-btn inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" data-target="custos-content">Custos</button></li>
+                            </ul>
+                        </div>
+                        <div id="receitas-content" class="financeiro-tab-content">
+                             <div class="flex justify-end items-center mb-4">
+                                <button id="show-receita-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Nova Receita</button>
+                            </div>
+                            <div id="receitas-history-container">
+                                <!-- Filtros de Receitas -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                                <div>
+                                        <label for="filter-receita-start-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Venc. De</label>
+                                        <input type="date" id="filter-receita-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                    </div>
+                                    <div>
+                                        <label for="filter-receita-end-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Venc. Até</label>
+                                        <input type="date" id="filter-receita-end-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                    </div>
+                                    <div>
+                                        <label for="filter-receita-cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
+                                        <select id="filter-receita-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select>
+                                    </div>
+                                    <div>
+                                        <label for="filter-receita-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
+                                        <select id="filter-receita-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                            <option value="">Todos</option>
+                                            <option value="Pendente">Pendente</option>
+                                            <option value="Pago">Pago</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <!-- Tabela de Receitas -->
+                                <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-300">
+                                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                            <tr>
+                                                <th scope="col" class="px-6 py-3">Cliente</th>
+                                                <th scope="col" class="px-6 py-3">Vencimento</th>
+                                                <th scope="col" class="px-6 py-3">Valor</th>
+                                                <th scope="col" class="px-6 py-3">Status</th>
+                                                <th scope="col" class="px-6 py-3">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="receitas-table-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <!-- Formulário de Nova Receita (INICIALMENTE OCULTO) -->
+                            <div id="receita-form-container" class="hidden mt-6 p-6 bg-white rounded-lg shadow-md dark:bg-gray-800">
+                                <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Lançar Nova Receita</h3>
+                                <form id="receita-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <input type="hidden" id="receita-id">
+                                    <div>
+                                        <label for="receita-cliente-form" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
+                                        <select id="receita-cliente-form" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required></select>
+                                    </div>
+                                    <div>
+                                        <label for="receita-vencimento" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Vencimento</label>
+                                        <input type="date" id="receita-vencimento" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                                    </div>
+                                    <div>
+                                        <label for="receita-valor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor</label>
+                                        <input type="number" id="receita-valor" step="0.01" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                                    </div>
+                                    <div>
+                                        <label for="receita-status-form" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
+                                        <select id="receita-status-form" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                            <option value="Pendente">Pendente</option>
+                                            <option value="Pago">Pago</option>
+                                        </select>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label for="receita-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label>
+                                        <textarea id="receita-obs" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600"></textarea>
+                                    </div>
+                                    <div class="md:col-span-2 flex justify-end space-x-4">
+                                        <button type="button" id="cancel-receita-form" class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+                                        <button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <div id="custos-content" class="financeiro-tab-content hidden">
+                            <div class="flex justify-end items-center mb-4">
+                                <button id="show-custo-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Custo</button>
+                            </div>
+                            <div id="custos-history-container">
+                                <!-- Filtros de Custos -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                                <div>
+                                        <label for="filter-custo-start-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Venc. De</label>
+                                        <input type="date" id="filter-custo-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                    </div>
+                                    <div>
+                                        <label for="filter-custo-end-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Venc. Até</label>
+                                        <input type="date" id="filter-custo-end-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                    </div>
+                                    <div>
+                                        <label for="filter-custo-credor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Credor</label>
+                                        <input type="text" id="filter-custo-credor" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                    </div>
+                                    <div>
+                                        <label for="filter-custo-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
+                                        <select id="filter-custo-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                            <option value="">Todos</option>
+                                            <option value="Pendente">Pendente</option>
+                                            <option value="Pago">Pago</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <!-- Tabela de Custos -->
+                                <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-300">
+                                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                            <tr>
+                                                <th scope="col" class="px-6 py-3">Credor</th>
+                                                <th scope="col" class="px-6 py-3">Vencimento</th>
+                                                <th scope="col" class="px-6 py-3">Valor</th>
+                                                <th scope="col" class="px-6 py-3">Status</th>
+                                                <th scope="col" class="px-6 py-3">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="custos-table-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                             <!-- Formulário de Novo Custo (INICIALMENTE OCULTO) -->
+                            <div id="custo-form-container" class="hidden mt-6 p-6 bg-white rounded-lg shadow-md dark:bg-gray-800">
+                                <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Lançar Novo Custo</h3>
+                                <form id="custo-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <input type="hidden" id="custo-id">
+                                    <div>
+                                        <label for="custo-credor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Credor / Fornecedor</label>
+                                        <input type="text" id="custo-credor" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                                    </div>
+                                    <div>
+                                        <label for="custo-vencimento" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Vencimento</label>
+                                        <input type="date" id="custo-vencimento" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                                    </div>
+                                    <div>
+                                        <label for="custo-valor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor</label>
+                                        <input type="number" id="custo-valor" step="0.01" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                                    </div>
+                                    <div>
+                                        <label for="custo-status-form" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
+                                        <select id="custo-status-form" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                            <option value="Pendente">Pendente</option>
+                                            <option value="Pago">Pago</option>
+                                        </select>
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label for="custo-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label>
+                                        <textarea id="custo-obs" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600"></textarea>
+                                    </div>
+                                    <div class="md:col-span-2 flex justify-end space-x-4">
+                                        <button type="button" id="cancel-custo-form" class="px-6 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+                                        <button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
 
                 </main>
             </div>
@@ -424,6 +697,61 @@
     </div>
     
     <!-- Modals -->
+    <div id="insights-modal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
+        <div class="w-full max-w-lg p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
+            <div class="flex justify-between items-center border-b pb-3 dark:border-gray-700">
+                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white"><i class="fas fa-lightbulb text-yellow-400 mr-2"></i>Insights Valiosos</h2>
+                 <button id="close-insights-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div id="insights-content" class="mt-4 space-y-3 text-gray-700 dark:text-gray-300 max-h-96 overflow-y-auto"></div>
+        </div>
+    </div>
+
+     <div id="report-modal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
+        <div class="w-full max-w-lg p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
+             <div class="flex justify-between items-center border-b pb-3 dark:border-gray-700">
+                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Gerar Relatório PDF</h2>
+                 <button id="close-report-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <form id="report-form" class="mt-4 space-y-4">
+                <div>
+                    <label for="report-type" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo de Relatório</label>
+                    <select id="report-type" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                        <option value="financeiro">Financeiro</option>
+                        <option value="visitas">Visitas</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="report-subtype" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Detalhes</label>
+                    <select id="report-subtype" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select>
+                </div>
+                 <div id="report-visits-filters" class="hidden space-y-4">
+                    <div>
+                        <label for="report-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label>
+                        <select id="report-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select>
+                    </div>
+                     <div>
+                        <label for="report-cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
+                        <select id="report-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="report-start-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período (De)</label>
+                        <input type="date" id="report-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                    <div>
+                        <label for="report-end-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período (Até)</label>
+                        <input type="date" id="report-end-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                    </div>
+                </div>
+                <div class="flex justify-end pt-4">
+                    <button type="submit" class="w-full bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Baixar PDF</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="details-modal" class="fixed inset-0 z-40 items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
         <div class="w-full max-w-lg p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
             <div class="flex justify-between items-center border-b pb-3 dark:border-gray-700">
@@ -560,15 +888,24 @@
     let activeCard = null;
     let activeTableRow = null;
     let calendar;
+    let financeChart, visitsStatusChart;
     let activeDeleteItem = { id: null, type: null };
 
     // Simulação de banco de dados
+    let receitasData = [
+        { id: 1, cliente: 'Padaria Pão Quente', vencimento: '2025-10-05', valor: 1200.00, status: 'Pago' },
+        { id: 2, cliente: 'Restaurante Sabor Divino', vencimento: '2025-10-10', valor: 2500.50, status: 'Pendente' }
+    ];
+    let custosData = [
+        { id: 1, credor: 'Fornecedor de Farinha', vencimento: '2025-10-08', valor: 800.00, status: 'Pago' },
+        { id: 2, credor: 'Contabilidade ABC', vencimento: '2025-10-15', valor: 450.00, status: 'Pendente' }
+    ];
     let visitsData = [
-        { id: 1, consultor: 'Ana Silva', cliente: 'Padaria Pão Quente', data: '2025-10-20', inicio: '09:00', fim: '11:00', status: 'Agendada', descricao: 'Visita de rotina para verificação de boas práticas.', startTime: null, startAddress: null, endTime: null, endAddress: null, isRescheduled: false },
-        { id: 2, consultor: 'Bruno Costa', cliente: 'Restaurante Sabor Divino', data: '2025-09-28', inicio: '14:00', fim: '16:00', status: 'Agendada', descricao: 'Treinamento de equipe sobre manipulação de alimentos.', startTime: null, startAddress: null, endTime: null, endAddress: null, isRescheduled: false }
+        { id: 1, consultor: 'Ana Silva', cliente: 'Padaria Pão Quente', data: '2025-10-20', inicio: '09:00', fim: '11:00', status: 'Concluída', descricao: 'Visita de rotina.', startTime: '2025-10-20T09:00:00', endTime: '2025-10-20T11:00:00' },
+        { id: 2, consultor: 'Bruno Costa', cliente: 'Restaurante Sabor Divino', data: '2025-09-28', inicio: '14:00', fim: '16:00', status: 'Concluída', descricao: 'Treinamento.', startTime: '2025-09-28T14:00:00', endTime: '2025-09-28T16:00:00'},
+        { id: 3, consultor: 'Ana Silva', cliente: 'Restaurante Sabor Divino', data: '2025-10-22', inicio: '10:00', fim: '12:00', status: 'Agendada', descricao: 'Acompanhamento.', startTime: null, endTime: null}
     ];
     let requisicoesData = [];
-
     let itemData = {
         epis: ['Camisa', 'Botina', 'Óculos de Segurança', 'Luvas de Malha de Aço'],
         consumo: {
@@ -597,6 +934,8 @@
         detailsModal: document.getElementById('details-modal'),
         deleteConfirmModal: document.getElementById('delete-confirm-modal'),
         logoutConfirmModal: document.getElementById('logout-confirm-modal'),
+        insightsModal: document.getElementById('insights-modal'),
+        reportModal: document.getElementById('report-modal'),
         visitaFormModal: document.getElementById('visita-form-modal'),
         visitaForm: document.getElementById('visita-form'),
         requisicaoFormModal: document.getElementById('requisicao-form-modal'),
@@ -651,23 +990,22 @@
         }
     }
 
-    function populateSelectWithOptions(selector, dataSelector, dataField) {
+    function populateSelectWithOptions(selector, dataSelector, dataField, addAllOption = true) {
         const selects = document.querySelectorAll(selector);
         const items = document.querySelectorAll(dataSelector);
-        let options = '<option value="">Todos</option>';
+        let options = addAllOption ? '<option value="">Todos</option>' : '<option value="">Selecione...</option>';
         const uniqueItems = [...new Set(Array.from(items).map(c => c.dataset[dataField]))];
 
         uniqueItems.forEach(item => {
             options += `<option value="${item}">${item}</option>`;
         });
         selects.forEach(select => {
-            const firstOption = select.querySelector('option');
+            const currentVal = select.value;
             select.innerHTML = options;
-            if(firstOption && firstOption.value === "" && firstOption.textContent !== "Todos"){
-                 select.insertAdjacentHTML('afterbegin', `<option value="">${firstOption.textContent}</option>`);
-            }
+            select.value = currentVal;
         });
     }
+
 
     function populateConsultantSelects() {
         populateSelectWithOptions('.consultor-select', '#rh-cards-container .rh-card', 'name');
@@ -696,6 +1034,19 @@
                  preview.classList.add('hidden');
             }
         });
+        
+        // Listeners para filtros do Dashboard
+        ['dash-fin-status', 'dash-fin-start', 'dash-fin-end'].forEach(id => document.getElementById(id).addEventListener('change', updateFinanceDashboard));
+        document.querySelectorAll('.dash-fin-quick-filter').forEach(btn => btn.addEventListener('click', (e) => setDateFilter(e, 'fin')));
+        
+        ['dash-visit-start', 'dash-visit-end'].forEach(id => document.getElementById(id).addEventListener('change', updateVisitsDashboard));
+        document.querySelectorAll('.dash-visit-quick-filter').forEach(btn => btn.addEventListener('click', (e) => setDateFilter(e, 'visit')));
+
+        // Listener para modal de relatório
+        document.getElementById('report-type').addEventListener('change', toggleReportSubtype);
+        document.getElementById('report-form').addEventListener('submit', generatePdfReport);
+
+
         updateAllCounters();
     }
 
@@ -711,6 +1062,9 @@
         populateConsultantSelects();
         populateClientSelects();
         updateAllCounters();
+        renderReceitas();
+        renderCustos();
+        updateAllDashboards();
         checkOverdueVisits();
         initializeCalendar();
         applyFilters();
@@ -745,6 +1099,11 @@
             handleViewToggle({ currentTarget: button });
             return;
         }
+        if (button.classList.contains('dashboard-nav-btn')) {
+            handleDashboardNav(button);
+            return;
+        }
+
 
         const { id, classList } = button;
         const actionMap = {
@@ -756,9 +1115,14 @@
                 const isDark = document.documentElement.classList.contains('dark');
                 localStorage.setItem('theme', isDark ? 'dark' : 'light');
                 button.querySelector('i').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                updateAllDashboards(); // Redesenha gráficos com cores do tema
                 if (calendar) calendar.render();
             },
             'sidebar-toggle': () => allElements.sidebar?.classList.toggle('hidden'),
+            'show-insights-btn': () => { generateInsights(); showModal(allElements.insightsModal) },
+            'close-insights-modal': () => hideModal(allElements.insightsModal),
+            'show-report-modal-btn': () => { toggleReportSubtype(); showModal(allElements.reportModal) },
+            'close-report-modal': () => hideModal(allElements.reportModal),
             'show-rh-form': () => setupFormToggle('rh-cards-container', 'rh-form-container'),
             'cancel-rh-form': () => hideFormToggle('rh-cards-container', 'rh-form-container'),
             'show-cliente-form': () => setupFormToggle('cliente-cards-container', 'cliente-form-container'),
@@ -767,6 +1131,16 @@
             'cancel-visita-form': () => hideModal(allElements.visitaFormModal),
             'show-requisicao-form': () => openRequisicaoModal(),
             'cancel-requisicao-form': () => hideModal(allElements.requisicaoFormModal),
+            'show-receita-form': () => setupSubFormToggle('receitas-history-container', 'receita-form-container'),
+            'cancel-receita-form': () => {
+                document.getElementById('receita-form-container').classList.add('hidden');
+                document.getElementById('receitas-history-container').classList.remove('hidden');
+            },
+            'show-custo-form': () => setupSubFormToggle('custos-history-container', 'custo-form-container'),
+            'cancel-custo-form': () => {
+                document.getElementById('custo-form-container').classList.add('hidden');
+                document.getElementById('custos-history-container').classList.remove('hidden');
+            },
             'show-category-form': () => {
                 const newCategory = prompt("Nome da nova categoria:");
                 if(newCategory && !itemData.consumo[newCategory]) {
@@ -799,6 +1173,12 @@
                     const { category, itemName } = activeDeleteItem;
                     itemData.consumo[category] = itemData.consumo[category].filter(i => i.nome !== itemName);
                     renderItensDeRequisicao();
+                } else if (activeDeleteItem.type === 'receita') {
+                    receitasData = receitasData.filter(r => r.id !== activeDeleteItem.id);
+                    renderReceitas();
+                } else if (activeDeleteItem.type === 'custo') {
+                    custosData = custosData.filter(c => c.id !== activeDeleteItem.id);
+                    renderCustos();
                 }
                 else if (activeCard) {
                     activeCard.remove();
@@ -809,6 +1189,7 @@
                 activeDeleteItem = { id: null, type: null };
                 hideModal(allElements.deleteConfirmModal);
                 updateAllCounters();
+                updateAllDashboards();
             },
             'edit-btn': handleCardEdit,
             'close-modal': () => hideModal(allElements.detailsModal),
@@ -820,8 +1201,8 @@
         if (classList.contains('iniciar-visita-btn')) { handleStartVisit(button.dataset.id); }
         else if (classList.contains('encerrar-visita-btn')) { handleEndVisit(button.dataset.id); }
         else if (classList.contains('remarcar-visita-btn')) { handleRescheduleVisit(button.dataset.id); }
-        else if (classList.contains('rh-tab-btn') || classList.contains('requisicao-tab-btn')) { handleTabClick(button); }
-        else if (id.startsWith('show-') && !['show-rh-form', 'show-cliente-form', 'show-visita-form', 'show-requisicao-form', 'show-category-form'].includes(id)) {
+        else if (classList.contains('rh-tab-btn') || classList.contains('requisicao-tab-btn') || classList.contains('financeiro-tab-btn')) { handleTabClick(button); }
+        else if (id.startsWith('show-') && !Object.keys(actionMap).includes(id)) {
             const formType = id.replace('show-', '').replace('-form', '');
             setupSubFormToggle(`${formType}-history-container`, `${formType}-form-container`);
         } else if (classList.contains('cancel-sub-form')) {
@@ -858,14 +1239,34 @@
             if (targetId === 'visitas' && calendar) {
                 setTimeout(() => calendar.render(), 1);
             }
+             if (targetId === 'dashboard') {
+                setTimeout(() => updateAllDashboards(), 1);
+            }
         }
         document.querySelectorAll('.nav-link').forEach(l => {
             l.classList.remove('bg-brand-gold', 'text-white');
-            l.classList.add('text-gray-400');
+            l.classList.add('text-gray-400', 'hover:bg-brand-gold', 'hover:text-white');
         });
         navLink.classList.add('bg-brand-gold', 'text-white');
         navLink.classList.remove('text-gray-400');
         if (document.getElementById('page-title')) document.getElementById('page-title').textContent = navLink.title;
+
+        // Fecha a sidebar no mobile após o clique
+        if (window.innerWidth < 1024) { // lg breakpoint
+            allElements.sidebar.classList.add('hidden');
+        }
+    }
+
+    function handleDashboardNav(button) {
+        document.querySelectorAll('.dashboard-nav-btn').forEach(btn => {
+            btn.classList.remove('border-brand-gold', 'text-brand-gold');
+            btn.classList.add('border-transparent', 'hover:text-gray-600', 'hover:border-gray-300', 'dark:hover:text-gray-300');
+        });
+        button.classList.add('border-brand-gold', 'text-brand-gold');
+        button.classList.remove('border-transparent', 'hover:text-gray-600', 'hover:border-gray-300', 'dark:hover:text-gray-300');
+        
+        document.querySelectorAll('.dashboard-content').forEach(content => content.classList.add('hidden'));
+        document.getElementById(button.dataset.target).classList.remove('hidden');
     }
 
 
@@ -892,10 +1293,17 @@
         button.classList.add('border-brand-gold', 'text-brand-gold');
         
         const isRhTab = button.classList.contains('rh-tab-btn');
-        const contentClass = isRhTab ? '.rh-tab-content' : '.requisicao-tab-content';
+        const isReqTab = button.classList.contains('requisicao-tab-btn');
+        const isFinTab = button.classList.contains('financeiro-tab-btn');
+
+        let contentClass = '';
+        if(isRhTab) contentClass = '.rh-tab-content';
+        else if(isReqTab) contentClass = '.requisicao-tab-content';
+        else if(isFinTab) contentClass = '.financeiro-tab-content';
+
         const pageContainer = button.closest('.page');
         
-        if (pageContainer) {
+        if (pageContainer && contentClass) {
             pageContainer.querySelectorAll(contentClass).forEach(content => content.classList.add('hidden'));
             const targetContent = document.getElementById(button.dataset.target);
             if (targetContent) {
@@ -915,24 +1323,27 @@
         } else if (row.closest('#requisicoes-table-body')) {
             const requisicao = requisicoesData.find(r => r.id === id);
             if(requisicao) openRequisicaoModal(requisicao);
-        } else {
-             const formContainer = row.closest('.rh-tab-content').querySelector('div[id$="-form-container"]');
-            const historyContainer = row.closest('div[id$="-history-container"]');
-            if (formContainer && historyContainer) {
-                historyContainer.classList.add('hidden');
-                formContainer.classList.remove('hidden');
-                const form = formContainer.querySelector('form');
-                Object.keys(row.dataset).forEach(key => {
-                    const input = form.querySelector(`[id$="-${key}"], [id*="${key.toLowerCase()}"]`);
-                    if (input) {
-                        if (input.tagName === 'SELECT') {
-                            const option = Array.from(input.options).find(opt => opt.value === row.dataset[key] || opt.textContent === row.dataset[key]);
-                            if (option) input.value = option.value;
-                        } else {
-                            input.value = row.dataset[key];
-                        }
-                    }
-                });
+        } else if (row.closest('#receitas-table-body')) {
+            const receita = receitasData.find(r => r.id === id);
+            if (receita) {
+                setupSubFormToggle('receitas-history-container', 'receita-form-container');
+                const form = document.getElementById('receita-form');
+                form.querySelector('#receita-id').value = receita.id;
+                form.querySelector('#receita-cliente-form').value = receita.cliente;
+                form.querySelector('#receita-vencimento').value = receita.vencimento;
+                form.querySelector('#receita-valor').value = receita.valor;
+                form.querySelector('#receita-status-form').value = receita.status;
+            }
+        } else if (row.closest('#custos-table-body')) {
+            const custo = custosData.find(c => c.id === id);
+            if (custo) {
+                setupSubFormToggle('custos-history-container', 'custo-form-container');
+                const form = document.getElementById('custo-form');
+                form.querySelector('#custo-id').value = custo.id;
+                form.querySelector('#custo-credor').value = custo.credor;
+                form.querySelector('#custo-vencimento').value = custo.vencimento;
+                form.querySelector('#custo-valor').value = custo.valor;
+                form.querySelector('#custo-status-form').value = custo.status;
             }
         }
     }
@@ -941,11 +1352,12 @@
         const row = button.closest('tr');
         if (!row) return;
         
-        if (row.closest('#visitas-table-body')) {
-             activeDeleteItem = { id: parseInt(row.dataset.id), type: 'visita' };
-        } else if (row.closest('#requisicoes-table-body')) {
-             activeDeleteItem = { id: parseInt(row.dataset.id), type: 'requisicao' };
-        } else {
+        const id = parseInt(row.dataset.id);
+        if (row.closest('#visitas-table-body')) { activeDeleteItem = { id, type: 'visita' }; } 
+        else if (row.closest('#requisicoes-table-body')) { activeDeleteItem = { id, type: 'requisicao' }; }
+        else if (row.closest('#receitas-table-body')) { activeDeleteItem = { id, type: 'receita' }; }
+        else if (row.closest('#custos-table-body')) { activeDeleteItem = { id, type: 'custo' }; }
+        else {
             activeTableRow = row;
             activeCard = null;
             activeDeleteItem = { id: null, type: 'other' };
@@ -994,6 +1406,10 @@
     const setupSubFormToggle = (historyId, formId) => {
         document.getElementById(historyId)?.classList.add('hidden');
         document.getElementById(formId)?.classList.remove('hidden');
+        document.getElementById(formId.replace('-container', '')).reset();
+        // Limpar IDs ocultos
+        const idInput = document.getElementById(formId.replace('form-container', 'id'));
+        if(idInput) idInput.value = '';
     };
 
     const hideModal = (modal) => modal?.classList.replace('flex', 'hidden');
@@ -1016,6 +1432,242 @@
             showModal(allElements.detailsModal);
         }
     };
+
+    // --- LÓGICA DO DASHBOARD ---
+    function updateAllDashboards(){
+        updateFinanceDashboard();
+        updateVisitsDashboard();
+    }
+
+    function setDateFilter(e, typePrefix) {
+        const period = e.target.dataset.period;
+        const quickFilters = document.querySelectorAll(`.dash-${typePrefix}-quick-filter`);
+        quickFilters.forEach(btn => btn.classList.remove('filter-btn-active'));
+        e.target.classList.add('filter-btn-active');
+
+        const today = new Date();
+        const endInput = document.getElementById(`dash-${typePrefix}-end`);
+        endInput.value = today.toISOString().split('T')[0];
+        
+        const startInput = document.getElementById(`dash-${typePrefix}-start`);
+        let startDate = new Date();
+
+        switch (period) {
+            case 'week':
+                startDate.setDate(today.getDate() - today.getDay());
+                break;
+            case 'month':
+                startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                break;
+            case 'year':
+                startDate = new Date(today.getFullYear(), 0, 1);
+                break;
+        }
+
+        startInput.value = startDate.toISOString().split('T')[0];
+        
+        if(typePrefix === 'fin') updateFinanceDashboard();
+        else if (typePrefix === 'visit') updateVisitsDashboard();
+    }
+    
+    function updateFinanceDashboard() {
+        const status = document.getElementById('dash-fin-status').value;
+        const start = document.getElementById('dash-fin-start').value;
+        const end = document.getElementById('dash-fin-end').value;
+        
+        const filteredReceitas = receitasData.filter(r => 
+            (!status || r.status === status) &&
+            (!start || r.vencimento >= start) &&
+            (!end || r.vencimento <= end)
+        );
+        const filteredCustos = custosData.filter(c => 
+            (!status || c.status === status) &&
+            (!start || c.vencimento >= start) &&
+            (!end || c.vencimento <= end)
+        );
+
+        const totalRevenue = filteredReceitas.reduce((sum, r) => sum + r.valor, 0);
+        const totalCosts = filteredCustos.reduce((sum, c) => sum + c.valor, 0);
+        const balance = totalRevenue - totalCosts;
+        
+        const totalRevenuePending = receitasData.filter(r => r.status === 'Pendente' && (!start || r.vencimento >= start) && (!end || r.vencimento <= end)).reduce((sum, r) => sum + r.valor, 0);
+        const totalCostsPending = custosData.filter(c => c.status === 'Pendente' && (!start || c.vencimento >= start) && (!end || c.vencimento <= end)).reduce((sum, c) => sum + c.valor, 0);
+
+
+        const formatCurrency = (value) => value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        document.getElementById('dash-revenue').textContent = formatCurrency(totalRevenue);
+        document.getElementById('dash-costs').textContent = formatCurrency(totalCosts);
+        document.getElementById('dash-balance').textContent = formatCurrency(balance);
+        document.getElementById('dash-revenue-pending').textContent = formatCurrency(totalRevenuePending);
+        document.getElementById('dash-costs-pending').textContent = formatCurrency(totalCostsPending);
+        
+        document.getElementById('dash-balance').classList.toggle('text-green-500', balance >= 0);
+        document.getElementById('dash-balance').classList.toggle('text-red-500', balance < 0);
+        
+        updateFinanceChart(filteredReceitas, filteredCustos);
+    }
+
+    function updateVisitsDashboard() {
+        const start = document.getElementById('dash-visit-start').value;
+        const end = document.getElementById('dash-visit-end').value;
+
+        const filteredVisits = visitsData.filter(v => 
+            (!start || v.data >= start) &&
+            (!end || v.data <= end)
+        );
+
+        const calculateTotalMinutes = (visits) => visits.reduce((total, visit) => total + calculateDuration(visit), 0);
+        const formatMinutes = (minutes) => `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+        
+        const completedMinutes = calculateTotalMinutes(filteredVisits.filter(v => v.status === 'Concluída'));
+        const scheduledMinutes = calculateTotalMinutes(filteredVisits.filter(v => v.status === 'Agendada'));
+
+        document.getElementById('dash-hours-completed').textContent = formatMinutes(completedMinutes);
+        document.getElementById('dash-hours-scheduled').textContent = formatMinutes(scheduledMinutes);
+
+        updateVisitsStatusChart(filteredVisits);
+        updateTopConsultants(filteredVisits);
+    }
+
+    function updateTopConsultants(visits) {
+        const completedVisits = visits.filter(v => v.status === 'Concluída');
+        
+        const consultantStats = completedVisits.reduce((acc, visit) => {
+            if (!acc[visit.consultor]) {
+                acc[visit.consultor] = { count: 0, minutes: 0 };
+            }
+            acc[visit.consultor].count++;
+            acc[visit.consultor].minutes += calculateDuration(visit);
+            return acc;
+        }, {});
+
+        const sortedByHours = Object.entries(consultantStats).sort((a, b) => b[1].minutes - a[1].minutes);
+        const sortedByCount = Object.entries(consultantStats).sort((a, b) => b[1].count - a[1].count);
+        
+        const formatMinutes = (minutes) => `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+        
+        const topHoursList = document.getElementById('dash-top-consultants-hours');
+        topHoursList.innerHTML = sortedByHours.slice(0, 3).map(([name, stats]) => `<li class="flex justify-between items-center text-gray-700 dark:text-gray-300"><span>${name}</span><span class="font-bold text-gray-900 dark:text-white">${formatMinutes(stats.minutes)}</span></li>`).join('') || `<li class="text-gray-600 dark:text-gray-300">Nenhum dado.</li>`;
+
+        const topCountList = document.getElementById('dash-top-consultants-count');
+        topCountList.innerHTML = sortedByCount.slice(0, 3).map(([name, stats]) => `<li class="flex justify-between items-center text-gray-700 dark:text-gray-300"><span>${name}</span><span class="font-bold text-gray-900 dark:text-white">${stats.count} visitas</span></li>`).join('') || `<li class="text-gray-600 dark:text-gray-300">Nenhum dado.</li>`;
+    }
+
+
+    function calculateDuration(visit) {
+        if (visit.status === 'Concluída' && visit.startTime && visit.endTime) {
+            return (new Date(visit.endTime) - new Date(visit.startTime)) / 60000;
+        }
+        if (visit.inicio && visit.fim) {
+            const [startH, startM] = visit.inicio.split(':');
+            const [endH, endM] = visit.fim.split(':');
+            const startDate = new Date(0, 0, 0, startH, startM);
+            const endDate = new Date(0, 0, 0, endH, endM);
+            return (endDate - startDate) / 60000;
+        }
+        return 0; // minutes
+    }
+
+    function updateFinanceChart(receitas, custos) {
+        const ctx = document.getElementById('finance-chart').getContext('2d');
+        const isDark = document.documentElement.classList.contains('dark');
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+        const labelColor = isDark ? '#e5e7eb' : '#373737';
+
+        const dataByMonth = {};
+        const processData = (data, type) => {
+            data.forEach(item => {
+                const month = new Date(item.vencimento + 'T00:00:00').toLocaleString('pt-BR', { month: 'short', year: '2-digit' });
+                if (!dataByMonth[month]) dataByMonth[month] = { receitas: 0, custos: 0 };
+                dataByMonth[month][type] += item.valor;
+            });
+        };
+        processData(receitas, 'receitas');
+        processData(custos, 'custos');
+        
+        const sortedMonths = Object.keys(dataByMonth).sort((a, b) => {
+            const [m1, y1] = a.split('/');
+            const [m2, y2] = b.split('/');
+            return new Date(`20${y1}`, ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'].indexOf(m1.toLowerCase()), 1) - new Date(`20${y2}`, ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'].indexOf(m2.toLowerCase()), 1);
+        });
+        
+        const chartData = {
+            labels: sortedMonths,
+            datasets: [
+                { label: 'Receitas', data: sortedMonths.map(m => dataByMonth[m].receitas), backgroundColor: 'rgba(59, 130, 246, 0.7)' },
+                { label: 'Custos', data: sortedMonths.map(m => dataByMonth[m].custos), backgroundColor: 'rgba(239, 68, 68, 0.7)' }
+            ]
+        };
+
+        if (financeChart) {
+            financeChart.data = chartData;
+            financeChart.options.scales.x.ticks.color = labelColor;
+            financeChart.options.scales.y.ticks.color = labelColor;
+            financeChart.options.scales.x.grid.color = gridColor;
+            financeChart.options.scales.y.grid.color = gridColor;
+            financeChart.options.plugins.legend.labels.color = labelColor;
+            financeChart.update();
+        } else {
+            financeChart = new Chart(ctx, {
+                type: 'bar',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { ticks: { color: labelColor }, grid: { color: gridColor } },
+                        y: { ticks: { color: labelColor }, grid: { color: gridColor } }
+                    },
+                    plugins: { legend: { labels: { color: labelColor } } }
+                }
+            });
+        }
+    }
+    
+    function updateVisitsStatusChart(visits) {
+        const ctx = document.getElementById('visits-status-chart').getContext('2d');
+        const isDark = document.documentElement.classList.contains('dark');
+        const labelColor = isDark ? '#e5e7eb' : '#373737';
+
+        const statusCounts = visits.reduce((acc, visit) => {
+            acc[visit.status] = (acc[visit.status] || 0) + 1;
+            return acc;
+        }, {});
+        
+        const chartData = {
+            labels: Object.keys(statusCounts),
+            datasets: [{
+                data: Object.values(statusCounts),
+                backgroundColor: Object.keys(statusCounts).map(status => {
+                    return {
+                        'Agendada': '#3B82F6',
+                        'Concluída': '#10B981',
+                        'Em Andamento': '#F59E0B',
+                        'Remarcada': '#8B5CF6'
+                    }[status] || '#6B7280';
+                })
+            }]
+        };
+
+        if (visitsStatusChart) {
+            visitsStatusChart.data = chartData;
+            visitsStatusChart.options.plugins.legend.labels.color = labelColor;
+            visitsStatusChart.update();
+        } else {
+            visitsStatusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { color: labelColor }
+                        }
+                    }
+                }
+            });
+        }
+    }
     
     // --- LÓGICA DE VISITAS ---
 
@@ -1128,7 +1780,7 @@
             const row = tableBody.insertRow();
             row.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700';
             row.dataset.id = visit.id;
-            row.innerHTML = `<td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">${visit.cliente}</td><td class="px-6 py-4">${visit.consultor}</td><td class="px-6 py-4">${dateFormatted}</td><td class="px-6 py-4">${visit.inicio} - ${visit.fim}</td><td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${statusLabel}</span></td><td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500 hover:text-blue-700" title="Editar"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500 hover:text-red-700" title="Apagar"><i class="fas fa-trash"></i></button></td>`;
+            row.innerHTML = `<td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">${visit.cliente}</td><td class="px-6 py-4">${visit.consultor}</td><td class="px-6 py-4">${dateFormatted}</td><td class="px-6 py-4">${visit.inicio} - ${visit.fim}</td><td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${statusLabel}</span></td><td class="px-6 py-4 space-x-2"><button data-id="${visit.id}" class="table-edit-btn text-blue-500 hover:text-blue-700" title="Editar"><i class="fas fa-edit"></i></button><button data-id="${visit.id}" class="table-delete-btn text-red-500 hover:text-red-700" title="Apagar"><i class="fas fa-trash"></i></button></td>`;
         });
     }
 
@@ -1162,6 +1814,7 @@
             const clientCard = document.querySelector(`.cliente-card[data-name="${visit.cliente}"]`);
             visit.endAddress = clientCard ? clientCard.dataset.endereco : 'Endereço não encontrado';
             applyFilters();
+            updateAllDashboards();
         }
     }
 
@@ -1223,6 +1876,7 @@
         }
         hideModal(allElements.visitaFormModal);
         applyFilters();
+        updateAllDashboards();
     });
     
     function checkOverdueVisits() {
@@ -1624,23 +2278,292 @@
     }
 
 
+    // --- LÓGICA FINANCEIRO ---
+    function renderReceitas() {
+        const tableBody = document.getElementById('receitas-table-body');
+        tableBody.innerHTML = receitasData.map(r => `
+            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.id}">
+                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">${r.cliente}</td>
+                <td class="px-6 py-4">${new Date(r.vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td class="px-6 py-4">${r.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
+                <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.status === 'Pago' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${r.status}</span></td>
+                <td class="px-6 py-4 space-x-2"><button data-id="${r.id}" class="table-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button data-id="${r.id}" class="table-delete-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td>
+            </tr>
+        `).join('');
+    }
+
+    function renderCustos() {
+        const tableBody = document.getElementById('custos-table-body');
+        tableBody.innerHTML = custosData.map(c => `
+             <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${c.id}">
+                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">${c.credor}</td>
+                <td class="px-6 py-4">${new Date(c.vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td class="px-6 py-4">${c.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
+                <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${c.status === 'Pago' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${c.status}</span></td>
+                <td class="px-6 py-4 space-x-2"><button data-id="${c.id}" class="table-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button data-id="${c.id}" class="table-delete-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td>
+            </tr>
+        `).join('');
+    }
+
     // --- SUBMISSÃO DE FORMS GENÉRICOS ---
-    
-    document.querySelectorAll('#rh-form, #cliente-form, #ferias-form, #atestados-form, #epis-form, #ativos-form').forEach(form => {
+    document.querySelectorAll('form').forEach(form => {
+        if (form.id === 'report-form') return; // Handled separately
         form.addEventListener('submit', (e) => {
             e.preventDefault();
+            
+            if (form.id === 'receita-form') {
+                const id = parseInt(form.querySelector('#receita-id').value);
+                const data = {
+                    cliente: form.querySelector('#receita-cliente-form').value,
+                    vencimento: form.querySelector('#receita-vencimento').value,
+                    valor: parseFloat(form.querySelector('#receita-valor').value),
+                    status: form.querySelector('#receita-status-form').value,
+                };
+                if(id) {
+                    const index = receitasData.findIndex(r => r.id === id);
+                    if(index > -1) receitasData[index] = {...receitasData[index], ...data};
+                } else {
+                    receitasData.push({ id: Date.now(), ...data });
+                }
+                renderReceitas();
+            } else if (form.id === 'custo-form') {
+                 const id = parseInt(form.querySelector('#custo-id').value);
+                const data = {
+                    credor: form.querySelector('#custo-credor').value,
+                    vencimento: form.querySelector('#custo-vencimento').value,
+                    valor: parseFloat(form.querySelector('#custo-valor').value),
+                    status: form.querySelector('#custo-status-form').value,
+                };
+                 if(id) {
+                    const index = custosData.findIndex(c => c.id === id);
+                    if(index > -1) custosData[index] = {...custosData[index], ...data};
+                } else {
+                    custosData.push({ id: Date.now(), ...data });
+                }
+                renderCustos();
+            }
+
             console.log(`Formulário ${form.id} salvo (simulação).`);
             const container = form.closest('div[id$="-form-container"]');
-            const history = container.previousElementSibling.id.includes('history') ? container.previousElementSibling : container.previousElementSibling.previousElementSibling;
-            container.classList.add('hidden');
-            if(history) history.classList.remove('hidden');
+            if(container) {
+                const historyId = container.id.replace('form-container', 'history-container');
+                const historyEl = document.getElementById(historyId);
+                container.classList.add('hidden');
+                if (historyEl) historyEl.classList.remove('hidden');
+                form.reset();
+                 const idInput = form.querySelector('input[type="hidden"]');
+                 if(idInput) idInput.value = '';
+            }
+
             updateAllCounters();
+            updateAllDashboards();
         });
     });
     
+    // --- INSIGHTS & REPORTS ---
+    function generateInsights(){
+        const content = document.getElementById('insights-content');
+        let insightsHtml = '';
+
+        const totalRevenue = receitasData.reduce((sum, r) => sum + r.valor, 0);
+        const totalCosts = custosData.reduce((sum, c) => sum + c.valor, 0);
+        const balance = totalRevenue - totalCosts;
+        
+        if(balance >= 0) {
+            insightsHtml += `<div class="flex items-start"><i class="fas fa-check-circle text-green-500 mt-1 mr-3"></i><p><strong>Balanço Positivo:</strong> Suas receitas (total: ${totalRevenue.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}) estão superando os custos (total: ${totalCosts.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}).</p></div>`;
+        } else {
+            insightsHtml += `<div class="flex items-start"><i class="fas fa-exclamation-triangle text-red-500 mt-1 mr-3"></i><p><strong>Atenção ao Balanço:</strong> Seus custos estão superando as receitas. É um bom momento para revisar as despesas.</p></div>`;
+        }
+        
+        const pendingRevenue = receitasData.filter(r => r.status === 'Pendente').reduce((sum, r) => sum + r.valor, 0);
+        if(pendingRevenue > 0) {
+            insightsHtml += `<div class="flex items-start"><i class="fas fa-hourglass-half text-yellow-500 mt-1 mr-3"></i><p><strong>Cobrança Necessária:</strong> Existem <strong>${pendingRevenue.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</strong> em receitas pendentes. Foque na cobrança para melhorar o fluxo de caixa.</p></div>`;
+        }
+
+        const consultantStats = visitsData.filter(v => v.status === 'Concluída').reduce((acc, visit) => {
+            if (!acc[visit.consultor]) acc[visit.consultor] = { count: 0, minutes: 0 };
+            acc[visit.consultor].count++;
+            acc[visit.consultor].minutes += calculateDuration(visit);
+            return acc;
+        }, {});
+
+        const topConsultantByHours = Object.entries(consultantStats).sort((a,b) => b[1].minutes - a[1].minutes)[0];
+        if(topConsultantByHours) {
+            insightsHtml += `<div class="flex items-start"><i class="fas fa-star text-yellow-400 mt-1 mr-3"></i><p><strong>Consultor Destaque:</strong> <strong>${topConsultantByHours[0]}</strong> é o consultor com mais horas de visitas concluídas. Um ótimo trabalho!</p></div>`;
+        }
+
+        content.innerHTML = insightsHtml || `<p>Nenhum insight gerado. Adicione mais dados para análises.</p>`;
+    }
+
+    function toggleReportSubtype() {
+        const type = document.getElementById('report-type').value;
+        const subtypeSelect = document.getElementById('report-subtype');
+        const visitsFilters = document.getElementById('report-visits-filters');
+        
+        let options = '';
+        if (type === 'financeiro') {
+            options = '<option value="geral">Geral</option><option value="receitas">Apenas Receitas</option><option value="custos">Apenas Custos</option>';
+            visitsFilters.classList.add('hidden');
+        } else { // visitas
+            options = '<option value="geral">Geral</option><option value="consultor">Por Consultor</option><option value="cliente">Por Cliente</option>';
+            visitsFilters.classList.remove('hidden');
+        }
+        subtypeSelect.innerHTML = options;
+    }
+
+    function generatePdfReport(e) {
+        e.preventDefault();
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        const type = document.getElementById('report-type').value;
+        const subtype = document.getElementById('report-subtype').value;
+        const startDate = document.getElementById('report-start-date').value;
+        const endDate = document.getElementById('report-end-date').value;
+        const consultor = document.getElementById('report-consultor').value;
+        const cliente = document.getElementById('report-cliente').value;
+        
+        const title = `Relatório de ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+        const period = startDate && endDate ? `Período: ${new Date(startDate+'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(endDate+'T00:00:00').toLocaleDateString('pt-BR')}` : 'Período: Todos';
+
+        doc.setFontSize(18);
+        doc.text(title, 14, 22);
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text(period, 14, 30);
+        doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 14, 36);
+
+        if (type === 'financeiro') {
+            generateFinanceReport(doc, { subtype, startDate, endDate });
+        } else {
+            generateVisitReport(doc, { subtype, startDate, endDate, consultor, cliente });
+        }
+        
+        doc.save(`relatorio_${type}_${new Date().toISOString().split('T')[0]}.pdf`);
+    }
+
+    function generateFinanceReport(doc, filters) {
+        const formatCurrency = (val) => val.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+        
+        let filteredReceitas = receitasData.filter(r => (!filters.startDate || r.vencimento >= filters.startDate) && (!filters.endDate || r.vencimento <= filters.endDate));
+        let filteredCustos = custosData.filter(c => (!filters.startDate || c.vencimento >= filters.startDate) && (!filters.endDate || c.vencimento <= filters.endDate));
+
+        let finalY = 45;
+
+        if (filters.subtype === 'geral' || filters.subtype === 'receitas') {
+            doc.autoTable({
+                startY: finalY,
+                head: [['Cliente', 'Vencimento', 'Valor', 'Status']],
+                body: filteredReceitas.map(r => [r.cliente, new Date(r.vencimento+'T00:00:00').toLocaleDateString('pt-BR'), formatCurrency(r.valor), r.status]),
+                headStyles: { fillColor: [55, 55, 55] }
+            });
+            finalY = doc.lastAutoTable.finalY + 10;
+        }
+
+        if (filters.subtype === 'geral' || filters.subtype === 'custos') {
+            doc.autoTable({
+                startY: finalY,
+                head: [['Credor', 'Vencimento', 'Valor', 'Status']],
+                body: filteredCustos.map(c => [c.credor, new Date(c.vencimento+'T00:00:00').toLocaleDateString('pt-BR'), formatCurrency(c.valor), c.status]),
+                headStyles: { fillColor: [55, 55, 55] }
+            });
+            finalY = doc.lastAutoTable.finalY + 10;
+        }
+        
+        const totalReceitas = filteredReceitas.reduce((sum, r) => sum + r.valor, 0);
+        const totalCustos = filteredCustos.reduce((sum, c) => sum + c.valor, 0);
+        doc.setFontSize(12);
+        doc.text('Resumo Financeiro', 14, finalY);
+        doc.autoTable({
+            startY: finalY + 5,
+            theme: 'plain',
+            body: [
+                ['Total de Receitas:', formatCurrency(totalReceitas)],
+                ['Total de Custos:', formatCurrency(totalCustos)],
+                ['Balanço:', formatCurrency(totalReceitas - totalCustos)],
+            ]
+        });
+    }
+
+    function generateVisitReport(doc, filters) {
+        let filteredVisits = visitsData.filter(v => 
+            (!filters.startDate || v.data >= filters.startDate) && 
+            (!filters.endDate || v.data <= filters.endDate) &&
+            (!filters.consultor || v.consultor === filters.consultor) &&
+            (!filters.cliente || v.cliente === filters.cliente)
+        );
+
+        let body = filteredVisits.map(v => [
+            v.cliente,
+            v.consultor,
+            new Date(v.data+'T00:00:00').toLocaleDateString('pt-BR'),
+            `${v.inicio} - ${v.fim}`,
+            v.status
+        ]);
+        
+        let head = [['Cliente', 'Consultor', 'Data', 'Horário', 'Status']];
+        if(filters.subtype === 'consultor' && !filters.consultor) {
+            const byConsultor = filteredVisits.reduce((acc, v) => {
+                if(!acc[v.consultor]) acc[v.consultor] = [];
+                acc[v.consultor].push(v);
+                return acc;
+            }, {});
+            let startY = 45;
+            Object.keys(byConsultor).forEach(consultor => {
+                 doc.autoTable({
+                    head: [['Visitas de ' + consultor]],
+                    startY: doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : startY
+                 });
+                 doc.autoTable({
+                    head, body: byConsultor[consultor].map(v => [v.cliente, v.consultor, new Date(v.data+'T00:00:00').toLocaleDateString('pt-BR'), `${v.inicio} - ${v.fim}`, v.status])
+                 });
+            });
+            return; // Exit function early
+        } else if (filters.subtype === 'cliente' && !filters.cliente) {
+             const byCliente = filteredVisits.reduce((acc, v) => {
+                if(!acc[v.cliente]) acc[v.cliente] = [];
+                acc[v.cliente].push(v);
+                return acc;
+            }, {});
+             let startY = 45;
+            Object.keys(byCliente).forEach(cliente => {
+                 doc.autoTable({
+                    head: [['Visitas para ' + cliente]],
+                    startY: doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : startY
+                 });
+                 doc.autoTable({
+                    head, body: byCliente[cliente].map(v => [v.cliente, v.consultor, new Date(v.data+'T00:00:00').toLocaleDateString('pt-BR'), `${v.inicio} - ${v.fim}`, v.status])
+                 });
+            });
+            return;
+        }
+
+        doc.autoTable({
+            startY: 45,
+            head,
+            body,
+            headStyles: { fillColor: [55, 55, 55] }
+        });
+
+        const totalMinutes = filteredVisits.reduce((sum, v) => sum + calculateDuration(v), 0);
+        const totalHours = Math.floor(totalMinutes/60);
+        const remainingMinutes = totalMinutes % 60;
+
+        doc.setFontSize(12);
+        doc.text('Resumo de Visitas', 14, doc.lastAutoTable.finalY + 10);
+        doc.autoTable({
+            startY: doc.lastAutoTable.finalY + 15,
+            theme: 'plain',
+            body: [
+                ['Total de Visitas:', String(filteredVisits.length)],
+                ['Total de Horas:', `${totalHours}h ${remainingMinutes}m`],
+            ]
+        });
+    }
+
+
     initializeApp();
 });
 </script>
 </body>
 </html>
-
