@@ -91,6 +91,7 @@
                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg bg-brand-gold text-white" data-target="rh" title="RH"><i class="fas fa-briefcase"></i></a>
                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="clientes" title="Clientes"><i class="fas fa-handshake"></i></a>
                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="visitas" title="Visitas"><i class="fas fa-calendar-check"></i></a>
+                    <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="requisicao" title="Requisição"><i class="fas fa-clipboard-list"></i></a>
                 </nav>
             </aside>
             <div class="flex flex-col flex-1">
@@ -329,6 +330,51 @@
                         </div>
 
                     </div>
+
+                    <div id="requisicao" class="page hidden">
+                        <div class="mb-4">
+                            <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Requisições</h2>
+                            <p class="text-gray-500 dark:text-gray-400">Gerenciamento de requisições de EPIs e Consumo.</p>
+                        </div>
+
+                        <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+                            <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="requisicao-tabs">
+                                <li class="mr-2"><button class="requisicao-tab-btn inline-block p-4 border-b-2 rounded-t-lg border-brand-gold text-brand-gold" data-target="requisicoes-content">Requisições</button></li>
+                                <li class="mr-2"><button class="requisicao-tab-btn inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" data-target="itens-requisicao-content">Itens de Requisição</button></li>
+                            </ul>
+                        </div>
+
+                        <div id="requisicoes-content" class="requisicao-tab-content">
+                             <div class="flex justify-end items-center mb-4">
+                                <button id="show-requisicao-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Nova Requisição</button>
+                            </div>
+                            <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3">Tipo</th>
+                                            <th scope="col" class="px-6 py-3">Itens</th>
+                                            <th scope="col" class="px-6 py-3">Consultor</th>
+                                            <th scope="col" class="px-6 py-3">Data/Hora</th>
+                                            <th scope="col" class="px-6 py-3">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="requisicoes-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="itens-requisicao-content" class="requisicao-tab-content hidden">
+                            <div class="flex justify-end items-center mb-4">
+                                <button id="show-category-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Nova Categoria</button>
+                            </div>
+                            <div id="item-management-container" class="space-y-6">
+                                <!-- As categorias e itens serão renderizados aqui pelo JS -->
+                            </div>
+                        </div>
+
+                    </div>
+
                 </main>
             </div>
         </div>
@@ -390,6 +436,80 @@
             </form>
         </div>
     </div>
+    
+    <div id="requisicao-form-modal" class="fixed inset-0 z-40 items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
+        <div class="w-full max-w-2xl p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate max-h-[90vh] flex flex-col">
+            <h2 id="requisicao-modal-title" class="text-xl font-bold text-gray-900 dark:text-white mb-4">Nova Requisição</h2>
+            <form id="requisicao-form" class="flex-grow overflow-y-auto">
+                <input type="hidden" id="requisicao-id">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="requisicao-tipo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo de Requisição</label>
+                        <select id="requisicao-tipo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                            <option value="">Selecione...</option>
+                            <option value="EPIs">EPIs</option>
+                            <option value="Consumo">Consumo</option>
+                        </select>
+                    </div>
+                     <div>
+                        <label for="requisicao-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label>
+                        <select id="requisicao-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required></select>
+                    </div>
+                     <div>
+                        <label for="requisicao-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data/Hora</label>
+                        <input type="text" id="requisicao-data" class="bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" readonly>
+                    </div>
+                </div>
+
+                <div id="epis-fields" class="hidden mt-4 space-y-4">
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="epis-item" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Item</label>
+                            <select id="epis-item" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select>
+                        </div>
+                        <div>
+                            <label for="epis-quantidade" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Quantidade</label>
+                            <input type="number" id="epis-quantidade" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" min="1" value="1">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="consumo-fields" class="hidden mt-4 space-y-4">
+                    <div id="consumo-categories-container" class="space-y-4"></div>
+                    <button type="button" id="add-consumo-category-btn" class="text-sm text-brand-gold hover:underline"><i class="fas fa-plus mr-1"></i> Adicionar Categoria de Consumo</button>
+                </div>
+            </form>
+            <div class="flex justify-end mt-6 space-x-4 pt-4 border-t dark:border-gray-700">
+                <button type="button" id="cancel-requisicao-form" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+                <button type="submit" form="requisicao-form" class="px-4 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="item-form-modal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
+        <div class="w-full max-w-lg p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
+            <h2 id="item-modal-title" class="text-xl font-bold text-gray-900 dark:text-white mb-4">Novo Item</h2>
+            <form id="item-form">
+                <input type="hidden" id="item-original-name">
+                <input type="hidden" id="item-category-name">
+                <div class="space-y-4">
+                    <div>
+                        <label for="item-name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nome do Item</label>
+                        <input type="text" id="item-name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                    </div>
+                    <div>
+                        <label for="item-foto" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Foto do Item</label>
+                        <input type="file" id="item-foto" accept="image/*" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
+                        <img id="item-foto-preview" src="" alt="Pré-visualização da foto" class="mt-2 rounded-lg h-24 w-24 object-cover hidden">
+                    </div>
+                </div>
+                 <div class="flex justify-end mt-6 space-x-4">
+                    <button type="button" id="cancel-item-form" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
 
     <script>
@@ -399,39 +519,27 @@
     let calendar;
     let activeDeleteItem = { id: null, type: null };
 
-    // Simulação de banco de dados para visitas
+    // Simulação de banco de dados
     let visitsData = [
-        {
-            id: 1,
-            consultor: 'Ana Silva',
-            cliente: 'Padaria Pão Quente',
-            data: '2025-10-20',
-            inicio: '09:00',
-            fim: '11:00',
-            status: 'Agendada',
-            descricao: 'Visita de rotina para verificação de boas práticas.',
-            startTime: null,
-            startAddress: null,
-            endTime: null,
-            endAddress: null,
-            isRescheduled: false
-        },
-        {
-            id: 2,
-            consultor: 'Bruno Costa',
-            cliente: 'Restaurante Sabor Divino',
-            data: '2025-09-28', // Data no passado para teste de "Remarcada"
-            inicio: '14:00',
-            fim: '16:00',
-            status: 'Agendada',
-            descricao: 'Treinamento de equipe sobre manipulação de alimentos.',
-            startTime: null,
-            startAddress: null,
-            endTime: null,
-            endAddress: null,
-            isRescheduled: false
-        }
+        { id: 1, consultor: 'Ana Silva', cliente: 'Padaria Pão Quente', data: '2025-10-20', inicio: '09:00', fim: '11:00', status: 'Agendada', descricao: 'Visita de rotina para verificação de boas práticas.', startTime: null, startAddress: null, endTime: null, endAddress: null, isRescheduled: false },
+        { id: 2, consultor: 'Bruno Costa', cliente: 'Restaurante Sabor Divino', data: '2025-09-28', inicio: '14:00', fim: '16:00', status: 'Agendada', descricao: 'Treinamento de equipe sobre manipulação de alimentos.', startTime: null, startAddress: null, endTime: null, endAddress: null, isRescheduled: false }
     ];
+    let requisicoesData = [];
+
+    let itemData = {
+        epis: ['Camisa', 'Botina', 'Óculos de Segurança', 'Luvas de Malha de Aço'],
+        consumo: {
+            'Placas': [
+                { nome: 'Placa de Proibido Fumar', foto: 'https://placehold.co/100x100/EEE/31343C?text=Placa' },
+                { nome: 'Placa de Lave as Mãos', foto: 'https://placehold.co/100x100/EEE/31343C?text=Placa' }
+            ],
+            'Planilhas': [
+                { nome: 'Planilha de Controle de Temperatura', foto: 'https://placehold.co/100x100/EEE/31343C?text=Planilha' }
+            ],
+            'Outros': []
+        }
+    };
+
 
     // Seletores Globais
     const allElements = {
@@ -441,33 +549,17 @@
         themeToggle: document.getElementById('theme-toggle'),
         sidebar: document.getElementById('sidebar'),
         sidebarToggle: document.getElementById('sidebar-toggle'),
-        navLinks: document.querySelectorAll('.nav-link'),
         pages: document.querySelectorAll('.page'),
         pageTitle: document.getElementById('page-title'),
         detailsModal: document.getElementById('details-modal'),
-        closeModal: document.getElementById('close-modal'),
         deleteConfirmModal: document.getElementById('delete-confirm-modal'),
-        cancelDeleteBtn: document.getElementById('cancel-delete-btn'),
-        confirmDeleteBtn: document.getElementById('confirm-delete-btn'),
-        editBtn: document.getElementById('edit-btn'),
-        deleteBtn: document.getElementById('delete-btn'),
         logoutConfirmModal: document.getElementById('logout-confirm-modal'),
-        logoutButton: document.getElementById('logout-button'),
-        cancelLogoutBtn: document.getElementById('cancel-logout-btn'),
-        confirmLogoutBtn: document.getElementById('confirm-logout-btn'),
         visitaFormModal: document.getElementById('visita-form-modal'),
-        showVisitaFormBtn: document.getElementById('show-visita-form'),
-        cancelVisitaFormBtn: document.getElementById('cancel-visita-form'),
         visitaForm: document.getElementById('visita-form'),
-        rhForm: document.getElementById('rh-form'),
-        clienteForm: document.getElementById('cliente-form'),
-        feriasForm: document.getElementById('ferias-form'),
-        atestadosForm: document.getElementById('atestados-form'),
-        episForm: document.getElementById('epis-form'),
-        ativosForm: document.getElementById('ativos-form'),
-        cancelRhFormBtn: document.getElementById('cancel-rh-form'),
-        cancelClienteFormBtn: document.getElementById('cancel-cliente-form'),
-        visitasViews: document.getElementById('visitas'),
+        requisicaoFormModal: document.getElementById('requisicao-form-modal'),
+        requisicaoForm: document.getElementById('requisicao-form'),
+        itemFormModal: document.getElementById('item-form-modal'),
+        itemForm: document.getElementById('item-form'),
     };
 
     function updateAllCounters() {
@@ -544,12 +636,23 @@
 
     function initializeApp() {
         allElements.loginForm?.addEventListener('submit', handleLogin);
-        allElements.navLinks.forEach(link => link.addEventListener('click', handleNavClick));
-        document.querySelectorAll('.view-toggle-btn').forEach(btn => btn.addEventListener('click', handleViewToggle));
-        
-        // Event Delegation
         document.body.addEventListener('click', handleGlobalClick);
-
+        document.getElementById('requisicao-tipo')?.addEventListener('change', toggleRequisicaoFields);
+        allElements.itemForm.addEventListener('submit', saveItem);
+        document.getElementById('item-foto').addEventListener('change', (e) => {
+            const preview = document.getElementById('item-foto-preview');
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                }
+                reader.readAsDataURL(file);
+            } else {
+                 preview.classList.add('hidden');
+            }
+        });
         updateAllCounters();
     }
 
@@ -567,178 +670,198 @@
         updateAllCounters();
         checkOverdueVisits();
         initializeCalendar();
-        applyFilters(); // Apply filters on login to show initial state
+        applyFilters();
+        renderItensDeRequisicao();
     }
-
-    function handleNavClick(e) {
-        e.preventDefault();
-        const targetId = this.dataset.target;
-        allElements.pages.forEach(page => page.classList.add('hidden'));
-        const targetPage = document.getElementById(targetId);
-        if (targetPage) {
-            targetPage.classList.remove('hidden');
-            if (targetId === 'visitas') {
-                setTimeout(() => {
-                    if (calendar) calendar.render();
-                }, 1);
-            }
-        }
-        allElements.navLinks.forEach(l => {
-            l.classList.remove('bg-brand-gold', 'text-white');
-            l.classList.add('text-gray-400');
-        });
-        this.classList.add('bg-brand-gold', 'text-white');
-        this.classList.remove('text-gray-400');
-
-        if (allElements.pageTitle) allElements.pageTitle.textContent = this.title;
-    }
-
-    function handleViewToggle(e) {
-        const button = e.currentTarget;
-        document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.remove('bg-white', 'dark:bg-gray-800', 'shadow-sm'));
-        button.classList.add('bg-white', 'dark:bg-gray-800', 'shadow-sm');
-        document.querySelectorAll('.visitas-view').forEach(view => view.classList.add('hidden'));
-        const targetView = document.getElementById(button.dataset.view);
-        if (targetView) {
-            targetView.classList.remove('hidden');
-            if (button.dataset.view === 'calendar-view' && calendar) {
-                setTimeout(() => calendar.render(), 1);
-            }
-        }
-    }
-
+    
     function handleGlobalClick(e) {
         const target = e.target;
-        const button = target.closest('button');
+        
+        const navLink = target.closest('.nav-link');
+        if (navLink) {
+            e.preventDefault();
+            const targetId = navLink.dataset.target;
+            document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
+            const targetPage = document.getElementById(targetId);
+            if (targetPage) {
+                targetPage.classList.remove('hidden');
+                if (targetId === 'visitas' && calendar) {
+                    setTimeout(() => calendar.render(), 1);
+                }
+            }
+            document.querySelectorAll('.nav-link').forEach(l => {
+                l.classList.remove('bg-brand-gold', 'text-white');
+                l.classList.add('text-gray-400');
+            });
+            navLink.classList.add('bg-brand-gold', 'text-white');
+            navLink.classList.remove('text-gray-400');
+            if (document.getElementById('page-title')) document.getElementById('page-title').textContent = navLink.title;
+            return;
+        }
 
         const rhCard = target.closest('.rh-card');
-        if (rhCard && !target.closest('a')) {
+        if (rhCard && !target.closest('a') && !target.closest('button')) {
             openDetailsModal(rhCard);
             return;
         }
-
         const clienteCard = target.closest('.cliente-card');
-        if (clienteCard && !target.closest('a')) {
+        if (clienteCard && !target.closest('a') && !target.closest('button')) {
             openDetailsModal(clienteCard);
             return;
         }
-
+        
+        const button = target.closest('button');
         if (!button) return;
 
+        if (button.classList.contains('view-toggle-btn')) {
+            handleViewToggle({ currentTarget: button });
+            return;
+        }
+
         const { id, classList } = button;
-        
-        // Ações principais
-        if (id === 'logout-button') showModal(allElements.logoutConfirmModal);
-        if (id === 'cancel-logout-btn') hideModal(allElements.logoutConfirmModal);
-        if (id === 'confirm-logout-btn') location.reload();
-        if (id === 'theme-toggle') {
-            document.documentElement.classList.toggle('dark');
-            const isDark = document.documentElement.classList.contains('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            button.querySelector('i').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
-            if (calendar) calendar.render();
-        }
-        if (id === 'sidebar-toggle') allElements.sidebar?.classList.toggle('hidden');
-        if (id === 'show-rh-form') setupFormToggle('rh-cards-container', 'rh-form-container');
-        if (id === 'cancel-rh-form') hideFormToggle('rh-cards-container', 'rh-form-container');
-        if (id === 'show-cliente-form') setupFormToggle('cliente-cards-container', 'cliente-form-container');
-        if (id === 'cancel-cliente-form') hideFormToggle('cliente-cards-container', 'cliente-form-container');
-        
-        // Ações de Visita
-        if (id === 'show-visita-form') openVisitaModal();
-        if (id === 'cancel-visita-form') hideModal(allElements.visitaFormModal);
-        if (classList.contains('iniciar-visita-btn')) handleStartVisit(button.dataset.id);
-        if (classList.contains('encerrar-visita-btn')) handleEndVisit(button.dataset.id);
-        if (classList.contains('remarcar-visita-btn')) handleRescheduleVisit(button.dataset.id);
-        if (id === 'apply-filters-btn') applyFilters();
-        if (id === 'clear-filters-btn') clearFilters();
+        const actionMap = {
+            'logout-button': () => showModal(allElements.logoutConfirmModal),
+            'cancel-logout-btn': () => hideModal(allElements.logoutConfirmModal),
+            'confirm-logout-btn': () => location.reload(),
+            'theme-toggle': () => {
+                document.documentElement.classList.toggle('dark');
+                const isDark = document.documentElement.classList.contains('dark');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                button.querySelector('i').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+                if (calendar) calendar.render();
+            },
+            'sidebar-toggle': () => allElements.sidebar?.classList.toggle('hidden'),
+            'show-rh-form': () => setupFormToggle('rh-cards-container', 'rh-form-container'),
+            'cancel-rh-form': () => hideFormToggle('rh-cards-container', 'rh-form-container'),
+            'show-cliente-form': () => setupFormToggle('cliente-cards-container', 'cliente-form-container'),
+            'cancel-cliente-form': () => hideFormToggle('cliente-cards-container', 'cliente-form-container'),
+            'show-visita-form': () => openVisitaModal(),
+            'cancel-visita-form': () => hideModal(allElements.visitaFormModal),
+            'show-requisicao-form': () => openRequisicaoModal(),
+            'cancel-requisicao-form': () => hideModal(allElements.requisicaoFormModal),
+            'show-category-form': () => {
+                const newCategory = prompt("Nome da nova categoria:");
+                if(newCategory && !itemData.consumo[newCategory]) {
+                    itemData.consumo[newCategory] = [];
+                    renderItensDeRequisicao();
+                } else if (newCategory) {
+                    alert("Categoria já existe.");
+                }
+            },
+            'cancel-item-form': () => hideModal(allElements.itemFormModal),
+            'apply-filters-btn': applyFilters,
+            'clear-filters-btn': clearFilters,
+            'delete-btn': () => { hideModal(allElements.detailsModal); showModal(allElements.deleteConfirmModal); },
+            'cancel-delete-btn': () => {
+                hideModal(allElements.deleteConfirmModal);
+                if (activeCard) showModal(allElements.detailsModal);
+                activeDeleteItem = { id: null, type: null };
+            },
+            'confirm-delete-btn': () => {
+                if (activeDeleteItem.type === 'visita') {
+                    visitsData = visitsData.filter(v => v.id !== activeDeleteItem.id);
+                    applyFilters();
+                } else if (activeDeleteItem.type === 'requisicao') {
+                    requisicoesData = requisicoesData.filter(r => r.id !== activeDeleteItem.id);
+                    renderRequisicoes();
+                } else if (activeDeleteItem.type === 'consumoItem') {
+                    const { category, itemName } = activeDeleteItem;
+                    itemData.consumo[category] = itemData.consumo[category].filter(i => i.nome !== itemName);
+                    renderItensDeRequisicao();
+                }
+                else if (activeCard) {
+                    activeCard.remove();
+                } else if (activeTableRow) {
+                    activeTableRow.remove();
+                }
+                activeCard = activeTableRow = null;
+                activeDeleteItem = { id: null, type: null };
+                hideModal(allElements.deleteConfirmModal);
+                updateAllCounters();
+            },
+            'edit-btn': handleCardEdit,
+            'close-modal': () => hideModal(allElements.detailsModal),
+            'add-consumo-category-btn': addConsumoCategory,
+        };
 
+        if (actionMap[id]) { actionMap[id](); return; }
 
-        // Ações Modais
-        if (id === 'delete-btn') {
-            hideModal(allElements.detailsModal);
-            showModal(allElements.deleteConfirmModal);
-        }
-        if (id === 'cancel-delete-btn') {
-            hideModal(allElements.deleteConfirmModal);
-            if (activeCard) showModal(allElements.detailsModal);
-            activeDeleteItem = { id: null, type: null };
-        }
-        if (id === 'confirm-delete-btn') {
-            if (activeDeleteItem.type === 'visita') {
-                visitsData = visitsData.filter(v => v.id !== activeDeleteItem.id);
-                applyFilters();
-            } else if (activeCard) {
-                activeCard.remove();
-            } else if (activeTableRow) {
-                activeTableRow.remove();
-            }
-            activeCard = activeTableRow = null;
-            activeDeleteItem = { id: null, type: null };
-            hideModal(allElements.deleteConfirmModal);
-            updateAllCounters();
-        }
-        if (id === 'edit-btn') handleCardEdit();
-        if (id === 'close-modal') hideModal(allElements.detailsModal);
-
-        // Ações de abas e tabelas
-        if (classList.contains('rh-tab-btn')) handleTabClick(button, '#rh-tabs', '.rh-tab-content');
-        if (id.startsWith('show-') && !['show-rh-form', 'show-cliente-form', 'show-visita-form'].includes(id)) {
+        if (classList.contains('iniciar-visita-btn')) { handleStartVisit(button.dataset.id); }
+        else if (classList.contains('encerrar-visita-btn')) { handleEndVisit(button.dataset.id); }
+        else if (classList.contains('remarcar-visita-btn')) { handleRescheduleVisit(button.dataset.id); }
+        else if (classList.contains('rh-tab-btn') || classList.contains('requisicao-tab-btn')) { handleTabClick(button); }
+        else if (id.startsWith('show-') && !['show-rh-form', 'show-cliente-form', 'show-visita-form', 'show-requisicao-form', 'show-category-form'].includes(id)) {
             const formType = id.replace('show-', '').replace('-form', '');
             setupSubFormToggle(`${formType}-history-container`, `${formType}-form-container`);
-        }
-        if (classList.contains('cancel-sub-form')) {
+        } else if (classList.contains('cancel-sub-form')) {
             document.getElementById(button.dataset.form).classList.add('hidden');
             document.getElementById(button.dataset.history).classList.remove('hidden');
+        } else if (classList.contains('table-edit-btn')) { handleTableEdit(button); }
+        else if (classList.contains('table-delete-btn')) { handleTableDelete(button); }
+        else if (classList.contains('add-consumo-item-btn')) { addConsumoItem(button); }
+        else if (classList.contains('remove-item-btn')) { button.closest('.consumo-item-row').remove(); }
+        else if (classList.contains('remove-category-btn')) { button.closest('.consumo-category-block').remove(); }
+        else if (classList.contains('add-item-btn')) { openItemModal(button.dataset.category); }
+        else if (classList.contains('edit-item-btn')) {
+             const item = itemData.consumo[button.dataset.category].find(i => i.nome === button.dataset.item);
+             openItemModal(button.dataset.category, item);
+        } else if (classList.contains('delete-item-btn')) {
+            activeDeleteItem = { type: 'consumoItem', category: button.dataset.category, itemName: button.dataset.item };
+            showModal(allElements.deleteConfirmModal);
         }
-
-        if (classList.contains('table-edit-btn')) handleTableEdit(button);
-        if (classList.contains('table-delete-btn')) handleTableDelete(button);
     }
     
-    function handleTabClick(button, tabsSelector, contentSelector) {
-        const tabs = document.querySelector(tabsSelector);
-        tabs.querySelectorAll('.rh-tab-btn').forEach(btn => {
+    function handleTabClick(button) {
+        const tabsContainer = button.closest('ul');
+        tabsContainer.querySelectorAll('button').forEach(btn => {
             btn.classList.remove('border-brand-gold', 'text-brand-gold');
             btn.classList.add('border-transparent');
         });
         button.classList.add('border-brand-gold', 'text-brand-gold');
-        document.querySelectorAll(contentSelector).forEach(content => content.classList.add('hidden'));
-        const targetContent = document.getElementById(button.dataset.target);
-        if (targetContent) {
-            targetContent.classList.remove('hidden');
-            updateAllCounters();
+        
+        const isRhTab = button.classList.contains('rh-tab-btn');
+        const contentClass = isRhTab ? '.rh-tab-content' : '.requisicao-tab-content';
+        const pageContainer = button.closest('.page');
+        
+        if (pageContainer) {
+            pageContainer.querySelectorAll(contentClass).forEach(content => content.classList.add('hidden'));
+            const targetContent = document.getElementById(button.dataset.target);
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+            }
         }
     }
 
     function handleTableEdit(button) {
         const row = button.closest('tr');
         if (!row) return;
+        const id = parseInt(row.dataset.id);
 
         if (row.closest('#visitas-table-body')) {
-            const visitId = parseInt(row.dataset.id);
-            const visit = visitsData.find(v => v.id === visitId);
+            const visit = visitsData.find(v => v.id === id);
             if (visit) openVisitaModal(visit);
-            return;
-        }
-
-        const formContainer = row.closest('.rh-tab-content').querySelector('div[id$="-form-container"]');
-        const historyContainer = row.closest('div[id$="-history-container"]');
-        if (formContainer && historyContainer) {
-            historyContainer.classList.add('hidden');
-            formContainer.classList.remove('hidden');
-            const form = formContainer.querySelector('form');
-            Object.keys(row.dataset).forEach(key => {
-                const input = form.querySelector(`[id$="-${key}"], [id*="${key.toLowerCase()}"]`);
-                if (input) {
-                    if (input.tagName === 'SELECT') {
-                        const option = Array.from(input.options).find(opt => opt.value === row.dataset[key] || opt.textContent === row.dataset[key]);
-                        if (option) input.value = option.value;
-                    } else {
-                        input.value = row.dataset[key];
+        } else if (row.closest('#requisicoes-table-body')) {
+            const requisicao = requisicoesData.find(r => r.id === id);
+            if(requisicao) openRequisicaoModal(requisicao);
+        } else {
+             const formContainer = row.closest('.rh-tab-content').querySelector('div[id$="-form-container"]');
+            const historyContainer = row.closest('div[id$="-history-container"]');
+            if (formContainer && historyContainer) {
+                historyContainer.classList.add('hidden');
+                formContainer.classList.remove('hidden');
+                const form = formContainer.querySelector('form');
+                Object.keys(row.dataset).forEach(key => {
+                    const input = form.querySelector(`[id$="-${key}"], [id*="${key.toLowerCase()}"]`);
+                    if (input) {
+                        if (input.tagName === 'SELECT') {
+                            const option = Array.from(input.options).find(opt => opt.value === row.dataset[key] || opt.textContent === row.dataset[key]);
+                            if (option) input.value = option.value;
+                        } else {
+                            input.value = row.dataset[key];
+                        }
                     }
-                }
-            });
+                });
+            }
         }
     }
 
@@ -748,6 +871,8 @@
         
         if (row.closest('#visitas-table-body')) {
              activeDeleteItem = { id: parseInt(row.dataset.id), type: 'visita' };
+        } else if (row.closest('#requisicoes-table-body')) {
+             activeDeleteItem = { id: parseInt(row.dataset.id), type: 'requisicao' };
         } else {
             activeTableRow = row;
             activeCard = null;
@@ -819,7 +944,7 @@
         }
     };
     
-    // --- LÓGICA DE VISITAS REFEITA ---
+    // --- LÓGICA DE VISITAS ---
 
     const statusConfig = {
         'Agendada': { color: 'blue', label: 'Agendada' },
@@ -836,14 +961,8 @@
         const status = document.getElementById('filter-status').value;
 
         const filtered = visitsData.filter(visit => {
-            if (startDate) {
-                const visitDate = new Date(visit.data + 'T00:00:00');
-                if (new Date(startDate + 'T00:00:00') > visitDate) return false;
-            }
-            if (endDate) {
-                 const visitDate = new Date(visit.data + 'T00:00:00');
-                if (new Date(endDate + 'T00:00:00') < visitDate) return false;
-            }
+            if (startDate && visit.data < startDate) return false;
+            if (endDate && visit.data > endDate) return false;
             if (consultor && visit.consultor !== consultor) return false;
             if (cliente && visit.cliente !== cliente) return false;
             if (status && visit.status !== status) return false;
@@ -862,14 +981,12 @@
         renderAllVisits(visitsData);
     }
 
-
     function renderAllVisits(data = visitsData) {
         const kanbanData = data.filter(visit => visit.status !== 'Remarcada');
         renderKanbanBoard(kanbanData);
         renderVisitsList(data);
         renderCalendarEvents(data);
     }
-
 
     function renderKanbanBoard(data) {
         const columns = {
@@ -892,15 +1009,9 @@
         const card = document.createElement('div');
         card.className = 'kanban-card bg-white dark:bg-gray-700 p-4 rounded-lg shadow';
         card.dataset.id = visit.id;
-
         const { color, label } = statusConfig[visit.status];
         const dateFormatted = new Date(visit.data + 'T00:00:00').toLocaleDateString('pt-BR');
-        
-        let rescheduledMarker = '';
-        if (visit.isRescheduled && visit.status === 'Agendada') {
-            rescheduledMarker = `<span class="text-xs ml-2 font-semibold text-purple-800">(Remarcado)</span>`;
-        }
-
+        let rescheduledMarker = visit.isRescheduled && visit.status === 'Agendada' ? `<span class="text-xs ml-2 font-semibold text-purple-800">(Remarcado)</span>` : '';
         let actionsHtml = '';
         if (visit.status === 'Agendada') {
             actionsHtml = `<button data-id="${visit.id}" class="iniciar-visita-btn w-full bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Iniciar Visita</button>
@@ -908,7 +1019,6 @@
         } else if (visit.status === 'Em Andamento') {
             actionsHtml = `<button data-id="${visit.id}" class="encerrar-visita-btn w-full bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">Encerrar Visita</button>`;
         }
-
         let locationHtml = '';
         if (visit.startAddress) {
             locationHtml += `<div class="text-xs text-gray-500 dark:text-gray-400 mt-2 p-2 bg-gray-100 dark:bg-gray-600 rounded">
@@ -922,32 +1032,16 @@
                 <div class="flex justify-between items-center"><span>${visit.endAddress}</span><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(visit.endAddress)}" target="_blank" class="text-blue-500 hover:text-blue-600 ml-2"><i class="fas fa-map-marked-alt"></i> Mapa</a></div>
             </div>`;
         }
-        
         let durationHtml = '';
         if (visit.status === 'Concluída' && visit.startTime && visit.endTime) {
-            const start = new Date(visit.startTime);
-            const end = new Date(visit.endTime);
-            const diffMs = end - start;
+            const diffMs = new Date(visit.endTime) - new Date(visit.startTime);
             if (diffMs > 0) {
                 const diffHrs = Math.floor(diffMs / 3600000);
                 const diffMins = Math.round(((diffMs % 3600000) / 60000));
-                durationHtml = `<div class="text-xs text-center font-bold text-brand-gold mt-2 p-1 bg-yellow-100 dark:bg-yellow-900 rounded">
-                    Duração: ${diffHrs}h ${diffMins}min
-                </div>`;
+                durationHtml = `<div class="text-xs text-center font-bold text-brand-gold mt-2 p-1 bg-yellow-100 dark:bg-yellow-900 rounded">Duração: ${diffHrs}h ${diffMins}min</div>`;
             }
         }
-
-        card.innerHTML = `
-            <div class="flex justify-between items-start mb-2">
-                <h4 class="font-bold text-gray-800 dark:text-white">${visit.cliente}${rescheduledMarker}</h4>
-                <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}</span>
-            </div>
-            <p class="text-sm text-gray-600 dark:text-gray-300">Consultor: ${visit.consultor}</p>
-            <p class="text-sm text-gray-600 dark:text-gray-300">${dateFormatted} - ${visit.inicio}</p>
-            ${locationHtml}
-            ${durationHtml}
-            <div class="mt-4 border-t pt-2 dark:border-gray-600 visit-actions">${actionsHtml}</div>
-        `;
+        card.innerHTML = `<div class="flex justify-between items-start mb-2"><h4 class="font-bold text-gray-800 dark:text-white">${visit.cliente}${rescheduledMarker}</h4><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}</span></div><p class="text-sm text-gray-600 dark:text-gray-300">Consultor: ${visit.consultor}</p><p class="text-sm text-gray-600 dark:text-gray-300">${dateFormatted} - ${visit.inicio}</p>${locationHtml}${durationHtml}<div class="mt-4 border-t pt-2 dark:border-gray-600 visit-actions">${actionsHtml}</div>`;
         return card;
     }
 
@@ -956,40 +1050,24 @@
         tableBody.innerHTML = '';
         data.forEach(visit => {
             const { color, label } = statusConfig[visit.status];
-            let statusLabel = label;
-            if (visit.isRescheduled && visit.status === 'Agendada') {
-                statusLabel += ' (Remarcado)';
-            }
+            let statusLabel = label + (visit.isRescheduled && visit.status === 'Agendada' ? ' (Remarcado)' : '');
             const dateFormatted = new Date(visit.data + 'T00:00:00').toLocaleDateString('pt-BR');
-            const row = document.createElement('tr');
+            const row = tableBody.insertRow();
             row.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700';
             row.dataset.id = visit.id;
-            
-            row.innerHTML = `
-                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">${visit.cliente}</td>
-                <td class="px-6 py-4">${visit.consultor}</td>
-                <td class="px-6 py-4">${dateFormatted}</td>
-                <td class="px-6 py-4">${visit.inicio} - ${visit.fim}</td>
-                <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${statusLabel}</span></td>
-                <td class="px-6 py-4 space-x-2">
-                    <button class="table-edit-btn text-blue-500 hover:text-blue-700" title="Editar"><i class="fas fa-edit"></i></button>
-                    <button class="table-delete-btn text-red-500 hover:text-red-700" title="Apagar"><i class="fas fa-trash"></i></button>
-                </td>
-            `;
-            tableBody.appendChild(row);
+            row.innerHTML = `<td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">${visit.cliente}</td><td class="px-6 py-4">${visit.consultor}</td><td class="px-6 py-4">${dateFormatted}</td><td class="px-6 py-4">${visit.inicio} - ${visit.fim}</td><td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${statusLabel}</span></td><td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500 hover:text-blue-700" title="Editar"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500 hover:text-red-700" title="Apagar"><i class="fas fa-trash"></i></button></td>`;
         });
     }
 
     function renderCalendarEvents(data) {
         if (!calendar) return;
         calendar.removeAllEvents();
-        const events = data.map(visit => ({
+        calendar.addEventSource(data.map(visit => ({
             title: `${visit.cliente} (${visit.consultor})`,
             start: `${visit.data}T${visit.inicio}`,
             end: `${visit.data}T${visit.fim}`,
             color: statusConfig[visit.status].color
-        }));
-        calendar.addEventSource(events);
+        })));
     }
 
     function handleStartVisit(visitId) {
@@ -1040,22 +1118,16 @@
             document.getElementById('visita-modal-title').textContent = "Agendar Nova Visita";
             document.getElementById('visita-id').value = '';
             const user = document.getElementById('logged-user-name').textContent;
-            const consultorSelect = document.getElementById('visita-consultor');
-            if (consultorSelect) consultorSelect.value = user;
+            document.getElementById('visita-consultor').value = user;
         }
         showModal(allElements.visitaFormModal);
     }
     
     allElements.visitaForm.addEventListener('submit', function(e) {
         e.preventDefault();
-        if (!this.checkValidity()) {
-            this.reportValidity();
-            return;
-        }
-        
+        if (!this.checkValidity()) { this.reportValidity(); return; }
         const id = parseInt(document.getElementById('visita-id').value);
         const isRescheduling = document.getElementById('is-rescheduling').value === 'true';
-
         const visitData = {
             consultor: document.getElementById('visita-consultor').value,
             cliente: document.getElementById('visita-cliente').value,
@@ -1064,28 +1136,18 @@
             fim: document.getElementById('visita-fim').value,
             descricao: document.getElementById('visita-descricao').value,
         };
-
-        if (id) { // Editando
+        if (id) {
             const index = visitsData.findIndex(v => v.id === id);
             if (index > -1) {
-                const existingVisit = visitsData[index];
-                visitsData[index] = { ...existingVisit, ...visitData };
+                visitsData[index] = { ...visitsData[index], ...visitData };
                 if (isRescheduling) {
                     visitsData[index].status = 'Agendada';
                     visitsData[index].isRescheduled = true;
                 }
             }
-        } else { // Novo
-            visitData.id = Date.now();
-            visitData.status = 'Agendada';
-            visitData.startTime = null;
-            visitData.startAddress = null;
-            visitData.endTime = null;
-            visitData.endAddress = null;
-            visitData.isRescheduled = false;
-            visitsData.push(visitData);
+        } else {
+            visitsData.push({ id: Date.now(), status: 'Agendada', ...visitData });
         }
-        
         hideModal(allElements.visitaFormModal);
         applyFilters();
     });
@@ -1105,41 +1167,298 @@
     }
     
     function initializeCalendar() {
-        const calendarEl = document.getElementById('calendar');
-        if (calendarEl && typeof FullCalendar !== 'undefined') {
-            calendar = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                locale: 'pt-br',
+        if (document.getElementById('calendar') && typeof FullCalendar !== 'undefined') {
+            calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+                initialView: 'dayGridMonth', locale: 'pt-br',
                 buttonText: { today: 'Hoje', month: 'Mês', week: 'Semana', list: 'Lista' },
                 headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' },
             });
         }
     }
     
-    const handleGenericFormSubmit = (form, historyContainerId, cardsContainerId) => {
-         form?.addEventListener('submit', (e) => {
-            e.preventDefault();
-            console.log('Dados salvos (simulação) para o formulário:', form.id);
-            const formContainer = form.closest('div[id$="-form-container"]');
-            if (historyContainerId) document.getElementById(historyContainerId)?.classList.remove('hidden');
-            if (cardsContainerId) document.getElementById(cardsContainerId)?.classList.remove('hidden');
-            if (formContainer) formContainer.classList.add('hidden');
-            activeCard = activeTableRow = null;
-            updateAllCounters();
+    // --- LÓGICA DE REQUISIÇÕES ---
+
+    function openRequisicaoModal(requisicao = null) {
+        const form = allElements.requisicaoForm;
+        form.reset();
+        document.getElementById('epis-fields').style.display = 'none';
+        document.getElementById('consumo-fields').style.display = 'none';
+        document.getElementById('consumo-categories-container').innerHTML = '';
+        
+        document.getElementById('requisicao-data').value = new Date().toLocaleString('pt-BR');
+
+        if(requisicao) {
+            document.getElementById('requisicao-modal-title').textContent = "Editar Requisição";
+            document.getElementById('requisicao-id').value = requisicao.id;
+            document.getElementById('requisicao-tipo').value = requisicao.tipo;
+            document.getElementById('requisicao-consultor').value = requisicao.consultor;
+            toggleRequisicaoFields();
+            if(requisicao.tipo === 'EPIs') {
+                document.getElementById('epis-item').value = requisicao.items[0].item;
+                document.getElementById('epis-quantidade').value = requisicao.items[0].quantidade;
+            } else if (requisicao.tipo === 'Consumo') {
+                const categories = {};
+                requisicao.items.forEach(item => {
+                    if(!categories[item.categoria]) categories[item.categoria] = [];
+                    categories[item.categoria].push(item);
+                });
+                Object.keys(categories).forEach(catName => {
+                    const categoryBlock = addConsumoCategory(catName);
+                    categories[catName].forEach(item => {
+                        const itemRow = addConsumoItem(categoryBlock.querySelector('.add-consumo-item-btn'), item.item);
+                        itemRow.querySelector('.consumo-item-quantidade').value = item.quantidade;
+                    });
+                });
+            }
+        } else {
+            document.getElementById('requisicao-modal-title').textContent = "Nova Requisição";
+            document.getElementById('requisicao-id').value = '';
+            document.getElementById('requisicao-consultor').value = document.getElementById('logged-user-name').textContent;
+        }
+        showModal(allElements.requisicaoFormModal);
+    }
+
+    function toggleRequisicaoFields() {
+        const tipo = document.getElementById('requisicao-tipo').value;
+        const episFields = document.getElementById('epis-fields');
+        const consumoFields = document.getElementById('consumo-fields');
+        episFields.style.display = tipo === 'EPIs' ? 'block' : 'none';
+        consumoFields.style.display = tipo === 'Consumo' ? 'block' : 'none';
+        
+        if(tipo === 'EPIs' && !document.getElementById('epis-item').innerHTML) {
+            document.getElementById('epis-item').innerHTML = itemData.epis.map(item => `<option value="${item}">${item}</option>`).join('');
+        }
+    }
+
+    function addConsumoCategory(categoryName = '') {
+        const container = document.getElementById('consumo-categories-container');
+        const block = document.createElement('div');
+        block.className = 'consumo-category-block border p-3 rounded-lg dark:border-gray-600 space-y-2';
+        const categoryOptions = Object.keys(itemData.consumo).map(cat => `<option value="${cat}" ${cat === categoryName ? 'selected' : ''}>${cat}</option>`).join('');
+        block.innerHTML = `
+            <div class="flex items-center justify-between">
+                <select class="consumo-category-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" ${categoryName ? 'disabled' : ''}>
+                    <option value="">Selecione Categoria...</option>
+                    ${categoryOptions}
+                </select>
+                <button type="button" class="remove-category-btn text-red-500 hover:text-red-700 ml-2"><i class="fas fa-trash"></i></button>
+            </div>
+            <div class="consumo-items-container space-y-2"></div>
+            <button type="button" class="add-consumo-item-btn text-sm text-brand-gold hover:underline"><i class="fas fa-plus mr-1"></i> Adicionar Item</button>
+        `;
+        container.appendChild(block);
+        return block;
+    }
+
+    function addConsumoItem(button, itemName = '') {
+        const categoryBlock = button.closest('.consumo-category-block');
+        const category = categoryBlock.querySelector('.consumo-category-select').value;
+        if (!category) { alert('Por favor, selecione uma categoria primeiro.'); return; }
+        
+        categoryBlock.querySelector('.consumo-category-select').disabled = true;
+
+        const container = categoryBlock.querySelector('.consumo-items-container');
+        const itemRow = document.createElement('div');
+        itemRow.className = 'consumo-item-row flex items-center gap-2';
+        
+        const itemOptions = itemData.consumo[category].map(item => `<option value="${item.nome}" ${item.nome === itemName ? 'selected' : ''}>${item.nome}</option>`).join('');
+        itemRow.innerHTML = `
+            <img src="https://placehold.co/40x40/EEE/31343C?text=?" class="item-preview-img h-10 w-10 rounded-md object-cover">
+            <select class="consumo-item-select flex-grow bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                <option value="">Selecione um item...</option>
+                ${itemOptions}
+            </select>
+            <input type="number" class="consumo-item-quantidade bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-24 p-2.5 dark:bg-gray-700 dark:border-gray-600" min="1" value="1">
+            <button type="button" class="remove-item-btn text-red-500 hover:text-red-700"><i class="fas fa-times-circle"></i></button>
+        `;
+        container.appendChild(itemRow);
+        
+        const select = itemRow.querySelector('.consumo-item-select');
+        select.addEventListener('change', (e) => {
+            const selectedItem = itemData.consumo[category].find(i => i.nome === e.target.value);
+            const img = itemRow.querySelector('.item-preview-img');
+            img.src = selectedItem ? selectedItem.foto : 'https://placehold.co/40x40/EEE/31343C?text=?';
+        });
+
+        if(itemName) {
+            select.dispatchEvent(new Event('change'));
+        }
+
+        return itemRow;
+    }
+
+    allElements.requisicaoForm.addEventListener('submit', function(e){
+        e.preventDefault();
+        const id = parseInt(document.getElementById('requisicao-id').value);
+        const tipo = document.getElementById('requisicao-tipo').value;
+        let items = [];
+
+        if (tipo === 'EPIs') {
+            items.push({
+                item: document.getElementById('epis-item').value,
+                quantidade: document.getElementById('epis-quantidade').value
+            });
+        } else if (tipo === 'Consumo') {
+            document.querySelectorAll('.consumo-category-block').forEach(block => {
+                const categoria = block.querySelector('.consumo-category-select').value;
+                block.querySelectorAll('.consumo-item-row').forEach(row => {
+                    items.push({
+                        categoria: categoria,
+                        item: row.querySelector('.consumo-item-select').value,
+                        quantidade: row.querySelector('.consumo-item-quantidade').value,
+                    });
+                });
+            });
+        }
+        
+        const requisicaoData = {
+            id: id || Date.now(),
+            tipo: tipo,
+            consultor: document.getElementById('requisicao-consultor').value,
+            data: new Date().toISOString(),
+            items: items
+        };
+
+        if(id) {
+            const index = requisicoesData.findIndex(r => r.id === id);
+            if(index > -1) requisicoesData[index] = requisicaoData;
+        } else {
+            requisicoesData.push(requisicaoData);
+        }
+
+        hideModal(allElements.requisicaoFormModal);
+        renderRequisicoes();
+    });
+
+    function renderRequisicoes() {
+        const tableBody = document.getElementById('requisicoes-table-body');
+        tableBody.innerHTML = '';
+        requisicoesData.forEach(req => {
+            const row = tableBody.insertRow();
+            row.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700';
+            row.dataset.id = req.id;
+            
+            const itemsHtml = req.items.map(i => {
+                return req.tipo === 'Consumo' ? `<div><span class="font-semibold">${i.categoria}:</span> ${i.item} (${i.quantidade})</div>` : `${i.item} (${i.quantidade})`;
+            }).join('');
+
+            row.innerHTML = `
+                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">${req.tipo}</td>
+                <td class="px-6 py-4">${itemsHtml}</td>
+                <td class="px-6 py-4">${req.consultor}</td>
+                <td class="px-6 py-4">${new Date(req.data).toLocaleString('pt-BR')}</td>
+                <td class="px-6 py-4 space-x-2">
+                    <button class="table-edit-btn text-blue-500 hover:text-blue-700" title="Editar"><i class="fas fa-edit"></i></button>
+                    <button class="table-delete-btn text-red-500 hover:text-red-700" title="Apagar"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
         });
     }
+
+    // --- LÓGICA DE ITENS DE REQUISIÇÃO ---
+    function renderItensDeRequisicao() {
+        const container = document.getElementById('item-management-container');
+        container.innerHTML = '';
+        Object.keys(itemData.consumo).forEach(category => {
+            const categoryCard = document.createElement('div');
+            categoryCard.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-md p-4';
+            
+            const itemsHtml = itemData.consumo[category].map(item => `
+                <li class="flex items-center justify-between py-2 border-b dark:border-gray-700">
+                    <div class="flex items-center">
+                        <img src="${item.foto}" alt="${item.nome}" class="h-10 w-10 rounded-md object-cover mr-4">
+                        <span class="text-gray-700 dark:text-gray-300">${item.nome}</span>
+                    </div>
+                    <div class="space-x-2">
+                        <button class="edit-item-btn text-blue-500 hover:text-blue-700" data-category="${category}" data-item="${item.nome}"><i class="fas fa-edit"></i></button>
+                        <button class="delete-item-btn text-red-500 hover:text-red-700" data-category="${category}" data-item="${item.nome}"><i class="fas fa-trash"></i></button>
+                    </div>
+                </li>
+            `).join('');
+
+            categoryCard.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">${category}</h3>
+                    <button class="add-item-btn bg-brand-gold text-white px-3 py-1 text-sm rounded-md hover:bg-brand-gold-dark" data-category="${category}">Adicionar Item</button>
+                </div>
+                <ul>${itemsHtml}</ul>
+            `;
+            container.appendChild(categoryCard);
+        });
+    }
+
+    function openItemModal(category, item = null) {
+        allElements.itemForm.reset();
+        document.getElementById('item-category-name').value = category;
+        const preview = document.getElementById('item-foto-preview');
+        preview.classList.add('hidden');
+        preview.src = '';
+        
+        if (item) {
+            document.getElementById('item-modal-title').textContent = `Editar Item em ${category}`;
+            document.getElementById('item-original-name').value = item.nome;
+            document.getElementById('item-name').value = item.nome;
+            if (item.foto) {
+                preview.src = item.foto;
+                preview.classList.remove('hidden');
+            }
+        } else {
+            document.getElementById('item-modal-title').textContent = `Novo Item em ${category}`;
+            document.getElementById('item-original-name').value = '';
+        }
+        showModal(allElements.itemFormModal);
+    }
     
-    handleGenericFormSubmit(allElements.rhForm, 'rh-cards-container', 'rh-cards-container');
-    handleGenericFormSubmit(allElements.clienteForm, 'cliente-cards-container', 'cliente-cards-container');
-    handleGenericFormSubmit(allElements.feriasForm, 'ferias-history-container');
-    handleGenericFormSubmit(allElements.atestadosForm, 'atestados-history-container');
-    handleGenericFormSubmit(allElements.episForm, 'epis-history-container');
-    handleGenericFormSubmit(allElements.ativosForm, 'ativos-history-container');
+    function saveItem(e) {
+        e.preventDefault();
+        const category = document.getElementById('item-category-name').value;
+        const originalName = document.getElementById('item-original-name').value;
+        const newName = document.getElementById('item-name').value;
+        const fotoFile = document.getElementById('item-foto').files[0];
+        const previewSrc = document.getElementById('item-foto-preview').src;
+
+        const handleSave = (fotoUrl) => {
+            if (originalName) { // Editando
+                const itemIndex = itemData.consumo[category].findIndex(i => i.nome === originalName);
+                if (itemIndex > -1) {
+                    itemData.consumo[category][itemIndex] = { nome: newName, foto: fotoUrl };
+                }
+            } else { // Novo
+                itemData.consumo[category].push({ nome: newName, foto: fotoUrl });
+            }
+            hideModal(allElements.itemFormModal);
+            renderItensDeRequisicao();
+        };
+        
+        if (fotoFile) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                handleSave(e.target.result);
+            }
+            reader.readAsDataURL(fotoFile);
+        } else {
+             handleSave(previewSrc || 'https://placehold.co/100x100/EEE/31343C?text=?');
+        }
+    }
+
+
+    // --- SUBMISSÃO DE FORMS GENÉRICOS ---
+    
+    document.querySelectorAll('#rh-form, #cliente-form, #ferias-form, #atestados-form, #epis-form, #ativos-form').forEach(form => {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            console.log(`Formulário ${form.id} salvo (simulação).`);
+            const container = form.closest('div[id$="-form-container"]');
+            const history = container.previousElementSibling.id.includes('history') ? container.previousElementSibling : container.previousElementSibling.previousElementSibling;
+            container.classList.add('hidden');
+            if(history) history.classList.remove('hidden');
+            updateAllCounters();
+        });
+    });
     
     initializeApp();
 });
 </script>
 </body>
 </html>
-"
 
