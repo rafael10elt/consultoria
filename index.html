@@ -13,60 +13,100 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 
     <style>
-        :root {
-            --brand-gold: #BFA16A;
-            --brand-dark: #373737;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Estilos para modo escuro */
-        .dark .dark\:bg-gray-800 { background-color: #1f2937; }
-        .dark .dark\:bg-gray-900 { background-color: #111827; }
-        .dark .dark\:text-gray-100 { color: #f3f4f6; }
-        .dark .dark\:text-gray-200 { color: #e5e7eb; }
-        .dark .dark\:text-gray-300 { color: #d1d5db; }
-        .dark .dark\:text-gray-400 { color: #9ca3af; }
-        .dark .dark\:border-gray-700 { border-color: #374151; }
-        .dark .dark\:hover\:bg-gray-700:hover { background-color: #374151; }
-        .dark .dark\:placeholder-gray-500::placeholder { color: #6b7280; }
+:root {
+  --brand-gold: #BFA16A;
+  --brand-dark: #373737;
+}
 
-        /* Cores da marca */
-        .bg-brand-gold { background-color: var(--brand-gold); }
-        .text-brand-gold { color: var(--brand-gold); }
-        .border-brand-gold { border-color: var(--brand-gold); }
-        .hover\:bg-brand-gold-dark:hover { background-color: #a68a5a; }
-        .bg-brand-dark { background-color: var(--brand-dark); }
-        .text-brand-dark { color: var(--brand-dark); }
-        
-        /* Foco customizado */
-        .focus\:ring-brand-gold:focus {
-            --tw-ring-color: var(--brand-gold);
-        }
-         .focus\:border-brand-gold:focus {
-            --tw-border-opacity: 1;
-            border-color: var(--brand-gold);
-        }
-        
-        /* Animação para o modal */
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .modal-bg-animate { animation: fadeIn 0.3s ease-out forwards; }
-        .modal-content-animate { animation: slideIn 0.3s ease-out forwards; }
+body {
+  font-family: 'Inter', sans-serif;
+  /* DEFINIÇÃO DO MODO CLARO */
+  background-color: #f3f4f6; /* Cor de fundo padrão */
+  color: var(--brand-dark);      /* Cor de texto padrão */
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+}
 
-        /* Estilos Kanban */
-        .kanban-column { min-height: 400px; }
-        
-        /* FullCalendar dark mode */
-        .dark .fc-daygrid-day-number, .dark .fc-col-header-cell-cushion, .dark .fc-list-day-text, .dark .fc-list-day-side-text { color: #e5e7eb; }
-        .dark .fc-theme-standard .fc-list-day-cushion { background-color: #1f2937; }
-        .dark .fc-theme-standard td, .dark .fc-theme-standard th { border-color: #374151; }
+/*
+  ============================================
+  REGRAS GERAIS PARA O MODO ESCURO
+  ============================================
+*/
 
-        /* Botão de filtro ativo */
-        .filter-btn-active {
-            background-color: var(--brand-gold) !important;
-            color: white !important;
-        }
+/* DEFINIÇÃO DO MODO ESCURO */
+.dark body {
+  background-color: #111827; /* Fundo escuro */
+  color: #e5e7eb;             /* Texto claro */
+}
+
+/* Garante que a cor de texto da marca seja legível no modo escuro */
+.dark .text-brand-dark {
+  color: #f3f4f6;
+}
+
+/* Melhora a visibilidade de placeholders no modo escuro */
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #9ca3af;
+}
+
+/*
+  ============================================
+  ESTILOS DE COMPONENTES CUSTOMIZADOS
+  ============================================
+*/
+
+/* Cores da marca */
+.bg-brand-gold { background-color: var(--brand-gold); }
+.text-brand-gold { color: var(--brand-gold); }
+.border-brand-gold { border-color: var(--brand-gold); }
+.hover\:bg-brand-gold-dark:hover { background-color: #a68a5a; }
+.bg-brand-dark { background-color: var(--brand-dark); }
+.text-brand-dark { color: var(--brand-dark); }
+
+/* Foco customizado */
+.focus\:ring-brand-gold:focus {
+  --tw-ring-color: var(--brand-gold);
+}
+.focus\:border-brand-gold:focus {
+  --tw-border-opacity: 1;
+  border-color: var(--brand-gold);
+}
+
+/* Animação para o modal */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-bg-animate { animation: fadeIn 0.3s ease-out forwards; }
+.modal-content-animate { animation: slideIn 0.3s ease-out forwards; }
+
+/* Estilos Kanban */
+.kanban-column { 
+    min-height: 400px; 
+    background-color: #e5e7eb; /* Fundo claro para colunas */
+}
+.dark .kanban-column {
+    background-color: #1f2937; /* Fundo escuro para colunas */
+}
+
+/* FullCalendar dark mode */
+.dark .fc-daygrid-day-number, 
+.dark .fc-col-header-cell-cushion, 
+.dark .fc-list-day-text, 
+.dark .fc-list-day-side-text { 
+  color: #e5e7eb; 
+}
+.dark .fc-theme-standard .fc-list-day-cushion { 
+  background-color: #1f2937; 
+}
+.dark .fc-theme-standard td, 
+.dark .fc-theme-standard th { 
+  border-color: #374151; 
+}
+
+/* Botão de filtro ativo */
+.filter-btn-active {
+  background-color: var(--brand-gold) !important;
+  color: white !important;
+}
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-300 transition-colors duration-300">
@@ -136,8 +176,8 @@
                                 <p class="text-gray-600 dark:text-gray-300">Visão geral e métricas chave do sistema.</p>
                             </div>
                             <div class="flex space-x-2 w-full sm:w-auto">
-                                <button id="show-insights-btn" class="flex-1 bg-yellow-500 text-white px-4 py-2 rounded-lg shadow hover:bg-yellow-600 transition-colors"><i class="fas fa-lightbulb mr-2"></i>Insights</button>
-                                <button id="show-report-modal-btn" class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition-colors"><i class="fas fa-file-pdf mr-2"></i>Relatório</button>
+                                <button id="show-insights-btn" class="bg-yellow-500 text-white px-4 py-2 rounded-lg shadow hover:bg-yellow-600 transition-colors"><i class="fas fa-lightbulb mr-2"></i>Gerar Insights</button>
+                                <button id="show-report-modal-btn" class="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition-colors"><i class="fas fa-file-pdf mr-2"></i>Gerar Relatório</button>
                             </div>
                         </div>
 
