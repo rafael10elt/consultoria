@@ -8,9 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
-    <!-- ADICIONADO CHART.JS PARA GRÁFICOS -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- ADICIONADO JSPDF PARA RELATÓRIOS PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 
@@ -28,7 +26,7 @@
         .dark .dark\:text-gray-100 { color: #f3f4f6; }
         .dark .dark\:text-gray-200 { color: #e5e7eb; }
         .dark .dark\:text-gray-300 { color: #d1d5db; }
-        .dark .dark\:text-gray-400 { color: #d1d5db; }
+        .dark .dark\:text-gray-400 { color: #9ca3af; }
         .dark .dark\:border-gray-700 { border-color: #374151; }
         .dark .dark\:hover\:bg-gray-700:hover { background-color: #374151; }
         .dark .dark\:placeholder-gray-500::placeholder { color: #6b7280; }
@@ -71,7 +69,7 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-300 transition-colors duration-300">
 
     <!-- Tela de Login -->
     <div id="login-screen" class="flex items-center justify-center min-h-screen">
@@ -97,7 +95,7 @@
     <!-- Sistema Principal -->
     <div id="main-app" class="hidden">
         <div class="flex h-screen bg-gray-100 dark:bg-gray-900">
-            <aside id="sidebar" class="absolute z-30 flex-col items-center hidden w-20 text-white transform -translate-x-full lg:relative lg:flex lg:translate-x-0 transition-transform duration-200 ease-in-out bg-brand-dark dark:bg-gray-800">
+            <aside id="sidebar" class="absolute z-30 flex-col items-center w-20 text-white transform -translate-x-full lg:relative lg:flex lg:translate-x-0 transition-transform duration-200 ease-in-out bg-brand-dark dark:bg-gray-800">
                 <div class="flex items-center justify-center w-full h-20 border-b border-gray-700">
                     <svg class="w-10 h-10 text-brand-gold" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 25C100 25 50 40 50 100V150H75V100C75 75 100 60 100 60V25Z" fill="#BFA16A"/><path d="M100 60C100 60 125 75 125 100V150H150V100C150 40 100 25 100 25V60Z" fill="#BFA16A"/><path d="M125 60C140 60 150 70 150 85C150 100 140 110 125 110" stroke="#373737" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M135 70C155 70 165 85 165 100C165 115 155 130 135 130" stroke="#373737" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </div>
@@ -110,6 +108,9 @@
                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="rh" title="RH"><i class="fas fa-briefcase"></i></a>
                 </nav>
             </aside>
+            <!-- Overlay for mobile sidebar -->
+            <div id="sidebar-overlay" class="fixed inset-0 z-20 bg-black bg-opacity-50 hidden lg:hidden"></div>
+
             <div class="flex flex-col flex-1">
                 <header class="flex items-center justify-between h-20 px-6 bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                     <div class="flex items-center">
@@ -134,26 +135,26 @@
                                 <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Dashboard</h2>
                                 <p class="text-gray-600 dark:text-gray-300">Visão geral e métricas chave do sistema.</p>
                             </div>
-                            <div class="flex space-x-2">
-                                <button id="show-insights-btn" class="bg-yellow-500 text-white px-4 py-2 rounded-lg shadow hover:bg-yellow-600 transition-colors"><i class="fas fa-lightbulb mr-2"></i>Gerar Insights</button>
-                                <button id="show-report-modal-btn" class="bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition-colors"><i class="fas fa-file-pdf mr-2"></i>Gerar Relatório</button>
+                            <div class="flex space-x-2 w-full sm:w-auto">
+                                <button id="show-insights-btn" class="flex-1 bg-yellow-500 text-white px-4 py-2 rounded-lg shadow hover:bg-yellow-600 transition-colors"><i class="fas fa-lightbulb mr-2"></i>Insights</button>
+                                <button id="show-report-modal-btn" class="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition-colors"><i class="fas fa-file-pdf mr-2"></i>Relatório</button>
                             </div>
                         </div>
 
                         <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
                             <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
                                 <li class="mr-2"><button class="dashboard-nav-btn inline-block p-4 border-b-2 rounded-t-lg border-brand-gold text-brand-gold" data-target="dashboard-financeiro">Financeiro</button></li>
-                                <li class="mr-2"><button class="dashboard-nav-btn inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" data-target="dashboard-visitas">Visitas</button></li>
+                                <li class="mr-2"><button class="dashboard-nav-btn inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 dark:hover:text-gray-300 hover:border-gray-300" data-target="dashboard-visitas">Visitas</button></li>
                             </ul>
                         </div>
 
                         <div id="dashboard-financeiro" class="dashboard-content">
                             <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 items-end">
-                                    <div class="sm:col-span-2 md:col-span-4 lg:col-span-1"><label for="dash-fin-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label><select id="dash-fin-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"><option value="">Todos</option><option value="Pago">Pago</option><option value="Pendente">Pendente</option></select></div>
-                                    <div><label for="dash-fin-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label><input type="date" id="dash-fin-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div>
-                                    <div><label for="dash-fin-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Até</label><input type="date" id="dash-fin-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div>
-                                    <div class="sm:col-span-2 md:col-span-4 lg:col-span-3 flex items-center justify-end space-x-2">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                                    <div><label for="dash-fin-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label><select id="dash-fin-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"><option value="">Todos</option><option value="Pago">Pago</option><option value="Pendente">Pendente</option></select></div>
+                                    <div><label for="dash-fin-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label><input type="date" id="dash-fin-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+                                    <div><label for="dash-fin-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Até</label><input type="date" id="dash-fin-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+                                    <div class="flex items-center justify-start sm:justify-end space-x-2">
                                         <button class="dash-fin-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="week">Semana</button>
                                         <button class="dash-fin-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="month">Mês</button>
                                         <button class="dash-fin-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="year">Ano</button>
@@ -177,10 +178,10 @@
 
                         <div id="dashboard-visitas" class="dashboard-content hidden">
                              <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 items-end">
-                                    <div><label for="dash-visit-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label><input type="date" id="dash-visit-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div>
-                                    <div><label for="dash-visit-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Até</label><input type="date" id="dash-visit-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div>
-                                    <div class="sm:col-span-2 md:col-span-3 lg:col-span-3 flex items-center justify-end space-x-2">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                                    <div><label for="dash-visit-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label><input type="date" id="dash-visit-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+                                    <div><label for="dash-visit-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Até</label><input type="date" id="dash-visit-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+                                    <div class="col-span-1 lg:col-span-2 flex items-center justify-start sm:justify-end space-x-2">
                                         <button class="dash-visit-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="week">Semana</button>
                                         <button class="dash-visit-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="month">Mês</button>
                                         <button class="dash-visit-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="year">Ano</button>
@@ -230,12 +231,12 @@
                         </div>
                         
                         <div id="consultores-content" class="rh-tab-content">
-                            <div class="flex justify-between items-center mb-4">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
                                 <div class="relative w-full max-w-xs">
                                     <input type="text" id="rh-search" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Buscar consultor...">
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><i class="fas fa-search text-gray-400"></i></div>
                                 </div>
-                                <button id="show-rh-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Consultor</button>
+                                <button id="show-rh-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors w-full sm:w-auto">Novo Consultor</button>
                             </div>
                             <div id="rh-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 <div class="rh-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" data-name="Ana Silva" data-nascimento="1990-05-15" data-telefone="+5583912345678" data-email="ana.silva@email.com" data-endereco="R. das Acácias, 123, João Pessoa, PB" data-login="ana.silva" data-cnpj="11.222.333/0001-44" data-razao="Ana Silva MEI" data-valor="150" data-inicio="2022-01-10" data-fim="" data-obs="Especialista em laticínios.">
@@ -368,23 +369,23 @@
                         <div id="visitas-filters" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
                             <div>
                                 <label for="filter-start-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label>
-                                <input type="date" id="filter-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                <input type="date" id="filter-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             </div>
                             <div>
                                 <label for="filter-end-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Até</label>
-                                <input type="date" id="filter-end-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                <input type="date" id="filter-end-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                             </div>
                             <div>
                                 <label for="filter-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label>
-                                <select id="filter-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select>
+                                <select id="filter-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></select>
                             </div>
                             <div>
                                 <label for="filter-cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
-                                <select id="filter-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select>
+                                <select id="filter-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></select>
                             </div>
                             <div>
                                 <label for="filter-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
-                                <select id="filter-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                <select id="filter-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                     <option value="">Todos</option>
                                     <option value="Agendada">Agendada</option>
                                     <option value="Em Andamento">Em Andamento</option>
@@ -449,19 +450,19 @@
                             <div id="requisicoes-filters" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
                                 <div>
                                     <label for="filter-req-start-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label>
-                                    <input type="date" id="filter-req-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                    <input type="date" id="filter-req-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                 </div>
                                 <div>
                                     <label for="filter-req-end-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Até</label>
-                                    <input type="date" id="filter-req-end-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                    <input type="date" id="filter-req-end-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                 </div>
                                 <div>
                                     <label for="filter-req-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label>
-                                    <select id="filter-req-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select>
+                                    <select id="filter-req-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></select>
                                 </div>
                                 <div>
                                     <label for="filter-req-tipo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo</label>
-                                    <select id="filter-req-tipo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                    <select id="filter-req-tipo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                         <option value="">Todos</option>
                                         <option value="EPIs">EPIs</option>
                                         <option value="Consumo">Consumo</option>
@@ -469,7 +470,7 @@
                                 </div>
                                  <div>
                                     <label for="filter-req-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
-                                    <select id="filter-req-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                    <select id="filter-req-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                         <option value="">Todos</option>
                                         <option value="Pendente">Pendente</option>
                                         <option value="Entregue">Entregue</option>
@@ -477,7 +478,7 @@
                                 </div>
                                 <div>
                                     <label for="filter-req-item" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Item</label>
-                                    <input type="text" id="filter-req-item" placeholder="Buscar item..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                    <input type="text" id="filter-req-item" placeholder="Buscar item..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
                                 </div>
                                 <div class="lg:col-span-6 flex justify-end space-x-2">
                                     <button id="clear-req-filters-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Limpar Filtros</button>
@@ -539,19 +540,19 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
                                 <div>
                                         <label for="filter-receita-start-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Venc. De</label>
-                                        <input type="date" id="filter-receita-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                        <input type="date" id="filter-receita-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                     </div>
                                     <div>
                                         <label for="filter-receita-end-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Venc. Até</label>
-                                        <input type="date" id="filter-receita-end-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                        <input type="date" id="filter-receita-end-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                     </div>
                                     <div>
                                         <label for="filter-receita-cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
-                                        <select id="filter-receita-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select>
+                                        <select id="filter-receita-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></select>
                                     </div>
                                     <div>
                                         <label for="filter-receita-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
-                                        <select id="filter-receita-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                        <select id="filter-receita-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                             <option value="">Todos</option>
                                             <option value="Pendente">Pendente</option>
                                             <option value="Pago">Pago</option>
@@ -581,7 +582,7 @@
                                     <input type="hidden" id="receita-id">
                                     <div>
                                         <label for="receita-cliente-form" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
-                                        <select id="receita-cliente-form" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required></select>
+                                        <select id="receita-cliente-form" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></select>
                                     </div>
                                     <div>
                                         <label for="receita-vencimento" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Vencimento</label>
@@ -593,7 +594,7 @@
                                     </div>
                                     <div>
                                         <label for="receita-status-form" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
-                                        <select id="receita-status-form" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                        <select id="receita-status-form" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                             <option value="Pendente">Pendente</option>
                                             <option value="Pago">Pago</option>
                                         </select>
@@ -618,19 +619,19 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
                                 <div>
                                         <label for="filter-custo-start-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Venc. De</label>
-                                        <input type="date" id="filter-custo-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                        <input type="date" id="filter-custo-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                     </div>
                                     <div>
                                         <label for="filter-custo-end-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Venc. Até</label>
-                                        <input type="date" id="filter-custo-end-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                        <input type="date" id="filter-custo-end-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                     </div>
                                     <div>
                                         <label for="filter-custo-credor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Credor</label>
-                                        <input type="text" id="filter-custo-credor" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                        <input type="text" id="filter-custo-credor" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
                                     </div>
                                     <div>
                                         <label for="filter-custo-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
-                                        <select id="filter-custo-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                        <select id="filter-custo-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                             <option value="">Todos</option>
                                             <option value="Pendente">Pendente</option>
                                             <option value="Pago">Pago</option>
@@ -672,7 +673,7 @@
                                     </div>
                                     <div>
                                         <label for="custo-status-form" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
-                                        <select id="custo-status-form" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                        <select id="custo-status-form" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                             <option value="Pendente">Pendente</option>
                                             <option value="Pago">Pago</option>
                                         </select>
@@ -716,33 +717,33 @@
             <form id="report-form" class="mt-4 space-y-4">
                 <div>
                     <label for="report-type" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo de Relatório</label>
-                    <select id="report-type" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                    <select id="report-type" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                         <option value="financeiro">Financeiro</option>
                         <option value="visitas">Visitas</option>
                     </select>
                 </div>
                 <div>
                     <label for="report-subtype" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Detalhes</label>
-                    <select id="report-subtype" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select>
+                    <select id="report-subtype" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></select>
                 </div>
                  <div id="report-visits-filters" class="hidden space-y-4">
                     <div>
                         <label for="report-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label>
-                        <select id="report-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select>
+                        <select id="report-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></select>
                     </div>
                      <div>
                         <label for="report-cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
-                        <select id="report-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select>
+                        <select id="report-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></select>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label for="report-start-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período (De)</label>
-                        <input type="date" id="report-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                        <input type="date" id="report-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     </div>
                     <div>
                         <label for="report-end-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período (Até)</label>
-                        <input type="date" id="report-end-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                        <input type="date" id="report-end-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     </div>
                 </div>
                 <div class="flex justify-end pt-4">
@@ -792,12 +793,12 @@
                 <input type="hidden" id="visita-id">
                 <input type="hidden" id="is-rescheduling" value="false">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label for="visita-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><select id="visita-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required></select></div>
-                    <div><label for="visita-cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label><select id="visita-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required></select></div>
-                    <div><label for="visita-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data da Visita</label><input type="date" id="visita-data" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required></div>
+                    <div><label for="visita-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><select id="visita-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></select></div>
+                    <div><label for="visita-cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label><select id="visita-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></select></div>
+                    <div><label for="visita-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data da Visita</label><input type="date" id="visita-data" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></div>
                     <div></div>
-                    <div><label for="visita-inicio" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hora Início</label><input type="time" id="visita-inicio" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required></div>
-                    <div><label for="visita-fim" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hora Fim</label><input type="time" id="visita-fim" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required></div>
+                    <div><label for="visita-inicio" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hora Início</label><input type="time" id="visita-inicio" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></div>
+                    <div><label for="visita-fim" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hora Fim</label><input type="time" id="visita-fim" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></div>
                     <div class="md:col-span-2"><label for="visita-descricao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descrição</label><textarea id="visita-descricao" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600" required></textarea></div>
                 </div>
                 <div class="flex justify-end mt-6 space-x-4">
@@ -816,7 +817,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label for="requisicao-tipo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo de Requisição</label>
-                        <select id="requisicao-tipo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                        <select id="requisicao-tipo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
                             <option value="">Selecione...</option>
                             <option value="EPIs">EPIs</option>
                             <option value="Consumo">Consumo</option>
@@ -824,7 +825,7 @@
                     </div>
                      <div>
                         <label for="requisicao-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label>
-                        <select id="requisicao-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required></select>
+                        <select id="requisicao-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></select>
                     </div>
                      <div>
                         <label for="requisicao-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data/Hora</label>
@@ -928,6 +929,7 @@
         loginForm: document.getElementById('login-form'),
         themeToggle: document.getElementById('theme-toggle'),
         sidebar: document.getElementById('sidebar'),
+        sidebarOverlay: document.getElementById('sidebar-overlay'),
         sidebarToggle: document.getElementById('sidebar-toggle'),
         pages: document.querySelectorAll('.page'),
         pageTitle: document.getElementById('page-title'),
@@ -1045,6 +1047,9 @@
         // Listener para modal de relatório
         document.getElementById('report-type').addEventListener('change', toggleReportSubtype);
         document.getElementById('report-form').addEventListener('submit', generatePdfReport);
+        
+        // Listener para overlay do menu mobile
+        allElements.sidebarOverlay.addEventListener('click', toggleMobileSidebar);
 
 
         updateAllCounters();
@@ -1118,7 +1123,7 @@
                 updateAllDashboards(); // Redesenha gráficos com cores do tema
                 if (calendar) calendar.render();
             },
-            'sidebar-toggle': () => allElements.sidebar?.classList.toggle('hidden'),
+            'sidebar-toggle': toggleMobileSidebar,
             'show-insights-btn': () => { generateInsights(); showModal(allElements.insightsModal) },
             'close-insights-modal': () => hideModal(allElements.insightsModal),
             'show-report-modal-btn': () => { toggleReportSubtype(); showModal(allElements.reportModal) },
@@ -1229,6 +1234,12 @@
         }
     }
     
+    function toggleMobileSidebar() {
+        allElements.sidebar.classList.toggle('-translate-x-full');
+        allElements.sidebar.classList.toggle('translate-x-0');
+        allElements.sidebarOverlay.classList.toggle('hidden');
+    }
+    
     function handleNavClick(e) {
         const navLink = e.currentTarget;
         const targetId = navLink.dataset.target;
@@ -1253,7 +1264,7 @@
 
         // Fecha a sidebar no mobile após o clique
         if (window.innerWidth < 1024) { // lg breakpoint
-            allElements.sidebar.classList.add('hidden');
+            toggleMobileSidebar();
         }
     }
 
@@ -1406,10 +1417,12 @@
     const setupSubFormToggle = (historyId, formId) => {
         document.getElementById(historyId)?.classList.add('hidden');
         document.getElementById(formId)?.classList.remove('hidden');
-        document.getElementById(formId.replace('-container', '')).reset();
-        // Limpar IDs ocultos
-        const idInput = document.getElementById(formId.replace('form-container', 'id'));
-        if(idInput) idInput.value = '';
+        const form = document.getElementById(formId.replace('-container', ''));
+        if(form) {
+            form.reset();
+            const idInput = form.querySelector('input[type="hidden"]');
+            if(idInput) idInput.value = '';
+        }
     };
 
     const hideModal = (modal) => modal?.classList.replace('flex', 'hidden');
@@ -1964,7 +1977,7 @@
         const categoryOptions = Object.keys(itemData.consumo).map(cat => `<option value="${cat}" ${cat === categoryName ? 'selected' : ''}>${cat}</option>`).join('');
         block.innerHTML = `
             <div class="flex items-center justify-between">
-                <select class="consumo-category-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" ${categoryName ? 'disabled' : ''}>
+                <select class="consumo-category-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" ${categoryName ? 'disabled' : ''}>
                     <option value="">Selecione Categoria...</option>
                     ${categoryOptions}
                 </select>
@@ -1991,11 +2004,11 @@
         const itemOptions = itemData.consumo[category].map(item => `<option value="${item.nome}" ${item.nome === itemName ? 'selected' : ''}>${item.nome}</option>`).join('');
         itemRow.innerHTML = `
             <img src="https://placehold.co/40x40/EEE/31343C?text=?" class="item-preview-img h-10 w-10 rounded-md object-cover">
-            <select class="consumo-item-select flex-grow bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+            <select class="consumo-item-select flex-grow bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 <option value="">Selecione um item...</option>
                 ${itemOptions}
             </select>
-            <input type="number" class="consumo-item-quantidade bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-24 p-2.5 dark:bg-gray-700 dark:border-gray-600" min="1" value="1">
+            <input type="number" class="consumo-item-quantidade bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-24 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" min="1" value="1">
             <button type="button" class="remove-item-btn text-red-500 hover:text-red-700"><i class="fas fa-times-circle"></i></button>
         `;
         container.appendChild(itemRow);
@@ -2070,7 +2083,7 @@
             row.dataset.id = req.id;
             
             const itemsHtml = req.items.map(i => {
-                return req.tipo === 'Consumo' ? `<div><span class="font-semibold">${i.categoria}:</span> ${i.item} (${i.quantidade})</div>` : `${i.item} (${i.quantidade})`;
+                return req.tipo === 'Consumo' ? `<div class="text-gray-800 dark:text-gray-200"><span class="font-semibold">${i.categoria}:</span> ${i.item} (${i.quantidade})</div>` : `${i.item} (${i.quantidade})`;
             }).join('');
 
             const statusColor = req.status === 'Pendente' ? 'yellow' : 'green';
@@ -2281,11 +2294,12 @@
     // --- LÓGICA FINANCEIRO ---
     function renderReceitas() {
         const tableBody = document.getElementById('receitas-table-body');
+        if (!tableBody) return;
         tableBody.innerHTML = receitasData.map(r => `
             <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.id}">
                 <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">${r.cliente}</td>
-                <td class="px-6 py-4">${new Date(r.vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                <td class="px-6 py-4">${r.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
+                <td class="px-6 py-4 text-gray-700 dark:text-gray-300">${new Date(r.vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td class="px-6 py-4 text-gray-700 dark:text-gray-300">${r.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
                 <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.status === 'Pago' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${r.status}</span></td>
                 <td class="px-6 py-4 space-x-2"><button data-id="${r.id}" class="table-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button data-id="${r.id}" class="table-delete-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td>
             </tr>
@@ -2294,11 +2308,12 @@
 
     function renderCustos() {
         const tableBody = document.getElementById('custos-table-body');
+        if(!tableBody) return;
         tableBody.innerHTML = custosData.map(c => `
              <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${c.id}">
                 <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">${c.credor}</td>
-                <td class="px-6 py-4">${new Date(c.vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                <td class="px-6 py-4">${c.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
+                <td class="px-6 py-4 text-gray-700 dark:text-gray-300">${new Date(c.vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td class="px-6 py-4 text-gray-700 dark:text-gray-300">${c.valor.toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td>
                 <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${c.status === 'Pago' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${c.status}</span></td>
                 <td class="px-6 py-4 space-x-2"><button data-id="${c.id}" class="table-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button data-id="${c.id}" class="table-delete-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td>
             </tr>
@@ -2469,7 +2484,6 @@
             });
             finalY = doc.lastAutoTable.finalY + 10;
         }
-        
         const totalReceitas = filteredReceitas.reduce((sum, r) => sum + r.valor, 0);
         const totalCustos = filteredCustos.reduce((sum, c) => sum + c.valor, 0);
         doc.setFontSize(12);
