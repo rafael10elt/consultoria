@@ -345,6 +345,37 @@
                         </div>
 
                         <div id="requisicoes-content" class="requisicao-tab-content">
+                            <div id="requisicoes-filters" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                                <div>
+                                    <label for="filter-req-start-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label>
+                                    <input type="date" id="filter-req-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                </div>
+                                <div>
+                                    <label for="filter-req-end-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Até</label>
+                                    <input type="date" id="filter-req-end-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                </div>
+                                <div>
+                                    <label for="filter-req-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label>
+                                    <select id="filter-req-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select>
+                                </div>
+                                <div>
+                                    <label for="filter-req-tipo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo</label>
+                                    <select id="filter-req-tipo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                        <option value="">Todos</option>
+                                        <option value="EPIs">EPIs</option>
+                                        <option value="Consumo">Consumo</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="filter-req-item" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Item</label>
+                                    <input type="text" id="filter-req-item" placeholder="Buscar item..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                </div>
+                                <div class="lg:col-span-5 flex justify-end space-x-2">
+                                    <button id="clear-req-filters-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Limpar Filtros</button>
+                                    <button id="apply-req-filters-btn" class="px-4 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Filtrar</button>
+                                </div>
+                            </div>
+
                              <div class="flex justify-end items-center mb-4">
                                 <button id="show-requisicao-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Nova Requisição</button>
                             </div>
@@ -365,7 +396,10 @@
                         </div>
 
                         <div id="itens-requisicao-content" class="requisicao-tab-content hidden">
-                            <div class="flex justify-end items-center mb-4">
+                           <div class="flex items-center justify-between mb-4">
+                                <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-lg flex space-x-1" id="item-category-filters">
+                                    <button class="item-category-filter-btn bg-white dark:bg-gray-800 px-3 py-1 rounded-md shadow-sm" data-category="Todos">Todas</button>
+                                </div>
                                 <button id="show-category-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Nova Categoria</button>
                             </div>
                             <div id="item-management-container" class="space-y-6">
@@ -744,6 +778,7 @@
                 if(newCategory && !itemData.consumo[newCategory]) {
                     itemData.consumo[newCategory] = [];
                     renderItensDeRequisicao();
+                    renderCategoryFilters();
                 } else if (newCategory) {
                     alert("Categoria já existe.");
                 }
@@ -751,6 +786,8 @@
             'cancel-item-form': () => hideModal(allElements.itemFormModal),
             'apply-filters-btn': applyFilters,
             'clear-filters-btn': clearFilters,
+            'apply-req-filters-btn': applyRequisicaoFilters,
+            'clear-req-filters-btn': clearRequisicaoFilters,
             'delete-btn': () => { hideModal(allElements.detailsModal); showModal(allElements.deleteConfirmModal); },
             'cancel-delete-btn': () => {
                 hideModal(allElements.deleteConfirmModal);
@@ -808,6 +845,22 @@
         } else if (classList.contains('delete-item-btn')) {
             activeDeleteItem = { type: 'consumoItem', category: button.dataset.category, itemName: button.dataset.item };
             showModal(allElements.deleteConfirmModal);
+        } else if (classList.contains('item-category-filter-btn')) { 
+            handleCategoryFilterClick(button);
+        }
+    }
+    
+    function handleViewToggle(e) {
+        const button = e.currentTarget;
+        document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.remove('bg-white', 'dark:bg-gray-800', 'shadow-sm'));
+        button.classList.add('bg-white', 'dark:bg-gray-800', 'shadow-sm');
+        document.querySelectorAll('.visitas-view').forEach(view => view.classList.add('hidden'));
+        const targetView = document.getElementById(button.dataset.view);
+        if (targetView) {
+            targetView.classList.remove('hidden');
+            if (button.dataset.view === 'calendar-view' && calendar) {
+                setTimeout(() => calendar.render(), 1);
+            }
         }
     }
     
@@ -1330,10 +1383,10 @@
         renderRequisicoes();
     });
 
-    function renderRequisicoes() {
+    function renderRequisicoes(data = requisicoesData) {
         const tableBody = document.getElementById('requisicoes-table-body');
         tableBody.innerHTML = '';
-        requisicoesData.forEach(req => {
+        data.forEach(req => {
             const row = tableBody.insertRow();
             row.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700';
             row.dataset.id = req.id;
@@ -1361,7 +1414,8 @@
         container.innerHTML = '';
         Object.keys(itemData.consumo).forEach(category => {
             const categoryCard = document.createElement('div');
-            categoryCard.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-md p-4';
+            categoryCard.className = 'category-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4';
+            categoryCard.dataset.category = category;
             
             const itemsHtml = itemData.consumo[category].map(item => `
                 <li class="flex items-center justify-between py-2 border-b dark:border-gray-700">
@@ -1385,7 +1439,41 @@
             `;
             container.appendChild(categoryCard);
         });
+        renderCategoryFilters();
     }
+    
+    function renderCategoryFilters() {
+        const container = document.getElementById('item-category-filters');
+        if(!container) return;
+        
+        const currentActive = container.querySelector('.bg-white')?.dataset.category || 'Todos';
+
+        container.innerHTML = `<button class="item-category-filter-btn px-3 py-1 rounded-md" data-category="Todos">Todas</button>`;
+        Object.keys(itemData.consumo).forEach(category => {
+            container.innerHTML += `<button class="item-category-filter-btn px-3 py-1 rounded-md" data-category="${category}">${category}</button>`;
+        });
+
+        const newActiveBtn = container.querySelector(`[data-category="${currentActive}"]`) || container.querySelector(`[data-category="Todos"]`);
+        newActiveBtn.classList.add('bg-white', 'dark:bg-gray-800', 'shadow-sm');
+
+    }
+    
+    function handleCategoryFilterClick(button) {
+        const filter = button.dataset.category;
+        document.querySelectorAll('.item-category-filter-btn').forEach(btn => {
+            btn.classList.remove('bg-white', 'dark:bg-gray-800', 'shadow-sm');
+        });
+        button.classList.add('bg-white', 'dark:bg-gray-800', 'shadow-sm');
+
+        document.querySelectorAll('#item-management-container .category-card').forEach(card => {
+            if (filter === 'Todos' || card.dataset.category === filter) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+
 
     function openItemModal(category, item = null) {
         allElements.itemForm.reset();
@@ -1439,6 +1527,34 @@
         } else {
              handleSave(previewSrc || 'https://placehold.co/100x100/EEE/31343C?text=?');
         }
+    }
+    
+     function applyRequisicaoFilters() {
+        const startDate = document.getElementById('filter-req-start-date').value;
+        const endDate = document.getElementById('filter-req-end-date').value;
+        const consultor = document.getElementById('filter-req-consultor').value;
+        const tipo = document.getElementById('filter-req-tipo').value;
+        const itemSearch = document.getElementById('filter-req-item').value.toLowerCase();
+
+        const filtered = requisicoesData.filter(req => {
+            const reqDate = req.data.split('T')[0];
+            if (startDate && reqDate < startDate) return false;
+            if (endDate && reqDate > endDate) return false;
+            if (consultor && req.consultor !== consultor) return false;
+            if (tipo && req.tipo !== tipo) return false;
+            if (itemSearch && !req.items.some(item => item.item.toLowerCase().includes(itemSearch))) return false;
+            return true;
+        });
+        renderRequisicoes(filtered);
+    }
+
+    function clearRequisicaoFilters() {
+        document.getElementById('filter-req-start-date').value = '';
+        document.getElementById('filter-req-end-date').value = '';
+        document.getElementById('filter-req-consultor').value = '';
+        document.getElementById('filter-req-tipo').value = '';
+        document.getElementById('filter-req-item').value = '';
+        renderRequisicoes();
     }
 
 
