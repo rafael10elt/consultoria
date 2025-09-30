@@ -345,7 +345,7 @@
                         </div>
 
                         <div id="requisicoes-content" class="requisicao-tab-content">
-                            <div id="requisicoes-filters" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                            <div id="requisicoes-filters" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
                                 <div>
                                     <label for="filter-req-start-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label>
                                     <input type="date" id="filter-req-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
@@ -366,11 +366,19 @@
                                         <option value="Consumo">Consumo</option>
                                     </select>
                                 </div>
+                                 <div>
+                                    <label for="filter-req-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
+                                    <select id="filter-req-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                        <option value="">Todos</option>
+                                        <option value="Pendente">Pendente</option>
+                                        <option value="Entregue">Entregue</option>
+                                    </select>
+                                </div>
                                 <div>
                                     <label for="filter-req-item" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Item</label>
                                     <input type="text" id="filter-req-item" placeholder="Buscar item..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
                                 </div>
-                                <div class="lg:col-span-5 flex justify-end space-x-2">
+                                <div class="lg:col-span-6 flex justify-end space-x-2">
                                     <button id="clear-req-filters-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Limpar Filtros</button>
                                     <button id="apply-req-filters-btn" class="px-4 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Filtrar</button>
                                 </div>
@@ -387,6 +395,7 @@
                                             <th scope="col" class="px-6 py-3">Itens</th>
                                             <th scope="col" class="px-6 py-3">Consultor</th>
                                             <th scope="col" class="px-6 py-3">Data/Hora</th>
+                                            <th scope="col" class="px-6 py-3">Status</th>
                                             <th scope="col" class="px-6 py-3">Ações</th>
                                         </tr>
                                     </thead>
@@ -422,7 +431,7 @@
                  <button id="close-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-3xl leading-none">&times;</button>
             </div>
             <div id="modal-content" class="mt-4 space-y-2 text-gray-700 dark:text-gray-300 max-h-96 overflow-y-auto"></div>
-             <div class="flex justify-end mt-6 space-x-4">
+             <div id="details-modal-actions" class="flex justify-end mt-6 space-x-4">
                 <button id="delete-btn" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Apagar</button>
                 <button id="edit-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Editar</button>
             </div>
@@ -714,22 +723,7 @@
         const navLink = target.closest('.nav-link');
         if (navLink) {
             e.preventDefault();
-            const targetId = navLink.dataset.target;
-            document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
-            const targetPage = document.getElementById(targetId);
-            if (targetPage) {
-                targetPage.classList.remove('hidden');
-                if (targetId === 'visitas' && calendar) {
-                    setTimeout(() => calendar.render(), 1);
-                }
-            }
-            document.querySelectorAll('.nav-link').forEach(l => {
-                l.classList.remove('bg-brand-gold', 'text-white');
-                l.classList.add('text-gray-400');
-            });
-            navLink.classList.add('bg-brand-gold', 'text-white');
-            navLink.classList.remove('text-gray-400');
-            if (document.getElementById('page-title')) document.getElementById('page-title').textContent = navLink.title;
+            handleNavClick({ currentTarget: navLink });
             return;
         }
 
@@ -800,7 +794,7 @@
                     applyFilters();
                 } else if (activeDeleteItem.type === 'requisicao') {
                     requisicoesData = requisicoesData.filter(r => r.id !== activeDeleteItem.id);
-                    renderRequisicoes();
+                    applyRequisicaoFilters();
                 } else if (activeDeleteItem.type === 'consumoItem') {
                     const { category, itemName } = activeDeleteItem;
                     itemData.consumo[category] = itemData.consumo[category].filter(i => i.nome !== itemName);
@@ -847,9 +841,34 @@
             showModal(allElements.deleteConfirmModal);
         } else if (classList.contains('item-category-filter-btn')) { 
             handleCategoryFilterClick(button);
+        } else if (classList.contains('change-status-req-btn')) {
+            changeRequisicaoStatus(button.dataset.id);
+        } else if (classList.contains('view-req-btn')) {
+            openRequisicaoDetailsModal(button.dataset.id);
         }
     }
     
+    function handleNavClick(e) {
+        const navLink = e.currentTarget;
+        const targetId = navLink.dataset.target;
+        document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
+        const targetPage = document.getElementById(targetId);
+        if (targetPage) {
+            targetPage.classList.remove('hidden');
+            if (targetId === 'visitas' && calendar) {
+                setTimeout(() => calendar.render(), 1);
+            }
+        }
+        document.querySelectorAll('.nav-link').forEach(l => {
+            l.classList.remove('bg-brand-gold', 'text-white');
+            l.classList.add('text-gray-400');
+        });
+        navLink.classList.add('bg-brand-gold', 'text-white');
+        navLink.classList.remove('text-gray-400');
+        if (document.getElementById('page-title')) document.getElementById('page-title').textContent = navLink.title;
+    }
+
+
     function handleViewToggle(e) {
         const button = e.currentTarget;
         document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.remove('bg-white', 'dark:bg-gray-800', 'shadow-sm'));
@@ -982,6 +1001,7 @@
 
     const openDetailsModal = (card) => {
         activeCard = card;
+        document.getElementById('details-modal-actions').style.display = 'flex';
         const formatters = {
             nascimento: (val) => val ? new Date(val + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A',
             valor: (val) => val ? parseFloat(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'N/A',
@@ -1369,18 +1389,22 @@
             tipo: tipo,
             consultor: document.getElementById('requisicao-consultor').value,
             data: new Date().toISOString(),
+            status: 'Pendente',
             items: items
         };
 
         if(id) {
             const index = requisicoesData.findIndex(r => r.id === id);
-            if(index > -1) requisicoesData[index] = requisicaoData;
+            if(index > -1) {
+                requisicaoData.status = requisicoesData[index].status; // Preserve status on edit
+                requisicoesData[index] = requisicaoData;
+            }
         } else {
             requisicoesData.push(requisicaoData);
         }
 
         hideModal(allElements.requisicaoFormModal);
-        renderRequisicoes();
+        applyRequisicaoFilters();
     });
 
     function renderRequisicoes(data = requisicoesData) {
@@ -1395,18 +1419,57 @@
                 return req.tipo === 'Consumo' ? `<div><span class="font-semibold">${i.categoria}:</span> ${i.item} (${i.quantidade})</div>` : `${i.item} (${i.quantidade})`;
             }).join('');
 
+            const statusColor = req.status === 'Pendente' ? 'yellow' : 'green';
+
             row.innerHTML = `
                 <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">${req.tipo}</td>
                 <td class="px-6 py-4">${itemsHtml}</td>
                 <td class="px-6 py-4">${req.consultor}</td>
                 <td class="px-6 py-4">${new Date(req.data).toLocaleString('pt-BR')}</td>
+                <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${statusColor}-200 text-${statusColor}-800">${req.status}</span></td>
                 <td class="px-6 py-4 space-x-2">
-                    <button class="table-edit-btn text-blue-500 hover:text-blue-700" title="Editar"><i class="fas fa-edit"></i></button>
+                    <button class="view-req-btn text-gray-500 hover:text-gray-700" title="Ver Detalhes" data-id="${req.id}"><i class="fas fa-eye"></i></button>
+                    <button class="change-status-req-btn text-blue-500 hover:text-blue-700" title="Alterar Status" data-id="${req.id}"><i class="fas fa-exchange-alt"></i></button>
+                    <button class="table-edit-btn text-yellow-500 hover:text-yellow-700" title="Editar"><i class="fas fa-edit"></i></button>
                     <button class="table-delete-btn text-red-500 hover:text-red-700" title="Apagar"><i class="fas fa-trash"></i></button>
                 </td>
             `;
         });
     }
+
+    function changeRequisicaoStatus(reqId) {
+        const id = parseInt(reqId);
+        const requisicao = requisicoesData.find(r => r.id === id);
+        if (requisicao) {
+            requisicao.status = requisicao.status === 'Pendente' ? 'Entregue' : 'Pendente';
+            applyRequisicaoFilters();
+        }
+    }
+    
+    function openRequisicaoDetailsModal(reqId) {
+        const id = parseInt(reqId);
+        const requisicao = requisicoesData.find(r => r.id === id);
+        if (!requisicao) return;
+
+        const itemsHtml = requisicao.items.map(i => {
+            return requisicao.tipo === 'Consumo' ? `<p><strong class="capitalize">${i.categoria}:</strong> ${i.item} (Qtd: ${i.quantidade})</p>` : `<p><strong class="capitalize">Item:</strong> ${i.item} (Qtd: ${i.quantidade})</p>`;
+        }).join('');
+        
+        document.getElementById('modal-title').textContent = `Detalhes da Requisição #${requisicao.id}`;
+        document.getElementById('modal-content').innerHTML = `
+            <p><strong>Tipo:</strong> ${requisicao.tipo}</p>
+            <p><strong>Consultor:</strong> ${requisicao.consultor}</p>
+            <p><strong>Data/Hora:</strong> ${new Date(requisicao.data).toLocaleString('pt-BR')}</p>
+            <p><strong>Status:</strong> ${requisicao.status}</p>
+            <div class="mt-4 pt-4 border-t dark:border-gray-600">
+                <h4 class="font-bold mb-2">Itens:</h4>
+                ${itemsHtml}
+            </div>
+        `;
+        document.getElementById('details-modal-actions').style.display = 'none';
+        showModal(allElements.detailsModal);
+    }
+
 
     // --- LÓGICA DE ITENS DE REQUISIÇÃO ---
     function renderItensDeRequisicao() {
@@ -1534,6 +1597,7 @@
         const endDate = document.getElementById('filter-req-end-date').value;
         const consultor = document.getElementById('filter-req-consultor').value;
         const tipo = document.getElementById('filter-req-tipo').value;
+        const status = document.getElementById('filter-req-status').value;
         const itemSearch = document.getElementById('filter-req-item').value.toLowerCase();
 
         const filtered = requisicoesData.filter(req => {
@@ -1542,6 +1606,7 @@
             if (endDate && reqDate > endDate) return false;
             if (consultor && req.consultor !== consultor) return false;
             if (tipo && req.tipo !== tipo) return false;
+            if (status && req.status !== status) return false;
             if (itemSearch && !req.items.some(item => item.item.toLowerCase().includes(itemSearch))) return false;
             return true;
         });
@@ -1553,6 +1618,7 @@
         document.getElementById('filter-req-end-date').value = '';
         document.getElementById('filter-req-consultor').value = '';
         document.getElementById('filter-req-tipo').value = '';
+        document.getElementById('filter-req-status').value = '';
         document.getElementById('filter-req-item').value = '';
         renderRequisicoes();
     }
