@@ -262,9 +262,43 @@
                                 <button id="show-visita-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Nova Visita</button>
                             </div>
                         </div>
+                        
+                        <div id="visitas-filters" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                            <div>
+                                <label for="filter-start-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label>
+                                <input type="date" id="filter-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                            </div>
+                            <div>
+                                <label for="filter-end-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Até</label>
+                                <input type="date" id="filter-end-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                            </div>
+                            <div>
+                                <label for="filter-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label>
+                                <select id="filter-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select>
+                            </div>
+                            <div>
+                                <label for="filter-cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
+                                <select id="filter-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select>
+                            </div>
+                            <div>
+                                <label for="filter-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
+                                <select id="filter-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                                    <option value="">Todos</option>
+                                    <option value="Agendada">Agendada</option>
+                                    <option value="Em Andamento">Em Andamento</option>
+                                    <option value="Concluída">Concluída</option>
+                                    <option value="Remarcada">Remarcada</option>
+                                </select>
+                            </div>
+                            <div class="lg:col-span-5 flex justify-end space-x-2">
+                                <button id="clear-filters-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Limpar Filtros</button>
+                                <button id="apply-filters-btn" class="px-4 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Filtrar</button>
+                            </div>
+                        </div>
+
 
                         <div id="kanban-view" class="visitas-view">
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 <div class="kanban-column bg-gray-200 dark:bg-gray-800 rounded-lg p-4" data-status="Agendada">
                                     <h3 class="font-bold text-lg mb-4 text-gray-800 dark:text-white">Agendada</h3>
                                     <div class="space-y-4" id="kanban-agendada"></div>
@@ -276,10 +310,6 @@
                                 <div class="kanban-column bg-gray-200 dark:bg-gray-800 rounded-lg p-4" data-status="Concluída">
                                     <h3 class="font-bold text-lg mb-4 text-gray-800 dark:text-white">Concluída</h3>
                                     <div class="space-y-4" id="kanban-concluida"></div>
-                                </div>
-                                <div class="kanban-column bg-gray-200 dark:bg-gray-800 rounded-lg p-4" data-status="Remarcada">
-                                    <h3 class="font-bold text-lg mb-4 text-gray-800 dark:text-white">Remarcada</h3>
-                                    <div class="space-y-4" id="kanban-remarcada"></div>
                                 </div>
                             </div>
                         </div>
@@ -346,13 +376,13 @@
                 <input type="hidden" id="visita-id">
                 <input type="hidden" id="is-rescheduling" value="false">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label for="visita-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><select id="visita-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select></div>
-                    <div><label for="visita-cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label><select id="visita-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select></div>
-                    <div><label for="visita-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data da Visita</label><input type="date" id="visita-data" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div>
+                    <div><label for="visita-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><select id="visita-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required></select></div>
+                    <div><label for="visita-cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label><select id="visita-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required></select></div>
+                    <div><label for="visita-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data da Visita</label><input type="date" id="visita-data" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required></div>
                     <div></div>
-                    <div><label for="visita-inicio" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hora Início</label><input type="time" id="visita-inicio" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div>
-                    <div><label for="visita-fim" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hora Fim</label><input type="time" id="visita-fim" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></div>
-                    <div class="md:col-span-2"><label for="visita-descricao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descrição</label><textarea id="visita-descricao" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600"></textarea></div>
+                    <div><label for="visita-inicio" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hora Início</label><input type="time" id="visita-inicio" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required></div>
+                    <div><label for="visita-fim" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hora Fim</label><input type="time" id="visita-fim" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required></div>
+                    <div class="md:col-span-2"><label for="visita-descricao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descrição</label><textarea id="visita-descricao" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600" required></textarea></div>
                 </div>
                 <div class="flex justify-end mt-6 space-x-4">
                     <button type="button" id="cancel-visita-form" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
@@ -490,11 +520,19 @@
     function populateSelectWithOptions(selector, dataSelector, dataField) {
         const selects = document.querySelectorAll(selector);
         const items = document.querySelectorAll(dataSelector);
-        let options = '<option value="">Selecione...</option>';
-        items.forEach(c => {
-            options += `<option value="${c.dataset[dataField]}">${c.dataset[dataField]}</option>`;
+        let options = '<option value="">Todos</option>';
+        const uniqueItems = [...new Set(Array.from(items).map(c => c.dataset[dataField]))];
+
+        uniqueItems.forEach(item => {
+            options += `<option value="${item}">${item}</option>`;
         });
-        selects.forEach(select => select.innerHTML = options);
+        selects.forEach(select => {
+            const firstOption = select.querySelector('option');
+            select.innerHTML = options;
+            if(firstOption && firstOption.value === "" && firstOption.textContent !== "Todos"){
+                 select.insertAdjacentHTML('afterbegin', `<option value="">${firstOption.textContent}</option>`);
+            }
+        });
     }
 
     function populateConsultantSelects() {
@@ -530,7 +568,7 @@
         updateAllCounters();
         checkOverdueVisits();
         initializeCalendar();
-        renderAllVisits();
+        applyFilters(); // Apply filters on login to show initial state
     }
 
     function handleNavClick(e) {
@@ -574,7 +612,6 @@
         const target = e.target;
         const button = target.closest('button');
 
-        // Card clicks for details modal
         const rhCard = target.closest('.rh-card');
         if (rhCard && !target.closest('a')) {
             openDetailsModal(rhCard);
@@ -614,6 +651,9 @@
         if (classList.contains('iniciar-visita-btn')) handleStartVisit(button.dataset.id);
         if (classList.contains('encerrar-visita-btn')) handleEndVisit(button.dataset.id);
         if (classList.contains('remarcar-visita-btn')) handleRescheduleVisit(button.dataset.id);
+        if (id === 'apply-filters-btn') applyFilters();
+        if (id === 'clear-filters-btn') clearFilters();
+
 
         // Ações Modais
         if (id === 'delete-btn') {
@@ -628,7 +668,7 @@
         if (id === 'confirm-delete-btn') {
             if (activeDeleteItem.type === 'visita') {
                 visitsData = visitsData.filter(v => v.id !== activeDeleteItem.id);
-                renderAllVisits();
+                applyFilters();
             } else if (activeCard) {
                 activeCard.remove();
             } else if (activeTableRow) {
@@ -789,25 +829,62 @@
         'Remarcada': { color: 'purple', label: 'Remarcada' }
     };
 
-    function renderAllVisits() {
-        renderKanbanBoard();
-        renderVisitsList();
-        renderCalendarEvents();
+    function applyFilters() {
+        const startDate = document.getElementById('filter-start-date').value;
+        const endDate = document.getElementById('filter-end-date').value;
+        const consultor = document.getElementById('filter-consultor').value;
+        const cliente = document.getElementById('filter-cliente').value;
+        const status = document.getElementById('filter-status').value;
+
+        const filtered = visitsData.filter(visit => {
+            if (startDate) {
+                const visitDate = new Date(visit.data + 'T00:00:00');
+                if (new Date(startDate + 'T00:00:00') > visitDate) return false;
+            }
+            if (endDate) {
+                 const visitDate = new Date(visit.data + 'T00:00:00');
+                if (new Date(endDate + 'T00:00:00') < visitDate) return false;
+            }
+            if (consultor && visit.consultor !== consultor) return false;
+            if (cliente && visit.cliente !== cliente) return false;
+            if (status && visit.status !== status) return false;
+            return true;
+        });
+
+        renderAllVisits(filtered);
     }
 
-    function renderKanbanBoard() {
-        // Limpa as colunas
-        document.getElementById('kanban-agendada').innerHTML = '';
-        document.getElementById('kanban-em-andamento').innerHTML = '';
-        document.getElementById('kanban-concluida').innerHTML = '';
-        document.getElementById('kanban-remarcada').innerHTML = '';
+    function clearFilters() {
+        document.getElementById('filter-start-date').value = '';
+        document.getElementById('filter-end-date').value = '';
+        document.getElementById('filter-consultor').value = '';
+        document.getElementById('filter-cliente').value = '';
+        document.getElementById('filter-status').value = '';
+        renderAllVisits(visitsData);
+    }
 
-        visitsData.forEach(visit => {
+
+    function renderAllVisits(data = visitsData) {
+        const kanbanData = data.filter(visit => visit.status !== 'Remarcada');
+        renderKanbanBoard(kanbanData);
+        renderVisitsList(data);
+        renderCalendarEvents(data);
+    }
+
+
+    function renderKanbanBoard(data) {
+        const columns = {
+            'kanban-agendada': document.getElementById('kanban-agendada'),
+            'kanban-em-andamento': document.getElementById('kanban-em-andamento'),
+            'kanban-concluida': document.getElementById('kanban-concluida'),
+        };
+        Object.values(columns).forEach(col => col.innerHTML = '');
+
+        data.forEach(visit => {
             const card = createKanbanCard(visit);
             const statusId = `kanban-${visit.status.toLowerCase().replace(' ', '-').normalize("NFD").replace(/[\u0300-\u036f]/g, "")}`;
-            const column = document.getElementById(statusId);
-            if(column) {
-                column.appendChild(card);
+            if (columns[statusId]) {
+                columns[statusId].appendChild(card);
             }
         });
     }
@@ -875,10 +952,10 @@
         return card;
     }
 
-    function renderVisitsList() {
+    function renderVisitsList(data) {
         const tableBody = document.getElementById('visitas-table-body');
         tableBody.innerHTML = '';
-        visitsData.forEach(visit => {
+        data.forEach(visit => {
             const { color, label } = statusConfig[visit.status];
             let statusLabel = label;
             if (visit.isRescheduled && visit.status === 'Agendada') {
@@ -904,10 +981,10 @@
         });
     }
 
-    function renderCalendarEvents() {
+    function renderCalendarEvents(data) {
         if (!calendar) return;
         calendar.removeAllEvents();
-        const events = visitsData.map(visit => ({
+        const events = data.map(visit => ({
             title: `${visit.cliente} (${visit.consultor})`,
             start: `${visit.data}T${visit.inicio}`,
             end: `${visit.data}T${visit.fim}`,
@@ -923,7 +1000,7 @@
             visit.startTime = new Date().toISOString();
             const clientCard = document.querySelector(`.cliente-card[data-name="${visit.cliente}"]`);
             visit.startAddress = clientCard ? clientCard.dataset.endereco : 'Endereço não encontrado';
-            renderAllVisits();
+            applyFilters();
         }
     }
 
@@ -934,7 +1011,7 @@
             visit.endTime = new Date().toISOString();
             const clientCard = document.querySelector(`.cliente-card[data-name="${visit.cliente}"]`);
             visit.endAddress = clientCard ? clientCard.dataset.endereco : 'Endereço não encontrado';
-            renderAllVisits();
+            applyFilters();
         }
     }
 
@@ -972,6 +1049,11 @@
     
     allElements.visitaForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        if (!this.checkValidity()) {
+            this.reportValidity();
+            return;
+        }
+        
         const id = parseInt(document.getElementById('visita-id').value);
         const isRescheduling = document.getElementById('is-rescheduling').value === 'true';
 
@@ -1006,7 +1088,7 @@
         }
         
         hideModal(allElements.visitaFormModal);
-        renderAllVisits();
+        applyFilters();
     });
     
     function checkOverdueVisits() {
@@ -1020,7 +1102,7 @@
                 changed = true;
             }
         });
-        if(changed) renderAllVisits();
+        if(changed) applyFilters();
     }
     
     function initializeCalendar() {
