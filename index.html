@@ -925,7 +925,7 @@ body {
 
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
+       document.addEventListener('DOMContentLoaded', function() {
     let activeCard = null;
     let activeTableRow = null;
     let calendar;
@@ -1091,6 +1091,15 @@ body {
         // Listener para overlay do menu mobile
         allElements.sidebarOverlay.addEventListener('click', toggleMobileSidebar);
 
+        // ### CORREÇÃO INICIADA ###
+        // Adiciona listeners para os filtros da tela Financeiro
+        ['filter-receita-start-date', 'filter-receita-end-date', 'filter-receita-cliente', 'filter-receita-status'].forEach(id => {
+            document.getElementById(id)?.addEventListener('change', applyAndRenderReceitas);
+        });
+        ['filter-custo-start-date', 'filter-custo-end-date', 'filter-custo-credor', 'filter-custo-status'].forEach(id => {
+            document.getElementById(id)?.addEventListener('change', applyAndRenderCustos);
+        });
+        // ### CORREÇÃO FINALIZADA ###
 
         updateAllCounters();
     }
@@ -1107,8 +1116,8 @@ body {
         populateConsultantSelects();
         populateClientSelects();
         updateAllCounters();
-        renderReceitas();
-        renderCustos();
+        applyAndRenderReceitas(); // CORREÇÃO: Usar a função com filtro
+        applyAndRenderCustos(); // CORREÇÃO: Usar a função com filtro
         updateAllDashboards();
         checkOverdueVisits();
         initializeCalendar();
@@ -1220,10 +1229,10 @@ body {
                     renderItensDeRequisicao();
                 } else if (activeDeleteItem.type === 'receita') {
                     receitasData = receitasData.filter(r => r.id !== activeDeleteItem.id);
-                    renderReceitas();
+                    applyAndRenderReceitas(); // CORREÇÃO: Usar a função com filtro
                 } else if (activeDeleteItem.type === 'custo') {
                     custosData = custosData.filter(c => c.id !== activeDeleteItem.id);
-                    renderCustos();
+                    applyAndRenderCustos(); // CORREÇÃO: Usar a função com filtro
                 }
                 else if (activeCard) {
                     activeCard.remove();
@@ -2332,10 +2341,47 @@ body {
 
 
     // --- LÓGICA FINANCEIRO ---
-    function renderReceitas() {
+    // ### CORREÇÃO INICIADA ###
+
+    // Função para aplicar filtros e renderizar a tabela de receitas
+    function applyAndRenderReceitas() {
+        const startDate = document.getElementById('filter-receita-start-date').value;
+        const endDate = document.getElementById('filter-receita-end-date').value;
+        const cliente = document.getElementById('filter-receita-cliente').value;
+        const status = document.getElementById('filter-receita-status').value;
+
+        const filtered = receitasData.filter(r => {
+            if (startDate && r.vencimento < startDate) return false;
+            if (endDate && r.vencimento > endDate) return false;
+            if (cliente && r.cliente !== cliente) return false;
+            if (status && r.status !== status) return false;
+            return true;
+        });
+        renderReceitas(filtered);
+    }
+
+    // Função para aplicar filtros e renderizar a tabela de custos
+    function applyAndRenderCustos() {
+        const startDate = document.getElementById('filter-custo-start-date').value;
+        const endDate = document.getElementById('filter-custo-end-date').value;
+        const credor = document.getElementById('filter-custo-credor').value.toLowerCase();
+        const status = document.getElementById('filter-custo-status').value;
+
+        const filtered = custosData.filter(c => {
+            if (startDate && c.vencimento < startDate) return false;
+            if (endDate && c.vencimento > endDate) return false;
+            if (credor && !c.credor.toLowerCase().includes(credor)) return false;
+            if (status && c.status !== status) return false;
+            return true;
+        });
+        renderCustos(filtered);
+    }
+
+    // A função renderReceitas agora aceita um array de dados para renderizar
+    function renderReceitas(data = receitasData) {
         const tableBody = document.getElementById('receitas-table-body');
         if (!tableBody) return;
-        tableBody.innerHTML = receitasData.map(r => `
+        tableBody.innerHTML = data.map(r => `
             <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.id}">
                 <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">${r.cliente}</td>
                 <td class="px-6 py-4 text-gray-700 dark:text-gray-300">${new Date(r.vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td>
@@ -2346,10 +2392,11 @@ body {
         `).join('');
     }
 
-    function renderCustos() {
+    // A função renderCustos agora aceita um array de dados para renderizar
+    function renderCustos(data = custosData) {
         const tableBody = document.getElementById('custos-table-body');
         if(!tableBody) return;
-        tableBody.innerHTML = custosData.map(c => `
+        tableBody.innerHTML = data.map(c => `
              <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${c.id}">
                 <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">${c.credor}</td>
                 <td class="px-6 py-4 text-gray-700 dark:text-gray-300">${new Date(c.vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td>
@@ -2359,6 +2406,8 @@ body {
             </tr>
         `).join('');
     }
+     // ### CORREÇÃO FINALIZADA ###
+
 
     // --- SUBMISSÃO DE FORMS GENÉRICOS ---
     document.querySelectorAll('form').forEach(form => {
@@ -2380,7 +2429,7 @@ body {
                 } else {
                     receitasData.push({ id: Date.now(), ...data });
                 }
-                renderReceitas();
+                applyAndRenderReceitas(); // CORREÇÃO: Usar a função com filtro
             } else if (form.id === 'custo-form') {
                  const id = parseInt(form.querySelector('#custo-id').value);
                 const data = {
@@ -2395,7 +2444,7 @@ body {
                 } else {
                     custosData.push({ id: Date.now(), ...data });
                 }
-                renderCustos();
+                applyAndRenderCustos(); // CORREÇÃO: Usar a função com filtro
             }
 
             console.log(`Formulário ${form.id} salvo (simulação).`);
