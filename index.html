@@ -125,7 +125,7 @@ body {
                 <h2 class="text-2xl font-bold text-center text-gray-900 dark:text-white">Acesse o sistema</h2>
             </div>
             <form id="login-form" class="mt-8 space-y-6">
-                <div><input id="username" name="username" type="text" value="Admin Pontes" autocomplete="username" class="relative block w-full px-3 py-2 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-t-md focus:outline-none focus:ring-brand-gold focus:border-brand-gold focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-500 dark:text-white" placeholder="Usuário"></div>
+                <div><input id="username" name="username" type="text" value="Lumi" autocomplete="username" class="relative block w-full px-3 py-2 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-t-md focus:outline-none focus:ring-brand-gold focus:border-brand-gold focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-500 dark:text-white" placeholder="Usuário"></div>
                 <div><input id="password" name="password" type="password" autocomplete="current-password" class="relative block w-full px-3 py-2 text-gray-900 placeholder-gray-500 border border-gray-300 rounded-b-md focus:outline-none focus:ring-brand-gold focus:border-brand-gold focus:z-10 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-500 dark:text-white" placeholder="Senha"></div>
                 <div><button type="submit" class="relative flex justify-center w-full px-4 py-2 text-sm font-medium text-white border border-transparent rounded-md group bg-brand-dark hover:bg-brand-gold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-gold transition-colors">Entrar</button></div>
             </form>
@@ -976,7 +976,7 @@ document.addEventListener('DOMContentLoaded', function() {
         itemForm: document.getElementById('item-form'),
     };
 
-    // --- Função Auxiliar para Chamadas à API ---
+    // --- Funções Auxiliares para Chamadas à API ---
     async function nocoFetch(endpoint, options = {}) {
         try {
             const response = await fetch(`${API_URL}/${endpoint}`, {
@@ -1001,26 +1001,36 @@ document.addEventListener('DOMContentLoaded', function() {
             return null;
         }
     }
+
+    async function uploadFile(tableName, columnName, file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            const uploadUrl = `${NocoDB_BaseURL}/api/v1/db/data/upload/noco/Consultoria_DB/${tableName}/${columnName}`;
+            const response = await fetch(uploadUrl, {
+                method: 'POST',
+                headers: { 'xc-token': API_TOKEN },
+                body: formData,
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Erro no upload: ${errorData.msg || response.statusText}`);
+            }
+            const result = await response.json();
+            return Array.isArray(result) ? result[0] : result;
+        } catch (error) {
+            console.error(`Falha no upload para ${tableName}:`, error);
+            alert(`Ocorreu um erro ao enviar a imagem.\nDetalhes: ${error.message}`);
+            return null;
+        }
+    }
     
     // --- Funções de Carregamento de Dados (Fetch) ---
     async function fetchAllData() {
         showLoadingOverlay('Carregando dados...');
-        // Carrega dados independentes primeiro
-        await Promise.all([
-            fetchConsultores(),
-            fetchClientes(),
-            fetchCustos(),
-            fetchItensCatalogo()
-        ]);
-        // Carrega dados que dependem dos anteriores
-        await Promise.all([
-            fetchVisitas(),
-            fetchReceitas(),
-            fetchRequisicoes(),
-        ]);
-        hideLoadingOverlay();
+        await Promise.all([ fetchConsultores(), fetchClientes(), fetchCustos(), fetchItensCatalogo() ]);
+        await Promise.all([ fetchVisitas(), fetchReceitas(), fetchRequisicoes() ]);
         
-        // Renderiza tudo após todos os dados serem carregados
         renderConsultores();
         renderClientes();
         populateConsultantSelects();
@@ -1034,6 +1044,7 @@ document.addEventListener('DOMContentLoaded', function() {
         applyFilters();
         renderItensDeRequisicao();
         renderRequisicoes();
+        hideLoadingOverlay();
     }
 
     const fetchDataAndMapRelations = async (mainTable, relations) => {
@@ -1050,120 +1061,80 @@ document.addEventListener('DOMContentLoaded', function() {
         return data;
     }
 
-    async function fetchConsultores() {
-        const result = await nocoFetch('Consultores');
-        if (result && result.list) consultoresData = result.list;
-    }
-    
-    async function fetchClientes() {
-        const result = await nocoFetch('Clientes');
-        if (result && result.list) clientesData = result.list;
-    }
-
-    async function fetchVisitas() {
-        visitsData = await fetchDataAndMapRelations('Visitas', [
-            { fk: 'ConsultorId', dataArray: consultoresData, newField: 'consultor_nome' },
-            { fk: 'ClienteId', dataArray: clientesData, newField: 'cliente_nome' }
-        ]);
-        visitsData = visitsData.map(v => ({...v, startTime: v.HoraInicio ? `${v.DataVisita}T${v.HoraInicio}`:null, endTime: v.HoraFim ? `${v.DataVisita}T${v.HoraFim}`:null }));
-    }
-    
-    async function fetchReceitas() {
-       receitasData = await fetchDataAndMapRelations('Receitas', [
-           { fk: 'ClienteId', dataArray: clientesData, newField: 'cliente_nome' }
-       ]);
-    }
-    
-    async function fetchCustos() {
-        const result = await nocoFetch('Custos');
-        if (result && result.list) custosData = result.list;
-    }
-    
-    async function fetchRequisicoes() {
-       requisicoesData = await fetchDataAndMapRelations('Requisicoes', [
-           { fk: 'ConsultorId', dataArray: consultoresData, newField: 'consultor_nome' }
-       ]);
-       // TODO: Buscar itens de cada requisição se necessário para a visualização inicial.
-    }
-
+    async function fetchConsultores() { const result = await nocoFetch('Consultores'); if (result && result.list) consultoresData = result.list; }
+    async function fetchClientes() { const result = await nocoFetch('Clientes'); if (result && result.list) clientesData = result.list; }
+    async function fetchVisitas() { visitsData = await fetchDataAndMapRelations('Visitas', [ { fk: 'ConsultorId', dataArray: consultoresData, newField: 'consultor_nome' }, { fk: 'ClienteId', dataArray: clientesData, newField: 'cliente_nome' } ]); visitsData = visitsData.map(v => ({...v, startTime: v.HoraInicio ? `${v.DataVisita}T${v.HoraInicio}`:null, endTime: v.HoraFim ? `${v.DataVisita}T${v.HoraFim}`:null })); }
+    async function fetchReceitas() { receitasData = await fetchDataAndMapRelations('Receitas', [ { fk: 'ClienteId', dataArray: clientesData, newField: 'cliente_nome' } ]); }
+    async function fetchCustos() { const result = await nocoFetch('Custos'); if (result && result.list) custosData = result.list; }
+    async function fetchRequisicoes() { requisicoesData = await fetchDataAndMapRelations('Requisicoes', [ { fk: 'ConsultorId', dataArray: consultoresData, newField: 'consultor_nome' } ]); }
     async function fetchItensCatalogo() {
          const result = await nocoFetch('Itens_Catalogo');
          if(result && result.list) {
             itemData.epis = result.list.filter(i => i.Tipo === 'EPI').map(i => i.Nome);
             itemData.consumo = result.list.filter(i => i.Tipo === 'Consumo').reduce((acc, item) => {
-                if(!acc[item.Categoria]) acc[item.Categoria] = [];
-                acc[item.Categoria].push({ nome: item.Nome, foto: item.Foto ? NocoDB_BaseURL + item.Foto[0]?.path : null });
+                const category = item.Categoria || 'Outros';
+                if(!acc[category]) acc[category] = [];
+                acc[category].push({ id: item.Id, nome: item.Nome, foto: item.Foto && item.Foto[0]?.path ? NocoDB_BaseURL + item.Foto[0].path : null });
                 return acc;
             }, {});
          }
     }
 
-    // --- Lógica de Autenticação ---
+    // --- Lógica de Autenticação e Sessão ---
     async function handleLogin(e) {
         e.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
+        const username = document.getElementById('username').value, password = document.getElementById('password').value;
         if (!username || !password) { alert('Por favor, preencha usuário e senha.'); return; }
-        
         showLoadingOverlay('Autenticando...');
         const user = await authenticateUser(username, password);
-        
         if (user) {
-            loggedInUser = user;
-            document.getElementById('logged-user-name').textContent = loggedInUser.Nome;
-            document.querySelector('#logged-user-name + p').textContent = loggedInUser.IsAdmin ? 'Administrador' : 'Consultor';
-            await fetchAllData();
-            hideLoadingOverlay();
+            sessionStorage.setItem('loggedInUser', JSON.stringify(user));
+            await initializeUserSession(user);
+        } else { hideLoadingOverlay(); alert('Usuário ou senha inválidos.'); }
+    }
+
+    async function initializeUserSession(user) {
+        loggedInUser = user;
+        document.getElementById('logged-user-name').textContent = loggedInUser.Nome;
+        document.querySelector('#logged-user-name + p').textContent = loggedInUser.IsAdmin ? 'Administrador' : 'Consultor';
+
+        const userAvatar = document.querySelector('#logged-user-name').closest('div').nextElementSibling;
+        if (userAvatar && loggedInUser.Foto && loggedInUser.Foto[0]?.path) {
+            userAvatar.src = NocoDB_BaseURL + loggedInUser.Foto[0].path;
+        } else if(userAvatar) {
+            userAvatar.src = `https://i.pravatar.cc/150?u=${loggedInUser.Login || loggedInUser.Nome}`;
+        }
+        
+        allElements.loginScreen.classList.add('hidden');
+        allElements.mainApp.classList.remove('hidden');
+
+        await fetchAllData();
+        
+        const savedPage = sessionStorage.getItem('currentPage') || 'dashboard';
+        navigateTo(savedPage, true);
+        hideLoadingOverlay();
+    }
+    
+    async function checkSession() {
+        const userString = sessionStorage.getItem('loggedInUser');
+        if (userString) {
             allElements.loginScreen.classList.add('hidden');
             allElements.mainApp.classList.remove('hidden');
-        } else {
-            hideLoadingOverlay();
-            alert('Usuário ou senha inválidos.');
+            showLoadingOverlay('Restaurando sessão...');
+            const user = JSON.parse(userString);
+            await initializeUserSession(user);
         }
     }
 
-    async function authenticateUser(login, senha) {
-        const endpoint = `Consultores?where=(Login,eq,${login})~and(Senha,eq,${senha})`;
-        const result = await nocoFetch(endpoint);
-        return (result && result.list && result.list.length > 0) ? result.list[0] : null;
-    }
+    async function authenticateUser(login, senha) { const endpoint = `Consultores?where=(Login,eq,${login})~and(Senha,eq,${senha})`; const result = await nocoFetch(endpoint); return (result && result.list && result.list.length > 0) ? result.list[0] : null; }
 
     // --- Funções de Renderização ---
-    function renderConsultores() {
-        const container = document.getElementById('rh-cards-container');
-        container.innerHTML = consultoresData.map(c => createConsultorCard(c)).join('');
-    }
-    
-    function createConsultorCard(consultor) {
-        const fotoUrl = (consultor.Foto && consultor.Foto[0]?.path) ? NocoDB_BaseURL + consultor.Foto[0].path : `https://i.pravatar.cc/150?u=${consultor.Login}`;
-        const dataset = Object.keys(consultor)
-            .map(key => `data-${key.toLowerCase()}="${consultor[key] && typeof consultor[key] === 'object' ? JSON.stringify(consultor[key]) : (consultor[key] || '')}"`)
-            .join(' ');
-        return `<div class="rh-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset}> <img src="${fotoUrl}" class="w-24 h-24 rounded-full object-cover mb-4"> <h4 class="font-bold text-lg text-gray-800 dark:text-white">${consultor.Nome}</h4> <p class="text-sm text-gray-500 dark:text-gray-400">${consultor.Email || ''}</p> <div class="flex space-x-4 mt-4"><a href="https://wa.me/${consultor.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a></div> </div>`;
-    }
-    
-     function renderClientes() {
-        const container = document.getElementById('cliente-cards-container');
-        container.innerHTML = clientesData.map(c => createClienteCard(c)).join('');
-    }
-    
-    function createClienteCard(cliente) {
-        const fotoUrl = (cliente.Foto && cliente.Foto[0]?.path) ? NocoDB_BaseURL + cliente.Foto[0].path : `https://picsum.photos/seed/${cliente.Nome.replace(/\s/g, '')}/100/100`;
-        const dataset = Object.keys(cliente).map(key => `data-${key.toLowerCase()}="${cliente[key] && typeof cliente[key] === 'object' ? JSON.stringify(cliente[key]) : (cliente[key] || '')}"`).join(' ');
-        return `<div class="cliente-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset}> <img src="${fotoUrl}" class="w-24 h-24 rounded-lg object-cover mb-4"> <h4 class="font-bold text-lg text-gray-800 dark:text-white">${cliente.Nome}</h4> <p class="text-sm text-gray-500 dark:text-gray-400">Responsável: ${cliente.Responsavel || ''}</p> <div class="flex space-x-4 mt-4"> <a href="https://wa.me/${cliente.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a> <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(cliente.Endereco || '')}" target="_blank" class="text-blue-500 hover:text-blue-600"><i class="fas fa-map-marker-alt fa-2x"></i></a> </div> </div>`;
-    }
-
-    function renderReceitas(data = receitasData) {
-        const tableBody = document.getElementById('receitas-table-body');
-        if (!tableBody) return;
-        tableBody.innerHTML = data.map(r => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}"> <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">${r.cliente_nome}</td> <td class="px-6 py-4 text-gray-700 dark:text-gray-300">${new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4 text-gray-700 dark:text-gray-300">${(r.Valor || 0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td> <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.Status === 'Pago' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${r.Status}</span></td> <td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td> </tr> `).join('');
-    }
-
-    function renderCustos(data = custosData) {
-        const tableBody = document.getElementById('custos-table-body');
-        if(!tableBody) return;
-        tableBody.innerHTML = data.map(c => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${c.Id}"> <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">${c.Credor}</td> <td class="px-6 py-4 text-gray-700 dark:text-gray-300">${new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4 text-gray-700 dark:text-gray-300">${(c.Valor || 0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'})}</td> <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${c.Status === 'Pago' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${c.Status}</span></td> <td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button></td> </tr> `).join('');
-    }
+    function renderConsultores() { document.getElementById('rh-cards-container').innerHTML = consultoresData.map(c => createConsultorCard(c)).join(''); }
+    function createConsultorCard(c) { const fotoUrl = (c.Foto && c.Foto[0]?.path) ? NocoDB_BaseURL + c.Foto[0].path : `https://i.pravatar.cc/150?u=${c.Login || c.Nome}`; const dataset = Object.keys(c).map(k => `data-${k.toLowerCase()}="${c[k] && typeof c[k] === 'object' ? JSON.stringify(c[k]) : (c[k] || '')}"`).join(' '); return `<div class="rh-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset}> <img src="${fotoUrl}" class="w-24 h-24 rounded-full object-cover mb-4"> <h4 class="font-bold text-lg text-gray-800 dark:text-white">${c.Nome}</h4> <p class="text-sm text-gray-500 dark:text-gray-400">${c.Email || ''}</p> <div class="flex space-x-4 mt-4"><a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a></div> </div>`; }
+    function renderClientes() { document.getElementById('cliente-cards-container').innerHTML = clientesData.map(c => createClienteCard(c)).join(''); }
+    function createClienteCard(c) { const fotoUrl = (c.Foto && c.Foto[0]?.path) ? NocoDB_BaseURL + c.Foto[0].path : `https://picsum.photos/seed/${c.Nome.replace(/\s/g, '')}/100/100`; const dataset = Object.keys(c).map(k => `data-${k.toLowerCase()}="${c[k] && typeof c[k] === 'object' ? JSON.stringify(c[k]) : (c[k] || '')}"`).join(' '); return `<div class="cliente-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset}> <img src="${fotoUrl}" class="w-24 h-24 rounded-lg object-cover mb-4"> <h4 class="font-bold text-lg text-gray-800 dark:text-white">${c.Nome}</h4> <p class="text-sm text-gray-500 dark:text-gray-400">Responsável: ${c.Responsavel || ''}</p> <div class="flex space-x-4 mt-4"> <a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a> <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.Endereco || '')}" target="_blank" class="text-blue-500 hover:text-blue-600"><i class="fas fa-map-marker-alt fa-2x"></i></a> </div> </div>`; }
+    function renderReceitas(data) { const t = document.getElementById('receitas-table-body'); if(t) t.innerHTML = data.map(r => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}"> <td class="px-6 py-4">${r.cliente_nome}</td> <td class="px-6 py-4">${new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${(r.Valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td> <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.Status==='Pago'?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">${r.Status}</span></td> <td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500"><i class="fas fa-trash"></i></button></td> </tr> `).join(''); }
+    function renderCustos(data) { const t = document.getElementById('custos-table-body'); if(t) t.innerHTML = data.map(c => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${c.Id}"> <td class="px-6 py-4">${c.Credor}</td> <td class="px-6 py-4">${new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${(c.Valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td> <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${c.Status==='Pago'?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">${c.Status}</span></td> <td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500"><i class="fas fa-trash"></i></button></td> </tr> `).join(''); }
 
     // --- Lógica de Submissão de Formulários (CRUD) ---
     async function handleFormSubmit(e) {
@@ -1172,10 +1143,38 @@ document.addEventListener('DOMContentLoaded', function() {
         let endpoint = '', body = {}, id = null, callback = null;
 
         switch (form.id) {
+            case 'rh-form':
+            case 'cliente-form': {
+                const isConsultor = form.id === 'rh-form';
+                const table = isConsultor ? 'Consultores' : 'Clientes';
+                const fileInput = form.querySelector('input[type="file"]');
+                let fileData = null;
+
+                if (fileInput && fileInput.files[0]) {
+                    showLoadingOverlay('Enviando imagem...');
+                    fileData = await uploadFile(table, 'Foto', fileInput.files[0]);
+                    if (!fileData) { hideLoadingOverlay(); return; }
+                }
+
+                id = form.querySelector(isConsultor ? '#rh-id' : '#cliente-id')?.value;
+                endpoint = id ? `${table}/${id}` : table;
+                
+                if(isConsultor) {
+                    body = { Nome: form.querySelector('#rh-nome').value, DataNascimento: form.querySelector('#rh-nasc').value || null, Telefone: form.querySelector('#rh-tel').value, Email: form.querySelector('#rh-email').value, Login: form.querySelector('#rh-login').value, InicioVinculo: form.querySelector('#rh-inicio').value || null, FimVinculo: form.querySelector('#rh-fim').value || null, CNPJ: form.querySelector('#rh-cnpj').value, RazaoSocial: form.querySelector('#rh-razao').value, ValorHora: parseFloat(form.querySelector('#rh-valor').value) || 0, IsAdmin: form.querySelector('#rh-admin').checked, Endereco: form.querySelector('#rh-endereco').value, Observacao: form.querySelector('#rh-obs').value };
+                    const senha = form.querySelector('#rh-senha').value; if (senha) body.Senha = senha;
+                    callback = async () => { await fetchConsultores(); renderConsultores(); };
+                } else {
+                    body = { Nome: form.querySelector('#cliente-nome').value, RazaoSocial: form.querySelector('#cliente-razao').value, CNPJ: form.querySelector('#cliente-cnpj').value, Telefone: form.querySelector('#cliente-tel').value, Email: form.querySelector('#cliente-email').value, HorasContratadas: parseInt(form.querySelector('#cliente-horas').value) || 0, Responsavel: form.querySelector('#cliente-responsavel').value, CPFResponsavel: form.querySelector('#cliente-cpf').value, IPTU: form.querySelector('#cliente-iptu').value, SenhaPortal: form.querySelector('#cliente-senha-portal').value, Endereco: form.querySelector('#cliente-endereco').value, Observacao: form.querySelector('#cliente-obs').value };
+                    callback = async () => { await fetchClientes(); renderClientes(); };
+                }
+
+                if (fileData) body.Foto = [fileData];
+                break;
+            }
             case 'receita-form':
                 id = form.querySelector('#receita-id').value;
                 endpoint = id ? `Receitas/${id}` : 'Receitas';
-                body = { ClienteId: form.querySelector('#receita-cliente-form').value, Vencimento: form.querySelector('#receita-vencimento').value, Valor: parseFloat(form.querySelector('#receita-valor').value), Status: form.querySelector('#receita-status-form').value, Observacao: form.querySelector('#receita-obs').value };
+                body = { ClienteId: parseInt(form.querySelector('#receita-cliente-form').value), Vencimento: form.querySelector('#receita-vencimento').value, Valor: parseFloat(form.querySelector('#receita-valor').value), Status: form.querySelector('#receita-status-form').value, Observacao: form.querySelector('#receita-obs').value };
                 callback = async () => { await fetchReceitas(); applyAndRenderReceitas(); };
                 break;
             case 'custo-form':
@@ -1194,23 +1193,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
             default: return;
         }
-
         const method = id ? 'PATCH' : 'POST';
         showLoadingOverlay('Salvando...');
         const result = await nocoFetch(endpoint, { method, body: JSON.stringify(body) });
         hideLoadingOverlay();
-        
         if (result) {
             if (callback) await callback();
-            const container = form.closest('div[id$="-form-container"], .fixed');
+            const container = form.closest('div[id$="-container"]');
             if(container && !container.classList.contains('fixed')) {
-                const historyId = container.id.replace('form-container', 'history-container');
+                const historyId = container.id.replace('form-container', 'cards-container') || container.id.replace('form-container', 'history-container');
                 container.classList.add('hidden');
                 document.getElementById(historyId)?.classList.remove('hidden');
             }
             form.reset();
-            const idInput = form.querySelector('input[type="hidden"]');
-            if (idInput) idInput.value = '';
             updateAllCounters();
             updateAllDashboards();
         }
@@ -1220,7 +1215,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!activeDeleteItem || !activeDeleteItem.type) return;
         const { id, type } = activeDeleteItem;
         let endpoint = '', callback = null;
-
         switch(type) {
             case 'receita': endpoint = `Receitas/${id}`; callback = async () => { await fetchReceitas(); applyAndRenderReceitas(); }; break;
             case 'custo': endpoint = `Custos/${id}`; callback = async () => { await fetchCustos(); applyAndRenderCustos(); }; break;
@@ -1229,11 +1223,9 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'cliente': endpoint = `Clientes/${id}`; callback = async () => { await fetchClientes(); renderClientes(); }; break;
             default: hideModal(allElements.deleteConfirmModal); return;
         }
-        
         showLoadingOverlay('Apagando...');
         const result = await nocoFetch(endpoint, { method: 'DELETE' });
         hideLoadingOverlay();
-
         if (result && result.success) {
             if (callback) await callback();
             activeDeleteItem.element?.remove();
@@ -1245,341 +1237,155 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- Funções de UI, Eventos e Lógica Auxiliar ---
-    function showLoadingOverlay(message) {
-        let overlay = document.getElementById('loading-overlay');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'loading-overlay';
-            overlay.className = 'fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-60';
-            overlay.innerHTML = `<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl flex items-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-gold mr-3"></div><span class="text-gray-800 dark:text-white">${message}</span></div>`;
-            document.body.appendChild(overlay);
-        }
-        overlay.querySelector('span').textContent = message;
-        overlay.style.display = 'flex';
-    }
-    function hideLoadingOverlay() {
-        const overlay = document.getElementById('loading-overlay');
-        if (overlay) overlay.style.display = 'none';
-    }
-
-    function updateAllCounters() {
-        const currentMonth = new Date().getMonth();
-        let birthdayCount = consultoresData.filter(c => c.DataNascimento && new Date(c.DataNascimento + 'T00:00:00').getMonth() === currentMonth).length;
-        document.getElementById('birthday-count-badge').textContent = birthdayCount;
-        populateBirthdayCards();
-        document.getElementById('consultores-count-badge').textContent = consultoresData.length;
-        document.getElementById('ferias-count-badge').textContent = feriasData.length;
-        document.getElementById('atestados-count-badge').textContent = atestadosData.length;
-        document.getElementById('epis-count-badge').textContent = episEntreguesData.length;
-        document.getElementById('ativos-count-badge').textContent = ativosData.length;
-    }
-
-    function populateBirthdayCards() {
-        const container = document.getElementById('birthday-cards-container');
-        if (!container) return;
-        const currentMonth = new Date().getMonth();
-        const birthdayConsultants = consultoresData.filter(c => c.DataNascimento && new Date(c.DataNascimento + 'T00:00:00').getMonth() === currentMonth);
-        if (birthdayConsultants.length > 0) {
-            container.innerHTML = birthdayConsultants.map(consultant => {
-                const cardHTML = createConsultorCard(consultant);
-                const birthDate = new Date(consultant.DataNascimento + 'T00:00:00');
-                const dateStr = birthDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit'});
-                return cardHTML.replace('</p>', `</p><p class="text-brand-gold font-semibold mt-2">${dateStr}</p>`);
-            }).join('');
-        } else {
-            container.innerHTML = `<p class="text-gray-500 dark:text-gray-400 col-span-full">Nenhum aniversariante este mês.</p>`;
-        }
-    }
-
-    function populateSelectWithOptions(selector, dataArray, valueField, textField, addAllOption = true) {
-        const selects = document.querySelectorAll(selector);
-        let options = addAllOption ? '<option value="">Todos</option>' : '<option value="">Selecione...</option>';
-        dataArray.forEach(item => { options += `<option value="${item[valueField]}">${item[textField]}</option>`; });
-        selects.forEach(select => { const currentVal = select.value; select.innerHTML = options; select.value = currentVal; });
-    }
-
+    function showLoadingOverlay(m) { let o = document.getElementById('loading-overlay'); if (!o) { o = document.createElement('div'); o.id = 'loading-overlay'; o.className = 'fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-60'; o.innerHTML = `<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl flex items-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-gold mr-3"></div><span class="text-gray-800 dark:text-white">${m}</span></div>`; document.body.appendChild(o); } o.querySelector('span').textContent = m; o.style.display = 'flex'; }
+    function hideLoadingOverlay() { const o = document.getElementById('loading-overlay'); if (o) o.style.display = 'none'; }
+    function updateAllCounters() { const curMonth = new Date().getMonth(); document.getElementById('birthday-count-badge').textContent = consultoresData.filter(c => c.DataNascimento && new Date(c.DataNascimento+'T00:00:00').getMonth()===curMonth).length; populateBirthdayCards(); document.getElementById('consultores-count-badge').textContent = consultoresData.length; document.getElementById('ferias-count-badge').textContent=feriasData.length; document.getElementById('atestados-count-badge').textContent=atestadosData.length; document.getElementById('epis-count-badge').textContent=episEntreguesData.length; document.getElementById('ativos-count-badge').textContent=ativosData.length; }
+    function populateBirthdayCards() { const cont = document.getElementById('birthday-cards-container'); if (!cont) return; const curMonth = new Date().getMonth(); const bdayPpl = consultoresData.filter(c=>c.DataNascimento&&new Date(c.DataNascimento+'T00:00:00').getMonth()===curMonth); if(bdayPpl.length>0){ cont.innerHTML = bdayPpl.map(c=>{const cardHTML=createConsultorCard(c); const bDate=new Date(c.DataNascimento+'T00:00:00'); const dateStr=bDate.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}); return cardHTML.replace('</p>',`</p><p class="text-brand-gold font-semibold mt-2">${dateStr}</p>`);}).join('');}else{cont.innerHTML=`<p class="col-span-full text-gray-500 dark:text-gray-400">Nenhum aniversariante este mês.</p>`;}}
+    function populateSelectWithOptions(sel, data, valF, textF, addAll=true) { const selects=document.querySelectorAll(sel); let opts=addAll?'<option value="">Todos</option>':'<option value="">Selecione...</option>'; data.forEach(i=>{opts+=`<option value="${i[valF]}">${i[textF]}</option>`;}); selects.forEach(s=>{const curVal=s.value; s.innerHTML=opts; s.value=curVal;});}
     function populateConsultantSelects() { populateSelectWithOptions('.consultor-select', consultoresData, 'Id', 'Nome', false); }
     function populateClientSelects() { populateSelectWithOptions('.cliente-select', clientesData, 'Id', 'Nome', false); }
+    function handleGlobalClick(e) { const t=e.target; const nL=t.closest('.nav-link'); if(nL){e.preventDefault(); handleNavClick({currentTarget:nL}); return;} const rhC=t.closest('.rh-card'); if(rhC&&!t.closest('a')){openDetailsModal(rhC); return;} const clC=t.closest('.cliente-card'); if(clC&&!t.closest('a')){openDetailsModal(clC); return;} const btn=t.closest('button'); if(!btn)return; if(btn.classList.contains('view-toggle-btn')){handleViewToggle({currentTarget:btn});return;} if(btn.classList.contains('dashboard-nav-btn')){handleDashboardNav(btn);return;} const aM={'logout-button':()=>showModal(allElements.logoutConfirmModal),'cancel-logout-btn':()=>hideModal(allElements.logoutConfirmModal),'confirm-logout-btn':()=>{sessionStorage.clear(); location.reload();},'theme-toggle':()=>{document.documentElement.classList.toggle('dark'); const iD=document.documentElement.classList.contains('dark'); localStorage.setItem('theme',iD?'dark':'light'); btn.querySelector('i').className=iD?'fas fa-sun':'fas fa-moon'; updateAllDashboards(); calendar?.render();},'sidebar-toggle':toggleMobileSidebar,'show-insights-btn':()=>{generateInsights(); showModal(allElements.insightsModal);},'close-insights-modal':()=>hideModal(allElements.insightsModal),'show-report-modal-btn':()=>{toggleReportSubtype(); showModal(allElements.reportModal);},'close-report-modal':()=>hideModal(allElements.reportModal),'show-rh-form':()=>setupFormToggle('rh-cards-container','rh-form-container'),'cancel-rh-form':()=>hideFormToggle('rh-cards-container','rh-form-container'),'show-cliente-form':()=>setupFormToggle('cliente-cards-container','cliente-form-container'),'cancel-cliente-form':()=>hideFormToggle('cliente-cards-container','cliente-form-container'),'show-visita-form':()=>openVisitaModal(),'cancel-visita-form':()=>hideModal(allElements.visitaFormModal),'show-requisicao-form':()=>openRequisicaoModal(),'cancel-requisicao-form':()=>hideModal(allElements.requisicaoFormModal),'show-receita-form':()=>setupSubFormToggle('receitas-history-container','receita-form-container'),'cancel-receita-form':()=>hideSubFormToggle('receitas-history-container','receita-form-container'),'show-custo-form':()=>setupSubFormToggle('custos-history-container','custo-form-container'),'cancel-custo-form':()=>hideSubFormToggle('custos-history-container','custo-form-container'),'cancel-item-form':()=>hideModal(allElements.itemFormModal),'apply-filters-btn':applyFilters,'clear-filters-btn':clearFilters,'apply-req-filters-btn':applyRequisicaoFilters,'clear-req-filters-btn':clearRequisicaoFilters,'delete-btn':()=>{hideModal(allElements.detailsModal); showModal(allElements.deleteConfirmModal);},'cancel-delete-btn':()=>{hideModal(allElements.deleteConfirmModal); if(activeCard||activeTableRow)showModal(allElements.detailsModal); activeDeleteItem={id:null,type:null,element:null};},'edit-btn':handleCardEdit,'close-modal':()=>hideModal(allElements.detailsModal),}; if(aM[btn.id]){aM[btn.id](); return;} if(btn.classList.contains('table-edit-btn'))handleTableEdit(btn); else if(btn.classList.contains('table-delete-btn'))handleTableDelete(btn); else if(btn.classList.contains('rh-tab-btn')||btn.classList.contains('requisicao-tab-btn')||btn.classList.contains('financeiro-tab-btn'))handleTabClick(btn);}
     
-    function handleGlobalClick(e) {
-        const target = e.target;
-        const navLink = target.closest('.nav-link');
-        if (navLink) { e.preventDefault(); handleNavClick({ currentTarget: navLink }); return; }
-        const rhCard = target.closest('.rh-card');
-        if (rhCard && !target.closest('a')) { openDetailsModal(rhCard); return; }
-        const clienteCard = target.closest('.cliente-card');
-        if (clienteCard && !target.closest('a')) { openDetailsModal(clienteCard); return; }
-        const button = target.closest('button');
-        if (!button) return;
-        if (button.classList.contains('view-toggle-btn')) { handleViewToggle({ currentTarget: button }); return; }
-        if (button.classList.contains('dashboard-nav-btn')) { handleDashboardNav(button); return; }
-
-        const actionMap = {
-            'logout-button': () => showModal(allElements.logoutConfirmModal),
-            'cancel-logout-btn': () => hideModal(allElements.logoutConfirmModal),
-            'confirm-logout-btn': () => location.reload(),
-            'theme-toggle': () => {
-                document.documentElement.classList.toggle('dark');
-                const isDark = document.documentElement.classList.contains('dark');
-                localStorage.setItem('theme', isDark ? 'dark' : 'light');
-                button.querySelector('i').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
-                updateAllDashboards();
-                calendar?.render();
-            },
-            'sidebar-toggle': toggleMobileSidebar,
-            'show-insights-btn': () => { generateInsights(); showModal(allElements.insightsModal); },
-            'close-insights-modal': () => hideModal(allElements.insightsModal),
-            'show-report-modal-btn': () => { toggleReportSubtype(); showModal(allElements.reportModal); },
-            'close-report-modal': () => hideModal(allElements.reportModal),
-            'show-rh-form': () => setupFormToggle('rh-cards-container', 'rh-form-container'),
-            'cancel-rh-form': () => hideFormToggle('rh-cards-container', 'rh-form-container'),
-            'show-cliente-form': () => setupFormToggle('cliente-cards-container', 'cliente-form-container'),
-            'cancel-cliente-form': () => hideFormToggle('cliente-cards-container', 'cliente-form-container'),
-            'show-visita-form': () => openVisitaModal(),
-            'cancel-visita-form': () => hideModal(allElements.visitaFormModal),
-            'show-requisicao-form': () => openRequisicaoModal(),
-            'cancel-requisicao-form': () => hideModal(allElements.requisicaoFormModal),
-            'show-receita-form': () => setupSubFormToggle('receitas-history-container', 'receita-form-container'),
-            'cancel-receita-form': () => hideSubFormToggle('receitas-history-container', 'receita-form-container'),
-            'show-custo-form': () => setupSubFormToggle('custos-history-container', 'custo-form-container'),
-            'cancel-custo-form': () => hideSubFormToggle('custos-history-container', 'custo-form-container'),
-            'cancel-item-form': () => hideModal(allElements.itemFormModal),
-            'apply-filters-btn': applyFilters,
-            'clear-filters-btn': clearFilters,
-            'apply-req-filters-btn': applyRequisicaoFilters,
-            'clear-req-filters-btn': clearRequisicaoFilters,
-            'delete-btn': () => { hideModal(allElements.detailsModal); showModal(allElements.deleteConfirmModal); },
-            'cancel-delete-btn': () => {
-                hideModal(allElements.deleteConfirmModal);
-                if (activeCard || activeTableRow) showModal(allElements.detailsModal);
-                activeDeleteItem = { id: null, type: null, element: null };
-            },
-            'edit-btn': handleCardEdit,
-            'close-modal': () => hideModal(allElements.detailsModal),
-        };
-        if (actionMap[button.id]) { actionMap[button.id](); return; }
-        if (button.classList.contains('table-edit-btn')) handleTableEdit(button);
-        else if (button.classList.contains('table-delete-btn')) handleTableDelete(button);
-        else if (button.classList.contains('rh-tab-btn') || button.classList.contains('requisicao-tab-btn') || button.classList.contains('financeiro-tab-btn')) handleTabClick(button);
-    }
-    
-    function handleNavClick(e) {
-        const navLink = e.currentTarget;
-        const targetId = navLink.dataset.target;
-        document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
+    function navigateTo(targetId, isInitial = false) {
+        if (!isInitial) {
+            allElements.pages.forEach(page => page.classList.add('hidden'));
+        }
         const targetPage = document.getElementById(targetId);
         if (targetPage) {
             targetPage.classList.remove('hidden');
             if (targetId === 'visitas' && calendar) setTimeout(() => calendar.render(), 1);
             if (targetId === 'dashboard') setTimeout(() => updateAllDashboards(), 1);
         }
-        document.querySelectorAll('.nav-link').forEach(l => {
-            l.classList.remove('bg-brand-gold', 'text-white');
-            l.classList.add('text-gray-400', 'hover:bg-brand-gold', 'hover:text-white');
-        });
-        navLink.classList.add('bg-brand-gold', 'text-white');
-        navLink.classList.remove('text-gray-400');
-        if (document.getElementById('page-title')) document.getElementById('page-title').textContent = navLink.title;
+        const navLink = document.querySelector(`.nav-link[data-target="${targetId}"]`);
+        if (navLink) {
+            document.querySelectorAll('.nav-link').forEach(l => {
+                l.classList.remove('bg-brand-gold', 'text-white');
+                l.classList.add('text-gray-400', 'hover:bg-brand-gold', 'hover:text-white');
+            });
+            navLink.classList.add('bg-brand-gold', 'text-white');
+            navLink.classList.remove('text-gray-400');
+            if (document.getElementById('page-title')) document.getElementById('page-title').textContent = navLink.title;
+        }
+    }
+
+    function handleNavClick(e) { 
+        const navLink = e.currentTarget;
+        const targetId = navLink.dataset.target;
+        sessionStorage.setItem('currentPage', targetId);
+        navigateTo(targetId);
         if (window.innerWidth < 1024) toggleMobileSidebar();
     }
-    
     function toggleMobileSidebar() { allElements.sidebar.classList.toggle('-translate-x-full'); allElements.sidebarOverlay.classList.toggle('hidden'); }
-    function handleDashboardNav(button) { document.querySelectorAll('.dashboard-nav-btn').forEach(btn => { btn.classList.remove('border-brand-gold', 'text-brand-gold'); btn.classList.add('border-transparent'); }); button.classList.add('border-brand-gold', 'text-brand-gold'); document.querySelectorAll('.dashboard-content').forEach(content => content.classList.add('hidden')); document.getElementById(button.dataset.target).classList.remove('hidden'); }
-    function handleViewToggle(e) { const button = e.currentTarget; document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.remove('bg-white', 'dark:bg-gray-800', 'shadow-sm')); button.classList.add('bg-white', 'dark:bg-gray-800', 'shadow-sm'); document.querySelectorAll('.visitas-view').forEach(view => view.classList.add('hidden')); const targetView = document.getElementById(button.dataset.view); if (targetView) { targetView.classList.remove('hidden'); if (button.dataset.view === 'calendar-view' && calendar) { setTimeout(() => calendar.render(), 1); } } }
-    function handleTabClick(button) { const tabsContainer = button.closest('ul'); tabsContainer.querySelectorAll('button').forEach(btn => { btn.classList.remove('border-brand-gold', 'text-brand-gold'); btn.classList.add('border-transparent'); }); button.classList.add('border-brand-gold', 'text-brand-gold'); const contentClass = button.classList.contains('rh-tab-btn') ? '.rh-tab-content' : button.classList.contains('requisicao-tab-btn') ? '.requisicao-tab-content' : '.financeiro-tab-content'; const pageContainer = button.closest('.page'); if (pageContainer && contentClass) { pageContainer.querySelectorAll(contentClass).forEach(content => content.classList.add('hidden')); document.getElementById(button.dataset.target)?.classList.remove('hidden'); } }
+    function handleDashboardNav(btn) { document.querySelectorAll('.dashboard-nav-btn').forEach(b=>{b.classList.remove('border-brand-gold','text-brand-gold'); b.classList.add('border-transparent');}); btn.classList.add('border-brand-gold','text-brand-gold'); document.querySelectorAll('.dashboard-content').forEach(c=>c.classList.add('hidden')); document.getElementById(btn.dataset.target).classList.remove('hidden');}
+    function handleViewToggle(e) { const btn=e.currentTarget; document.querySelectorAll('.view-toggle-btn').forEach(b=>b.classList.remove('bg-white','dark:bg-gray-800','shadow-sm')); btn.classList.add('bg-white','dark:bg-gray-800','shadow-sm'); document.querySelectorAll('.visitas-view').forEach(v=>v.classList.add('hidden')); const tV=document.getElementById(btn.dataset.view); if(tV){tV.classList.remove('hidden'); if(btn.dataset.view==='calendar-view'&&calendar){setTimeout(()=>calendar.render(),1);}}}
+    function handleTabClick(btn) { const tC=btn.closest('ul'); tC.querySelectorAll('button').forEach(b=>{b.classList.remove('border-brand-gold','text-brand-gold'); b.classList.add('border-transparent');}); btn.classList.add('border-brand-gold','text-brand-gold'); const cC=btn.classList.contains('rh-tab-btn')?'.rh-tab-content':btn.classList.contains('requisicao-tab-btn')?'.requisicao-tab-content':'.financeiro-tab-content'; const pC=btn.closest('.page'); if(pC&&cC){pC.querySelectorAll(cC).forEach(c=>c.classList.add('hidden')); document.getElementById(btn.dataset.target)?.classList.remove('hidden');}}
+    function handleTableEdit(btn) { const row=btn.closest('tr'); if(!row)return; const id=parseInt(row.dataset.id); if(row.closest('#visitas-table-body')){const v=visitsData.find(d=>d.Id===id); if(v)openVisitaModal(v);}else if(row.closest('#receitas-table-body')){const r=receitasData.find(d=>d.Id===id); if(r){setupSubFormToggle('receitas-history-container','receita-form-container'); const f=document.getElementById('receita-form'); f.querySelector('#receita-id').value=r.Id; f.querySelector('#receita-cliente-form').value=r.ClienteId; f.querySelector('#receita-vencimento').value=r.Vencimento; f.querySelector('#receita-valor').value=r.Valor; f.querySelector('#receita-status-form').value=r.Status; f.querySelector('#receita-obs').value=r.Observacao||'';}}else if(row.closest('#custos-table-body')){const c=custosData.find(d=>d.Id===id); if(c){setupSubFormToggle('custos-history-container','custo-form-container'); const f=document.getElementById('custo-form'); f.querySelector('#custo-id').value=c.Id; f.querySelector('#custo-credor').value=c.Credor; f.querySelector('#custo-vencimento').value=c.Vencimento; f.querySelector('#custo-valor').value=c.Valor; f.querySelector('#custo-status-form').value=c.Status; f.querySelector('#custo-obs').value=c.Observacao||'';}}}
     
-    function handleTableEdit(button) {
-        const row = button.closest('tr');
-        if (!row) return;
-        const id = parseInt(row.dataset.id);
-        if (row.closest('#visitas-table-body')) { const visit = visitsData.find(v => v.Id === id); if (visit) openVisitaModal(visit); }
-        else if (row.closest('#receitas-table-body')) { const receita = receitasData.find(r => r.Id === id); if (receita) { setupSubFormToggle('receitas-history-container', 'receita-form-container'); const form = document.getElementById('receita-form'); form.querySelector('#receita-id').value = receita.Id; form.querySelector('#receita-cliente-form').value = receita.ClienteId; form.querySelector('#receita-vencimento').value = receita.Vencimento; form.querySelector('#receita-valor').value = receita.Valor; form.querySelector('#receita-status-form').value = receita.Status; form.querySelector('#receita-obs').value = receita.Observacao || ''; } }
-        else if (row.closest('#custos-table-body')) { const custo = custosData.find(c => c.Id === id); if (custo) { setupSubFormToggle('custos-history-container', 'custo-form-container'); const form = document.getElementById('custo-form'); form.querySelector('#custo-id').value = custo.Id; form.querySelector('#custo-credor').value = custo.Credor; form.querySelector('#custo-vencimento').value = custo.Vencimento; form.querySelector('#custo-valor').value = custo.Valor; form.querySelector('#custo-status-form').value = custo.Status; form.querySelector('#custo-obs').value = custo.Observacao || ''; } }
-    }
-    
-    function handleCardEdit() {
-        if (!activeCard) return;
-        hideModal(allElements.detailsModal);
+    function handleCardEdit() { 
+        if (!activeCard) return; 
+        hideModal(allElements.detailsModal); 
         const isConsultor = activeCard.classList.contains('rh-card');
-        const formContainer = document.getElementById(isConsultor ? 'rh-form-container' : 'cliente-form-container');
-        const cardsContainer = document.getElementById(isConsultor ? 'rh-cards-container' : 'cliente-cards-container');
-        const form = formContainer.querySelector('form');
+        const formContainerId = isConsultor ? 'rh-form-container' : 'cliente-form-container';
+        const cardsContainerId = isConsultor ? 'rh-cards-container' : 'cliente-cards-container';
+        const form = document.getElementById(formContainerId).querySelector('form');
         const data = activeCard.dataset;
-        (isConsultor ? ['id','nome','datanascimento','telefone','email','login','datainiciovinculo','datafimvinculo','cnpj','razaosocial','valorhora','isadmin','endereco','observacao'] : ['id','nome','razaosocial','cnpj','telefone','email','horascontratadas','responsavel','cpfresponsavel','iptu','senhaportal','endereco','observacao'])
-        .forEach(key => {
-            const inputId = `#${isConsultor ? 'rh' : 'cliente'}-${key.replace('datanascimento','nasc').replace('data','').replace('vinculo','').replace('valorhora','valor').replace('isadmin','admin').replace('razaosocial','razao').replace('horascontratadas','horas').replace('cpfresponsavel','cpf').replace('senhaportal','senha-portal')}`;
-            const input = form.querySelector(inputId);
+        form.reset();
+
+        let hiddenIdInput = form.querySelector('input[type="hidden"]');
+        if (!hiddenIdInput) {
+            hiddenIdInput = document.createElement('input');
+            hiddenIdInput.type = 'hidden';
+            hiddenIdInput.id = isConsultor ? 'rh-id' : 'cliente-id';
+            form.prepend(hiddenIdInput);
+        }
+        hiddenIdInput.value = data.id;
+
+        const fieldMapping = isConsultor 
+            ? {'rh-nome':'nome', 'rh-nasc':'datanascimento', 'rh-tel':'telefone', 'rh-email':'email', 'rh-login':'login', 'rh-inicio':'iniciovinculo', 'rh-fim':'fimvinculo', 'rh-cnpj':'cnpj', 'rh-razao':'razaosocial', 'rh-valor':'valorhora', 'rh-admin':'isadmin', 'rh-endereco':'endereco', 'rh-obs':'observacao'}
+            : {'cliente-nome':'nome', 'cliente-razao':'razaosocial', 'cliente-cnpj':'cnpj', 'cliente-tel':'telefone', 'cliente-email':'email', 'cliente-horas':'horascontratadas', 'cliente-responsavel':'responsavel', 'cliente-cpf':'cpfresponsavel', 'cliente-iptu':'iptu', 'cliente-senha-portal':'senhaportal', 'cliente-endereco':'endereco', 'cliente-obs':'observacao'};
+
+        for (const [fieldId, dataKey] of Object.entries(fieldMapping)) {
+            const input = form.querySelector(`#${fieldId}`);
             if (input) {
-                if(input.type === 'checkbox') input.checked = data[key] === 'true' || data[key] === '1';
-                else input.value = data[key] || '';
+                if (input.type === 'checkbox') {
+                    input.checked = data[dataKey] === 'true' || data[dataKey] === '1';
+                } else {
+                    input.value = data[dataKey] || '';
+                }
             }
-        });
-        cardsContainer.classList.add('hidden');
-        formContainer.classList.remove('hidden');
-    }
-    
-    const setupSearch = (inputId, cardSelector) => { document.getElementById(inputId)?.addEventListener('input', (e) => { const searchTerm = e.target.value.toLowerCase(); document.querySelectorAll(cardSelector).forEach(card => { const name = card.dataset.nome || ''; card.style.display = name.toLowerCase().includes(searchTerm) ? 'flex' : 'none'; }); }); };
-    const setupFormToggle = (cardsId, formId) => { activeCard = null; const form = document.getElementById(formId).querySelector('form'); form?.reset(); const idInput = form?.querySelector('input[type="hidden"]'); if(idInput) idInput.value = ''; document.getElementById(cardsId)?.classList.add('hidden'); document.getElementById(formId)?.classList.remove('hidden'); };
-    const hideFormToggle = (cardsId, formId) => { document.getElementById(formId).classList.add('hidden'); document.getElementById(cardsId).classList.remove('hidden'); }
-    const setupSubFormToggle = (historyId, formId) => { document.getElementById(historyId)?.classList.add('hidden'); document.getElementById(formId)?.classList.remove('hidden'); const form = document.getElementById(formId).querySelector('form'); if(form) { form.reset(); const idInput = form.querySelector('input[type="hidden"]'); if(idInput) idInput.value = ''; } };
-    const hideSubFormToggle = (hId, fId) => { document.getElementById(fId).classList.add('hidden'); document.getElementById(hId).classList.remove('hidden'); }
-    const hideModal = (modal) => modal?.classList.replace('flex', 'hidden');
-    const showModal = (modal) => modal?.classList.replace('hidden', 'flex');
-    
-    const openDetailsModal = (card) => {
-        activeCard = card;
-        activeDeleteItem = { id: card.dataset.id, type: card.classList.contains('rh-card') ? 'consultor' : 'cliente', element: card };
-        document.getElementById('details-modal-actions').style.display = 'flex';
-        const data = card.dataset;
-        const formatters = { datanascimento: v => v ? new Date(v+'T00:00:00').toLocaleDateString('pt-BR') : 'N/A', valorhora: v => v ? parseFloat(v).toLocaleString('pt-BR', {style:'currency', currency:'BRL'}) : 'N/A', datainiciovinculo: v => v ? new Date(v+'T00:00:00').toLocaleDateString('pt-BR') : 'N/A', datafimvinculo: v => v ? new Date(v+'T00:00:00').toLocaleDateString('pt-BR') : 'N/A' };
-        document.getElementById('modal-title').textContent = data.nome;
-        document.getElementById('modal-content').innerHTML = Object.keys(data).map(key => {
-            if (key === 'id' || key.toLowerCase().includes('foto') || key.toLowerCase().includes('senha')) return '';
-            const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-            const value = formatters[key] ? formatters[key](data[key]) : (data[key] || 'N/A');
-            return `<p><strong>${label}:</strong> ${value}</p>`;
-        }).join('');
-        showModal(allElements.detailsModal);
-    };
+        }
 
-    function updateAllDashboards(){ updateFinanceDashboard(); updateVisitsDashboard(); }
-    
-    function setDateFilter(e, typePrefix) {
-        const period = e.target.dataset.period;
-        document.querySelectorAll(`.dash-${typePrefix}-quick-filter`).forEach(b => b.classList.remove('filter-btn-active'));
-        e.target.classList.add('filter-btn-active');
-        const endInput = document.getElementById(`dash-${typePrefix}-end`);
-        const startInput = document.getElementById(`dash-${typePrefix}-start`);
-        const today = new Date();
-        endInput.valueAsDate = today;
-        let startDate = new Date();
-        if(period === 'week') startDate.setDate(today.getDate() - today.getDay());
-        else if(period === 'month') startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        else if(period === 'year') startDate = new Date(today.getFullYear(), 0, 1);
-        startInput.valueAsDate = startDate;
-        if(typePrefix === 'fin') updateFinanceDashboard(); else updateVisitsDashboard();
-    }
-    
-    function updateFinanceDashboard() {
-        const status = document.getElementById('dash-fin-status').value, start = document.getElementById('dash-fin-start').value, end = document.getElementById('dash-fin-end').value;
-        const filteredReceitas = receitasData.filter(r => (!status || r.Status === status) && (!start || r.Vencimento >= start) && (!end || r.Vencimento <= end) );
-        const filteredCustos = custosData.filter(c => (!status || c.Status === status) && (!start || c.Vencimento >= start) && (!end || c.Vencimento <= end) );
-        const totalRevenue = filteredReceitas.reduce((sum, r) => sum + r.Valor, 0);
-        const totalCosts = filteredCustos.reduce((sum, c) => sum + c.Valor, 0);
-        const balance = totalRevenue - totalCosts;
-        const totalRevenuePending = receitasData.filter(r => r.Status === 'Pendente' && (!start || r.Vencimento >= start) && (!end || r.Vencimento <= end)).reduce((sum, r) => sum + r.Valor, 0);
-        const totalCostsPending = custosData.filter(c => c.Status === 'Pendente' && (!start || c.Vencimento >= start) && (!end || c.Vencimento <= end)).reduce((sum, c) => sum + c.Valor, 0);
-        const f = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        document.getElementById('dash-revenue').textContent = f(totalRevenue);
-        document.getElementById('dash-costs').textContent = f(totalCosts);
-        document.getElementById('dash-balance').textContent = f(balance);
-        document.getElementById('dash-revenue-pending').textContent = f(totalRevenuePending);
-        document.getElementById('dash-costs-pending').textContent = f(totalCostsPending);
-        document.getElementById('dash-balance').classList.toggle('text-green-500', balance >= 0);
-        document.getElementById('dash-balance').classList.toggle('text-red-500', balance < 0);
-        updateFinanceChart(filteredReceitas, filteredCustos);
-    }
+        if (isConsultor) {
+            const passwordInput = form.querySelector('#rh-senha');
+            if (passwordInput) {
+                passwordInput.value = '';
+                passwordInput.placeholder = "Deixe em branco para não alterar";
+            }
+        }
 
-    function updateVisitsDashboard() {
-        const start = document.getElementById('dash-visit-start').value, end = document.getElementById('dash-visit-end').value;
-        const filteredVisits = visitsData.filter(v => (!start || v.DataVisita >= start) && (!end || v.DataVisita <= end) );
-        const calcMins = visits => visits.reduce((t, v) => t + calculateDuration(v), 0);
-        const fmtMins = mins => `${Math.floor(mins / 60)}h ${mins % 60}m`;
-        document.getElementById('dash-hours-completed').textContent = fmtMins(calcMins(filteredVisits.filter(v => v.Status === 'Concluída')));
-        document.getElementById('dash-hours-scheduled').textContent = fmtMins(calcMins(filteredVisits.filter(v => v.Status === 'Agendada')));
-        updateVisitsStatusChart(filteredVisits);
-        updateTopConsultants(filteredVisits);
+        const imgPreview = form.querySelector('img');
+        if (imgPreview) {
+            let fotoData;
+            try { fotoData = data.foto ? JSON.parse(data.foto) : null; } catch(e) { fotoData = null; }
+            imgPreview.src = (fotoData && fotoData[0]?.path) 
+                ? NocoDB_BaseURL + fotoData[0].path 
+                : `https://placehold.co/100x100/e2e8f0/cbd5e0?text=${isConsultor ? 'Foto' : 'Logo'}`;
+        }
+        
+        document.getElementById(cardsContainerId).classList.add('hidden');
+        document.getElementById(formContainerId).classList.remove('hidden');
     }
-
-    function updateTopConsultants(visits) {
-        const completed = visits.filter(v => v.Status === 'Concluída');
-        const stats = completed.reduce((acc, v) => {
-            acc[v.consultor_nome] = acc[v.consultor_nome] || { count: 0, minutes: 0 };
-            acc[v.consultor_nome].count++;
-            acc[v.consultor_nome].minutes += calculateDuration(v);
-            return acc;
-        }, {});
-        const sortedByHours = Object.entries(stats).sort((a, b) => b[1].minutes - a[1].minutes);
-        const sortedByCount = Object.entries(stats).sort((a, b) => b[1].count - a[1].count);
-        const fmtMins = mins => `${Math.floor(mins / 60)}h ${mins % 60}m`;
-        const topHoursList = document.getElementById('dash-top-consultants-hours');
-        topHoursList.innerHTML = sortedByHours.slice(0, 3).map(([n, s]) => `<li class="flex justify-between items-center"><span>${n}</span><span class="font-bold">${fmtMins(s.minutes)}</span></li>`).join('') || `<li>Nenhum dado.</li>`;
-        const topCountList = document.getElementById('dash-top-consultants-count');
-        topCountList.innerHTML = sortedByCount.slice(0, 3).map(([n, s]) => `<li class="flex justify-between items-center"><span>${n}</span><span class="font-bold">${s.count} visitas</span></li>`).join('') || `<li>Nenhum dado.</li>`;
-    }
-
-    function calculateDuration(visit) {
-        if (visit.Status === 'Concluída' && visit.CheckIn && visit.CheckOut) return (new Date(visit.CheckOut) - new Date(visit.CheckIn)) / 60000;
-        if (visit.HoraInicio && visit.HoraFim) { const [sH, sM] = visit.HoraInicio.split(':'); const [eH, eM] = visit.HoraFim.split(':'); return (new Date(0,0,0,eH,eM) - new Date(0,0,0,sH,sM)) / 60000; }
-        return 0;
-    }
-
-    function updateFinanceChart(receitas, custos) {
-        const ctx = document.getElementById('finance-chart').getContext('2d');
-        const isDark = document.documentElement.classList.contains('dark');
-        const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
-        const labelColor = isDark ? '#e5e7eb' : '#373737';
-        const dataByMonth = {};
-        const process = (data, type) => { data.forEach(item => { const month = new Date(item.Vencimento + 'T00:00:00').toLocaleString('pt-BR', { month: 'short', year: '2-digit' }); dataByMonth[month] = dataByMonth[month] || { receitas: 0, custos: 0 }; dataByMonth[month][type] += item.Valor; }); };
-        process(receitas, 'receitas'); process(custos, 'custos');
-        const sortedMonths = Object.keys(dataByMonth).sort((a, b) => { const [m1,y1]=a.split('/'), [m2,y2]=b.split('/'); return new Date(`20${y1}`, 'jan,fev,mar,abr,mai,jun,jul,ago,set,out,nov,dez'.split(',').indexOf(m1.toLowerCase()), 1) - new Date(`20${y2}`, 'jan,fev,mar,abr,mai,jun,jul,ago,set,out,nov,dez'.split(',').indexOf(m2.toLowerCase()), 1); });
-        const chartData = { labels: sortedMonths, datasets: [ { label: 'Receitas', data: sortedMonths.map(m => dataByMonth[m].receitas), backgroundColor: 'rgba(59, 130, 246, 0.7)' }, { label: 'Custos', data: sortedMonths.map(m => dataByMonth[m].custos), backgroundColor: 'rgba(239, 68, 68, 0.7)' } ] };
-        if (financeChart) { Object.assign(financeChart.data, chartData); Object.assign(financeChart.options.scales.x.ticks, { color: labelColor }); Object.assign(financeChart.options.scales.y.ticks, { color: labelColor }); Object.assign(financeChart.options.scales.x.grid, { color: gridColor }); Object.assign(financeChart.options.scales.y.grid, { color: gridColor }); Object.assign(financeChart.options.plugins.legend.labels, { color: labelColor }); financeChart.update();
-        } else { financeChart = new Chart(ctx, { type: 'bar', data: chartData, options: { responsive: true, scales: { x: { ticks: { color: labelColor }, grid: { color: gridColor } }, y: { ticks: { color: labelColor }, grid: { color: gridColor } } }, plugins: { legend: { labels: { color: labelColor } } } } }); }
-    }
-    
-    function updateVisitsStatusChart(visits) {
-        const ctx = document.getElementById('visits-status-chart').getContext('2d');
-        const isDark = document.documentElement.classList.contains('dark');
-        const labelColor = isDark ? '#e5e7eb' : '#373737';
-        const statusCounts = visits.reduce((acc, v) => { acc[v.Status] = (acc[v.Status] || 0) + 1; return acc; }, {});
-        const chartData = { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts), backgroundColor: Object.keys(statusCounts).map(s => ({'Agendada':'#3B82F6','Concluída':'#10B981','Em Andamento':'#F59E0B','Remarcada':'#8B5CF6'}[s] || '#6B7280')) }] };
-        if (visitsStatusChart) { Object.assign(visitsStatusChart.data, chartData); Object.assign(visitsStatusChart.options.plugins.legend.labels, { color: labelColor }); visitsStatusChart.update();
-        } else { visitsStatusChart = new Chart(ctx, { type: 'doughnut', data: chartData, options: { responsive: true, plugins: { legend: { position: 'top', labels: { color: labelColor } } } } }); }
-    }
-    
-    // --- Lógica de Visitas ---
-    const statusConfig = { 'Agendada': { color: 'blue', label: 'Agendada' }, 'Em Andamento': { color: 'yellow', label: 'Em Andamento' }, 'Concluída': { color: 'green', label: 'Concluída' }, 'Remarcada': { color: 'purple', label: 'Remarcada' } };
-    function applyFilters() { const start = document.getElementById('filter-start-date').value, end = document.getElementById('filter-end-date').value, consultor = document.getElementById('filter-consultor').value, cliente = document.getElementById('filter-cliente').value, status = document.getElementById('filter-status').value; const filtered = visitsData.filter(v => (!start || v.DataVisita >= start) && (!end || v.DataVisita <= end) && (!consultor || v.ConsultorId == consultor) && (!cliente || v.ClienteId == cliente) && (!status || v.Status === status)); renderAllVisits(filtered); }
-    function clearFilters() { document.getElementById('filter-start-date').value = ''; document.getElementById('filter-end-date').value = ''; document.getElementById('filter-consultor').value = ''; document.getElementById('filter-cliente').value = ''; document.getElementById('filter-status').value = ''; renderAllVisits(visitsData); }
-    function renderAllVisits(data = visitsData) { renderKanbanBoard(data.filter(v => v.Status !== 'Remarcada')); renderVisitsList(data); renderCalendarEvents(data); }
-    function renderKanbanBoard(data) { const cols = { 'agendada': [], 'em-andamento': [], 'concluida': [] }; data.forEach(v => { const statusKey = v.Status.toLowerCase().replace(' ', '-'); if(cols[statusKey]) cols[statusKey].push(createKanbanCard(v)); }); document.getElementById('kanban-agendada').innerHTML = cols.agendada.join(''); document.getElementById('kanban-em-andamento').innerHTML = cols['em-andamento'].join(''); document.getElementById('kanban-concluida').innerHTML = cols.concluida.join(''); }
-    function createKanbanCard(visit) { const { color, label } = statusConfig[visit.Status]; const dateFmt = new Date(visit.DataVisita + 'T00:00:00').toLocaleDateString('pt-BR'); const rescheduled = visit.Remarcada && visit.Status === 'Agendada' ? `<span class="text-xs ml-2 font-semibold text-purple-800">(Remarcado)</span>` : ''; let actions = ''; if (visit.Status === 'Agendada') actions = `<button data-id="${visit.Id}" class="iniciar-visita-btn w-full bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Iniciar</button><button data-id="${visit.Id}" class="remarcar-visita-btn w-full mt-2 bg-gray-500 text-white px-3 py-1 rounded-md text-sm hover:bg-gray-600">Remarcar</button>`; else if (visit.Status === 'Em Andamento') actions = `<button data-id="${visit.Id}" class="encerrar-visita-btn w-full bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">Encerrar</button>`; let duration = ''; if (visit.Status === 'Concluída' && visit.CheckIn && visit.CheckOut) { const diff = (new Date(visit.CheckOut) - new Date(visit.CheckIn)) / 60000; duration = `<div class="text-xs text-center font-bold text-brand-gold mt-2 p-1 bg-yellow-100 dark:bg-yellow-900 rounded">Duração: ${Math.floor(diff/60)}h ${Math.round(diff%60)}min</div>`; } return `<div class="kanban-card bg-white dark:bg-gray-700 p-4 rounded-lg shadow" data-id="${visit.Id}"><div class="flex justify-between items-start mb-2"><h4 class="font-bold text-gray-800 dark:text-white">${visit.cliente_nome}${rescheduled}</h4><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}</span></div><p class="text-sm text-gray-600 dark:text-gray-300">${visit.consultor_nome}</p><p class="text-sm text-gray-600 dark:text-gray-300">${dateFmt} - ${visit.HoraInicio}</p>${duration}<div class="mt-4 border-t pt-2 dark:border-gray-600 visit-actions">${actions}</div></div>`; }
-    function renderVisitsList(data) { const tBody = document.getElementById('visitas-table-body'); tBody.innerHTML = ''; data.forEach(v => { const { color, label } = statusConfig[v.Status]; const status = label + (v.Remarcada && v.Status === 'Agendada' ? ' (Remarcado)' : ''); const row = tBody.insertRow(); row.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700'; row.dataset.id = v.Id; row.innerHTML = `<td class="px-6 py-4">${v.cliente_nome}</td><td class="px-6 py-4">${v.consultor_nome}</td><td class="px-6 py-4">${new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR')}</td><td class="px-6 py-4">${v.HoraInicio} - ${v.HoraFim}</td><td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${status}</span></td><td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500"><i class="fas fa-trash"></i></button></td>`; }); }
-    function renderCalendarEvents(data) { if (!calendar) return; calendar.removeAllEvents(); calendar.addEventSource(data.map(v => ({ id: v.Id, title: `${v.cliente_nome} (${v.consultor_nome})`, start: `${v.DataVisita}T${v.HoraInicio}`, end: `${v.DataVisita}T${v.HoraFim}`, color: statusConfig[v.Status].color }))); }
-    async function handleStartVisit(visitId) { showLoadingOverlay('Iniciando...'); await nocoFetch(`Visitas/${visitId}`, { method: 'PATCH', body: JSON.stringify({ Status: 'Em Andamento', CheckIn: new Date().toISOString() }) }); await fetchVisitas(); applyFilters(); hideLoadingOverlay(); }
-    async function handleEndVisit(visitId) { showLoadingOverlay('Encerrando...'); await nocoFetch(`Visitas/${visitId}`, { method: 'PATCH', body: JSON.stringify({ Status: 'Concluída', CheckOut: new Date().toISOString() }) }); await fetchVisitas(); applyFilters(); updateAllDashboards(); hideLoadingOverlay(); }
-    function handleRescheduleVisit(visitId) { const visit = visitsData.find(v => v.Id == visitId); if(visit) { document.getElementById('is-rescheduling').value = 'true'; openVisitaModal(visit); } }
-    function openVisitaModal(visit = null) { const form = allElements.visitaForm; form.reset(); document.getElementById('is-rescheduling').value = 'false'; if (visit) { document.getElementById('visita-modal-title').textContent = "Editar Visita"; form.querySelector('#visita-id').value = visit.Id; form.querySelector('#visita-consultor').value = visit.ConsultorId; form.querySelector('#visita-cliente').value = visit.ClienteId; form.querySelector('#visita-data').value = visit.DataVisita; form.querySelector('#visita-inicio').value = visit.HoraInicio; form.querySelector('#visita-fim').value = visit.HoraFim; form.querySelector('#visita-descricao').value = visit.Descricao; } else { document.getElementById('visita-modal-title').textContent = "Agendar Nova Visita"; form.querySelector('#visita-id').value = ''; form.querySelector('#visita-consultor').value = loggedInUser.Id; } showModal(allElements.visitaFormModal); }
-    async function checkOverdueVisits() { const today = new Date(); today.setHours(0,0,0,0); const overdue = visitsData.filter(v => v.Status === 'Agendada' && new Date(v.DataVisita+'T23:59:59') < today); if(overdue.length > 0) { showLoadingOverlay('Atualizando status...'); await Promise.all(overdue.map(v => nocoFetch(`Visitas/${v.Id}`, { method: 'PATCH', body: JSON.stringify({ Status: 'Remarcada' }) }))); await fetchVisitas(); applyFilters(); hideLoadingOverlay(); } }
-    function initializeCalendar() { if (document.getElementById('calendar') && typeof FullCalendar !== 'undefined') { calendar = new FullCalendar.Calendar(document.getElementById('calendar'), { initialView: 'dayGridMonth', locale: 'pt-br', buttonText: { today: 'Hoje', month: 'Mês', week: 'Semana', list: 'Lista' }, headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,listWeek' }, }); } }
-    
-    // --- Lógica de Requisições & Itens ---
-    function openRequisicaoModal(req = null) { /* ... */ }
-    function toggleRequisicaoFields() { /* ... */ }
-    function addConsumoCategory(catName = '') { /* ... */ }
-    function addConsumoItem(btn, itemName = '') { /* ... */ }
-    function renderRequisicoes(data = requisicoesData) { /* ... */ }
-    function changeRequisicaoStatus(reqId) { /* ... */ }
-    function openRequisicaoDetailsModal(reqId) { /* ... */ }
-    function renderItensDeRequisicao() { /* ... */ }
-    function renderCategoryFilters() { /* ... */ }
-    function handleCategoryFilterClick(button) { /* ... */ }
-    function openItemModal(category, item = null) { /* ... */ }
-    async function saveItem(e) { /* ... */ }
-    function applyRequisicaoFilters() { /* ... */ }
-    function clearRequisicaoFilters() { /* ... */ }
-    
-    // --- Lógica Financeiro ---
-    function applyAndRenderReceitas() { const start = document.getElementById('filter-receita-start-date').value, end = document.getElementById('filter-receita-end-date').value, cliente = document.getElementById('filter-receita-cliente').value, status = document.getElementById('filter-receita-status').value; const filtered = receitasData.filter(r => (!start || r.Vencimento >= start) && (!end || r.Vencimento <= end) && (!cliente || r.ClienteId == cliente) && (!status || r.Status === status)); renderReceitas(filtered); }
-    function applyAndRenderCustos() { const start = document.getElementById('filter-custo-start-date').value, end = document.getElementById('filter-custo-end-date').value, credor = document.getElementById('filter-custo-credor').value.toLowerCase(), status = document.getElementById('filter-custo-status').value; const filtered = custosData.filter(c => (!start || c.Vencimento >= start) && (!end || c.Vencimento <= end) && (!credor || c.Credor.toLowerCase().includes(credor)) && (!status || c.Status === status)); renderCustos(filtered); }
-
-    // --- Insights & Reports ---
-    function generateInsights(){ /* ... */ }
-    function toggleReportSubtype() { /* ... */ }
-    function generatePdfReport(e) { /* ... */ }
-    function generateFinanceReport(doc, filters) { /* ... */ }
-    function generateVisitReport(doc, filters) { /* ... */ }
+    const setupSearch=(iId,cS)=>{document.getElementById(iId)?.addEventListener('input',e=>{const sT=e.target.value.toLowerCase(); document.querySelectorAll(cS).forEach(c=>{const n=c.dataset.nome||''; c.style.display=n.toLowerCase().includes(sT)?'flex':'none';});});};
+    const setupFormToggle=(cId,fId)=>{activeCard=null; const f=document.getElementById(fId).querySelector('form'); f?.reset(); let hId=f.querySelector('input[type="hidden"]'); if(hId)hId.value=''; document.getElementById(cId)?.classList.add('hidden'); document.getElementById(fId)?.classList.remove('hidden');};
+    const hideFormToggle=(cId,fId)=>{document.getElementById(fId).classList.add('hidden'); document.getElementById(cId).classList.remove('hidden');}
+    const setupSubFormToggle=(hId,fId)=>{document.getElementById(hId)?.classList.add('hidden'); document.getElementById(fId)?.classList.remove('hidden'); const f=document.getElementById(fId).querySelector('form'); if(f){f.reset(); const iId=f.querySelector('input[type="hidden"]'); if(iId)iId.value='';}};
+    const hideSubFormToggle=(hId,fId)=>{document.getElementById(fId).classList.add('hidden'); document.getElementById(hId).classList.remove('hidden');}
+    const hideModal=(m)=>m?.classList.replace('flex','hidden');
+    const showModal=(m)=>m?.classList.replace('hidden','flex');
+    const openDetailsModal=(card)=>{activeCard=card; activeDeleteItem={id:card.dataset.id, type:card.classList.contains('rh-card')?'consultor':'cliente', element:card}; document.getElementById('details-modal-actions').style.display='flex'; const data=card.dataset; const fm={datanascimento:v=>v?new Date(v+'T00:00:00').toLocaleDateString('pt-BR'):'N/A', valorhora:v=>v?parseFloat(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):'N/A', iniciovinculo:v=>v?new Date(v+'T00:00:00').toLocaleDateString('pt-BR'):'N/A', fimvinculo:v=>v?new Date(v+'T00:00:00').toLocaleDateString('pt-BR'):'N/A'}; document.getElementById('modal-title').textContent=data.nome; document.getElementById('modal-content').innerHTML=Object.keys(data).map(k=>{if(k==='id'||k.toLowerCase().includes('foto')||k.toLowerCase().includes('senha'))return''; const l=k.replace(/([A-Z])/g,' $1').replace(/^./,s=>s.toUpperCase()); const v=fm[k]?fm[k](data[k]):(data[k]||'N/A'); return`<p><strong>${l}:</strong> ${v}</p>`;}).join(''); showModal(allElements.detailsModal);};
+    function updateAllDashboards(){updateFinanceDashboard(); updateVisitsDashboard();}
+    function setDateFilter(e, p) { const period=e.target.dataset.period; document.querySelectorAll(`.dash-${p}-quick-filter`).forEach(b=>b.classList.remove('filter-btn-active')); e.target.classList.add('filter-btn-active'); const endI=document.getElementById(`dash-${p}-end`), startI=document.getElementById(`dash-${p}-start`), today=new Date(); endI.valueAsDate=today; let sD=new Date(); if(period==='week')sD.setDate(today.getDate()-today.getDay()); else if(period==='month')sD=new Date(today.getFullYear(),today.getMonth(),1); else if(period==='year')sD=new Date(today.getFullYear(),0,1); startI.valueAsDate=sD; if(p==='fin')updateFinanceDashboard(); else updateVisitsDashboard();}
+    function updateFinanceDashboard() { const s=document.getElementById('dash-fin-status').value, st=document.getElementById('dash-fin-start').value, e=document.getElementById('dash-fin-end').value; const fR=receitasData.filter(r=>(!s||r.Status===s)&&(!st||r.Vencimento>=st)&&(!e||r.Vencimento<=e)); const fC=custosData.filter(c=>(!s||c.Status===s)&&(!st||c.Vencimento>=st)&&(!e||c.Vencimento<=e)); const tR=fR.reduce((sum,r)=>sum+(r.Valor||0),0), tC=fC.reduce((sum,c)=>sum+(c.Valor||0),0), bal=tR-tC; const tRP=receitasData.filter(r=>r.Status==='Pendente'&&(!st||r.Vencimento>=st)&&(!e||r.Vencimento<=e)).reduce((sum,r)=>sum+(r.Valor||0),0); const tCP=custosData.filter(c=>c.Status==='Pendente'&&(!st||c.Vencimento>=st)&&(!e||c.Vencimento<=e)).reduce((sum,c)=>sum+(c.Valor||0),0); const f=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); document.getElementById('dash-revenue').textContent=f(tR); document.getElementById('dash-costs').textContent=f(tC); document.getElementById('dash-balance').textContent=f(bal); document.getElementById('dash-revenue-pending').textContent=f(tRP); document.getElementById('dash-costs-pending').textContent=f(tCP); document.getElementById('dash-balance').classList.toggle('text-green-500',bal>=0); document.getElementById('dash-balance').classList.toggle('text-red-500',bal<0); updateFinanceChart(fR,fC); }
+    function updateVisitsDashboard() { const st=document.getElementById('dash-visit-start').value, e=document.getElementById('dash-visit-end').value; const fV=visitsData.filter(v=>(!st||v.DataVisita>=st)&&(!e||v.DataVisita<=e)); const cM=vs=>vs.reduce((t,v)=>t+calculateDuration(v),0); const fM=m=>`${Math.floor(m/60)}h ${m%60}m`; document.getElementById('dash-hours-completed').textContent=fM(cM(fV.filter(v=>v.Status==='Concluída'))); document.getElementById('dash-hours-scheduled').textContent=fM(cM(fV.filter(v=>v.Status==='Agendada'))); updateVisitsStatusChart(fV); updateTopConsultants(fV); }
+    function updateTopConsultants(visits) { const comp=visits.filter(v=>v.Status==='Concluída'); const stats=comp.reduce((acc,v)=>{acc[v.consultor_nome]=acc[v.consultor_nome]||{count:0,minutes:0}; acc[v.consultor_nome].count++; acc[v.consultor_nome].minutes+=calculateDuration(v); return acc;},{}); const sH=Object.entries(stats).sort((a,b)=>b[1].minutes-a[1].minutes); const sC=Object.entries(stats).sort((a,b)=>b[1].count-a[1].count); const fM=m=>`${Math.floor(m/60)}h ${m%60}m`; const tHL=document.getElementById('dash-top-consultants-hours'); tHL.innerHTML=sH.slice(0,3).map(([n,s])=>`<li class="flex justify-between items-center"><span>${n}</span><span class="font-bold">${fM(s.minutes)}</span></li>`).join('')||`<li>Nenhum dado.</li>`; const tCL=document.getElementById('dash-top-consultants-count'); tCL.innerHTML=sC.slice(0,3).map(([n,s])=>`<li class="flex justify-between items-center"><span>${n}</span><span class="font-bold">${s.count} visitas</span></li>`).join('')||`<li>Nenhum dado.</li>`; }
+    function calculateDuration(v) { if(v.Status==='Concluída'&&v.CheckIn&&v.CheckOut)return(new Date(v.CheckOut)-new Date(v.CheckIn))/60000; if(v.HoraInicio&&v.HoraFim){const[sH,sM]=v.HoraInicio.split(':'),[eH,eM]=v.HoraFim.split(':'); return(new Date(0,0,0,eH,eM)-new Date(0,0,0,sH,sM))/60000;} return 0;}
+    function updateFinanceChart(r,c) { const ctx=document.getElementById('finance-chart').getContext('2d'), iD=document.documentElement.classList.contains('dark'), gC=iD?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.1)', lC=iD?'#e5e7eb':'#373737', dM={}; const p=(d,t)=>{d.forEach(i=>{const m=new Date(i.Vencimento+'T00:00:00').toLocaleString('pt-BR',{month:'short',year:'2-digit'}); dM[m]=dM[m]||{receitas:0,custos:0}; dM[m][t]+=(i.Valor||0);});}; p(r,'receitas'); p(c,'custos'); const sM=Object.keys(dM).sort((a,b)=>{const[m1,y1]=a.split('/'),[m2,y2]=b.split('/'); return new Date(`20${y1}`,'jan,fev,mar,abr,mai,jun,jul,ago,set,out,nov,dez'.split(',').indexOf(m1.toLowerCase()),1)-new Date(`20${y2}`,'jan,fev,mar,abr,mai,jun,jul,ago,set,out,nov,dez'.split(',').indexOf(m2.toLowerCase()),1);}); const cD={labels:sM, datasets:[{label:'Receitas',data:sM.map(m=>dM[m].receitas),backgroundColor:'rgba(59,130,246,0.7)'},{label:'Custos',data:sM.map(m=>dM[m].custos),backgroundColor:'rgba(239,68,68,0.7)'}]}; if(financeChart){Object.assign(financeChart.data,cD); Object.assign(financeChart.options.scales.x.ticks,{color:lC}); Object.assign(financeChart.options.scales.y.ticks,{color:lC}); Object.assign(financeChart.options.scales.x.grid,{color:gC}); Object.assign(financeChart.options.scales.y.grid,{color:gC}); Object.assign(financeChart.options.plugins.legend.labels,{color:lC}); financeChart.update();}else{financeChart=new Chart(ctx,{type:'bar',data:cD,options:{responsive:true,scales:{x:{ticks:{color:lC},grid:{color:gC}},y:{ticks:{color:lC},grid:{color:gC}}},plugins:{legend:{labels:{color:lC}}}}});}}
+    function updateVisitsStatusChart(v) { const ctx=document.getElementById('visits-status-chart').getContext('2d'), iD=document.documentElement.classList.contains('dark'), lC=iD?'#e5e7eb':'#373737', sC=v.reduce((a,v)=>{a[v.Status]=(a[v.Status]||0)+1; return a;},{}); const cD={labels:Object.keys(sC), datasets:[{data:Object.values(sC), backgroundColor:Object.keys(sC).map(s=>({'Agendada':'#3B82F6','Concluída':'#10B981','Em Andamento':'#F59E0B','Remarcada':'#8B5CF6'}[s]||'#6B7280'))}]}; if(visitsStatusChart){Object.assign(visitsStatusChart.data,cD); Object.assign(visitsStatusChart.options.plugins.legend.labels,{color:lC}); visitsStatusChart.update();}else{visitsStatusChart=new Chart(ctx,{type:'doughnut',data:cD,options:{responsive:true,plugins:{legend:{position:'top',labels:{color:lC}}}}});}}
+    const sConf={'Agendada':{color:'blue',label:'Agendada'},'Em Andamento':{color:'yellow',label:'Em Andamento'},'Concluída':{color:'green',label:'Concluída'},'Remarcada':{color:'purple',label:'Remarcada'}};
+    function applyFilters(){const s=document.getElementById('filter-start-date').value,e=document.getElementById('filter-end-date').value,c=document.getElementById('filter-consultor').value,cl=document.getElementById('filter-cliente').value,st=document.getElementById('filter-status').value; const f=visitsData.filter(v=>(!s||v.DataVisita>=s)&&(!e||v.DataVisita<=e)&&(!c||v.ConsultorId==c)&&(!cl||v.ClienteId==cl)&&(!st||v.Status===st)); renderAllVisits(f);}
+    function clearFilters(){document.getElementById('filter-start-date').value=''; document.getElementById('filter-end-date').value=''; document.getElementById('filter-consultor').value=''; document.getElementById('filter-cliente').value=''; document.getElementById('filter-status').value=''; renderAllVisits(visitsData);}
+    function renderAllVisits(d=visitsData){renderKanbanBoard(d.filter(v=>v.Status!=='Remarcada')); renderVisitsList(d); renderCalendarEvents(d);}
+    function renderKanbanBoard(d){const c={'agendada':[],'em-andamento':[],'concluida':[]}; d.forEach(v=>{const sK=v.Status.toLowerCase().replace(' ','-'); if(c[sK])c[sK].push(createKanbanCard(v));}); document.getElementById('kanban-agendada').innerHTML=c.agendada.join(''); document.getElementById('kanban-em-andamento').innerHTML=c['em-andamento'].join(''); document.getElementById('kanban-concluida').innerHTML=c.concluida.join('');}
+    function createKanbanCard(v){const{color,label}=sConf[v.Status]; const dF=new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR'); const rS=v.Remarcada&&v.Status==='Agendada'?'<span class="text-xs ml-2 font-semibold text-purple-800">(Remarcado)</span>':''; let acts=''; if(v.Status==='Agendada')acts=`<button data-id="${v.Id}" class="iniciar-visita-btn w-full bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Iniciar</button><button data-id="${v.Id}" class="remarcar-visita-btn w-full mt-2 bg-gray-500 text-white px-3 py-1 rounded-md text-sm hover:bg-gray-600">Remarcar</button>`; else if(v.Status==='Em Andamento')acts=`<button data-id="${v.Id}" class="encerrar-visita-btn w-full bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">Encerrar</button>`; let dur=''; if(v.Status==='Concluída'&&v.CheckIn&&v.CheckOut){const diff=(new Date(v.CheckOut)-new Date(v.CheckIn))/60000; dur=`<div class="text-xs text-center font-bold text-brand-gold mt-2 p-1 bg-yellow-100 dark:bg-yellow-900 rounded">Duração: ${Math.floor(diff/60)}h ${Math.round(diff%60)}min</div>`;} return`<div class="kanban-card bg-white dark:bg-gray-700 p-4 rounded-lg shadow" data-id="${v.Id}"><div class="flex justify-between items-start mb-2"><h4 class="font-bold text-gray-800 dark:text-white">${v.cliente_nome}${rS}</h4><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}</span></div><p class="text-sm text-gray-600 dark:text-gray-300">${v.consultor_nome}</p><p class="text-sm text-gray-600 dark:text-gray-300">${dF} - ${v.HoraInicio}</p>${dur}<div class="mt-4 border-t pt-2 dark:border-gray-600 visit-actions">${acts}</div></div>`;}
+    function renderVisitsList(d){const tB=document.getElementById('visitas-table-body'); tB.innerHTML=''; d.forEach(v=>{const{color,label}=sConf[v.Status]; const s=label+(v.Remarcada&&v.Status==='Agendada'?' (Remarcado)':''); const r=tB.insertRow(); r.className='bg-white border-b dark:bg-gray-800 dark:border-gray-700'; r.dataset.id=v.Id; r.innerHTML=`<td class="px-6 py-4">${v.cliente_nome}</td><td class="px-6 py-4">${v.consultor_nome}</td><td class="px-6 py-4">${new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR')}</td><td class="px-6 py-4">${v.HoraInicio} - ${v.HoraFim}</td><td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${s}</span></td><td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500"><i class="fas fa-trash"></i></button></td>`;});}
+    function renderCalendarEvents(d){if(!calendar)return; calendar.removeAllEvents(); calendar.addEventSource(d.map(v=>({id:v.Id, title:`${v.cliente_nome} (${v.consultor_nome})`, start:`${v.DataVisita}T${v.HoraInicio}`, end:`${v.DataVisita}T${v.HoraFim}`, color:sConf[v.Status].color})));}
+    async function handleStartVisit(vId){showLoadingOverlay('Iniciando...'); await nocoFetch(`Visitas/${vId}`,{method:'PATCH',body:JSON.stringify({Status:'Em Andamento',CheckIn:new Date().toISOString()})}); await fetchVisitas(); applyFilters(); hideLoadingOverlay();}
+    async function handleEndVisit(vId){showLoadingOverlay('Encerrando...'); await nocoFetch(`Visitas/${vId}`,{method:'PATCH',body:JSON.stringify({Status:'Concluída',CheckOut:new Date().toISOString()})}); await fetchVisitas(); applyFilters(); updateAllDashboards(); hideLoadingOverlay();}
+    function handleRescheduleVisit(vId){const v=visitsData.find(d=>d.Id==vId); if(v){document.getElementById('is-rescheduling').value='true'; openVisitaModal(v);}}
+    function openVisitaModal(v=null){const f=allElements.visitaForm; f.reset(); document.getElementById('is-rescheduling').value='false'; if(v){document.getElementById('visita-modal-title').textContent="Editar Visita"; f.querySelector('#visita-id').value=v.Id; f.querySelector('#visita-consultor').value=v.ConsultorId; f.querySelector('#visita-cliente').value=v.ClienteId; f.querySelector('#visita-data').value=v.DataVisita; f.querySelector('#visita-inicio').value=v.HoraInicio; f.querySelector('#visita-fim').value=v.HoraFim; f.querySelector('#visita-descricao').value=v.Descricao;}else{document.getElementById('visita-modal-title').textContent="Agendar Nova Visita"; f.querySelector('#visita-id').value=''; f.querySelector('#visita-consultor').value=loggedInUser.Id;} showModal(allElements.visitaFormModal);}
+    async function checkOverdueVisits(){const t=new Date(); t.setHours(0,0,0,0); const oD=visitsData.filter(v=>v.Status==='Agendada'&&new Date(v.DataVisita+'T23:59:59')<t); if(oD.length>0){showLoadingOverlay('Atualizando status...'); await Promise.all(oD.map(v=>nocoFetch(`Visitas/${v.Id}`,{method:'PATCH',body:JSON.stringify({Status:'Remarcada'})}))); await fetchVisitas(); applyFilters(); hideLoadingOverlay();}}
+    function initializeCalendar(){if(document.getElementById('calendar')&&typeof FullCalendar!=='undefined'){calendar=new FullCalendar.Calendar(document.getElementById('calendar'),{initialView:'dayGridMonth',locale:'pt-br',buttonText:{today:'Hoje',month:'Mês',week:'Semana',list:'Lista'},headerToolbar:{left:'prev,next today',center:'title',right:'dayGridMonth,timeGridWeek,listWeek'},});}}
+    function openRequisicaoModal(r=null){}
+    function toggleRequisicaoFields(){}
+    function addConsumoCategory(cat=''){ }
+    function addConsumoItem(btn,iN=''){ }
+    function renderRequisicoes(d=requisicoesData){ }
+    function changeRequisicaoStatus(rId){}
+    function openRequisicaoDetailsModal(rId){}
+    function renderItensDeRequisicao(){}
+    function renderCategoryFilters(){}
+    function handleCategoryFilterClick(btn){}
+    function openItemModal(cat,i=null){}
+    async function saveItem(e){}
+    function applyRequisicaoFilters(){}
+    function clearRequisicaoFilters(){}
+    function applyAndRenderReceitas(){const s=document.getElementById('filter-receita-start-date').value,e=document.getElementById('filter-receita-end-date').value,c=document.getElementById('filter-receita-cliente').value,st=document.getElementById('filter-receita-status').value; const f=receitasData.filter(r=>(!s||r.Vencimento>=s)&&(!e||r.Vencimento<=e)&&(!c||r.ClienteId==c)&&(!st||r.Status===st)); renderReceitas(f);}
+    function applyAndRenderCustos(){const s=document.getElementById('filter-custo-start-date').value,e=document.getElementById('filter-custo-end-date').value,cr=document.getElementById('filter-custo-credor').value.toLowerCase(),st=document.getElementById('filter-custo-status').value; const f=custosData.filter(c=>(!s||c.Vencimento>=s)&&(!e||c.Vencimento<=e)&&(!cr||c.Credor.toLowerCase().includes(cr))&&(!st||c.Status===st)); renderCustos(f);}
+    function generateInsights(){}
+    function toggleReportSubtype(){}
+    function generatePdfReport(e){}
+    function generateFinanceReport(doc,f){}
+    function generateVisitReport(doc,f){}
 
     function handleTableDelete(button) {
         const row = button.closest('tr');
@@ -1594,6 +1400,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Inicialização ---
     function initializeApp() {
+        // CORREÇÃO: Esconde todas as páginas inicialmente para evitar "flash"
+        document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+
         allElements.loginForm?.addEventListener('submit', handleLogin);
         document.body.addEventListener('click', handleGlobalClick);
         document.querySelectorAll('form').forEach(form => { if (form.id !== 'login-form' && form.id !== 'report-form') form.addEventListener('submit', handleFormSubmit); });
@@ -1602,6 +1411,8 @@ document.addEventListener('DOMContentLoaded', function() {
         ['filter-custo-start-date', 'filter-custo-end-date', 'filter-custo-credor', 'filter-custo-status'].forEach(id => document.getElementById(id)?.addEventListener('change', applyAndRenderCustos));
         setupSearch('rh-search', '.rh-card');
         setupSearch('cliente-search', '.cliente-card');
+        
+        checkSession();
     }
 
     initializeApp();
