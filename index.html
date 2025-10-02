@@ -977,6 +977,10 @@ document.addEventListener('DOMContentLoaded', function() {
         renderClientes();
         populateConsultantSelects();
         populateClientSelects();
+        // Populando selects do modal de relatório com a opção "Todos"
+        populateSelectWithOptions('#report-consultor', consultoresData, 'Id', 'Nome', true);
+        populateSelectWithOptions('#report-cliente', clientesData, 'Id', 'Nome', true);
+
         updateAllCounters();
         
         applyAndRenderReceitas();
@@ -1007,11 +1011,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (fkValue === null || typeof fkValue === 'undefined') {
                     return { ...item, [relation.newField]: 'N/A' };
                 }
-                // NocoDB pode retornar o ID diretamente ou um objeto.
                 const fkId = (typeof fkValue === 'object' && fkValue !== null) ? fkValue.Id : fkValue;
                 const relatedItem = relatedData.find(rel => rel.Id === fkId);
                 const newItem = { ...item, [relation.newField]: relatedItem ? (relatedItem.Nome || 'N/A') : 'N/A' };
-                newItem[relation.fk] = fkId; // Garante que a FK seja sempre o ID
+                newItem[relation.fk] = fkId;
                 return newItem;
             });
         }
@@ -1191,7 +1194,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const form = e.target;
         let endpoint = '', body = {}, id = null, callback = null;
 
-        // Identificador comum para os formulários de RH
         const rhSubFormIds = ['ferias-form', 'atestados-form', 'epis-form', 'ativos-form'];
         
         switch (form.id) {
@@ -1281,13 +1283,11 @@ document.addEventListener('DOMContentLoaded', function() {
         showLoadingOverlay('Salvando...');
         const result = await nocoFetch(endpoint, { method, body: JSON.stringify(body) });
         
-        // Sempre esconder o overlay após a tentativa
         hideLoadingOverlay();
 
         if (result) {
             if (callback) await callback();
             
-            // Lógica para esconder formulários
             if(rhSubFormIds.includes(form.id)) {
                 const historyContainerId = form.id.replace('-form', '-history-container');
                 const formContainerId = form.id.replace('-form', '-form-container');
@@ -1299,7 +1299,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             form.reset();
-            delete form.dataset.id; // Limpa o ID após salvar
+            delete form.dataset.id;
             updateAllCounters();
             updateAllDashboards();
         }
@@ -1330,7 +1330,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updateAllCounters();
             updateAllDashboards();
         }
-        hideModal(allElements.detailsModal); // Esconde o modal de detalhes se estiver aberto
+        hideModal(allElements.detailsModal);
         hideModal(allElements.deleteConfirmModal);
         activeDeleteItem = { id: null, type: null, element: null };
     }
@@ -1345,7 +1345,16 @@ document.addEventListener('DOMContentLoaded', function() {
     function populateClientSelects() { populateSelectWithOptions('.cliente-select', clientesData, 'Id', 'Nome', false); }
     
     function handleGlobalClick(e) { 
-        const t=e.target; 
+        const t = e.target; 
+
+        const kanbanButton = t.closest('.kanban-card .visit-actions button');
+        if(kanbanButton) {
+            const visitId = parseInt(kanbanButton.closest('.kanban-card').dataset.id);
+            if(kanbanButton.classList.contains('iniciar-visita-btn')) { handleStartVisit(visitId); return; }
+            if(kanbanButton.classList.contains('encerrar-visita-btn')) { handleEndVisit(visitId); return; }
+            if(kanbanButton.classList.contains('remarcar-visita-btn')) { handleRescheduleVisit(visitId); return; }
+        }
+
         const nL=t.closest('.nav-link'); if(nL){e.preventDefault(); handleNavClick({currentTarget:nL}); return;} 
         const rhC=t.closest('.rh-card'); if(rhC&&!t.closest('a')){openDetailsModal(rhC); return;} 
         const clC=t.closest('.cliente-card'); if(clC&&!t.closest('a')){openDetailsModal(clC); return;} 
@@ -1496,9 +1505,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!row) return;
         const id = parseInt(row.dataset.id);
         const type = btn.dataset.type;
-        let dataArray, title, ignoredKeys = ['Id', 'id', 'cliente_nome', 'consultor_nome'];
-
+        let dataArray, title, ignoredKeys = ['Id', 'id', 'cliente_nome', 'consultor_nome', 'startTime', 'endTime', 'nc_created_by', 'nc_updated_by', 'nc_order'];
+    
         switch(type) {
+            case 'visita': dataArray = visitsData; title = 'Detalhes da Visita'; break;
             case 'ferias': dataArray = feriasData; title = 'Detalhes das Férias'; break;
             case 'atestado': dataArray = atestadosData; title = 'Detalhes do Atestado'; break;
             case 'epi': dataArray = episEntreguesData; title = 'Detalhes da Entrega de EPI'; break;
@@ -1508,21 +1518,37 @@ document.addEventListener('DOMContentLoaded', function() {
         const data = dataArray.find(d => d.Id === id);
         if (!data) return;
         document.getElementById('modal-title').textContent = title;
-        document.getElementById('modal-content').innerHTML = Object.entries(data).map(([key, value]) => {
-            if (ignoredKeys.includes(key)) return '';
-            let label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-            let displayValue = value || 'N/A';
-            if (key.toLowerCase().includes('data')) {
-                displayValue = value ? new Date(value + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
-            } else if (key === 'Consultor' || key === 'ConsultorId') {
-                label = 'Consultor';
-                displayValue = data.consultor_nome;
-            } else if (typeof value === 'object' && value !== null && value[0]?.signedPath) {
-                return `<p><strong>${label}:</strong> <a href="${NocoDB_BaseURL}/${value[0].signedPath}" target="_blank" class="text-brand-gold hover:underline">Ver Anexo</a></p>`;
-            }
-            return `<p><strong>${label}:</strong> ${displayValue}</p>`;
-        }).join('');
-        document.getElementById('details-modal-actions').style.display = 'none'; // Ações são apenas para cards
+        
+        if (type === 'visita') {
+            const { color, label } = sConf[data.Status] || { color: 'gray', label: data.Status };
+            document.getElementById('modal-content').innerHTML = `
+                <p><strong>Cliente:</strong> ${data.cliente_nome}</p>
+                <p><strong>Consultor:</strong> ${data.consultor_nome}</p>
+                <p><strong>Data:</strong> ${new Date(data.DataVisita + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
+                <p><strong>Horário:</strong> ${data.HoraInicio} - ${data.HoraFim}</p>
+                <p><strong>Descrição:</strong> ${data.Descricao || 'N/A'}</p>
+                <p><strong>Status:</strong> <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}${data.Remarcada ? ' (Remarcado)' : ''}</span></p>
+                ${data.CheckIn ? `<p><strong>Check-in:</strong> ${new Date(data.CheckIn).toLocaleString('pt-BR')}</p>` : ''}
+                ${data.CheckOut ? `<p><strong>Check-out:</strong> ${new Date(data.CheckOut).toLocaleString('pt-BR')}</p>` : ''}
+            `;
+        } else {
+             document.getElementById('modal-content').innerHTML = Object.entries(data).map(([key, value]) => {
+                if (ignoredKeys.includes(key)) return '';
+                let label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                let displayValue = value || 'N/A';
+                if (key.toLowerCase().includes('data')) {
+                    displayValue = value ? new Date(value + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
+                } else if (key === 'Consultor' || key === 'ConsultorId') {
+                    label = 'Consultor';
+                    displayValue = data.consultor_nome;
+                } else if (typeof value === 'object' && value !== null && value[0]?.signedPath) {
+                    return `<p><strong>${label}:</strong> <a href="${NocoDB_BaseURL}/${value[0].signedPath}" target="_blank" class="text-brand-gold hover:underline">Ver Anexo</a></p>`;
+                }
+                return `<p><strong>${label}:</strong> ${displayValue}</p>`;
+            }).join('');
+        }
+       
+        document.getElementById('details-modal-actions').style.display = 'none';
         showModal(allElements.detailsModal);
     }
     
@@ -1538,7 +1564,18 @@ document.addEventListener('DOMContentLoaded', function() {
     function applyFilters(){const s=document.getElementById('filter-start-date').value,e=document.getElementById('filter-end-date').value,c=document.getElementById('filter-consultor').value,cl=document.getElementById('filter-cliente').value,st=document.getElementById('filter-status').value; const f=visitsData.filter(v=>(!s||v.DataVisita>=s)&&(!e||v.DataVisita<=e)&&(!c||v.ConsultorId==c)&&(!cl||v.ClienteId==cl)&&(!st||v.Status===st)); renderAllVisits(f);}
     function clearFilters(){document.getElementById('filter-start-date').value=''; document.getElementById('filter-end-date').value=''; document.getElementById('filter-consultor').value=''; document.getElementById('filter-cliente').value=''; document.getElementById('filter-status').value=''; renderAllVisits(visitsData);}
     function renderAllVisits(d=visitsData){renderKanbanBoard(d.filter(v=>v.Status!=='Remarcada')); renderVisitsList(d); renderCalendarEvents(d);}
-    function renderKanbanBoard(d){const c={'agendada':[],'em-andamento':[],'concluida':[]}; d.forEach(v=>{const sK=v.Status.toLowerCase().replace(' ','-'); if(c[sK])c[sK].push(createKanbanCard(v));}); document.getElementById('kanban-agendada').innerHTML=c.agendada.join(''); document.getElementById('kanban-em-andamento').innerHTML=c['em-andamento'].join(''); document.getElementById('kanban-concluida').innerHTML=c.concluida.join('');}
+    
+    function renderKanbanBoard(d){
+        const c={'agendada':[],'em-andamento':[],'concluida':[]}; 
+        d.forEach(v=>{
+            const sK = v.Status.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(' ','-');
+            if(c[sK]) { c[sK].push(createKanbanCard(v)); }
+        });
+        document.getElementById('kanban-agendada').innerHTML=c.agendada.join(''); 
+        document.getElementById('kanban-em-andamento').innerHTML=c['em-andamento'].join(''); 
+        document.getElementById('kanban-concluida').innerHTML=c.concluida.join('');
+    }
+
     function createKanbanCard(v){const{color,label}=sConf[v.Status] || {color: 'gray', label: v.Status}; const dF=new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR'); const rS=v.Remarcada&&v.Status==='Agendada'?'<span class="text-xs ml-2 font-semibold text-purple-800">(Remarcado)</span>':''; let acts=''; if(v.Status==='Agendada')acts=`<button data-id="${v.Id}" class="iniciar-visita-btn w-full bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Iniciar</button><button data-id="${v.Id}" class="remarcar-visita-btn w-full mt-2 bg-gray-500 text-white px-3 py-1 rounded-md text-sm hover:bg-gray-600">Remarcar</button>`; else if(v.Status==='Em Andamento')acts=`<button data-id="${v.Id}" class="encerrar-visita-btn w-full bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">Encerrar</button>`; let dur=''; if(v.Status==='Concluída'&&v.CheckIn&&v.CheckOut){const diff=(new Date(v.CheckOut)-new Date(v.CheckIn))/60000; dur=`<div class="text-xs text-center font-bold text-brand-gold mt-2 p-1 bg-yellow-100 dark:bg-yellow-900 rounded">Duração: ${Math.floor(diff/60)}h ${Math.round(diff%60)}min</div>`;} return`<div class="kanban-card bg-white dark:bg-gray-700 p-4 rounded-lg shadow" data-id="${v.Id}"><div class="flex justify-between items-start mb-2"><h4 class="font-bold text-gray-800 dark:text-white">${v.cliente_nome}${rS}</h4><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}</span></div><p class="text-sm text-gray-600 dark:text-gray-300">${v.consultor_nome}</p><p class="text-sm text-gray-600 dark:text-gray-300">${dF} - ${v.HoraInicio}</p>${dur}<div class="mt-4 border-t pt-2 dark:border-gray-600 visit-actions">${acts}</div></div>`;}
     function renderVisitsList(d){const tB=document.getElementById('visitas-table-body'); tB.innerHTML=''; d.forEach(v=>{const{color,label}=sConf[v.Status] || {color: 'gray', label: v.Status}; const s=label+(v.Remarcada&&v.Status==='Agendada'?' (Remarcado)':''); const r=tB.insertRow(); r.className='bg-white border-b dark:bg-gray-800 dark:border-gray-700'; r.dataset.id=v.Id; r.innerHTML=`<td class="px-6 py-4">${v.cliente_nome}</td><td class="px-6 py-4">${v.consultor_nome}</td><td class="px-6 py-4">${new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR')}</td><td class="px-6 py-4">${v.HoraInicio} - ${v.HoraFim}</td><td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${s}</span></td><td class="px-6 py-4 space-x-2"><button class="table-details-btn text-gray-500" data-type="visita"><i class="fas fa-eye"></i></button><button class="table-edit-btn text-blue-500" data-type="visita"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500" data-type="visita"><i class="fas fa-trash"></i></button></td>`;});}
     function renderCalendarEvents(d){if(!calendar)return; calendar.removeAllEvents(); calendar.addEventSource(d.map(v=>({id:v.Id, title:`${v.cliente_nome} (${v.consultor_nome})`, start:`${v.DataVisita}T${v.HoraInicio}`, end:`${v.DataVisita}T${v.HoraFim}`, color:(sConf[v.Status] || {color:'gray'}).color})));}
@@ -1554,7 +1591,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function applyRequisicaoFilters(){}
     function clearRequisicaoFilters(){}
     
-    // Funções de filtro e renderização para as abas de RH
     function applyAndRenderFerias(){ const nome = document.getElementById('ferias-filter-name').value.toLowerCase(); const inicio = document.getElementById('ferias-filter-start').value; const fim = document.getElementById('ferias-filter-end').value; const filtered = feriasData.filter(f => (!nome || f.consultor_nome.toLowerCase().includes(nome)) && (!inicio || f.DataInicio >= inicio) && (!fim || f.DataRetorno <= fim) ); renderFerias(filtered); }
     function applyAndRenderAtestados(){ const nome = document.getElementById('atestados-filter-name').value.toLowerCase(); const inicio = document.getElementById('atestados-filter-start').value; const fim = document.getElementById('atestados-filter-end').value; const filtered = atestadosData.filter(a => (!nome || a.consultor_nome.toLowerCase().includes(nome)) && (!inicio || a.DataInicio >= inicio) && (!fim || a.DataRetorno <= fim) ); renderAtestados(filtered); }
     function applyAndRenderEpis(){ const nome = document.getElementById('epis-filter-name').value.toLowerCase(); const inicio = document.getElementById('epis-filter-start').value; const fim = document.getElementById('epis-filter-end').value; const filtered = episEntreguesData.filter(e => (!nome || e.consultor_nome.toLowerCase().includes(nome)) && (!inicio || e.DataEntrega >= inicio) && (!fim || e.DataEntrega <= fim) ); renderEpis(filtered); }
@@ -1562,9 +1598,239 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function applyAndRenderReceitas(){const s=document.getElementById('filter-receita-start-date').value,e=document.getElementById('filter-receita-end-date').value,c=document.getElementById('filter-receita-cliente').value,st=document.getElementById('filter-receita-status').value; const f=receitasData.filter(r=>(!s||r.Vencimento>=s)&&(!e||r.Vencimento<=e)&&(!c||r.ClienteId==c)&&(!st||r.Status===st)); renderReceitas(f);}
     function applyAndRenderCustos(){const s=document.getElementById('filter-custo-start-date').value,e=document.getElementById('filter-custo-end-date').value,cr=document.getElementById('filter-custo-credor').value.toLowerCase(),st=document.getElementById('filter-custo-status').value; const f=custosData.filter(c=>(!s||c.Vencimento>=s)&&(!e||c.Vencimento<=e)&&(!cr||c.Credor.toLowerCase().includes(cr))&&(!st||c.Status===st)); renderCustos(f);}
-    function generateInsights(){}
-    function toggleReportSubtype(){}
-    function generatePdfReport(e){}
+    
+    function generateInsights(){
+        const f = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const insightsContent = document.getElementById('insights-content');
+        let insightsHTML = '';
+
+        const totalReceitas = receitasData.reduce((sum, r) => sum + (r.Valor || 0), 0);
+        const totalCustos = custosData.reduce((sum, c) => sum + (c.Valor || 0), 0);
+        const balanco = totalReceitas - totalCustos;
+        insightsHTML += `<p class="p-2 rounded-lg ${balanco >= 0 ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'}"><strong>Balanço Financeiro Geral:</strong> <span class="font-bold ${balanco >= 0 ? 'text-green-600 dark:text-green-300' : 'text-red-600 dark:text-red-300'}">${f(balanco)}</span>.</p>`;
+
+        const receitasPendentes = receitasData.filter(r => r.Status === 'Pendente').reduce((sum, r) => sum + r.Valor, 0);
+        if (receitasPendentes > 0) {
+            insightsHTML += `<p class="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900"><strong>Atenção:</strong> Existem <strong>${f(receitasPendentes)}</strong> em receitas pendentes.</p>`;
+        }
+
+        const visitasConcluidas = visitsData.filter(v => v.Status === 'Concluída');
+        if (visitasConcluidas.length > 0) {
+            const stats = visitasConcluidas.reduce((acc, v) => {
+                acc[v.consultor_nome] = (acc[v.consultor_nome] || 0) + calculateDuration(v);
+                return acc;
+            }, {});
+            const [topConsultor, topHoras] = Object.entries(stats).sort((a, b) => b[1] - a[1])[0] || [null, 0];
+            if (topConsultor) {
+                insightsHTML += `<p class="p-2 rounded-lg bg-blue-100 dark:bg-blue-900"><strong>Destaque de Produtividade:</strong> O consultor <strong>${topConsultor}</strong> foi o que mais registrou horas (${Math.floor(topHoras/60)}h ${topHoras%60}m).</p>`;
+            }
+        } else {
+             insightsHTML += `<p class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700">Nenhuma visita concluída para análise de produtividade.</p>`;
+        }
+        
+        const totalVisitasAgendadas = visitsData.filter(v => v.Status === 'Agendada').length;
+        if(totalVisitasAgendadas > 0){
+            insightsHTML += `<p class="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900">Existem <strong>${totalVisitasAgendadas}</strong> visitas agendadas no sistema.</p>`;
+        }
+
+        insightsContent.innerHTML = insightsHTML || '<p>Não há dados suficientes para gerar insights.</p>';
+    }
+    
+    function toggleReportSubtype(){
+        const reportType = document.getElementById('report-type').value;
+        const visitsFilters = document.getElementById('report-visits-filters');
+        
+        // Simula a existência de um container de filtros financeiros para consistência
+        let financeFilters = document.getElementById('report-finance-filters');
+        if (!financeFilters) {
+            financeFilters = document.createElement('div');
+            financeFilters.id = 'report-finance-filters';
+            visitsFilters.parentElement.insertBefore(financeFilters, visitsFilters);
+            financeFilters.innerHTML = `
+                <div>
+                    <label for="report-finance-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
+                    <select id="report-finance-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <option value="">Todos</option>
+                        <option value="Pago">Pago</option>
+                        <option value="Pendente">Pendente</option>
+                    </select>
+                </div>`;
+        }
+
+        let visitsStatusFilter = document.getElementById('report-visits-status');
+        if (!visitsStatusFilter) {
+            const statusDiv = document.createElement('div');
+            visitsFilters.appendChild(statusDiv);
+            statusDiv.innerHTML = `
+                <label for="report-visits-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status da Visita</label>
+                <select id="report-visits-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <option value="">Todos</option>
+                    <option value="Agendada">Agendada</option>
+                    <option value="Em Andamento">Em Andamento</option>
+                    <option value="Concluída">Concluída</option>
+                    <option value="Remarcada">Remarcada</option>
+                </select>
+            `;
+        }
+
+        document.getElementById('report-subtype').parentElement.style.display = 'none';
+        
+        if (reportType === 'visitas') {
+            visitsFilters.classList.remove('hidden');
+            financeFilters.classList.add('hidden');
+        } else {
+            visitsFilters.classList.add('hidden');
+            financeFilters.classList.remove('hidden');
+        }
+    }
+
+    function generatePdfReport(e){
+        e.preventDefault();
+        const startDate = document.getElementById('report-start-date').value;
+        const endDate = document.getElementById('report-end-date').value;
+
+        if (!startDate || !endDate) {
+            alert('Por favor, preencha as datas de início e fim do período para gerar o relatório.');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+        
+        const type = document.getElementById('report-type').value;
+        
+        doc.setFontSize(18);
+        doc.text(`Relatório de ${type.charAt(0).toUpperCase() + type.slice(1)}`, 14, 22);
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text(`Período: ${new Date(startDate+'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(endDate+'T00:00:00').toLocaleDateString('pt-BR')}`, 14, 30);
+
+        if (type === 'financeiro') {
+            const status = document.getElementById('report-finance-status').value;
+            generateFinanceReport(doc, { startDate, endDate, status });
+        } else if (type === 'visitas') {
+            const consultorId = document.getElementById('report-consultor').value;
+            const clienteId = document.getElementById('report-cliente').value;
+            const status = document.getElementById('report-visits-status').value;
+            generateVisitReport(doc, { startDate, endDate, consultorId, clienteId, status });
+        }
+        
+        doc.save(`relatorio_${type}_${new Date().toISOString().slice(0,10)}.pdf`);
+        hideModal(allElements.reportModal);
+    }
+    
+    function generateFinanceReport(doc, filters) {
+        const { startDate, endDate, status } = filters;
+        const f = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        let finalY = 40;
+
+        const baseReceitas = receitasData.filter(r => (!startDate || r.Vencimento >= startDate) && (!endDate || r.Vencimento <= endDate));
+        const baseCustos = custosData.filter(c => (!startDate || c.Vencimento >= startDate) && (!endDate || c.Vencimento <= endDate));
+
+        const drawTable = (title, head, body) => {
+            if (body.length > 0) {
+                doc.setFontSize(12);
+                doc.text(title, 14, finalY);
+                finalY += 2;
+                doc.autoTable({
+                    startY: finalY,
+                    head: [head],
+                    body: body,
+                    theme: 'striped',
+                    headStyles: { fillColor: [55, 55, 55] }
+                });
+                finalY = doc.autoTable.previous.finalY + 10;
+            }
+        };
+
+        if (status === "" || status === "Todos") {
+            const receitasPagas = baseReceitas.filter(r => r.Status === 'Pago');
+            const receitasPendentes = baseReceitas.filter(r => r.Status === 'Pendente');
+            const custosPagos = baseCustos.filter(c => c.Status === 'Pago');
+            const custosPendentes = baseCustos.filter(c => c.Status === 'Pendente');
+            
+            drawTable('Receitas Pagas', ['Cliente', 'Vencimento', 'Valor'], receitasPagas.map(r => [r.cliente_nome, new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)]));
+            drawTable('Custos Pagos', ['Credor', 'Vencimento', 'Valor'], custosPagos.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)]));
+            drawTable('Receitas Pendentes', ['Cliente', 'Vencimento', 'Valor'], receitasPendentes.map(r => [r.cliente_nome, new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)]));
+            drawTable('Custos Pendentes', ['Credor', 'Vencimento', 'Valor'], custosPendentes.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)]));
+        } else {
+            const filteredReceitas = baseReceitas.filter(r => r.Status === status);
+            const filteredCustos = baseCustos.filter(c => c.Status === status);
+            drawTable(`Receitas com Status: ${status}`, ['Cliente', 'Vencimento', 'Valor'], filteredReceitas.map(r => [r.cliente_nome, new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)]));
+            drawTable(`Custos com Status: ${status}`, ['Credor', 'Vencimento', 'Valor'], filteredCustos.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)]));
+        }
+
+        if (finalY > 250) doc.addPage();
+        const totalReceitas = baseReceitas.reduce((sum, r) => sum + r.Valor, 0);
+        const totalCustos = baseCustos.reduce((sum, c) => sum + c.Valor, 0);
+        const balanco = totalReceitas - totalCustos;
+        
+        doc.setFontSize(12);
+        doc.text('Resumo Financeiro do Período', 14, finalY);
+        doc.setFontSize(10);
+        doc.text(`Total de Receitas: ${f(totalReceitas)}`, 14, finalY + 7);
+        doc.text(`Total de Custos: ${f(totalCustos)}`, 14, finalY + 14);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Balanço Final: ${f(balanco)}`, 14, finalY + 21);
+    }
+
+    function generateVisitReport(doc, filters) {
+        const { startDate, endDate, consultorId, clienteId, status } = filters;
+        let finalY = 40;
+
+        let filteredVisitas = visitsData.filter(v => 
+            (!startDate || v.DataVisita >= startDate) && 
+            (!endDate || v.DataVisita <= endDate) &&
+            (!consultorId || v.ConsultorId == consultorId) &&
+            (!clienteId || v.ClienteId == clienteId)
+        );
+
+        if (consultorId) { const c = consultoresData.find(c => c.Id == consultorId); if(c) doc.text(`Consultor: ${c.Nome}`, 14, finalY); finalY += 8;}
+        if (clienteId) { const c = clientesData.find(c => c.Id == clienteId); if(c) doc.text(`Cliente: ${c.Nome}`, 14, finalY); finalY += 8;}
+        if (finalY > 40) finalY += 4;
+        
+        const drawTable = (title, data) => {
+            if (data.length > 0) {
+                doc.setFontSize(12);
+                doc.text(title, 14, finalY);
+                finalY += 2;
+                doc.autoTable({
+                    startY: finalY,
+                    head: [['Cliente', 'Consultor', 'Data', 'Horário']],
+                    body: data.map(v => [ v.cliente_nome, v.consultor_nome, new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR'), `${v.HoraInicio} - ${v.HoraFim}`]),
+                    theme: 'striped',
+                    headStyles: { fillColor: [55, 55, 55] }
+                });
+                finalY = doc.autoTable.previous.finalY + 10;
+            }
+        };
+        
+        if (!status || status === "Todos") {
+            const statusGroups = ['Agendada', 'Em Andamento', 'Concluída', 'Remarcada'];
+            statusGroups.forEach(s => {
+                const groupData = filteredVisitas.filter(v => v.Status === s);
+                drawTable(`Visitas ${s}s`, groupData);
+            });
+        } else {
+            filteredVisitas = filteredVisitas.filter(v => v.Status === status);
+            drawTable(`Visitas com Status: ${status}`, filteredVisitas);
+        }
+
+        if (filteredVisitas.length === 0) {
+             doc.text('Nenhuma visita encontrada para os filtros selecionados.', 14, finalY);
+             return;
+        }
+
+        if (finalY > 250) doc.addPage();
+        const totalMinutos = filteredVisitas.filter(v => v.Status === 'Concluída').reduce((sum, v) => sum + calculateDuration(v), 0);
+        
+        doc.setFontSize(12);
+        doc.text('Resumo das Visitas', 14, finalY);
+        doc.setFontSize(10);
+        doc.text(`Total de Visitas no Relatório: ${filteredVisitas.length}`, 14, finalY + 7);
+        doc.text(`Total de Horas Concluídas: ${Math.floor(totalMinutos/60)}h ${Math.round(totalMinutos%60)}m`, 14, finalY + 14);
+    }
     
     function handleTableDelete(button) {
         const row = button.closest('tr');
@@ -1580,14 +1846,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
         allElements.loginForm?.addEventListener('submit', handleLogin);
         document.body.addEventListener('click', handleGlobalClick);
-        document.querySelectorAll('form').forEach(form => { if (form.id !== 'login-form' && form.id !== 'report-form') form.addEventListener('submit', handleFormSubmit); });
+        document.querySelectorAll('form').forEach(form => { 
+            if (form.id === 'report-form') {
+                form.addEventListener('submit', generatePdfReport);
+            } else if (form.id !== 'login-form') {
+                form.addEventListener('submit', handleFormSubmit);
+            }
+        });
         document.getElementById('confirm-delete-btn')?.addEventListener('click', handleDelete);
         
-        // Listeners para filtros de Financeiro
+        document.querySelectorAll('.dash-fin-quick-filter').forEach(btn => btn.addEventListener('click', (e) => setDateFilter(e, 'fin')));
+        document.querySelectorAll('.dash-visit-quick-filter').forEach(btn => btn.addEventListener('click', (e) => setDateFilter(e, 'visit')));
+        ['dash-fin-status', 'dash-fin-start', 'dash-fin-end'].forEach(id => document.getElementById(id)?.addEventListener('change', updateFinanceDashboard));
+        ['dash-visit-start', 'dash-visit-end'].forEach(id => document.getElementById(id)?.addEventListener('change', updateVisitsDashboard));
+        document.getElementById('report-type')?.addEventListener('change', toggleReportSubtype);
+        
         ['filter-receita-start-date', 'filter-receita-end-date', 'filter-receita-cliente', 'filter-receita-status'].forEach(id => document.getElementById(id)?.addEventListener('change', applyAndRenderReceitas));
         ['filter-custo-start-date', 'filter-custo-end-date', 'filter-custo-credor', 'filter-custo-status'].forEach(id => document.getElementById(id)?.addEventListener('change', applyAndRenderCustos));
         
-        // Listeners para filtros de RH
         ['ferias-filter-name', 'ferias-filter-start', 'ferias-filter-end'].forEach(id => document.getElementById(id)?.addEventListener('input', applyAndRenderFerias));
         ['atestados-filter-name', 'atestados-filter-start', 'atestados-filter-end'].forEach(id => document.getElementById(id)?.addEventListener('input', applyAndRenderAtestados));
         ['epis-filter-name', 'epis-filter-start', 'epis-filter-end'].forEach(id => document.getElementById(id)?.addEventListener('input', applyAndRenderEpis));
