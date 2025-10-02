@@ -973,7 +973,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function fetchAllData() {
         showLoadingOverlay('Carregando dados...');
         await Promise.all([ fetchConsultores(), fetchClientes(), fetchCustos(), fetchItensCatalogo() ]);
-        await Promise.all([ fetchVisitas(), fetchReceitas(), fetchRequisicoes() ]);
+        await Promise.all([ fetchVisitas(), fetchReceitas(), fetchRequisicoes(), fetchFerias(), fetchAtestados(), fetchEpis(), fetchAtivos() ]);
         
         renderConsultores();
         renderClientes();
@@ -988,6 +988,12 @@ document.addEventListener('DOMContentLoaded', function() {
         applyFilters();
         renderItensDeRequisicao();
         renderRequisicoes();
+        
+        renderFerias();
+        renderAtestados();
+        renderEpis();
+        renderAtivos();
+
         hideLoadingOverlay();
     }
 
@@ -999,7 +1005,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const relatedData = relation.dataArray;
             data = data.map(item => {
                 const relatedItem = relatedData.find(rel => rel.Id === item[relation.fk]);
-                return { ...item, [relation.newField]: relatedItem ? relatedItem.Nome : 'N/A' };
+                return { ...item, [relation.newField]: relatedItem ? (relatedItem.Nome || 'N/A') : 'N/A' };
             });
         }
         return data;
@@ -1018,12 +1024,16 @@ document.addEventListener('DOMContentLoaded', function() {
             itemData.consumo = result.list.filter(i => i.Tipo === 'Consumo').reduce((acc, item) => {
                 const category = item.Categoria || 'Outros';
                 if(!acc[category]) acc[category] = [];
-                // CORREÇÃO APLICADA AQUI
                 acc[category].push({ id: item.Id, nome: item.Nome, foto: item.Foto && item.Foto[0]?.signedPath ? `${NocoDB_BaseURL}/${item.Foto[0].signedPath}` : null });
                 return acc;
             }, {});
          }
     }
+    async function fetchFerias() { feriasData = await fetchDataAndMapRelations('Ferias', [{ fk: 'Consultor', dataArray: consultoresData, newField: 'consultor_nome' }]); }
+    async function fetchAtestados() { atestadosData = await fetchDataAndMapRelations('Atestados', [{ fk: 'Consultor', dataArray: consultoresData, newField: 'consultor_nome' }]); }
+    async function fetchEpis() { episEntreguesData = await fetchDataAndMapRelations('Epis_Entregues', [{ fk: 'ConsultorId', dataArray: consultoresData, newField: 'consultor_nome' }]); }
+    async function fetchAtivos() { ativosData = await fetchDataAndMapRelations('Ativos_Entregues', [{ fk: 'ConsultorId', dataArray: consultoresData, newField: 'consultor_nome' }]); }
+
 
     // --- Lógica de Autenticação e Sessão ---
     async function handleLogin(e) {
@@ -1044,7 +1054,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelector('#logged-user-name + p').textContent = loggedInUser.IsAdmin ? 'Administrador' : 'Consultor';
 
         const userAvatar = document.querySelector('#logged-user-name').closest('div').nextElementSibling;
-        // CORREÇÃO APLICADA AQUI
         if (userAvatar && loggedInUser.Foto && loggedInUser.Foto[0]?.signedPath) {
             userAvatar.src = `${NocoDB_BaseURL}/${loggedInUser.Foto[0].signedPath}`;
         } else if(userAvatar) {
@@ -1079,20 +1088,96 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Funções de Renderização ---
     function renderConsultores() { document.getElementById('rh-cards-container').innerHTML = consultoresData.map(c => createConsultorCard(c)).join(''); }
     function createConsultorCard(c) { 
-        // CORREÇÃO APLICADA AQUI
         const fotoUrl = (c.Foto && c.Foto[0]?.signedPath) ? `${NocoDB_BaseURL}/${c.Foto[0].signedPath}` : `https://i.pravatar.cc/150?u=${c.Login || c.Nome}`; 
         const dataset = Object.keys(c).map(k => `data-${k.toLowerCase()}="${c[k] && typeof c[k] === 'object' ? JSON.stringify(c[k]) : (c[k] || '')}"`).join(' '); 
         return `<div class="rh-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset}> <img src="${fotoUrl}" class="w-24 h-24 rounded-full object-cover mb-4"> <h4 class="font-bold text-lg text-gray-800 dark:text-white">${c.Nome}</h4> <p class="text-sm text-gray-500 dark:text-gray-400">${c.Email || ''}</p> <div class="flex space-x-4 mt-4"><a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a></div> </div>`; 
     }
     function renderClientes() { document.getElementById('cliente-cards-container').innerHTML = clientesData.map(c => createClienteCard(c)).join(''); }
     function createClienteCard(c) { 
-        // CORREÇÃO APLICADA AQUI
         const fotoUrl = (c.Foto && c.Foto[0]?.signedPath) ? `${NocoDB_BaseURL}/${c.Foto[0].signedPath}` : `https://picsum.photos/seed/${c.Nome.replace(/\s/g, '')}/100/100`; 
         const dataset = Object.keys(c).map(k => `data-${k.toLowerCase()}="${c[k] && typeof c[k] === 'object' ? JSON.stringify(c[k]) : (c[k] || '')}"`).join(' '); 
         return `<div class="cliente-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset}> <img src="${fotoUrl}" class="w-24 h-24 rounded-lg object-cover mb-4"> <h4 class="font-bold text-lg text-gray-800 dark:text-white">${c.Nome}</h4> <p class="text-sm text-gray-500 dark:text-gray-400">Responsável: ${c.Responsavel || ''}</p> <div class="flex space-x-4 mt-4"> <a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a> <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.Endereco || '')}" target="_blank" class="text-blue-500 hover:text-blue-600"><i class="fas fa-map-marker-alt fa-2x"></i></a> </div> </div>`; 
     }
-    function renderReceitas(data) { const t = document.getElementById('receitas-table-body'); if(t) t.innerHTML = data.map(r => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}"> <td class="px-6 py-4">${r.cliente_nome}</td> <td class="px-6 py-4">${new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${(r.Valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td> <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.Status==='Pago'?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">${r.Status}</span></td> <td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500"><i class="fas fa-trash"></i></button></td> </tr> `).join(''); }
-    function renderCustos(data) { const t = document.getElementById('custos-table-body'); if(t) t.innerHTML = data.map(c => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${c.Id}"> <td class="px-6 py-4">${c.Credor}</td> <td class="px-6 py-4">${new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${(c.Valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td> <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${c.Status==='Pago'?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">${c.Status}</span></td> <td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500"><i class="fas fa-trash"></i></button></td> </tr> `).join(''); }
+    function renderReceitas(data) { const t = document.getElementById('receitas-table-body'); if(t) t.innerHTML = data.map(r => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}"> <td class="px-6 py-4">${r.cliente_nome}</td> <td class="px-6 py-4">${new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${(r.Valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td> <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.Status==='Pago'?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">${r.Status}</span></td> <td class="px-6 py-4 space-x-2"><button class="table-details-btn text-gray-500"><i class="fas fa-eye"></i></button><button class="table-edit-btn text-blue-500"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500"><i class="fas fa-trash"></i></button></td> </tr> `).join(''); }
+    function renderCustos(data) { const t = document.getElementById('custos-table-body'); if(t) t.innerHTML = data.map(c => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${c.Id}"> <td class="px-6 py-4">${c.Credor}</td> <td class="px-6 py-4">${new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${(c.Valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td> <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${c.Status==='Pago'?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">${c.Status}</span></td> <td class="px-6 py-4 space-x-2"><button class="table-details-btn text-gray-500"><i class="fas fa-eye"></i></button><button class="table-edit-btn text-blue-500"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500"><i class="fas fa-trash"></i></button></td> </tr> `).join(''); }
+    
+    function renderFerias(data = feriasData) {
+        const tbody = document.getElementById('ferias-table-body');
+        if (!tbody) return;
+        tbody.innerHTML = data.map(f => {
+            const inicio = new Date(f.DataInicio + 'T00:00:00');
+            const retorno = new Date(f.DataRetorno + 'T00:00:00');
+            const dias = Math.round((retorno - inicio) / (1000 * 60 * 60 * 24)) + 1;
+            return `
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${f.Id}">
+                    <td class="px-6 py-4">${f.consultor_nome}</td>
+                    <td class="px-6 py-4">${inicio.toLocaleDateString('pt-BR')}</td>
+                    <td class="px-6 py-4">${retorno.toLocaleDateString('pt-BR')}</td>
+                    <td class="px-6 py-4">${dias}</td>
+                    <td class="px-6 py-4 space-x-2">
+                        <button class="table-details-btn text-gray-500" data-type="ferias"><i class="fas fa-eye"></i></button>
+                        <button class="table-edit-btn text-blue-500"><i class="fas fa-edit"></i></button>
+                        <button class="table-delete-btn text-red-500"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderAtestados(data = atestadosData) {
+        const tbody = document.getElementById('atestados-table-body');
+        if (!tbody) return;
+        tbody.innerHTML = data.map(a => `
+            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${a.Id}">
+                <td class="px-6 py-4">${a.consultor_nome}</td>
+                <td class="px-6 py-4">${new Date(a.DataInicio + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td class="px-6 py-4">${new Date(a.DataRetorno + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td class="px-6 py-4">${a.Anexo && a.Anexo[0]?.url ? `<a href="${a.Anexo[0].url}" target="_blank" class="text-brand-gold hover:underline"><i class="fas fa-paperclip"></i> Ver</a>` : 'Nenhum'}</td>
+                <td class="px-6 py-4 space-x-2">
+                    <button class="table-details-btn text-gray-500" data-type="atestado"><i class="fas fa-eye"></i></button>
+                    <button class="table-edit-btn text-blue-500"><i class="fas fa-edit"></i></button>
+                    <button class="table-delete-btn text-red-500"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function renderEpis(data = episEntreguesData) {
+        const tbody = document.getElementById('epis-table-body');
+        if (!tbody) return;
+        tbody.innerHTML = data.map(e => `
+            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${e.Id}">
+                <td class="px-6 py-4">${e.consultor_nome}</td>
+                <td class="px-6 py-4">${e.Item}</td>
+                <td class="px-6 py-4">${e.Quantidade}</td>
+                <td class="px-6 py-4">${new Date(e.DataEntrega + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td class="px-6 py-4 space-x-2">
+                    <button class="table-details-btn text-gray-500" data-type="epi"><i class="fas fa-eye"></i></button>
+                    <button class="table-edit-btn text-blue-500"><i class="fas fa-edit"></i></button>
+                    <button class="table-delete-btn text-red-500"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function renderAtivos(data = ativosData) {
+        const tbody = document.getElementById('ativos-table-body');
+        if (!tbody) return;
+        tbody.innerHTML = data.map(a => `
+            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${a.Id}">
+                <td class="px-6 py-4">${a.consultor_nome}</td>
+                <td class="px-6 py-4">${a.Item}</td>
+                <td class="px-6 py-4">${new Date(a.DataEntrega + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td class="px-6 py-4">${a.DataDevolucao ? new Date(a.DataDevolucao + 'T00:00:00').toLocaleDateString('pt-BR') : 'Em uso'}</td>
+                <td class="px-6 py-4 space-x-2">
+                    <button class="table-details-btn text-gray-500" data-type="ativo"><i class="fas fa-eye"></i></button>
+                    <button class="table-edit-btn text-blue-500"><i class="fas fa-edit"></i></button>
+                    <button class="table-delete-btn text-red-500"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
 
     // --- Lógica de Submissão de Formulários (CRUD) ---
     async function handleFormSubmit(e) {
@@ -1149,6 +1234,61 @@ document.addEventListener('DOMContentLoaded', function() {
                 if(isRescheduling) { body.Status = 'Agendada'; body.Remarcada = true; } else if (!id) { body.Status = 'Agendada'; }
                 callback = async () => { await fetchVisitas(); applyFilters(); hideModal(allElements.visitaFormModal); };
                 break;
+            case 'ferias-form':
+                id = form.dataset.id;
+                endpoint = id ? `Ferias/${id}` : 'Ferias';
+                body = {
+                    Consultor: parseInt(form.querySelector('#ferias-consultor').value),
+                    DataInicio: form.querySelector('#ferias-inicio').value,
+                    DataRetorno: form.querySelector('#ferias-retorno').value
+                };
+                callback = async () => { await fetchFerias(); renderFerias(); };
+                break;
+            case 'atestados-form':
+                id = form.dataset.id;
+                endpoint = id ? `Atestados/${id}` : 'Atestados';
+                body = {
+                    Consultor: parseInt(form.querySelector('#atestados-consultor').value),
+                    DataInicio: form.querySelector('#atestados-inicio').value,
+                    DataRetorno: form.querySelector('#atestados-retorno').value
+                };
+                const anexoInput = form.querySelector('#atestados-anexo');
+                if (anexoInput && anexoInput.files[0]) {
+                    showLoadingOverlay('Enviando anexo...');
+                    const anexoData = await uploadFile('Atestados', 'Anexo', anexoInput.files[0]);
+                    if (anexoData) {
+                        body.Anexo = [anexoData];
+                    } else {
+                        hideLoadingOverlay();
+                        return; // Aborta se o upload falhar
+                    }
+                }
+                callback = async () => { await fetchAtestados(); renderAtestados(); };
+                break;
+            case 'epis-form':
+                id = form.dataset.id;
+                endpoint = id ? `Epis_Entregues/${id}` : 'Epis_Entregues';
+                body = {
+                    ConsultorId: parseInt(form.querySelector('#epis-consultor').value),
+                    Item: form.querySelector('#epis-item').value,
+                    Quantidade: parseInt(form.querySelector('#epis-qtd').value),
+                    DataEntrega: form.querySelector('#epis-data').value,
+                    Observacao: form.querySelector('#epis-obs').value
+                };
+                callback = async () => { await fetchEpis(); renderEpis(); };
+                break;
+            case 'ativos-form':
+                id = form.dataset.id;
+                endpoint = id ? `Ativos_Entregues/${id}` : 'Ativos_Entregues';
+                body = {
+                    ConsultorId: parseInt(form.querySelector('#ativos-consultor').value),
+                    Item: form.querySelector('#ativos-item').value,
+                    DataEntrega: form.querySelector('#ativos-entrega').value,
+                    DataDevolucao: form.querySelector('#ativos-devolucao').value || null,
+                    Observacao: form.querySelector('#ativos-obs').value
+                };
+                callback = async () => { await fetchAtivos(); renderAtivos(); };
+                break;
             default: return;
         }
         const method = id ? 'PATCH' : 'POST';
@@ -1159,11 +1299,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (callback) await callback();
             const container = form.closest('div[id$="-container"]');
             if(container && !container.classList.contains('fixed')) {
-                const historyId = container.id.replace('form-container', 'cards-container') || container.id.replace('form-container', 'history-container');
-                container.classList.add('hidden');
-                document.getElementById(historyId)?.classList.remove('hidden');
+                const historyId = container.id.replace('form-container', 'history-container');
+                hideSubFormToggle(historyId, container.id);
             }
             form.reset();
+            delete form.dataset.id;
             updateAllCounters();
             updateAllDashboards();
         }
@@ -1179,6 +1319,10 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'visita': endpoint = `Visitas/${id}`; callback = async () => { await fetchVisitas(); applyFilters(); }; break;
             case 'consultor': endpoint = `Consultores/${id}`; callback = async () => { await fetchConsultores(); renderConsultores(); }; break;
             case 'cliente': endpoint = `Clientes/${id}`; callback = async () => { await fetchClientes(); renderClientes(); }; break;
+            case 'ferias': endpoint = `Ferias/${id}`; callback = async () => { await fetchFerias(); renderFerias(); }; break;
+            case 'atestado': endpoint = `Atestados/${id}`; callback = async () => { await fetchAtestados(); renderAtestados(); }; break;
+            case 'epi': endpoint = `Epis_Entregues/${id}`; callback = async () => { await fetchEpis(); renderEpis(); }; break;
+            case 'ativo': endpoint = `Ativos_Entregues/${id}`; callback = async () => { await fetchAtivos(); renderAtivos(); }; break;
             default: hideModal(allElements.deleteConfirmModal); return;
         }
         showLoadingOverlay('Apagando...');
@@ -1202,7 +1346,44 @@ document.addEventListener('DOMContentLoaded', function() {
     function populateSelectWithOptions(sel, data, valF, textF, addAll=true) { const selects=document.querySelectorAll(sel); let opts=addAll?'<option value="">Todos</option>':'<option value="">Selecione...</option>'; data.forEach(i=>{opts+=`<option value="${i[valF]}">${i[textF]}</option>`;}); selects.forEach(s=>{const curVal=s.value; s.innerHTML=opts; s.value=curVal;});}
     function populateConsultantSelects() { populateSelectWithOptions('.consultor-select', consultoresData, 'Id', 'Nome', false); }
     function populateClientSelects() { populateSelectWithOptions('.cliente-select', clientesData, 'Id', 'Nome', false); }
-    function handleGlobalClick(e) { const t=e.target; const nL=t.closest('.nav-link'); if(nL){e.preventDefault(); handleNavClick({currentTarget:nL}); return;} const rhC=t.closest('.rh-card'); if(rhC&&!t.closest('a')){openDetailsModal(rhC); return;} const clC=t.closest('.cliente-card'); if(clC&&!t.closest('a')){openDetailsModal(clC); return;} const btn=t.closest('button'); if(!btn)return; if(btn.classList.contains('view-toggle-btn')){handleViewToggle({currentTarget:btn});return;} if(btn.classList.contains('dashboard-nav-btn')){handleDashboardNav(btn);return;} const aM={'logout-button':()=>showModal(allElements.logoutConfirmModal),'cancel-logout-btn':()=>hideModal(allElements.logoutConfirmModal),'confirm-logout-btn':()=>{sessionStorage.clear(); location.reload();},'sidebar-toggle':toggleMobileSidebar,'show-insights-btn':()=>{generateInsights(); showModal(allElements.insightsModal);},'close-insights-modal':()=>hideModal(allElements.insightsModal),'show-report-modal-btn':()=>{toggleReportSubtype(); showModal(allElements.reportModal);},'close-report-modal':()=>hideModal(allElements.reportModal),'show-rh-form':()=>setupFormToggle('rh-cards-container','rh-form-container'),'cancel-rh-form':()=>hideFormToggle('rh-cards-container','rh-form-container'),'show-cliente-form':()=>setupFormToggle('cliente-cards-container','cliente-form-container'),'cancel-cliente-form':()=>hideFormToggle('cliente-cards-container','cliente-form-container'),'show-visita-form':()=>openVisitaModal(),'cancel-visita-form':()=>hideModal(allElements.visitaFormModal),'show-requisicao-form':()=>openRequisicaoModal(),'cancel-requisicao-form':()=>hideModal(allElements.requisicaoFormModal),'show-receita-form':()=>setupSubFormToggle('receitas-history-container','receita-form-container'),'cancel-receita-form':()=>hideSubFormToggle('receitas-history-container','receita-form-container'),'show-custo-form':()=>setupSubFormToggle('custos-history-container','custo-form-container'),'cancel-custo-form':()=>hideSubFormToggle('custos-history-container','custo-form-container'),'cancel-item-form':()=>hideModal(allElements.itemFormModal),'apply-filters-btn':applyFilters,'clear-filters-btn':clearFilters,'apply-req-filters-btn':applyRequisicaoFilters,'clear-req-filters-btn':clearRequisicaoFilters,'delete-btn':()=>{hideModal(allElements.detailsModal); showModal(allElements.deleteConfirmModal);},'cancel-delete-btn':()=>{hideModal(allElements.deleteConfirmModal); if(activeCard||activeTableRow)showModal(allElements.detailsModal); activeDeleteItem={id:null,type:null,element:null};},'edit-btn':handleCardEdit,'close-modal':()=>hideModal(allElements.detailsModal),}; if(aM[btn.id]){aM[btn.id](); return;} if(btn.classList.contains('table-edit-btn'))handleTableEdit(btn); else if(btn.classList.contains('table-delete-btn'))handleTableDelete(btn); else if(btn.classList.contains('rh-tab-btn')||btn.classList.contains('requisicao-tab-btn')||btn.classList.contains('financeiro-tab-btn'))handleTabClick(btn);}
+    
+    function handleGlobalClick(e) { 
+        const t=e.target; 
+        const nL=t.closest('.nav-link'); if(nL){e.preventDefault(); handleNavClick({currentTarget:nL}); return;} 
+        const rhC=t.closest('.rh-card'); if(rhC&&!t.closest('a')){openDetailsModal(rhC); return;} 
+        const clC=t.closest('.cliente-card'); if(clC&&!t.closest('a')){openDetailsModal(clC); return;} 
+        const btn=t.closest('button'); if(!btn)return; 
+        if(btn.classList.contains('view-toggle-btn')){handleViewToggle({currentTarget:btn});return;} 
+        if(btn.classList.contains('dashboard-nav-btn')){handleDashboardNav(btn);return;}
+        if(btn.classList.contains('cancel-sub-form')){ hideSubFormToggle(btn.dataset.history, btn.dataset.form); return; }
+
+        const aM={
+            'logout-button':()=>showModal(allElements.logoutConfirmModal),'cancel-logout-btn':()=>hideModal(allElements.logoutConfirmModal),'confirm-logout-btn':()=>{sessionStorage.clear(); location.reload();},
+            'sidebar-toggle':toggleMobileSidebar,'show-insights-btn':()=>{generateInsights(); showModal(allElements.insightsModal);},'close-insights-modal':()=>hideModal(allElements.insightsModal),
+            'show-report-modal-btn':()=>{toggleReportSubtype(); showModal(allElements.reportModal);},'close-report-modal':()=>hideModal(allElements.reportModal),
+            'show-rh-form':()=>setupFormToggle('rh-cards-container','rh-form-container'),'cancel-rh-form':()=>hideFormToggle('rh-cards-container','rh-form-container'),
+            'show-cliente-form':()=>setupFormToggle('cliente-cards-container','cliente-form-container'),'cancel-cliente-form':()=>hideFormToggle('cliente-cards-container','cliente-form-container'),
+            'show-visita-form':()=>openVisitaModal(),'cancel-visita-form':()=>hideModal(allElements.visitaFormModal),
+            'show-requisicao-form':()=>openRequisicaoModal(),'cancel-requisicao-form':()=>hideModal(allElements.requisicaoFormModal),
+            'show-receita-form':()=>setupSubFormToggle('receitas-history-container','receita-form-container'),'cancel-receita-form':()=>hideSubFormToggle('receitas-history-container','receita-form-container'),
+            'show-custo-form':()=>setupSubFormToggle('custos-history-container','custo-form-container'),'cancel-custo-form':()=>hideSubFormToggle('custos-history-container','custo-form-container'),
+            'show-ferias-form': () => setupSubFormToggle('ferias-history-container', 'ferias-form-container'),
+            'show-atestados-form': () => setupSubFormToggle('atestados-history-container', 'atestados-form-container'),
+            'show-epis-form': () => setupSubFormToggle('epis-history-container', 'epis-form-container'),
+            'show-ativos-form': () => setupSubFormToggle('ativos-history-container', 'ativos-form-container'),
+            'cancel-item-form':()=>hideModal(allElements.itemFormModal),'apply-filters-btn':applyFilters,'clear-filters-btn':clearFilters,
+            'apply-req-filters-btn':applyRequisicaoFilters,'clear-req-filters-btn':clearRequisicaoFilters,
+            'delete-btn':()=>{hideModal(allElements.detailsModal); showModal(allElements.deleteConfirmModal);},
+            'cancel-delete-btn':()=>{hideModal(allElements.deleteConfirmModal); if(activeCard||activeTableRow)showModal(allElements.detailsModal); activeDeleteItem={id:null,type:null,element:null};},
+            'edit-btn':handleCardEdit,'close-modal':()=>hideModal(allElements.detailsModal),
+        }; 
+        if(aM[btn.id]){aM[btn.id](); return;} 
+        
+        if (btn.classList.contains('table-details-btn')) openDetailsModalForRow(btn);
+        else if(btn.classList.contains('table-edit-btn'))handleTableEdit(btn); 
+        else if(btn.classList.contains('table-delete-btn'))handleTableDelete(btn); 
+        else if(btn.classList.contains('rh-tab-btn')||btn.classList.contains('requisicao-tab-btn')||btn.classList.contains('financeiro-tab-btn'))handleTabClick(btn);
+    }
     
     function navigateTo(targetId, isInitial = false) {
         if (!isInitial) {
@@ -1237,7 +1418,19 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleDashboardNav(btn) { document.querySelectorAll('.dashboard-nav-btn').forEach(b=>{b.classList.remove('border-brand-gold','text-brand-gold'); b.classList.add('border-transparent');}); btn.classList.add('border-brand-gold','text-brand-gold'); document.querySelectorAll('.dashboard-content').forEach(c=>c.classList.add('hidden')); document.getElementById(btn.dataset.target).classList.remove('hidden');}
     function handleViewToggle(e) { const btn=e.currentTarget; document.querySelectorAll('.view-toggle-btn').forEach(b=>b.classList.remove('bg-white','dark:bg-gray-800','shadow-sm')); btn.classList.add('bg-white','dark:bg-gray-800','shadow-sm'); document.querySelectorAll('.visitas-view').forEach(v=>v.classList.add('hidden')); const tV=document.getElementById(btn.dataset.view); if(tV){tV.classList.remove('hidden'); if(btn.dataset.view==='calendar-view'&&calendar){setTimeout(()=>calendar.render(),1);}}}
     function handleTabClick(btn) { const tC=btn.closest('ul'); tC.querySelectorAll('button').forEach(b=>{b.classList.remove('border-brand-gold','text-brand-gold'); b.classList.add('border-transparent');}); btn.classList.add('border-brand-gold','text-brand-gold'); const cC=btn.classList.contains('rh-tab-btn')?'.rh-tab-content':btn.classList.contains('requisicao-tab-btn')?'.requisicao-tab-content':'.financeiro-tab-content'; const pC=btn.closest('.page'); if(pC&&cC){pC.querySelectorAll(cC).forEach(c=>c.classList.add('hidden')); document.getElementById(btn.dataset.target)?.classList.remove('hidden');}}
-    function handleTableEdit(btn) { const row=btn.closest('tr'); if(!row)return; const id=parseInt(row.dataset.id); if(row.closest('#visitas-table-body')){const v=visitsData.find(d=>d.Id===id); if(v)openVisitaModal(v);}else if(row.closest('#receitas-table-body')){const r=receitasData.find(d=>d.Id===id); if(r){setupSubFormToggle('receitas-history-container','receita-form-container'); const f=document.getElementById('receita-form'); f.querySelector('#receita-id').value=r.Id; f.querySelector('#receita-cliente-form').value=r.ClienteId; f.querySelector('#receita-vencimento').value=r.Vencimento; f.querySelector('#receita-valor').value=r.Valor; f.querySelector('#receita-status-form').value=r.Status; f.querySelector('#receita-obs').value=r.Observacao||'';}}else if(row.closest('#custos-table-body')){const c=custosData.find(d=>d.Id===id); if(c){setupSubFormToggle('custos-history-container','custo-form-container'); const f=document.getElementById('custo-form'); f.querySelector('#custo-id').value=c.Id; f.querySelector('#custo-credor').value=c.Credor; f.querySelector('#custo-vencimento').value=c.Vencimento; f.querySelector('#custo-valor').value=c.Valor; f.querySelector('#custo-status-form').value=c.Status; f.querySelector('#custo-obs').value=c.Observacao||'';}}}
+    
+    function handleTableEdit(btn) { 
+        const row=btn.closest('tr'); if(!row)return; 
+        const id=parseInt(row.dataset.id); 
+        
+        if(row.closest('#visitas-table-body')){const v=visitsData.find(d=>d.Id===id); if(v)openVisitaModal(v);}
+        else if(row.closest('#receitas-table-body')){const r=receitasData.find(d=>d.Id===id); if(r){setupSubFormToggle('receitas-history-container','receita-form-container'); const f=document.getElementById('receita-form'); f.querySelector('#receita-id').value=r.Id; f.querySelector('#receita-cliente-form').value=r.ClienteId; f.querySelector('#receita-vencimento').value=r.Vencimento; f.querySelector('#receita-valor').value=r.Valor; f.querySelector('#receita-status-form').value=r.Status; f.querySelector('#receita-obs').value=r.Observacao||'';}}
+        else if(row.closest('#custos-table-body')){const c=custosData.find(d=>d.Id===id); if(c){setupSubFormToggle('custos-history-container','custo-form-container'); const f=document.getElementById('custo-form'); f.querySelector('#custo-id').value=c.Id; f.querySelector('#custo-credor').value=c.Credor; f.querySelector('#custo-vencimento').value=c.Vencimento; f.querySelector('#custo-valor').value=c.Valor; f.querySelector('#custo-status-form').value=c.Status; f.querySelector('#custo-obs').value=c.Observacao||'';}}
+        else if(row.closest('#ferias-table-body')){ const data = feriasData.find(d => d.Id === id); if(data){ setupSubFormToggle('ferias-history-container', 'ferias-form-container'); const form = document.getElementById('ferias-form'); form.dataset.id = data.Id; form.querySelector('#ferias-consultor').value = data.Consultor; form.querySelector('#ferias-inicio').value = data.DataInicio; form.querySelector('#ferias-retorno').value = data.DataRetorno; }}
+        else if(row.closest('#atestados-table-body')){ const data = atestadosData.find(d => d.Id === id); if(data){ setupSubFormToggle('atestados-history-container', 'atestados-form-container'); const form = document.getElementById('atestados-form'); form.dataset.id = data.Id; form.querySelector('#atestados-consultor').value = data.Consultor; form.querySelector('#atestados-inicio').value = data.DataInicio; form.querySelector('#atestados-retorno').value = data.DataRetorno; }}
+        else if(row.closest('#epis-table-body')){ const data = episEntreguesData.find(d => d.Id === id); if(data){ setupSubFormToggle('epis-history-container', 'epis-form-container'); const form = document.getElementById('epis-form'); form.dataset.id = data.Id; form.querySelector('#epis-consultor').value = data.ConsultorId; form.querySelector('#epis-item').value = data.Item; form.querySelector('#epis-qtd').value = data.Quantidade; form.querySelector('#epis-data').value = data.DataEntrega; form.querySelector('#epis-obs').value = data.Observacao || ''; }}
+        else if(row.closest('#ativos-table-body')){ const data = ativosData.find(d => d.Id === id); if(data){ setupSubFormToggle('ativos-history-container', 'ativos-form-container'); const form = document.getElementById('ativos-form'); form.dataset.id = data.Id; form.querySelector('#ativos-consultor').value = data.ConsultorId; form.querySelector('#ativos-item').value = data.Item; form.querySelector('#ativos-entrega').value = data.DataEntrega; form.querySelector('#ativos-devolucao').value = data.DataDevolucao || ''; form.querySelector('#ativos-obs').value = data.Observacao || ''; }}
+    }
     
     function handleCardEdit() { 
         if (!activeCard) return; 
@@ -1285,10 +1478,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (imgPreview) {
             let fotoData;
             try { 
-                // CORREÇÃO APLICADA AQUI
                 fotoData = data.foto ? JSON.parse(data.foto) : null; 
             } catch(e) { fotoData = null; }
-            // CORREÇÃO APLICADA AQUI
             imgPreview.src = (fotoData && fotoData[0]?.signedPath) ? `${NocoDB_BaseURL}/${fotoData[0].signedPath}` : `https://placehold.co/100x100/e2e8f0/cbd5e0?text=${isConsultor ? 'Foto' : 'Logo'}`;
         }
         
@@ -1298,11 +1489,54 @@ document.addEventListener('DOMContentLoaded', function() {
     const setupSearch=(iId,cS)=>{document.getElementById(iId)?.addEventListener('input',e=>{const sT=e.target.value.toLowerCase(); document.querySelectorAll(cS).forEach(c=>{const n=c.dataset.nome||''; c.style.display=n.toLowerCase().includes(sT)?'flex':'none';});});};
     const setupFormToggle=(cId,fId)=>{activeCard=null; const f=document.getElementById(fId).querySelector('form'); f?.reset(); let hId=f.querySelector('input[type="hidden"]'); if(hId)hId.value=''; document.getElementById(cId)?.classList.add('hidden'); document.getElementById(fId)?.classList.remove('hidden');};
     const hideFormToggle=(cId,fId)=>{document.getElementById(fId).classList.add('hidden'); document.getElementById(cId).classList.remove('hidden');}
-    const setupSubFormToggle=(hId,fId)=>{document.getElementById(hId)?.classList.add('hidden'); document.getElementById(fId)?.classList.remove('hidden'); const f=document.getElementById(fId).querySelector('form'); if(f){f.reset(); const iId=f.querySelector('input[type="hidden"]'); if(iId)iId.value='';}};
+    const setupSubFormToggle=(hId,fId)=>{ const form = document.getElementById(fId).querySelector('form'); if(form) { form.reset(); delete form.dataset.id; } document.getElementById(hId)?.classList.add('hidden'); document.getElementById(fId)?.classList.remove('hidden');};
     const hideSubFormToggle=(hId,fId)=>{document.getElementById(fId).classList.add('hidden'); document.getElementById(hId).classList.remove('hidden');}
     const hideModal=(m)=>m?.classList.replace('flex','hidden');
     const showModal=(m)=>m?.classList.replace('hidden','flex');
     const openDetailsModal=(card)=>{activeCard=card; activeDeleteItem={id:card.dataset.id, type:card.classList.contains('rh-card')?'consultor':'cliente', element:card}; document.getElementById('details-modal-actions').style.display='flex'; const data=card.dataset; const fm={datanascimento:v=>v?new Date(v+'T00:00:00').toLocaleDateString('pt-BR'):'N/A', valorhora:v=>v?parseFloat(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):'N/A', iniciovinculo:v=>v?new Date(v+'T00:00:00').toLocaleDateString('pt-BR'):'N/A', fimvinculo:v=>v?new Date(v+'T00:00:00').toLocaleDateString('pt-BR'):'N/A'}; document.getElementById('modal-title').textContent=data.nome; document.getElementById('modal-content').innerHTML=Object.keys(data).map(k=>{if(k==='id'||k.toLowerCase().includes('foto')||k.toLowerCase().includes('senha'))return''; const l=k.replace(/([A-Z])/g,' $1').replace(/^./,s=>s.toUpperCase()); const v=fm[k]?fm[k](data[k]):(data[k]||'N/A'); return`<p><strong>${l}:</strong> ${v}</p>`;}).join(''); showModal(allElements.detailsModal);};
+    
+    // --- INÍCIO: NOVA FUNÇÃO PARA DETALHES DA TABELA ---
+    function openDetailsModalForRow(btn) {
+        const row = btn.closest('tr');
+        if (!row) return;
+
+        const id = parseInt(row.dataset.id);
+        const type = btn.dataset.type;
+        let dataArray, title, ignoredKeys = ['Id', 'id', 'cliente_nome', 'consultor_nome'];
+
+        switch(type) {
+            case 'ferias': dataArray = feriasData; title = 'Detalhes das Férias'; break;
+            case 'atestado': dataArray = atestadosData; title = 'Detalhes do Atestado'; break;
+            case 'epi': dataArray = episEntreguesData; title = 'Detalhes da Entrega de EPI'; break;
+            case 'ativo': dataArray = ativosData; title = 'Detalhes do Ativo'; break;
+            default: return;
+        }
+
+        const data = dataArray.find(d => d.Id === id);
+        if (!data) return;
+
+        document.getElementById('modal-title').textContent = title;
+        document.getElementById('modal-content').innerHTML = Object.entries(data).map(([key, value]) => {
+            if (ignoredKeys.includes(key)) return '';
+            const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+            
+            let displayValue = value || 'N/A';
+            if (key.toLowerCase().includes('data')) {
+                displayValue = new Date(value + 'T00:00:00').toLocaleDateString('pt-BR');
+            } else if (key === 'Consultor' || key === 'ConsultorId') {
+                displayValue = data.consultor_nome;
+            } else if (typeof value === 'object' && value !== null && value[0]?.url) {
+                return `<p><strong>${label}:</strong> <a href="${value[0].url}" target="_blank" class="text-brand-gold hover:underline">Ver Anexo</a></p>`;
+            }
+
+            return `<p><strong>${label}:</strong> ${displayValue}</p>`;
+        }).join('');
+
+        document.getElementById('details-modal-actions').style.display = 'none'; // Esconde botões de editar/apagar
+        showModal(allElements.detailsModal);
+    }
+    // --- FIM: NOVA FUNÇÃO PARA DETALHES DA TABELA ---
+
     function updateAllDashboards(){updateFinanceDashboard(); updateVisitsDashboard();}
     function setDateFilter(e, p) { const period=e.target.dataset.period; document.querySelectorAll(`.dash-${p}-quick-filter`).forEach(b=>b.classList.remove('filter-btn-active')); e.target.classList.add('filter-btn-active'); const endI=document.getElementById(`dash-${p}-end`), startI=document.getElementById(`dash-${p}-start`), today=new Date(); endI.valueAsDate=today; let sD=new Date(); if(period==='week')sD.setDate(today.getDate()-today.getDay()); else if(period==='month')sD=new Date(today.getFullYear(),today.getMonth(),1); else if(period==='year')sD=new Date(today.getFullYear(),0,1); startI.valueAsDate=sD; if(p==='fin')updateFinanceDashboard(); else updateVisitsDashboard();}
     function updateFinanceDashboard() { const s=document.getElementById('dash-fin-status').value, st=document.getElementById('dash-fin-start').value, e=document.getElementById('dash-fin-end').value; const fR=receitasData.filter(r=>(!s||r.Status===s)&&(!st||r.Vencimento>=st)&&(!e||r.Vencimento<=e)); const fC=custosData.filter(c=>(!s||c.Status===s)&&(!st||c.Vencimento>=st)&&(!e||c.Vencimento<=e)); const tR=fR.reduce((sum,r)=>sum+(r.Valor||0),0), tC=fC.reduce((sum,c)=>sum+(c.Valor||0),0), bal=tR-tC; const tRP=receitasData.filter(r=>r.Status==='Pendente'&&(!st||r.Vencimento>=st)&&(!e||r.Vencimento<=e)).reduce((sum,r)=>sum+(r.Valor||0),0); const tCP=custosData.filter(c=>c.Status==='Pendente'&&(!st||c.Vencimento>=st)&&(!e||c.Vencimento<=e)).reduce((sum,c)=>sum+(c.Valor||0),0); const f=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); document.getElementById('dash-revenue').textContent=f(tR); document.getElementById('dash-costs').textContent=f(tC); document.getElementById('dash-balance').textContent=f(bal); document.getElementById('dash-revenue-pending').textContent=f(tRP); document.getElementById('dash-costs-pending').textContent=f(tCP); document.getElementById('dash-balance').classList.toggle('text-green-500',bal>=0); document.getElementById('dash-balance').classList.toggle('text-red-500',bal<0); updateFinanceChart(fR,fC); }
@@ -1317,7 +1551,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderAllVisits(d=visitsData){renderKanbanBoard(d.filter(v=>v.Status!=='Remarcada')); renderVisitsList(d); renderCalendarEvents(d);}
     function renderKanbanBoard(d){const c={'agendada':[],'em-andamento':[],'concluida':[]}; d.forEach(v=>{const sK=v.Status.toLowerCase().replace(' ','-'); if(c[sK])c[sK].push(createKanbanCard(v));}); document.getElementById('kanban-agendada').innerHTML=c.agendada.join(''); document.getElementById('kanban-em-andamento').innerHTML=c['em-andamento'].join(''); document.getElementById('kanban-concluida').innerHTML=c.concluida.join('');}
     function createKanbanCard(v){const{color,label}=sConf[v.Status]; const dF=new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR'); const rS=v.Remarcada&&v.Status==='Agendada'?'<span class="text-xs ml-2 font-semibold text-purple-800">(Remarcado)</span>':''; let acts=''; if(v.Status==='Agendada')acts=`<button data-id="${v.Id}" class="iniciar-visita-btn w-full bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Iniciar</button><button data-id="${v.Id}" class="remarcar-visita-btn w-full mt-2 bg-gray-500 text-white px-3 py-1 rounded-md text-sm hover:bg-gray-600">Remarcar</button>`; else if(v.Status==='Em Andamento')acts=`<button data-id="${v.Id}" class="encerrar-visita-btn w-full bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">Encerrar</button>`; let dur=''; if(v.Status==='Concluída'&&v.CheckIn&&v.CheckOut){const diff=(new Date(v.CheckOut)-new Date(v.CheckIn))/60000; dur=`<div class="text-xs text-center font-bold text-brand-gold mt-2 p-1 bg-yellow-100 dark:bg-yellow-900 rounded">Duração: ${Math.floor(diff/60)}h ${Math.round(diff%60)}min</div>`;} return`<div class="kanban-card bg-white dark:bg-gray-700 p-4 rounded-lg shadow" data-id="${v.Id}"><div class="flex justify-between items-start mb-2"><h4 class="font-bold text-gray-800 dark:text-white">${v.cliente_nome}${rS}</h4><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}</span></div><p class="text-sm text-gray-600 dark:text-gray-300">${v.consultor_nome}</p><p class="text-sm text-gray-600 dark:text-gray-300">${dF} - ${v.HoraInicio}</p>${dur}<div class="mt-4 border-t pt-2 dark:border-gray-600 visit-actions">${acts}</div></div>`;}
-    function renderVisitsList(d){const tB=document.getElementById('visitas-table-body'); tB.innerHTML=''; d.forEach(v=>{const{color,label}=sConf[v.Status]; const s=label+(v.Remarcada&&v.Status==='Agendada'?' (Remarcado)':''); const r=tB.insertRow(); r.className='bg-white border-b dark:bg-gray-800 dark:border-gray-700'; r.dataset.id=v.Id; r.innerHTML=`<td class="px-6 py-4">${v.cliente_nome}</td><td class="px-6 py-4">${v.consultor_nome}</td><td class="px-6 py-4">${new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR')}</td><td class="px-6 py-4">${v.HoraInicio} - ${v.HoraFim}</td><td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${s}</span></td><td class="px-6 py-4 space-x-2"><button class="table-edit-btn text-blue-500"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500"><i class="fas fa-trash"></i></button></td>`;});}
+    function renderVisitsList(d){const tB=document.getElementById('visitas-table-body'); tB.innerHTML=''; d.forEach(v=>{const{color,label}=sConf[v.Status]; const s=label+(v.Remarcada&&v.Status==='Agendada'?' (Remarcado)':''); const r=tB.insertRow(); r.className='bg-white border-b dark:bg-gray-800 dark:border-gray-700'; r.dataset.id=v.Id; r.innerHTML=`<td class="px-6 py-4">${v.cliente_nome}</td><td class="px-6 py-4">${v.consultor_nome}</td><td class="px-6 py-4">${new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR')}</td><td class="px-6 py-4">${v.HoraInicio} - ${v.HoraFim}</td><td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${s}</span></td><td class="px-6 py-4 space-x-2"><button class="table-details-btn text-gray-500" data-type="visita"><i class="fas fa-eye"></i></button><button class="table-edit-btn text-blue-500"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500"><i class="fas fa-trash"></i></button></td>`;});}
     function renderCalendarEvents(d){if(!calendar)return; calendar.removeAllEvents(); calendar.addEventSource(d.map(v=>({id:v.Id, title:`${v.cliente_nome} (${v.consultor_nome})`, start:`${v.DataVisita}T${v.HoraInicio}`, end:`${v.DataVisita}T${v.HoraFim}`, color:sConf[v.Status].color})));}
     async function handleStartVisit(vId){showLoadingOverlay('Iniciando...'); await nocoFetch(`Visitas/${vId}`,{method:'PATCH',body:JSON.stringify({Status:'Em Andamento',CheckIn:new Date().toISOString()})}); await fetchVisitas(); applyFilters(); hideLoadingOverlay();}
     async function handleEndVisit(vId){showLoadingOverlay('Encerrando...'); await nocoFetch(`Visitas/${vId}`,{method:'PATCH',body:JSON.stringify({Status:'Concluída',CheckOut:new Date().toISOString()})}); await fetchVisitas(); applyFilters(); updateAllDashboards(); hideLoadingOverlay();}
@@ -1355,6 +1589,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (row.closest('#visitas-table-body')) type = 'visita';
         else if (row.closest('#receitas-table-body')) type = 'receita';
         else if (row.closest('#custos-table-body')) type = 'custo';
+        else if (row.closest('#ferias-table-body')) type = 'ferias';
+        else if (row.closest('#atestados-table-body')) type = 'atestado';
+        else if (row.closest('#epis-table-body')) type = 'epi';
+        else if (row.closest('#ativos-table-body')) type = 'ativo';
         if (type) { activeDeleteItem = { id, type, element: row }; showModal(allElements.deleteConfirmModal); }
     }
 
