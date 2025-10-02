@@ -877,7 +877,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let custosData = [];
     let visitsData = [];
     let requisicoesData = [];
-    let itemData = { epis: [], consumo: {} };
+    let itemData = { epis: [], consumo: {} }; // Alterado para armazenar objetos completos
+    let allItems = []; // Para facilitar a busca de itens por ID
     let feriasData = [];
     let atestadosData = [];
     let episEntreguesData = [];
@@ -909,7 +910,9 @@ document.addEventListener('DOMContentLoaded', function() {
         visitaFormModal: document.getElementById('visita-form-modal'),
         visitaForm: document.getElementById('visita-form'),
         requisicaoFormModal: document.getElementById('requisicao-form-modal'),
+        requisicaoForm: document.getElementById('requisicao-form'),
         itemFormModal: document.getElementById('item-form-modal'),
+        itemForm: document.getElementById('item-form'),
     };
 
     // --- Funções Auxiliares para Chamadas à API ---
@@ -925,7 +928,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             if (!response.ok) {
                 const errorData = await response.json();
-                // Adicionado para dar mais detalhes no erro
                 const errorMessage = errorData.msg || (Array.isArray(errorData) && errorData[0] ? errorData[0].msg : response.statusText);
                 throw new Error(errorMessage);
             }
@@ -977,7 +979,6 @@ document.addEventListener('DOMContentLoaded', function() {
         renderClientes();
         populateConsultantSelects();
         populateClientSelects();
-        // Populando selects do modal de relatório com a opção "Todos"
         populateSelectWithOptions('#report-consultor', consultoresData, 'Id', 'Nome', true);
         populateSelectWithOptions('#report-cliente', clientesData, 'Id', 'Nome', true);
 
@@ -994,14 +995,15 @@ document.addEventListener('DOMContentLoaded', function() {
         checkOverdueVisits();
         initializeCalendar();
         applyFilters();
+        renderCategoryFilters();
         renderItensDeRequisicao();
-        renderRequisicoes();
+        applyRequisicaoFilters();
         
         hideLoadingOverlay();
     }
 
     const fetchDataAndMapRelations = async (mainTable, relations) => {
-        const result = await nocoFetch(mainTable);
+        const result = await nocoFetch(`${mainTable}?nested[all]=true`);
         if (!result || !result.list) return [];
         let data = result.list;
         for (const relation of relations) {
@@ -1030,8 +1032,9 @@ document.addEventListener('DOMContentLoaded', function() {
     async function fetchItensCatalogo() {
          const result = await nocoFetch('Itens_Catalogo');
          if(result && result.list) {
-            itemData.epis = result.list.filter(i => i.Tipo === 'EPI').map(i => i.Nome);
-            itemData.consumo = result.list.filter(i => i.Tipo === 'Consumo').reduce((acc, item) => {
+            allItems = result.list;
+            itemData.epis = allItems.filter(i => i.Tipo === 'EPI');
+            itemData.consumo = allItems.filter(i => i.Tipo === 'Consumo').reduce((acc, item) => {
                 const category = item.Categoria || 'Outros';
                 if(!acc[category]) acc[category] = [];
                 acc[category].push({ id: item.Id, nome: item.Nome, foto: item.Foto && item.Foto[0]?.signedPath ? `${NocoDB_BaseURL}/${item.Foto[0].signedPath}` : null });
@@ -1045,148 +1048,22 @@ document.addEventListener('DOMContentLoaded', function() {
     async function fetchAtivos() { ativosData = await fetchDataAndMapRelations('Ativos_Entregues', [{ fk: 'ConsultorId', dataArray: consultoresData, newField: 'consultor_nome' }]); }
     
     // --- Lógica de Autenticação e Sessão ---
-    async function handleLogin(e) {
-        e.preventDefault();
-        const username = document.getElementById('username').value, password = document.getElementById('password').value;
-        if (!username || !password) { alert('Por favor, preencha usuário e senha.'); return; }
-        showLoadingOverlay('Autenticando...');
-        const user = await authenticateUser(username, password);
-        if (user) {
-            sessionStorage.setItem('loggedInUser', JSON.stringify(user));
-            await initializeUserSession(user);
-        } else { hideLoadingOverlay(); alert('Usuário ou senha inválidos.'); }
-    }
-
-    async function initializeUserSession(user) {
-        loggedInUser = user;
-        document.getElementById('logged-user-name').textContent = loggedInUser.Nome;
-        document.querySelector('#logged-user-name + p').textContent = loggedInUser.IsAdmin ? 'Administrador' : 'Consultor';
-
-        const userAvatar = document.querySelector('#logged-user-name').closest('div').nextElementSibling;
-        if (userAvatar && loggedInUser.Foto && loggedInUser.Foto[0]?.signedPath) {
-            userAvatar.src = `${NocoDB_BaseURL}/${loggedInUser.Foto[0].signedPath}`;
-        } else if(userAvatar) {
-            userAvatar.src = `https://i.pravatar.cc/150?u=${loggedInUser.Login || loggedInUser.Nome}`;
-        }
-        
-        allElements.loginScreen.classList.add('hidden');
-        allElements.mainApp.classList.remove('hidden');
-
-        await fetchAllData();
-        
-        const savedPage = sessionStorage.getItem('currentPage') || 'dashboard';
-        navigateTo(savedPage, true);
-        hideLoadingOverlay();
-    }
-    
-    async function checkSession() {
-        const userString = sessionStorage.getItem('loggedInUser');
-        if (userString) {
-            allElements.loginScreen.classList.add('hidden');
-            allElements.mainApp.classList.remove('hidden');
-            showLoadingOverlay('Restaurando sessão...');
-            await initializeUserSession(JSON.parse(userString));
-        } else {
-            allElements.loginScreen.classList.remove('hidden');
-        }
-    }
-
+    async function handleLogin(e) { e.preventDefault(); const username = document.getElementById('username').value, password = document.getElementById('password').value; if (!username || !password) { alert('Por favor, preencha usuário e senha.'); return; } showLoadingOverlay('Autenticando...'); const user = await authenticateUser(username, password); if (user) { sessionStorage.setItem('loggedInUser', JSON.stringify(user)); await initializeUserSession(user); } else { hideLoadingOverlay(); alert('Usuário ou senha inválidos.'); } }
+    async function initializeUserSession(user) { loggedInUser = user; document.getElementById('logged-user-name').textContent = loggedInUser.Nome; document.querySelector('#logged-user-name + p').textContent = loggedInUser.IsAdmin ? 'Administrador' : 'Consultor'; const userAvatar = document.querySelector('#logged-user-name').closest('div').nextElementSibling; if (userAvatar && loggedInUser.Foto && loggedInUser.Foto[0]?.signedPath) { userAvatar.src = `${NocoDB_BaseURL}/${loggedInUser.Foto[0].signedPath}`; } else if(userAvatar) { userAvatar.src = `https://i.pravatar.cc/150?u=${loggedInUser.Login || loggedInUser.Nome}`; } allElements.loginScreen.classList.add('hidden'); allElements.mainApp.classList.remove('hidden'); await fetchAllData(); const savedPage = sessionStorage.getItem('currentPage') || 'dashboard'; navigateTo(savedPage, true); hideLoadingOverlay(); }
+    async function checkSession() { const userString = sessionStorage.getItem('loggedInUser'); if (userString) { allElements.loginScreen.classList.add('hidden'); allElements.mainApp.classList.remove('hidden'); showLoadingOverlay('Restaurando sessão...'); await initializeUserSession(JSON.parse(userString)); } else { allElements.loginScreen.classList.remove('hidden'); } }
     async function authenticateUser(login, senha) { const endpoint = `Consultores?where=(Login,eq,${login})~and(Senha,eq,${senha})`; const result = await nocoFetch(endpoint); return (result && result.list && result.list.length > 0) ? result.list[0] : null; }
 
     // --- Funções de Renderização ---
     function renderConsultores() { document.getElementById('rh-cards-container').innerHTML = consultoresData.map(c => createConsultorCard(c)).join(''); }
-    function createConsultorCard(c) { 
-        const fotoUrl = (c.Foto && c.Foto[0]?.signedPath) ? `${NocoDB_BaseURL}/${c.Foto[0].signedPath}` : `https://i.pravatar.cc/150?u=${c.Login || c.Nome}`; 
-        const dataset = Object.keys(c).map(k => `data-${k.toLowerCase()}="${c[k] && typeof c[k] === 'object' ? JSON.stringify(c[k]) : (c[k] || '')}"`).join(' '); 
-        return `<div class="rh-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset} data-nome="${c.Nome}"> <img src="${fotoUrl}" class="w-24 h-24 rounded-full object-cover mb-4"> <h4 class="font-bold text-lg text-gray-800 dark:text-white">${c.Nome}</h4> <p class="text-sm text-gray-500 dark:text-gray-400">${c.Email || ''}</p> <div class="flex space-x-4 mt-4"><a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a></div> </div>`; 
-    }
+    function createConsultorCard(c) { const fotoUrl = (c.Foto && c.Foto[0]?.signedPath) ? `${NocoDB_BaseURL}/${c.Foto[0].signedPath}` : `https://i.pravatar.cc/150?u=${c.Login || c.Nome}`; const dataset = Object.keys(c).map(k => `data-${k.toLowerCase()}="${c[k] && typeof c[k] === 'object' ? JSON.stringify(c[k]) : (c[k] || '')}"`).join(' '); return `<div class="rh-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset} data-nome="${c.Nome}"> <img src="${fotoUrl}" class="w-24 h-24 rounded-full object-cover mb-4"> <h4 class="font-bold text-lg text-gray-800 dark:text-white">${c.Nome}</h4> <p class="text-sm text-gray-500 dark:text-gray-400">${c.Email || ''}</p> <div class="flex space-x-4 mt-4"><a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a></div> </div>`; }
     function renderClientes() { document.getElementById('cliente-cards-container').innerHTML = clientesData.map(c => createClienteCard(c)).join(''); }
-    function createClienteCard(c) { 
-        const fotoUrl = (c.Foto && c.Foto[0]?.signedPath) ? `${NocoDB_BaseURL}/${c.Foto[0].signedPath}` : `https://picsum.photos/seed/${c.Nome.replace(/\s/g, '')}/100/100`; 
-        const dataset = Object.keys(c).map(k => `data-${k.toLowerCase()}="${c[k] && typeof c[k] === 'object' ? JSON.stringify(c[k]) : (c[k] || '')}"`).join(' '); 
-        return `<div class="cliente-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset} data-nome="${c.Nome}"> <img src="${fotoUrl}" class="w-24 h-24 rounded-lg object-cover mb-4"> <h4 class="font-bold text-lg text-gray-800 dark:text-white">${c.Nome}</h4> <p class="text-sm text-gray-500 dark:text-gray-400">Responsável: ${c.Responsavel || ''}</p> <div class="flex space-x-4 mt-4"> <a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a> <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.Endereco || '')}" target="_blank" class="text-blue-500 hover:text-blue-600"><i class="fas fa-map-marker-alt fa-2x"></i></a> </div> </div>`; 
-    }
+    function createClienteCard(c) { const fotoUrl = (c.Foto && c.Foto[0]?.signedPath) ? `${NocoDB_BaseURL}/${c.Foto[0].signedPath}` : `https://picsum.photos/seed/${c.Nome.replace(/\s/g, '')}/100/100`; const dataset = Object.keys(c).map(k => `data-${k.toLowerCase()}="${c[k] && typeof c[k] === 'object' ? JSON.stringify(c[k]) : (c[k] || '')}"`).join(' '); return `<div class="cliente-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset} data-nome="${c.Nome}"> <img src="${fotoUrl}" class="w-24 h-24 rounded-lg object-cover mb-4"> <h4 class="font-bold text-lg text-gray-800 dark:text-white">${c.Nome}</h4> <p class="text-sm text-gray-500 dark:text-gray-400">Responsável: ${c.Responsavel || ''}</p> <div class="flex space-x-4 mt-4"> <a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a> <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.Endereco || '')}" target="_blank" class="text-blue-500 hover:text-blue-600"><i class="fas fa-map-marker-alt fa-2x"></i></a> </div> </div>`; }
     function renderReceitas(data = receitasData) { const t = document.getElementById('receitas-table-body'); if(t) t.innerHTML = data.map(r => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}"> <td class="px-6 py-4">${r.cliente_nome}</td> <td class="px-6 py-4">${new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${(r.Valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td> <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.Status==='Pago'?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">${r.Status}</span></td> <td class="px-6 py-4 space-x-2"><button class="table-details-btn text-gray-500" data-type="receita"><i class="fas fa-eye"></i></button><button class="table-edit-btn text-blue-500" data-type="receita"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500" data-type="receita"><i class="fas fa-trash"></i></button></td> </tr> `).join(''); }
     function renderCustos(data = custosData) { const t = document.getElementById('custos-table-body'); if(t) t.innerHTML = data.map(c => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${c.Id}"> <td class="px-6 py-4">${c.Credor}</td> <td class="px-6 py-4">${new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${(c.Valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td> <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${c.Status==='Pago'?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">${c.Status}</span></td> <td class="px-6 py-4 space-x-2"><button class="table-details-btn text-gray-500" data-type="custo"><i class="fas fa-eye"></i></button><button class="table-edit-btn text-blue-500" data-type="custo"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500" data-type="custo"><i class="fas fa-trash"></i></button></td> </tr> `).join(''); }
-    
-    function renderFerias(data = feriasData) {
-        const tbody = document.getElementById('ferias-table-body');
-        if (!tbody) return;
-        tbody.innerHTML = data.map(f => {
-            const inicio = new Date(f.DataInicio + 'T00:00:00');
-            const retorno = new Date(f.DataRetorno + 'T00:00:00');
-            const dias = Math.round((retorno - inicio) / (1000 * 60 * 60 * 24)) + 1;
-            return `
-                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${f.Id}">
-                    <td class="px-6 py-4">${f.consultor_nome}</td>
-                    <td class="px-6 py-4">${inicio.toLocaleDateString('pt-BR')}</td>
-                    <td class="px-6 py-4">${retorno.toLocaleDateString('pt-BR')}</td>
-                    <td class="px-6 py-4">${dias}</td>
-                    <td class="px-6 py-4 space-x-2">
-                        <button class="table-details-btn text-gray-500" data-type="ferias"><i class="fas fa-eye"></i></button>
-                        <button class="table-edit-btn text-blue-500" data-type="ferias"><i class="fas fa-edit"></i></button>
-                        <button class="table-delete-btn text-red-500" data-type="ferias"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
-
-    function renderAtestados(data = atestadosData) {
-        const tbody = document.getElementById('atestados-table-body');
-        if (!tbody) return;
-        tbody.innerHTML = data.map(a => {
-            const anexoUrl = a.Anexo && a.Anexo[0]?.signedPath ? `${NocoDB_BaseURL}/${a.Anexo[0].signedPath}` : '#';
-            return `
-            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${a.Id}">
-                <td class="px-6 py-4">${a.consultor_nome}</td>
-                <td class="px-6 py-4">${new Date(a.DataInicio + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                <td class="px-6 py-4">${new Date(a.DataRetorno + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                <td class="px-6 py-4">${a.Anexo && a.Anexo[0] ? `<a href="${anexoUrl}" target="_blank" class="text-brand-gold hover:underline"><i class="fas fa-paperclip"></i> Ver</a>` : 'Nenhum'}</td>
-                <td class="px-6 py-4 space-x-2">
-                    <button class="table-details-btn text-gray-500" data-type="atestado"><i class="fas fa-eye"></i></button>
-                    <button class="table-edit-btn text-blue-500" data-type="atestado"><i class="fas fa-edit"></i></button>
-                    <button class="table-delete-btn text-red-500" data-type="atestado"><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>
-        `}).join('');
-    }
-
-    function renderEpis(data = episEntreguesData) {
-        const tbody = document.getElementById('epis-table-body');
-        if (!tbody) return;
-        tbody.innerHTML = data.map(e => `
-            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${e.Id}">
-                <td class="px-6 py-4">${e.consultor_nome}</td>
-                <td class="px-6 py-4">${e.Item}</td>
-                <td class="px-6 py-4">${e.Quantidade}</td>
-                <td class="px-6 py-4">${new Date(e.DataEntrega + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                <td class="px-6 py-4 space-x-2">
-                    <button class="table-details-btn text-gray-500" data-type="epi"><i class="fas fa-eye"></i></button>
-                    <button class="table-edit-btn text-blue-500" data-type="epi"><i class="fas fa-edit"></i></button>
-                    <button class="table-delete-btn text-red-500" data-type="epi"><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    function renderAtivos(data = ativosData) {
-        const tbody = document.getElementById('ativos-table-body');
-        if (!tbody) return;
-        tbody.innerHTML = data.map(a => `
-            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${a.Id}">
-                <td class="px-6 py-4">${a.consultor_nome}</td>
-                <td class="px-6 py-4">${a.Item}</td>
-                <td class="px-6 py-4">${new Date(a.DataEntrega + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
-                <td class="px-6 py-4">${a.DataDevolucao ? new Date(a.DataDevolucao + 'T00:00:00').toLocaleDateString('pt-BR') : 'Em uso'}</td>
-                <td class="px-6 py-4 space-x-2">
-                    <button class="table-details-btn text-gray-500" data-type="ativo"><i class="fas fa-eye"></i></button>
-                    <button class="table-edit-btn text-blue-500" data-type="ativo"><i class="fas fa-edit"></i></button>
-                    <button class="table-delete-btn text-red-500" data-type="ativo"><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>
-        `).join('');
-    }
+    function renderFerias(data = feriasData) { const tbody = document.getElementById('ferias-table-body'); if (!tbody) return; tbody.innerHTML = data.map(f => { const inicio = new Date(f.DataInicio + 'T00:00:00'); const retorno = new Date(f.DataRetorno + 'T00:00:00'); const dias = Math.round((retorno - inicio) / (1000 * 60 * 60 * 24)) + 1; return ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${f.Id}"> <td class="px-6 py-4">${f.consultor_nome}</td> <td class="px-6 py-4">${inicio.toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${retorno.toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${dias}</td> <td class="px-6 py-4 space-x-2"> <button class="table-details-btn text-gray-500" data-type="ferias"><i class="fas fa-eye"></i></button> <button class="table-edit-btn text-blue-500" data-type="ferias"><i class="fas fa-edit"></i></button> <button class="table-delete-btn text-red-500" data-type="ferias"><i class="fas fa-trash"></i></button> </td> </tr> `; }).join(''); }
+    function renderAtestados(data = atestadosData) { const tbody = document.getElementById('atestados-table-body'); if (!tbody) return; tbody.innerHTML = data.map(a => { const anexoUrl = a.Anexo && a.Anexo[0]?.signedPath ? `${NocoDB_BaseURL}/${a.Anexo[0].signedPath}` : '#'; return ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${a.Id}"> <td class="px-6 py-4">${a.consultor_nome}</td> <td class="px-6 py-4">${new Date(a.DataInicio + 'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${new Date(a.DataRetorno + 'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${a.Anexo && a.Anexo[0] ? `<a href="${anexoUrl}" target="_blank" class="text-brand-gold hover:underline"><i class="fas fa-paperclip"></i> Ver</a>` : 'Nenhum'}</td> <td class="px-6 py-4 space-x-2"> <button class="table-details-btn text-gray-500" data-type="atestado"><i class="fas fa-eye"></i></button> <button class="table-edit-btn text-blue-500" data-type="atestado"><i class="fas fa-edit"></i></button> <button class="table-delete-btn text-red-500" data-type="atestado"><i class="fas fa-trash"></i></button> </td> </tr> `}).join(''); }
+    function renderEpis(data = episEntreguesData) { const tbody = document.getElementById('epis-table-body'); if (!tbody) return; tbody.innerHTML = data.map(e => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${e.Id}"> <td class="px-6 py-4">${e.consultor_nome}</td> <td class="px-6 py-4">${e.Item}</td> <td class="px-6 py-4">${e.Quantidade}</td> <td class="px-6 py-4">${new Date(e.DataEntrega + 'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4 space-x-2"> <button class="table-details-btn text-gray-500" data-type="epi"><i class="fas fa-eye"></i></button> <button class="table-edit-btn text-blue-500" data-type="epi"><i class="fas fa-edit"></i></button> <button class="table-delete-btn text-red-500" data-type="epi"><i class="fas fa-trash"></i></button> </td> </tr> `).join(''); }
+    function renderAtivos(data = ativosData) { const tbody = document.getElementById('ativos-table-body'); if (!tbody) return; tbody.innerHTML = data.map(a => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${a.Id}"> <td class="px-6 py-4">${a.consultor_nome}</td> <td class="px-6 py-4">${a.Item}</td> <td class="px-6 py-4">${new Date(a.DataEntrega + 'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${a.DataDevolucao ? new Date(a.DataDevolucao + 'T00:00:00').toLocaleDateString('pt-BR') : 'Em uso'}</td> <td class="px-6 py-4 space-x-2"> <button class="table-details-btn text-gray-500" data-type="ativo"><i class="fas fa-eye"></i></button> <button class="table-edit-btn text-blue-500" data-type="ativo"><i class="fas fa-edit"></i></button> <button class="table-delete-btn text-red-500" data-type="ativo"><i class="fas fa-trash"></i></button> </td> </tr> `).join(''); }
 
     // --- Lógica de Submissão de Formulários (CRUD) ---
     async function handleFormSubmit(e) {
@@ -1197,6 +1074,52 @@ document.addEventListener('DOMContentLoaded', function() {
         const rhSubFormIds = ['ferias-form', 'atestados-form', 'epis-form', 'ativos-form'];
         
         switch (form.id) {
+            case 'item-form':
+                id = form.dataset.id;
+                endpoint = id ? `Itens_Catalogo/${id}` : 'Itens_Catalogo';
+                const itemName = document.getElementById('item-name').value;
+                const itemCategory = document.getElementById('item-category-name').value;
+                body = { Nome: itemName, Categoria: itemCategory, Tipo: 'Consumo' }; // Assumindo que só itens de consumo são gerenciados aqui
+                const itemFotoInput = document.getElementById('item-foto');
+                if (itemFotoInput && itemFotoInput.files[0]) {
+                    showLoadingOverlay('Enviando imagem do item...');
+                    const fotoData = await uploadFile('Itens_Catalogo', 'Foto', itemFotoInput.files[0]);
+                    if(fotoData) body.Foto = [fotoData];
+                }
+                callback = async () => { await fetchItensCatalogo(); renderItensDeRequisicao(); renderCategoryFilters(); hideModal(allElements.itemFormModal); };
+                break;
+
+            case 'requisicao-form':
+                const tipoReq = form.querySelector('#requisicao-tipo').value;
+                const consultorReqId = form.querySelector('#requisicao-consultor').value;
+                const itensReq = [];
+
+                if (tipoReq === 'EPIs') {
+                    const epiId = form.querySelector('#epis-item').value;
+                    const epiQtd = form.querySelector('#epis-quantidade').value;
+                    if (epiId && epiQtd > 0) {
+                        itensReq.push({ Quantidade: parseInt(epiQtd), "ItensDoCatalogo-id": parseInt(epiId) });
+                    }
+                } else if (tipoReq === 'Consumo') {
+                    const qtdInputs = form.querySelectorAll('#consumo-categories-container .consumo-item-qtd');
+                    qtdInputs.forEach(input => {
+                        if (input.value > 0) {
+                            itensReq.push({ Quantidade: parseInt(input.value), "ItensDoCatalogo-id": parseInt(input.dataset.itemId) });
+                        }
+                    });
+                }
+                if (itensReq.length === 0) { alert('Adicione pelo menos um item à requisição.'); return; }
+                
+                body = {
+                    Tipo: tipoReq,
+                    "Consultores-id": parseInt(consultorReqId),
+                    Status: 'Pendente',
+                    ItensDaRequisicao: itensReq
+                };
+                endpoint = 'Requisicoes';
+                callback = async () => { await fetchRequisicoes(); applyRequisicaoFilters(); hideModal(allElements.requisicaoFormModal); };
+                break;
+            // Outros cases...
             case 'rh-form':
             case 'cliente-form': {
                 const isConsultor = form.id === 'rh-form';
@@ -1319,6 +1242,8 @@ document.addEventListener('DOMContentLoaded', function() {
             case 'atestado': endpoint = `Atestados/${id}`; callback = async () => { await fetchAtestados(); applyAndRenderAtestados(); }; break;
             case 'epi': endpoint = `Epis_Entregues/${id}`; callback = async () => { await fetchEpis(); applyAndRenderEpis(); }; break;
             case 'ativo': endpoint = `Ativos_Entregues/${id}`; callback = async () => { await fetchAtivos(); applyAndRenderAtivos(); }; break;
+            case 'item_catalogo': endpoint = `Itens_Catalogo/${id}`; callback = async () => { await fetchItensCatalogo(); renderItensDeRequisicao(); renderCategoryFilters(); }; break;
+            case 'requisicao': endpoint = `Requisicoes/${id}`; callback = async () => { await fetchRequisicoes(); applyRequisicaoFilters(); }; break;
             default: hideModal(allElements.deleteConfirmModal); return;
         }
         showLoadingOverlay('Apagando...');
@@ -1355,6 +1280,22 @@ document.addEventListener('DOMContentLoaded', function() {
             if(kanbanButton.classList.contains('remarcar-visita-btn')) { handleRescheduleVisit(visitId); return; }
         }
 
+        const itemActionButton = t.closest('.item-action-btn');
+        if (itemActionButton) {
+            const card = itemActionButton.closest('.item-card');
+            const itemId = parseInt(card.dataset.id);
+            const itemCategory = card.dataset.category;
+            const item = allItems.find(i => i.Id === itemId);
+
+            if (itemActionButton.classList.contains('edit-item-btn')) {
+                openItemModal(itemCategory, item);
+            } else if (itemActionButton.classList.contains('delete-item-btn')) {
+                activeDeleteItem = { id: itemId, type: 'item_catalogo', element: card };
+                showModal(allElements.deleteConfirmModal);
+            }
+            return;
+        }
+
         const nL=t.closest('.nav-link'); if(nL){e.preventDefault(); handleNavClick({currentTarget:nL}); return;} 
         const rhC=t.closest('.rh-card'); if(rhC&&!t.closest('a')){openDetailsModal(rhC); return;} 
         const clC=t.closest('.cliente-card'); if(clC&&!t.closest('a')){openDetailsModal(clC); return;} 
@@ -1362,6 +1303,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if(btn.classList.contains('view-toggle-btn')){handleViewToggle({currentTarget:btn});return;} 
         if(btn.classList.contains('dashboard-nav-btn')){handleDashboardNav(btn);return;}
         if(btn.classList.contains('cancel-sub-form')){ hideSubFormToggle(btn.dataset.history, btn.dataset.form); return; }
+        if(btn.classList.contains('item-category-filter-btn')){ handleCategoryFilterClick(btn); return; }
+        if (btn.classList.contains('add-item-btn')) { openItemModal(btn.dataset.category); return; }
 
         const aM={
             'logout-button':()=>showModal(allElements.logoutConfirmModal),'cancel-logout-btn':()=>hideModal(allElements.logoutConfirmModal),'confirm-logout-btn':()=>{sessionStorage.clear(); location.reload();},
@@ -1371,6 +1314,7 @@ document.addEventListener('DOMContentLoaded', function() {
             'show-cliente-form':()=>setupFormToggle('cliente-cards-container','cliente-form-container'),'cancel-cliente-form':()=>hideFormToggle('cliente-cards-container','cliente-form-container'),
             'show-visita-form':()=>openVisitaModal(),'cancel-visita-form':()=>hideModal(allElements.visitaFormModal),
             'show-requisicao-form':()=>openRequisicaoModal(),'cancel-requisicao-form':()=>hideModal(allElements.requisicaoFormModal),
+            'show-category-form': handleAddNewCategory,
             'show-receita-form':()=>setupSubFormToggle('receitas-history-container','receita-form-container'),'cancel-receita-form':()=>hideSubFormToggle('receitas-history-container','receita-form-container'),
             'show-custo-form':()=>setupSubFormToggle('custos-history-container','custo-form-container'),'cancel-custo-form':()=>hideSubFormToggle('custos-history-container','custo-form-container'),
             'show-ferias-form': () => setupSubFormToggle('ferias-history-container', 'ferias-form-container'),
@@ -1391,106 +1335,15 @@ document.addEventListener('DOMContentLoaded', function() {
         else if(btn.classList.contains('rh-tab-btn')||btn.classList.contains('requisicao-tab-btn')||btn.classList.contains('financeiro-tab-btn'))handleTabClick(btn);
     }
     
-    function navigateTo(targetId, isInitial = false) {
-        allElements.pages.forEach(page => page.classList.add('hidden'));
-        const targetPage = document.getElementById(targetId);
-        if (targetPage) {
-            targetPage.classList.remove('hidden');
-            if (targetId === 'visitas' && calendar) setTimeout(() => calendar.render(), 1);
-            if (targetId === 'dashboard') setTimeout(() => updateAllDashboards(), 1);
-        }
-        const navLink = document.querySelector(`.nav-link[data-target="${targetId}"]`);
-        if (navLink) {
-            document.querySelectorAll('.nav-link').forEach(l => {
-                l.classList.remove('bg-brand-gold', 'text-white');
-                l.classList.add('text-gray-400', 'hover:bg-brand-gold', 'hover:text-white');
-            });
-            navLink.classList.add('bg-brand-gold', 'text-white');
-            navLink.classList.remove('text-gray-400');
-            if (document.getElementById('page-title')) document.getElementById('page-title').textContent = navLink.title;
-        }
-    }
-
-    function handleNavClick(e) { 
-        const navLink = e.currentTarget;
-        const targetId = navLink.dataset.target;
-        sessionStorage.setItem('currentPage', targetId);
-        navigateTo(targetId);
-        if (window.innerWidth < 1024) toggleMobileSidebar();
-    }
+    function navigateTo(targetId, isInitial = false) { allElements.pages.forEach(page => page.classList.add('hidden')); const targetPage = document.getElementById(targetId); if (targetPage) { targetPage.classList.remove('hidden'); if (targetId === 'visitas' && calendar) setTimeout(() => calendar.render(), 1); if (targetId === 'dashboard') setTimeout(() => updateAllDashboards(), 1); } const navLink = document.querySelector(`.nav-link[data-target="${targetId}"]`); if (navLink) { document.querySelectorAll('.nav-link').forEach(l => { l.classList.remove('bg-brand-gold', 'text-white'); l.classList.add('text-gray-400', 'hover:bg-brand-gold', 'hover:text-white'); }); navLink.classList.add('bg-brand-gold', 'text-white'); navLink.classList.remove('text-gray-400'); if (document.getElementById('page-title')) document.getElementById('page-title').textContent = navLink.title; } }
+    function handleNavClick(e) { const navLink = e.currentTarget; const targetId = navLink.dataset.target; sessionStorage.setItem('currentPage', targetId); navigateTo(targetId); if (window.innerWidth < 1024) toggleMobileSidebar(); }
     function toggleMobileSidebar() { allElements.sidebar.classList.toggle('-translate-x-full'); allElements.sidebarOverlay.classList.toggle('hidden'); }
     function handleDashboardNav(btn) { document.querySelectorAll('.dashboard-nav-btn').forEach(b=>{b.classList.remove('border-brand-gold','text-brand-gold'); b.classList.add('border-transparent');}); btn.classList.add('border-brand-gold','text-brand-gold'); document.querySelectorAll('.dashboard-content').forEach(c=>c.classList.add('hidden')); document.getElementById(btn.dataset.target).classList.remove('hidden');}
     function handleViewToggle(e) { const btn=e.currentTarget; document.querySelectorAll('.view-toggle-btn').forEach(b=>b.classList.remove('bg-white','dark:bg-gray-800','shadow-sm')); btn.classList.add('bg-white','dark:bg-gray-800','shadow-sm'); document.querySelectorAll('.visitas-view').forEach(v=>v.classList.add('hidden')); const tV=document.getElementById(btn.dataset.view); if(tV){tV.classList.remove('hidden'); if(btn.dataset.view==='calendar-view'&&calendar){setTimeout(()=>calendar.render(),1);}}}
     function handleTabClick(btn) { const tC=btn.closest('ul'); tC.querySelectorAll('button').forEach(b=>{b.classList.remove('border-brand-gold','text-brand-gold'); b.classList.add('border-transparent');}); btn.classList.add('border-brand-gold','text-brand-gold'); const cC=btn.classList.contains('rh-tab-btn')?'.rh-tab-content':btn.classList.contains('requisicao-tab-btn')?'.requisicao-tab-content':'.financeiro-tab-content'; const pC=btn.closest('.page'); if(pC&&cC){pC.querySelectorAll(cC).forEach(c=>c.classList.add('hidden')); document.getElementById(btn.dataset.target)?.classList.remove('hidden');}}
     
-    function handleTableEdit(btn) { 
-        const row=btn.closest('tr'); if(!row)return; 
-        const id=parseInt(row.dataset.id); 
-        const type = btn.dataset.type;
-
-        switch(type) {
-            case 'visita': { const v=visitsData.find(d=>d.Id===id); if(v) openVisitaModal(v); break; }
-            case 'receita': { const r=receitasData.find(d=>d.Id===id); if(r){setupSubFormToggle('receitas-history-container','receita-form-container'); const f=document.getElementById('receita-form'); f.dataset.id = r.Id; f.querySelector('#receita-cliente-form').value=r.ClienteId; f.querySelector('#receita-vencimento').value=r.Vencimento; f.querySelector('#receita-valor').value=r.Valor; f.querySelector('#receita-status-form').value=r.Status; f.querySelector('#receita-obs').value=r.Observacao||'';} break; }
-            case 'custo': { const c=custosData.find(d=>d.Id===id); if(c){setupSubFormToggle('custos-history-container','custo-form-container'); const f=document.getElementById('custo-form'); f.dataset.id = c.Id; f.querySelector('#custo-credor').value=c.Credor; f.querySelector('#custo-vencimento').value=c.Vencimento; f.querySelector('#custo-valor').value=c.Valor; f.querySelector('#custo-status-form').value=c.Status; f.querySelector('#custo-obs').value=c.Observacao||'';} break; }
-            case 'ferias': { const data = feriasData.find(d => d.Id === id); if(data){ setupSubFormToggle('ferias-history-container', 'ferias-form-container'); const form = document.getElementById('ferias-form'); form.dataset.id = data.Id; form.querySelector('#ferias-consultor').value = data.Consultor; form.querySelector('#ferias-inicio').value = data.DataInicio; form.querySelector('#ferias-retorno').value = data.DataRetorno; } break; }
-            case 'atestado': { const data = atestadosData.find(d => d.Id === id); if(data){ setupSubFormToggle('atestados-history-container', 'atestados-form-container'); const form = document.getElementById('atestados-form'); form.dataset.id = data.Id; form.querySelector('#atestados-consultor').value = data.Consultor; form.querySelector('#atestados-inicio').value = data.DataInicio; form.querySelector('#atestados-retorno').value = data.DataRetorno; } break; }
-            case 'epi': { const data = episEntreguesData.find(d => d.Id === id); if(data){ setupSubFormToggle('epis-history-container', 'epis-form-container'); const form = document.getElementById('epis-form'); form.dataset.id = data.Id; form.querySelector('#epis-consultor').value = data.ConsultorId; form.querySelector('#epis-item').value = data.Item; form.querySelector('#epis-qtd').value = data.Quantidade; form.querySelector('#epis-data').value = data.DataEntrega; form.querySelector('#epis-obs').value = data.Observacao || ''; } break; }
-            case 'ativo': { const data = ativosData.find(d => d.Id === id); if(data){ setupSubFormToggle('ativos-history-container', 'ativos-form-container'); const form = document.getElementById('ativos-form'); form.dataset.id = data.Id; form.querySelector('#ativos-consultor').value = data.ConsultorId; form.querySelector('#ativos-item').value = data.Item; form.querySelector('#ativos-entrega').value = data.DataEntrega; form.querySelector('#ativos-devolucao').value = data.DataDevolucao || ''; form.querySelector('#ativos-obs').value = data.Observacao || ''; } break; }
-        }
-    }
-    
-    function handleCardEdit() { 
-        if (!activeCard) return; 
-        hideModal(allElements.detailsModal); 
-        const isConsultor = activeCard.classList.contains('rh-card');
-        const formContainerId = isConsultor ? 'rh-form-container' : 'cliente-form-container';
-        const cardsContainerId = isConsultor ? 'rh-cards-container' : 'cliente-cards-container';
-        const form = document.getElementById(formContainerId).querySelector('form');
-        const data = activeCard.dataset;
-        form.reset();
-
-        let hiddenIdInput = form.querySelector('input[type="hidden"]');
-        if (!hiddenIdInput) {
-            hiddenIdInput = document.createElement('input');
-            hiddenIdInput.type = 'hidden';
-            hiddenIdInput.id = isConsultor ? 'rh-id' : 'cliente-id';
-            form.prepend(hiddenIdInput);
-        }
-        hiddenIdInput.value = data.id;
-
-        const fieldMapping = isConsultor 
-            ? {'rh-nome':'nome', 'rh-nasc':'datanascimento', 'rh-tel':'telefone', 'rh-email':'email', 'rh-login':'login', 'rh-inicio':'iniciovinculo', 'rh-fim':'fimvinculo', 'rh-cnpj':'cnpj', 'rh-razao':'razaosocial', 'rh-valor':'valorhora', 'rh-admin':'isadmin', 'rh-endereco':'endereco', 'rh-obs':'observacao'}
-            : {'cliente-nome':'nome', 'cliente-razao':'razaosocial', 'cliente-cnpj':'cnpj', 'cliente-tel':'telefone', 'cliente-email':'email', 'cliente-horas':'horascontratadas', 'cliente-responsavel':'responsavel', 'cliente-cpf':'cpfresponsavel', 'cliente-iptu':'iptu', 'cliente-senha-portal':'senhaportal', 'cliente-endereco':'endereco', 'cliente-obs':'observacao'};
-
-        for (const [fieldId, dataKey] of Object.entries(fieldMapping)) {
-            const input = form.querySelector(`#${fieldId}`);
-            if (input) {
-                if (input.type === 'checkbox') {
-                    input.checked = data[dataKey] === 'true' || data[dataKey] === '1';
-                } else {
-                    input.value = data[dataKey] || '';
-                }
-            }
-        }
-
-        if (isConsultor) {
-            const passwordInput = form.querySelector('#rh-senha');
-            if (passwordInput) {
-                passwordInput.value = '';
-                passwordInput.placeholder = "Deixe em branco para não alterar";
-            }
-        }
-
-        const imgPreview = form.querySelector('img');
-        if (imgPreview) {
-            let fotoData;
-            try { fotoData = data.foto ? JSON.parse(data.foto) : null; } catch(e) { fotoData = null; }
-            imgPreview.src = (fotoData && fotoData[0]?.signedPath) ? `${NocoDB_BaseURL}/${fotoData[0].signedPath}` : `https://placehold.co/100x100/e2e8f0/cbd5e0?text=${isConsultor ? 'Foto' : 'Logo'}`;
-        }
-        
-        document.getElementById(cardsContainerId).classList.add('hidden');
-        document.getElementById(formContainerId).classList.remove('hidden');
-    }
+    function handleTableEdit(btn) { const row=btn.closest('tr'); if(!row)return; const id=parseInt(row.dataset.id); const type = btn.dataset.type; switch(type) { case 'visita': { const v=visitsData.find(d=>d.Id===id); if(v) openVisitaModal(v); break; } case 'receita': { const r=receitasData.find(d=>d.Id===id); if(r){setupSubFormToggle('receitas-history-container','receita-form-container'); const f=document.getElementById('receita-form'); f.dataset.id = r.Id; f.querySelector('#receita-cliente-form').value=r.ClienteId; f.querySelector('#receita-vencimento').value=r.Vencimento; f.querySelector('#receita-valor').value=r.Valor; f.querySelector('#receita-status-form').value=r.Status; f.querySelector('#receita-obs').value=r.Observacao||'';} break; } case 'custo': { const c=custosData.find(d=>d.Id===id); if(c){setupSubFormToggle('custos-history-container','custo-form-container'); const f=document.getElementById('custo-form'); f.dataset.id = c.Id; f.querySelector('#custo-credor').value=c.Credor; f.querySelector('#custo-vencimento').value=c.Vencimento; f.querySelector('#custo-valor').value=c.Valor; f.querySelector('#custo-status-form').value=c.Status; f.querySelector('#custo-obs').value=c.Observacao||'';} break; } case 'ferias': { const data = feriasData.find(d => d.Id === id); if(data){ setupSubFormToggle('ferias-history-container', 'ferias-form-container'); const form = document.getElementById('ferias-form'); form.dataset.id = data.Id; form.querySelector('#ferias-consultor').value = data.Consultor; form.querySelector('#ferias-inicio').value = data.DataInicio; form.querySelector('#ferias-retorno').value = data.DataRetorno; } break; } case 'atestado': { const data = atestadosData.find(d => d.Id === id); if(data){ setupSubFormToggle('atestados-history-container', 'atestados-form-container'); const form = document.getElementById('atestados-form'); form.dataset.id = data.Id; form.querySelector('#atestados-consultor').value = data.Consultor; form.querySelector('#atestados-inicio').value = data.DataInicio; form.querySelector('#atestados-retorno').value = data.DataRetorno; } break; } case 'epi': { const data = episEntreguesData.find(d => d.Id === id); if(data){ setupSubFormToggle('epis-history-container', 'epis-form-container'); const form = document.getElementById('epis-form'); form.dataset.id = data.Id; form.querySelector('#epis-consultor').value = data.ConsultorId; form.querySelector('#epis-item').value = data.Item; form.querySelector('#epis-qtd').value = data.Quantidade; form.querySelector('#epis-data').value = data.DataEntrega; form.querySelector('#epis-obs').value = data.Observacao || ''; } break; } case 'ativo': { const data = ativosData.find(d => d.Id === id); if(data){ setupSubFormToggle('ativos-history-container', 'ativos-form-container'); const form = document.getElementById('ativos-form'); form.dataset.id = data.Id; form.querySelector('#ativos-consultor').value = data.ConsultorId; form.querySelector('#ativos-item').value = data.Item; form.querySelector('#ativos-entrega').value = data.DataEntrega; form.querySelector('#ativos-devolucao').value = data.DataDevolucao || ''; form.querySelector('#ativos-obs').value = data.Observacao || ''; } break; } } }
+    function handleCardEdit() { if (!activeCard) return; hideModal(allElements.detailsModal); const isConsultor = activeCard.classList.contains('rh-card'); const formContainerId = isConsultor ? 'rh-form-container' : 'cliente-form-container'; const cardsContainerId = isConsultor ? 'rh-cards-container' : 'cliente-cards-container'; const form = document.getElementById(formContainerId).querySelector('form'); const data = activeCard.dataset; form.reset(); let hiddenIdInput = form.querySelector('input[type="hidden"]'); if (!hiddenIdInput) { hiddenIdInput = document.createElement('input'); hiddenIdInput.type = 'hidden'; hiddenIdInput.id = isConsultor ? 'rh-id' : 'cliente-id'; form.prepend(hiddenIdInput); } hiddenIdInput.value = data.id; const fieldMapping = isConsultor ? {'rh-nome':'nome', 'rh-nasc':'datanascimento', 'rh-tel':'telefone', 'rh-email':'email', 'rh-login':'login', 'rh-inicio':'iniciovinculo', 'rh-fim':'fimvinculo', 'rh-cnpj':'cnpj', 'rh-razao':'razaosocial', 'rh-valor':'valorhora', 'rh-admin':'isadmin', 'rh-endereco':'endereco', 'rh-obs':'observacao'} : {'cliente-nome':'nome', 'cliente-razao':'razaosocial', 'cliente-cnpj':'cnpj', 'cliente-tel':'telefone', 'cliente-email':'email', 'cliente-horas':'horascontratadas', 'cliente-responsavel':'responsavel', 'cliente-cpf':'cpfresponsavel', 'cliente-iptu':'iptu', 'cliente-senha-portal':'senhaportal', 'cliente-endereco':'endereco', 'cliente-obs':'observacao'}; for (const [fieldId, dataKey] of Object.entries(fieldMapping)) { const input = form.querySelector(`#${fieldId}`); if (input) { if (input.type === 'checkbox') { input.checked = data[dataKey] === 'true' || data[dataKey] === '1'; } else { input.value = data[dataKey] || ''; } } } if (isConsultor) { const passwordInput = form.querySelector('#rh-senha'); if (passwordInput) { passwordInput.value = ''; passwordInput.placeholder = "Deixe em branco para não alterar"; } } const imgPreview = form.querySelector('img'); if (imgPreview) { let fotoData; try { fotoData = data.foto ? JSON.parse(data.foto) : null; } catch(e) { fotoData = null; } imgPreview.src = (fotoData && fotoData[0]?.signedPath) ? `${NocoDB_BaseURL}/${fotoData[0].signedPath}` : `https://placehold.co/100x100/e2e8f0/cbd5e0?text=${isConsultor ? 'Foto' : 'Logo'}`; } document.getElementById(cardsContainerId).classList.add('hidden'); document.getElementById(formContainerId).classList.remove('hidden'); }
     const setupSearch=(iId,cS)=>{document.getElementById(iId)?.addEventListener('input',e=>{const sT=e.target.value.toLowerCase(); document.querySelectorAll(cS).forEach(c=>{const n=c.dataset.nome||''; c.style.display=n.toLowerCase().includes(sT)?'flex':'none';});});};
     const setupFormToggle=(cId,fId)=>{activeCard=null; const f=document.getElementById(fId).querySelector('form'); f?.reset(); let hId=f.querySelector('input[type="hidden"]'); if(hId)hId.value=''; document.getElementById(cId)?.classList.add('hidden'); document.getElementById(fId)?.classList.remove('hidden');};
     const hideFormToggle=(cId,fId)=>{document.getElementById(fId).classList.add('hidden'); document.getElementById(cId).classList.remove('hidden');}
@@ -1506,33 +1359,40 @@ document.addEventListener('DOMContentLoaded', function() {
         const id = parseInt(row.dataset.id);
         const type = btn.dataset.type;
         let dataArray, title, ignoredKeys = ['Id', 'id', 'cliente_nome', 'consultor_nome', 'startTime', 'endTime', 'nc_created_by', 'nc_updated_by', 'nc_order'];
-    
-        switch(type) {
+
+        switch (type) {
             case 'visita': dataArray = visitsData; title = 'Detalhes da Visita'; break;
+            case 'receita': dataArray = receitasData; title = 'Detalhes da Receita'; break;
+            case 'custo': dataArray = custosData; title = 'Detalhes do Custo'; break;
             case 'ferias': dataArray = feriasData; title = 'Detalhes das Férias'; break;
             case 'atestado': dataArray = atestadosData; title = 'Detalhes do Atestado'; break;
             case 'epi': dataArray = episEntreguesData; title = 'Detalhes da Entrega de EPI'; break;
             case 'ativo': dataArray = ativosData; title = 'Detalhes do Ativo'; break;
+            case 'requisicao': dataArray = requisicoesData; title = 'Detalhes da Requisição'; break;
             default: return;
         }
         const data = dataArray.find(d => d.Id === id);
         if (!data) return;
         document.getElementById('modal-title').textContent = title;
-        
+
+        let contentHTML = '';
         if (type === 'visita') {
             const { color, label } = sConf[data.Status] || { color: 'gray', label: data.Status };
-            document.getElementById('modal-content').innerHTML = `
-                <p><strong>Cliente:</strong> ${data.cliente_nome}</p>
-                <p><strong>Consultor:</strong> ${data.consultor_nome}</p>
-                <p><strong>Data:</strong> ${new Date(data.DataVisita + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
-                <p><strong>Horário:</strong> ${data.HoraInicio} - ${data.HoraFim}</p>
-                <p><strong>Descrição:</strong> ${data.Descricao || 'N/A'}</p>
-                <p><strong>Status:</strong> <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}${data.Remarcada ? ' (Remarcado)' : ''}</span></p>
-                ${data.CheckIn ? `<p><strong>Check-in:</strong> ${new Date(data.CheckIn).toLocaleString('pt-BR')}</p>` : ''}
-                ${data.CheckOut ? `<p><strong>Check-out:</strong> ${new Date(data.CheckOut).toLocaleString('pt-BR')}</p>` : ''}
-            `;
+            contentHTML = `<p><strong>Cliente:</strong> ${data.cliente_nome}</p> <p><strong>Consultor:</strong> ${data.consultor_nome}</p> <p><strong>Data:</strong> ${new Date(data.DataVisita + 'T00:00:00').toLocaleDateString('pt-BR')}</p> <p><strong>Horário:</strong> ${data.HoraInicio} - ${data.HoraFim}</p> <p><strong>Descrição:</strong> ${data.Descricao || 'N/A'}</p> <p><strong>Status:</strong> <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}${data.Remarcada ? ' (Remarcado)' : ''}</span></p> ${data.CheckIn ? `<p><strong>Check-in:</strong> ${new Date(data.CheckIn).toLocaleString('pt-BR')}</p>` : ''} ${data.CheckOut ? `<p><strong>Check-out:</strong> ${new Date(data.CheckOut).toLocaleString('pt-BR')}</p>` : ''}`;
+        } else if (type === 'receita') {
+            contentHTML = `<p><strong>Cliente:</strong> ${data.cliente_nome}</p> <p><strong>Vencimento:</strong> ${new Date(data.Vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</p> <p><strong>Valor:</strong> ${(data.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p> <p><strong>Status:</strong> ${data.Status}</p> <p><strong>Observação:</strong> ${data.Observacao || 'N/A'}</p>`;
+        } else if (type === 'custo') {
+            contentHTML = `<p><strong>Credor:</strong> ${data.Credor}</p> <p><strong>Vencimento:</strong> ${new Date(data.Vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</p> <p><strong>Valor:</strong> ${(data.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p> <p><strong>Status:</strong> ${data.Status}</p> <p><strong>Observação:</strong> ${data.Observacao || 'N/A'}</p>`;
+        } else if (type === 'requisicao') {
+            let itensStr = (data.ItensDaRequisicao && data.ItensDaRequisicao.length > 0) 
+                ? data.ItensDaRequisicao.map(itemJoin => {
+                    const itemInfo = allItems.find(i => i.Id === itemJoin['ItensDoCatalogo-id']);
+                    return `<li>${itemInfo ? itemInfo.Nome : 'Item desconhecido'} (Qtd: ${itemJoin.Quantidade})</li>`;
+                }).join('')
+                : '<li>Nenhum item.</li>';
+            contentHTML = `<p><strong>Consultor:</strong> ${data.consultor_nome}</p><p><strong>Data:</strong> ${new Date(data.DataRequisicao).toLocaleString('pt-BR')}</p><p><strong>Tipo:</strong> ${data.Tipo}</p><p><strong>Status:</strong> ${data.Status}</p><p><strong>Itens:</strong></p><ul class="list-disc list-inside">${itensStr}</ul>`;
         } else {
-             document.getElementById('modal-content').innerHTML = Object.entries(data).map(([key, value]) => {
+            contentHTML = Object.entries(data).map(([key, value]) => {
                 if (ignoredKeys.includes(key)) return '';
                 let label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
                 let displayValue = value || 'N/A';
@@ -1547,11 +1407,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 return `<p><strong>${label}:</strong> ${displayValue}</p>`;
             }).join('');
         }
-       
+        
+        document.getElementById('modal-content').innerHTML = contentHTML;
         document.getElementById('details-modal-actions').style.display = 'none';
         showModal(allElements.detailsModal);
     }
-    
+
     function updateAllDashboards(){updateFinanceDashboard(); updateVisitsDashboard();}
     function setDateFilter(e, p) { const period=e.target.dataset.period; document.querySelectorAll(`.dash-${p}-quick-filter`).forEach(b=>b.classList.remove('filter-btn-active')); e.target.classList.add('filter-btn-active'); const endI=document.getElementById(`dash-${p}-end`), startI=document.getElementById(`dash-${p}-start`), today=new Date(); endI.valueAsDate=today; let sD=new Date(); if(period==='week')sD.setDate(today.getDate()-today.getDay()); else if(period==='month')sD=new Date(today.getFullYear(),today.getMonth(),1); else if(period==='year')sD=new Date(today.getFullYear(),0,1); startI.valueAsDate=sD; if(p==='fin')updateFinanceDashboard(); else updateVisitsDashboard();}
     function updateFinanceDashboard() { const s=document.getElementById('dash-fin-status').value, st=document.getElementById('dash-fin-start').value, e=document.getElementById('dash-fin-end').value; const fR=receitasData.filter(r=>(!s||r.Status===s)&&(!st||r.Vencimento>=st)&&(!e||r.Vencimento<=e)); const fC=custosData.filter(c=>(!s||c.Status===s)&&(!st||c.Vencimento>=st)&&(!e||c.Vencimento<=e)); const tR=fR.reduce((sum,r)=>sum+(r.Valor||0),0), tC=fC.reduce((sum,c)=>sum+(c.Valor||0),0), bal=tR-tC; const tRP=receitasData.filter(r=>r.Status==='Pendente'&&(!st||r.Vencimento>=st)&&(!e||r.Vencimento<=e)).reduce((sum,r)=>sum+(r.Valor||0),0); const tCP=custosData.filter(c=>c.Status==='Pendente'&&(!st||c.Vencimento>=st)&&(!e||c.Vencimento<=e)).reduce((sum,c)=>sum+(c.Valor||0),0); const f=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); document.getElementById('dash-revenue').textContent=f(tR); document.getElementById('dash-costs').textContent=f(tC); document.getElementById('dash-balance').textContent=f(bal); document.getElementById('dash-revenue-pending').textContent=f(tRP); document.getElementById('dash-costs-pending').textContent=f(tCP); document.getElementById('dash-balance').classList.toggle('text-green-500',bal>=0); document.getElementById('dash-balance').classList.toggle('text-red-500',bal<0); updateFinanceChart(fR,fC); }
@@ -1565,17 +1426,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function clearFilters(){document.getElementById('filter-start-date').value=''; document.getElementById('filter-end-date').value=''; document.getElementById('filter-consultor').value=''; document.getElementById('filter-cliente').value=''; document.getElementById('filter-status').value=''; renderAllVisits(visitsData);}
     function renderAllVisits(d=visitsData){renderKanbanBoard(d.filter(v=>v.Status!=='Remarcada')); renderVisitsList(d); renderCalendarEvents(d);}
     
-    function renderKanbanBoard(d){
-        const c={'agendada':[],'em-andamento':[],'concluida':[]}; 
-        d.forEach(v=>{
-            const sK = v.Status.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(' ','-');
-            if(c[sK]) { c[sK].push(createKanbanCard(v)); }
-        });
-        document.getElementById('kanban-agendada').innerHTML=c.agendada.join(''); 
-        document.getElementById('kanban-em-andamento').innerHTML=c['em-andamento'].join(''); 
-        document.getElementById('kanban-concluida').innerHTML=c.concluida.join('');
-    }
-
+    function renderKanbanBoard(d){ const c={'agendada':[],'em-andamento':[],'concluida':[]}; d.forEach(v=>{ const sK = v.Status.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(' ','-'); if(c[sK]) { c[sK].push(createKanbanCard(v)); } }); document.getElementById('kanban-agendada').innerHTML=c.agendada.join(''); document.getElementById('kanban-em-andamento').innerHTML=c['em-andamento'].join(''); document.getElementById('kanban-concluida').innerHTML=c.concluida.join(''); }
     function createKanbanCard(v){const{color,label}=sConf[v.Status] || {color: 'gray', label: v.Status}; const dF=new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR'); const rS=v.Remarcada&&v.Status==='Agendada'?'<span class="text-xs ml-2 font-semibold text-purple-800">(Remarcado)</span>':''; let acts=''; if(v.Status==='Agendada')acts=`<button data-id="${v.Id}" class="iniciar-visita-btn w-full bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Iniciar</button><button data-id="${v.Id}" class="remarcar-visita-btn w-full mt-2 bg-gray-500 text-white px-3 py-1 rounded-md text-sm hover:bg-gray-600">Remarcar</button>`; else if(v.Status==='Em Andamento')acts=`<button data-id="${v.Id}" class="encerrar-visita-btn w-full bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">Encerrar</button>`; let dur=''; if(v.Status==='Concluída'&&v.CheckIn&&v.CheckOut){const diff=(new Date(v.CheckOut)-new Date(v.CheckIn))/60000; dur=`<div class="text-xs text-center font-bold text-brand-gold mt-2 p-1 bg-yellow-100 dark:bg-yellow-900 rounded">Duração: ${Math.floor(diff/60)}h ${Math.round(diff%60)}min</div>`;} return`<div class="kanban-card bg-white dark:bg-gray-700 p-4 rounded-lg shadow" data-id="${v.Id}"><div class="flex justify-between items-start mb-2"><h4 class="font-bold text-gray-800 dark:text-white">${v.cliente_nome}${rS}</h4><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}</span></div><p class="text-sm text-gray-600 dark:text-gray-300">${v.consultor_nome}</p><p class="text-sm text-gray-600 dark:text-gray-300">${dF} - ${v.HoraInicio}</p>${dur}<div class="mt-4 border-t pt-2 dark:border-gray-600 visit-actions">${acts}</div></div>`;}
     function renderVisitsList(d){const tB=document.getElementById('visitas-table-body'); tB.innerHTML=''; d.forEach(v=>{const{color,label}=sConf[v.Status] || {color: 'gray', label: v.Status}; const s=label+(v.Remarcada&&v.Status==='Agendada'?' (Remarcado)':''); const r=tB.insertRow(); r.className='bg-white border-b dark:bg-gray-800 dark:border-gray-700'; r.dataset.id=v.Id; r.innerHTML=`<td class="px-6 py-4">${v.cliente_nome}</td><td class="px-6 py-4">${v.consultor_nome}</td><td class="px-6 py-4">${new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR')}</td><td class="px-6 py-4">${v.HoraInicio} - ${v.HoraFim}</td><td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${s}</span></td><td class="px-6 py-4 space-x-2"><button class="table-details-btn text-gray-500" data-type="visita"><i class="fas fa-eye"></i></button><button class="table-edit-btn text-blue-500" data-type="visita"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500" data-type="visita"><i class="fas fa-trash"></i></button></td>`;});}
     function renderCalendarEvents(d){if(!calendar)return; calendar.removeAllEvents(); calendar.addEventSource(d.map(v=>({id:v.Id, title:`${v.cliente_nome} (${v.consultor_nome})`, start:`${v.DataVisita}T${v.HoraInicio}`, end:`${v.DataVisita}T${v.HoraFim}`, color:(sConf[v.Status] || {color:'gray'}).color})));}
@@ -1585,260 +1436,200 @@ document.addEventListener('DOMContentLoaded', function() {
     function openVisitaModal(v=null){const f=allElements.visitaForm; f.reset(); document.getElementById('is-rescheduling').value='false'; if(v){document.getElementById('visita-modal-title').textContent="Editar Visita"; f.querySelector('#visita-id').value=v.Id; f.querySelector('#visita-consultor').value=v.ConsultorId; f.querySelector('#visita-cliente').value=v.ClienteId; f.querySelector('#visita-data').value=v.DataVisita; f.querySelector('#visita-inicio').value=v.HoraInicio; f.querySelector('#visita-fim').value=v.HoraFim; f.querySelector('#visita-descricao').value=v.Descricao;}else{document.getElementById('visita-modal-title').textContent="Agendar Nova Visita"; f.querySelector('#visita-id').value=''; f.querySelector('#visita-consultor').value=loggedInUser.Id;} showModal(allElements.visitaFormModal);}
     async function checkOverdueVisits(){const t=new Date(); t.setHours(0,0,0,0); const oD=visitsData.filter(v=>v.Status==='Agendada'&&new Date(v.DataVisita+'T23:59:59')<t); if(oD.length>0){showLoadingOverlay('Atualizando status...'); await Promise.all(oD.map(v=>nocoFetch(`Visitas/${v.Id}`,{method:'PATCH',body:JSON.stringify({Status:'Remarcada'})}))); await fetchVisitas(); applyFilters(); hideLoadingOverlay();}}
     function initializeCalendar(){if(document.getElementById('calendar')&&typeof FullCalendar!=='undefined'){calendar=new FullCalendar.Calendar(document.getElementById('calendar'),{initialView:'dayGridMonth',locale:'pt-br',buttonText:{today:'Hoje',month:'Mês',week:'Semana',list:'Lista'},headerToolbar:{left:'prev,next today',center:'title',right:'dayGridMonth,timeGridWeek,listWeek'},});}}
-    function openRequisicaoModal(r=null){}
-    function renderRequisicoes(d=requisicoesData){ }
-    function renderItensDeRequisicao(){}
-    function applyRequisicaoFilters(){}
-    function clearRequisicaoFilters(){}
+    
+    // --- Funções da Tela de Requisição ---
+    function openRequisicaoModal(r=null) {
+        const form = allElements.requisicaoForm;
+        form.reset();
+        form.querySelector('#requisicao-id').value = '';
+        form.querySelector('#requisicao-data').value = new Date().toLocaleString('pt-BR');
+        form.querySelector('#requisicao-consultor').value = loggedInUser.Id;
+        toggleRequisicaoFields(); // Limpa os campos de itens
+        showModal(allElements.requisicaoFormModal);
+    }
+
+    function toggleRequisicaoFields() {
+        const tipo = document.getElementById('requisicao-tipo').value;
+        const episFields = document.getElementById('epis-fields');
+        const consumoFields = document.getElementById('consumo-fields');
+        const consumoContainer = document.getElementById('consumo-categories-container');
+
+        episFields.classList.add('hidden');
+        consumoFields.classList.add('hidden');
+        consumoContainer.innerHTML = '';
+
+        if (tipo === 'EPIs') {
+            const epiSelect = document.getElementById('epis-item');
+            epiSelect.innerHTML = itemData.epis.map(epi => `<option value="${epi.Id}">${epi.Nome}</option>`).join('');
+            episFields.classList.remove('hidden');
+        } else if (tipo === 'Consumo') {
+            Object.keys(itemData.consumo).sort().forEach(category => {
+                const items = itemData.consumo[category];
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'p-3 border rounded-lg dark:border-gray-600';
+                let itemsHTML = `<h4 class="font-semibold mb-2 text-gray-800 dark:text-gray-200">${category}</h4>`;
+                itemsHTML += '<div class="grid grid-cols-1 md:grid-cols-2 gap-2">';
+                items.forEach(item => {
+                    itemsHTML += `
+                        <div class="flex items-center justify-between">
+                            <label for="item-qtd-${item.id}" class="text-sm">${item.nome}</label>
+                            <input type="number" id="item-qtd-${item.id}" data-item-id="${item.id}" class="consumo-item-qtd bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-20 p-1.5 dark:bg-gray-700 dark:border-gray-600" min="0" placeholder="0">
+                        </div>
+                    `;
+                });
+                itemsHTML += '</div>';
+                categoryDiv.innerHTML = itemsHTML;
+                consumoContainer.appendChild(categoryDiv);
+            });
+            consumoFields.classList.remove('hidden');
+        }
+    }
+    
+    function renderRequisicoes(data = requisicoesData) {
+        const tbody = document.getElementById('requisicoes-table-body');
+        if (!tbody) return;
+        tbody.innerHTML = data.map(r => {
+            let itensStr = 'N/A';
+            if (r.ItensDaRequisicao && r.ItensDaRequisicao.length > 0) {
+                itensStr = r.ItensDaRequisicao.map(itemJoin => {
+                    const itemInfo = allItems.find(i => i.Id === itemJoin['ItensDoCatalogo-id']);
+                    return `${itemInfo ? itemInfo.Nome : 'Item desconhecido'} (${itemJoin.Quantidade})`;
+                }).join(', ');
+            }
+            return `
+                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}">
+                    <td class="px-6 py-4">${r.Tipo}</td>
+                    <td class="px-6 py-4 text-xs">${itensStr}</td>
+                    <td class="px-6 py-4">${r.consultor_nome}</td>
+                    <td class="px-6 py-4">${new Date(r.DataRequisicao).toLocaleString('pt-BR')}</td>
+                    <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.Status==='Entregue'?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">${r.Status}</span></td>
+                    <td class="px-6 py-4 space-x-2">
+                        <button class="table-details-btn text-gray-500" data-type="requisicao"><i class="fas fa-eye"></i></button>
+                        <button class="table-delete-btn text-red-500" data-type="requisicao"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderItensDeRequisicao(filterCategory = 'Todos') {
+        const container = document.getElementById('item-management-container');
+        if(!container) return;
+        container.innerHTML = '';
+        const categoriesToRender = (filterCategory === 'Todos') ? Object.keys(itemData.consumo).sort() : [filterCategory];
+
+        categoriesToRender.forEach(category => {
+            if (!itemData.consumo[category] && category !== 'Todos') return;
+
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = 'p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md';
+            categoryDiv.dataset.category = category;
+
+            const header = document.createElement('div');
+            header.className = 'flex justify-between items-center mb-4';
+            header.innerHTML = `<h3 class="text-xl font-bold text-gray-800 dark:text-white">${category}</h3><button class="add-item-btn bg-brand-gold text-white px-3 py-1 rounded-md text-sm hover:bg-brand-gold-dark" data-category="${category}">Adicionar Item</button>`;
+            categoryDiv.appendChild(header);
+
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4';
+            
+            const items = itemData.consumo[category] || [];
+            if (items.length > 0) {
+                grid.innerHTML = items.map(item => `
+                    <div class="item-card border dark:border-gray-700 rounded-lg p-2 text-center flex flex-col justify-between" data-id="${item.id}" data-category="${category}">
+                        <img src="${item.foto || 'https://placehold.co/100x100/e2e8f0/cbd5e0?text=Item'}" alt="${item.nome}" class="w-full h-24 object-contain mb-2 rounded">
+                        <p class="text-sm font-medium flex-grow">${item.nome}</p>
+                        <div class="mt-2 flex justify-center space-x-2">
+                            <button class="item-action-btn edit-item-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button>
+                            <button class="item-action-btn delete-item-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                grid.innerHTML = '<p class="text-gray-500 col-span-full">Nenhum item nesta categoria.</p>';
+            }
+            categoryDiv.appendChild(grid);
+            container.appendChild(categoryDiv);
+        });
+    }
+
+    function renderCategoryFilters(){
+        const container = document.getElementById('item-category-filters');
+        if(!container) return;
+        const categories = Object.keys(itemData.consumo).sort();
+        container.innerHTML = '<button class="item-category-filter-btn filter-btn-active px-3 py-1 rounded-md shadow-sm" data-category="Todos">Todas</button>';
+        categories.forEach(cat => {
+            container.innerHTML += `<button class="item-category-filter-btn px-3 py-1 rounded-md" data-category="${cat}">${cat}</button>`;
+        });
+    }
+
+    function handleCategoryFilterClick(btn) {
+        document.querySelectorAll('.item-category-filter-btn').forEach(b => b.classList.remove('filter-btn-active'));
+        btn.classList.add('filter-btn-active');
+        renderItensDeRequisicao(btn.dataset.category);
+    }
+    
+    function handleAddNewCategory() {
+        const categoryName = prompt('Digite o nome da nova categoria:');
+        if (categoryName && categoryName.trim() !== '') {
+            const trimmedName = categoryName.trim();
+            if (!itemData.consumo[trimmedName]) {
+                itemData.consumo[trimmedName] = [];
+                renderCategoryFilters();
+                renderItensDeRequisicao();
+                // Opcional: filtrar pela categoria recém-criada
+                const newFilterBtn = document.querySelector(`.item-category-filter-btn[data-category="${trimmedName}"]`);
+                if(newFilterBtn) handleCategoryFilterClick(newFilterBtn);
+            } else {
+                alert('Esta categoria já existe.');
+            }
+        }
+    }
+    
+    function openItemModal(category, item = null) {
+        const form = allElements.itemForm;
+        form.reset();
+        const modalTitle = document.getElementById('item-modal-title');
+        const preview = document.getElementById('item-foto-preview');
+        preview.classList.add('hidden');
+        preview.src = '';
+        
+        document.getElementById('item-category-name').value = category;
+
+        if (item) {
+            modalTitle.textContent = 'Editar Item';
+            form.dataset.id = item.id;
+            document.getElementById('item-name').value = item.Nome || item.nome;
+            if (item.Foto && item.Foto[0]?.signedPath) {
+                preview.src = `${NocoDB_BaseURL}/${item.Foto[0].signedPath}`;
+                preview.classList.remove('hidden');
+            } else if (item.foto) {
+                 preview.src = item.foto;
+                 preview.classList.remove('hidden');
+            }
+        } else {
+            modalTitle.textContent = 'Novo Item';
+            delete form.dataset.id;
+        }
+        showModal(allElements.itemFormModal);
+    }
+
+    function applyRequisicaoFilters(){ const sD=document.getElementById('filter-req-start-date').value,eD=document.getElementById('filter-req-end-date').value,cId=document.getElementById('filter-req-consultor').value,tipo=document.getElementById('filter-req-tipo').value,status=document.getElementById('filter-req-status').value,item=document.getElementById('filter-req-item').value.toLowerCase(); let filtered=requisicoesData.filter(r=>(!sD||r.DataRequisicao>=sD)&&(!eD||r.DataRequisicao<=eD)&&(!cId||r['Consultores-id']==cId)&&(!tipo||r.Tipo===tipo)&&(!status||r.Status===status)); if(item){filtered=filtered.filter(r=>{return r.ItensDaRequisicao.some(it=>{const itemInfo=allItems.find(i=>i.Id===it['ItensDoCatalogo-id']); return itemInfo&&itemInfo.Nome.toLowerCase().includes(item);});});} renderRequisicoes(filtered); }
+    function clearRequisicaoFilters(){ document.getElementById('requisicoes-filters').querySelectorAll('input, select').forEach(el => el.value = ''); applyRequisicaoFilters(); }
     
     function applyAndRenderFerias(){ const nome = document.getElementById('ferias-filter-name').value.toLowerCase(); const inicio = document.getElementById('ferias-filter-start').value; const fim = document.getElementById('ferias-filter-end').value; const filtered = feriasData.filter(f => (!nome || f.consultor_nome.toLowerCase().includes(nome)) && (!inicio || f.DataInicio >= inicio) && (!fim || f.DataRetorno <= fim) ); renderFerias(filtered); }
     function applyAndRenderAtestados(){ const nome = document.getElementById('atestados-filter-name').value.toLowerCase(); const inicio = document.getElementById('atestados-filter-start').value; const fim = document.getElementById('atestados-filter-end').value; const filtered = atestadosData.filter(a => (!nome || a.consultor_nome.toLowerCase().includes(nome)) && (!inicio || a.DataInicio >= inicio) && (!fim || a.DataRetorno <= fim) ); renderAtestados(filtered); }
     function applyAndRenderEpis(){ const nome = document.getElementById('epis-filter-name').value.toLowerCase(); const inicio = document.getElementById('epis-filter-start').value; const fim = document.getElementById('epis-filter-end').value; const filtered = episEntreguesData.filter(e => (!nome || e.consultor_nome.toLowerCase().includes(nome)) && (!inicio || e.DataEntrega >= inicio) && (!fim || e.DataEntrega <= fim) ); renderEpis(filtered); }
     function applyAndRenderAtivos(){ const nome = document.getElementById('ativos-filter-name').value.toLowerCase(); const inicio = document.getElementById('ativos-filter-start').value; const fim = document.getElementById('ativos-filter-end').value; const filtered = ativosData.filter(a => (!nome || a.consultor_nome.toLowerCase().includes(nome)) && (!inicio || a.DataEntrega >= inicio) && (!fim || a.DataEntrega <= fim) ); renderAtivos(filtered); }
-
     function applyAndRenderReceitas(){const s=document.getElementById('filter-receita-start-date').value,e=document.getElementById('filter-receita-end-date').value,c=document.getElementById('filter-receita-cliente').value,st=document.getElementById('filter-receita-status').value; const f=receitasData.filter(r=>(!s||r.Vencimento>=s)&&(!e||r.Vencimento<=e)&&(!c||r.ClienteId==c)&&(!st||r.Status===st)); renderReceitas(f);}
     function applyAndRenderCustos(){const s=document.getElementById('filter-custo-start-date').value,e=document.getElementById('filter-custo-end-date').value,cr=document.getElementById('filter-custo-credor').value.toLowerCase(),st=document.getElementById('filter-custo-status').value; const f=custosData.filter(c=>(!s||c.Vencimento>=s)&&(!e||c.Vencimento<=e)&&(!cr||c.Credor.toLowerCase().includes(cr))&&(!st||c.Status===st)); renderCustos(f);}
     
-    function generateInsights(){
-        const f = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        const insightsContent = document.getElementById('insights-content');
-        let insightsHTML = '';
-
-        const totalReceitas = receitasData.reduce((sum, r) => sum + (r.Valor || 0), 0);
-        const totalCustos = custosData.reduce((sum, c) => sum + (c.Valor || 0), 0);
-        const balanco = totalReceitas - totalCustos;
-        insightsHTML += `<p class="p-2 rounded-lg ${balanco >= 0 ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'}"><strong>Balanço Financeiro Geral:</strong> <span class="font-bold ${balanco >= 0 ? 'text-green-600 dark:text-green-300' : 'text-red-600 dark:text-red-300'}">${f(balanco)}</span>.</p>`;
-
-        const receitasPendentes = receitasData.filter(r => r.Status === 'Pendente').reduce((sum, r) => sum + r.Valor, 0);
-        if (receitasPendentes > 0) {
-            insightsHTML += `<p class="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900"><strong>Atenção:</strong> Existem <strong>${f(receitasPendentes)}</strong> em receitas pendentes.</p>`;
-        }
-
-        const visitasConcluidas = visitsData.filter(v => v.Status === 'Concluída');
-        if (visitasConcluidas.length > 0) {
-            const stats = visitasConcluidas.reduce((acc, v) => {
-                acc[v.consultor_nome] = (acc[v.consultor_nome] || 0) + calculateDuration(v);
-                return acc;
-            }, {});
-            const [topConsultor, topHoras] = Object.entries(stats).sort((a, b) => b[1] - a[1])[0] || [null, 0];
-            if (topConsultor) {
-                insightsHTML += `<p class="p-2 rounded-lg bg-blue-100 dark:bg-blue-900"><strong>Destaque de Produtividade:</strong> O consultor <strong>${topConsultor}</strong> foi o que mais registrou horas (${Math.floor(topHoras/60)}h ${topHoras%60}m).</p>`;
-            }
-        } else {
-             insightsHTML += `<p class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700">Nenhuma visita concluída para análise de produtividade.</p>`;
-        }
-        
-        const totalVisitasAgendadas = visitsData.filter(v => v.Status === 'Agendada').length;
-        if(totalVisitasAgendadas > 0){
-            insightsHTML += `<p class="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900">Existem <strong>${totalVisitasAgendadas}</strong> visitas agendadas no sistema.</p>`;
-        }
-
-        insightsContent.innerHTML = insightsHTML || '<p>Não há dados suficientes para gerar insights.</p>';
-    }
-    
-    function toggleReportSubtype(){
-        const reportType = document.getElementById('report-type').value;
-        const visitsFilters = document.getElementById('report-visits-filters');
-        
-        // Simula a existência de um container de filtros financeiros para consistência
-        let financeFilters = document.getElementById('report-finance-filters');
-        if (!financeFilters) {
-            financeFilters = document.createElement('div');
-            financeFilters.id = 'report-finance-filters';
-            visitsFilters.parentElement.insertBefore(financeFilters, visitsFilters);
-            financeFilters.innerHTML = `
-                <div>
-                    <label for="report-finance-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
-                    <select id="report-finance-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <option value="">Todos</option>
-                        <option value="Pago">Pago</option>
-                        <option value="Pendente">Pendente</option>
-                    </select>
-                </div>`;
-        }
-
-        let visitsStatusFilter = document.getElementById('report-visits-status');
-        if (!visitsStatusFilter) {
-            const statusDiv = document.createElement('div');
-            visitsFilters.appendChild(statusDiv);
-            statusDiv.innerHTML = `
-                <label for="report-visits-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status da Visita</label>
-                <select id="report-visits-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                    <option value="">Todos</option>
-                    <option value="Agendada">Agendada</option>
-                    <option value="Em Andamento">Em Andamento</option>
-                    <option value="Concluída">Concluída</option>
-                    <option value="Remarcada">Remarcada</option>
-                </select>
-            `;
-        }
-
-        document.getElementById('report-subtype').parentElement.style.display = 'none';
-        
-        if (reportType === 'visitas') {
-            visitsFilters.classList.remove('hidden');
-            financeFilters.classList.add('hidden');
-        } else {
-            visitsFilters.classList.add('hidden');
-            financeFilters.classList.remove('hidden');
-        }
-    }
-
-    function generatePdfReport(e){
-        e.preventDefault();
-        const startDate = document.getElementById('report-start-date').value;
-        const endDate = document.getElementById('report-end-date').value;
-
-        if (!startDate || !endDate) {
-            alert('Por favor, preencha as datas de início e fim do período para gerar o relatório.');
-            return;
-        }
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-        
-        const type = document.getElementById('report-type').value;
-        
-        doc.setFontSize(18);
-        doc.text(`Relatório de ${type.charAt(0).toUpperCase() + type.slice(1)}`, 14, 22);
-        doc.setFontSize(11);
-        doc.setTextColor(100);
-        doc.text(`Período: ${new Date(startDate+'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(endDate+'T00:00:00').toLocaleDateString('pt-BR')}`, 14, 30);
-
-        if (type === 'financeiro') {
-            const status = document.getElementById('report-finance-status').value;
-            generateFinanceReport(doc, { startDate, endDate, status });
-        } else if (type === 'visitas') {
-            const consultorId = document.getElementById('report-consultor').value;
-            const clienteId = document.getElementById('report-cliente').value;
-            const status = document.getElementById('report-visits-status').value;
-            generateVisitReport(doc, { startDate, endDate, consultorId, clienteId, status });
-        }
-        
-        doc.save(`relatorio_${type}_${new Date().toISOString().slice(0,10)}.pdf`);
-        hideModal(allElements.reportModal);
-    }
-    
-    function generateFinanceReport(doc, filters) {
-        const { startDate, endDate, status } = filters;
-        const f = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        let finalY = 40;
-
-        const baseReceitas = receitasData.filter(r => (!startDate || r.Vencimento >= startDate) && (!endDate || r.Vencimento <= endDate));
-        const baseCustos = custosData.filter(c => (!startDate || c.Vencimento >= startDate) && (!endDate || c.Vencimento <= endDate));
-
-        const drawTable = (title, head, body) => {
-            if (body.length > 0) {
-                doc.setFontSize(12);
-                doc.text(title, 14, finalY);
-                finalY += 2;
-                doc.autoTable({
-                    startY: finalY,
-                    head: [head],
-                    body: body,
-                    theme: 'striped',
-                    headStyles: { fillColor: [55, 55, 55] }
-                });
-                finalY = doc.autoTable.previous.finalY + 10;
-            }
-        };
-
-        if (status === "" || status === "Todos") {
-            const receitasPagas = baseReceitas.filter(r => r.Status === 'Pago');
-            const receitasPendentes = baseReceitas.filter(r => r.Status === 'Pendente');
-            const custosPagos = baseCustos.filter(c => c.Status === 'Pago');
-            const custosPendentes = baseCustos.filter(c => c.Status === 'Pendente');
-            
-            drawTable('Receitas Pagas', ['Cliente', 'Vencimento', 'Valor'], receitasPagas.map(r => [r.cliente_nome, new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)]));
-            drawTable('Custos Pagos', ['Credor', 'Vencimento', 'Valor'], custosPagos.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)]));
-            drawTable('Receitas Pendentes', ['Cliente', 'Vencimento', 'Valor'], receitasPendentes.map(r => [r.cliente_nome, new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)]));
-            drawTable('Custos Pendentes', ['Credor', 'Vencimento', 'Valor'], custosPendentes.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)]));
-        } else {
-            const filteredReceitas = baseReceitas.filter(r => r.Status === status);
-            const filteredCustos = baseCustos.filter(c => c.Status === status);
-            drawTable(`Receitas com Status: ${status}`, ['Cliente', 'Vencimento', 'Valor'], filteredReceitas.map(r => [r.cliente_nome, new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)]));
-            drawTable(`Custos com Status: ${status}`, ['Credor', 'Vencimento', 'Valor'], filteredCustos.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)]));
-        }
-
-        if (finalY > 250) doc.addPage();
-        const totalReceitas = baseReceitas.reduce((sum, r) => sum + r.Valor, 0);
-        const totalCustos = baseCustos.reduce((sum, c) => sum + c.Valor, 0);
-        const balanco = totalReceitas - totalCustos;
-        
-        doc.setFontSize(12);
-        doc.text('Resumo Financeiro do Período', 14, finalY);
-        doc.setFontSize(10);
-        doc.text(`Total de Receitas: ${f(totalReceitas)}`, 14, finalY + 7);
-        doc.text(`Total de Custos: ${f(totalCustos)}`, 14, finalY + 14);
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text(`Balanço Final: ${f(balanco)}`, 14, finalY + 21);
-    }
-
-    function generateVisitReport(doc, filters) {
-        const { startDate, endDate, consultorId, clienteId, status } = filters;
-        let finalY = 40;
-
-        let filteredVisitas = visitsData.filter(v => 
-            (!startDate || v.DataVisita >= startDate) && 
-            (!endDate || v.DataVisita <= endDate) &&
-            (!consultorId || v.ConsultorId == consultorId) &&
-            (!clienteId || v.ClienteId == clienteId)
-        );
-
-        if (consultorId) { const c = consultoresData.find(c => c.Id == consultorId); if(c) doc.text(`Consultor: ${c.Nome}`, 14, finalY); finalY += 8;}
-        if (clienteId) { const c = clientesData.find(c => c.Id == clienteId); if(c) doc.text(`Cliente: ${c.Nome}`, 14, finalY); finalY += 8;}
-        if (finalY > 40) finalY += 4;
-        
-        const drawTable = (title, data) => {
-            if (data.length > 0) {
-                doc.setFontSize(12);
-                doc.text(title, 14, finalY);
-                finalY += 2;
-                doc.autoTable({
-                    startY: finalY,
-                    head: [['Cliente', 'Consultor', 'Data', 'Horário']],
-                    body: data.map(v => [ v.cliente_nome, v.consultor_nome, new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR'), `${v.HoraInicio} - ${v.HoraFim}`]),
-                    theme: 'striped',
-                    headStyles: { fillColor: [55, 55, 55] }
-                });
-                finalY = doc.autoTable.previous.finalY + 10;
-            }
-        };
-        
-        if (!status || status === "Todos") {
-            const statusGroups = ['Agendada', 'Em Andamento', 'Concluída', 'Remarcada'];
-            statusGroups.forEach(s => {
-                const groupData = filteredVisitas.filter(v => v.Status === s);
-                drawTable(`Visitas ${s}s`, groupData);
-            });
-        } else {
-            filteredVisitas = filteredVisitas.filter(v => v.Status === status);
-            drawTable(`Visitas com Status: ${status}`, filteredVisitas);
-        }
-
-        if (filteredVisitas.length === 0) {
-             doc.text('Nenhuma visita encontrada para os filtros selecionados.', 14, finalY);
-             return;
-        }
-
-        if (finalY > 250) doc.addPage();
-        const totalMinutos = filteredVisitas.filter(v => v.Status === 'Concluída').reduce((sum, v) => sum + calculateDuration(v), 0);
-        
-        doc.setFontSize(12);
-        doc.text('Resumo das Visitas', 14, finalY);
-        doc.setFontSize(10);
-        doc.text(`Total de Visitas no Relatório: ${filteredVisitas.length}`, 14, finalY + 7);
-        doc.text(`Total de Horas Concluídas: ${Math.floor(totalMinutos/60)}h ${Math.round(totalMinutos%60)}m`, 14, finalY + 14);
-    }
-    
-    function handleTableDelete(button) {
-        const row = button.closest('tr');
-        if (!row) return;
-        const id = parseInt(row.dataset.id);
-        const type = button.dataset.type;
-        if (type) { activeDeleteItem = { id, type, element: row }; showModal(allElements.deleteConfirmModal); }
-    }
+    function generateInsights(){ const f = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); const insightsContent = document.getElementById('insights-content'); let insightsHTML = ''; const totalReceitas = receitasData.reduce((sum, r) => sum + (r.Valor || 0), 0); const totalCustos = custosData.reduce((sum, c) => sum + (c.Valor || 0), 0); const balanco = totalReceitas - totalCustos; insightsHTML += `<p class="p-2 rounded-lg ${balanco >= 0 ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'}"><strong>Balanço Financeiro Geral:</strong> <span class="font-bold ${balanco >= 0 ? 'text-green-600 dark:text-green-300' : 'text-red-600 dark:text-red-300'}">${f(balanco)}</span>.</p>`; const receitasPendentes = receitasData.filter(r => r.Status === 'Pendente').reduce((sum, r) => sum + r.Valor, 0); if (receitasPendentes > 0) { insightsHTML += `<p class="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900"><strong>Atenção:</strong> Existem <strong>${f(receitasPendentes)}</strong> em receitas pendentes.</p>`; } const visitasConcluidas = visitsData.filter(v => v.Status === 'Concluída'); if (visitasConcluidas.length > 0) { const stats = visitasConcluidas.reduce((acc, v) => { acc[v.consultor_nome] = (acc[v.consultor_nome] || 0) + calculateDuration(v); return acc; }, {}); const [topConsultor, topHoras] = Object.entries(stats).sort((a, b) => b[1] - a[1])[0] || [null, 0]; if (topConsultor) { insightsHTML += `<p class="p-2 rounded-lg bg-blue-100 dark:bg-blue-900"><strong>Destaque de Produtividade:</strong> O consultor <strong>${topConsultor}</strong> foi o que mais registrou horas (${Math.floor(topHoras/60)}h ${topHoras%60}m).</p>`; } } else { insightsHTML += `<p class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700">Nenhuma visita concluída para análise de produtividade.</p>`; } const totalVisitasAgendadas = visitsData.filter(v => v.Status === 'Agendada').length; if(totalVisitasAgendadas > 0){ insightsHTML += `<p class="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900">Existem <strong>${totalVisitasAgendadas}</strong> visitas agendadas no sistema.</p>`; } insightsContent.innerHTML = insightsHTML || '<p>Não há dados suficientes para gerar insights.</p>'; }
+    function toggleReportSubtype(){ const reportType = document.getElementById('report-type').value; const visitsFilters = document.getElementById('report-visits-filters'); let financeFilters = document.getElementById('report-finance-filters'); if (!financeFilters) { financeFilters = document.createElement('div'); financeFilters.id = 'report-finance-filters'; visitsFilters.parentElement.insertBefore(financeFilters, visitsFilters); financeFilters.innerHTML = ` <div> <label for="report-finance-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label> <select id="report-finance-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"> <option value="">Todos</option> <option value="Pago">Pago</option> <option value="Pendente">Pendente</option> </select> </div>`; } let visitsStatusFilter = document.getElementById('report-visits-status'); if (!visitsStatusFilter) { const statusDiv = document.createElement('div'); visitsFilters.appendChild(statusDiv); statusDiv.innerHTML = ` <label for="report-visits-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status da Visita</label> <select id="report-visits-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"> <option value="">Todos</option> <option value="Agendada">Agendada</option> <option value="Em Andamento">Em Andamento</option> <option value="Concluída">Concluída</option> <option value="Remarcada">Remarcada</option> </select> `; } document.getElementById('report-subtype').parentElement.style.display = 'none'; if (reportType === 'visitas') { visitsFilters.classList.remove('hidden'); financeFilters.classList.add('hidden'); } else { visitsFilters.classList.add('hidden'); financeFilters.classList.remove('hidden'); } }
+    function generatePdfReport(e){ e.preventDefault(); const startDate = document.getElementById('report-start-date').value; const endDate = document.getElementById('report-end-date').value; if (!startDate || !endDate) { alert('Por favor, preencha as datas de início e fim do período para gerar o relatório.'); return; } const { jsPDF } = window.jspdf; const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' }); const type = document.getElementById('report-type').value; doc.setFontSize(18); doc.text(`Relatório de ${type.charAt(0).toUpperCase() + type.slice(1)}`, 14, 22); doc.setFontSize(11); doc.setTextColor(100); doc.text(`Período: ${new Date(startDate+'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(endDate+'T00:00:00').toLocaleDateString('pt-BR')}`, 14, 30); if (type === 'financeiro') { const status = document.getElementById('report-finance-status').value; generateFinanceReport(doc, { startDate, endDate, status }); } else if (type === 'visitas') { const consultorId = document.getElementById('report-consultor').value; const clienteId = document.getElementById('report-cliente').value; const status = document.getElementById('report-visits-status').value; generateVisitReport(doc, { startDate, endDate, consultorId, clienteId, status }); } doc.save(`relatorio_${type}_${new Date().toISOString().slice(0,10)}.pdf`); hideModal(allElements.reportModal); }
+    function generateFinanceReport(doc, filters) { const { startDate, endDate, status } = filters; const f = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); let finalY = 40; const baseReceitas = receitasData.filter(r => (!startDate || r.Vencimento >= startDate) && (!endDate || r.Vencimento <= endDate)); const baseCustos = custosData.filter(c => (!startDate || c.Vencimento >= startDate) && (!endDate || c.Vencimento <= endDate)); const drawTable = (title, head, body) => { if (body.length > 0) { doc.setFontSize(12); doc.text(title, 14, finalY); finalY += 2; doc.autoTable({ startY: finalY, head: [head], body: body, theme: 'striped', headStyles: { fillColor: [55, 55, 55] } }); finalY = doc.autoTable.previous.finalY + 10; } }; if (status === "" || status === "Todos") { const receitasPagas = baseReceitas.filter(r => r.Status === 'Pago'); const receitasPendentes = baseReceitas.filter(r => r.Status === 'Pendente'); const custosPagos = baseCustos.filter(c => c.Status === 'Pago'); const custosPendentes = baseCustos.filter(c => c.Status === 'Pendente'); drawTable('Receitas Pagas', ['Cliente', 'Vencimento', 'Valor'], receitasPagas.map(r => [r.cliente_nome, new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)])); drawTable('Custos Pagos', ['Credor', 'Vencimento', 'Valor'], custosPagos.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)])); drawTable('Receitas Pendentes', ['Cliente', 'Vencimento', 'Valor'], receitasPendentes.map(r => [r.cliente_nome, new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)])); drawTable('Custos Pendentes', ['Credor', 'Vencimento', 'Valor'], custosPendentes.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)])); } else { const filteredReceitas = baseReceitas.filter(r => r.Status === status); const filteredCustos = baseCustos.filter(c => c.Status === status); drawTable(`Receitas com Status: ${status}`, ['Cliente', 'Vencimento', 'Valor'], filteredReceitas.map(r => [r.cliente_nome, new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)])); drawTable(`Custos com Status: ${status}`, ['Credor', 'Vencimento', 'Valor'], filteredCustos.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)])); } if (finalY > 250) doc.addPage(); const totalReceitas = baseReceitas.reduce((sum, r) => sum + r.Valor, 0); const totalCustos = baseCustos.reduce((sum, c) => sum + c.Valor, 0); const balanco = totalReceitas - totalCustos; doc.setFontSize(12); doc.text('Resumo Financeiro do Período', 14, finalY); doc.setFontSize(10); doc.text(`Total de Receitas: ${f(totalReceitas)}`, 14, finalY + 7); doc.text(`Total de Custos: ${f(totalCustos)}`, 14, finalY + 14); doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text(`Balanço Final: ${f(balanco)}`, 14, finalY + 21); }
+    function generateVisitReport(doc, filters) { const { startDate, endDate, consultorId, clienteId, status } = filters; let finalY = 40; let filteredVisitas = visitsData.filter(v => (!startDate || v.DataVisita >= startDate) && (!endDate || v.DataVisita <= endDate) && (!consultorId || v.ConsultorId == consultorId) && (!clienteId || v.ClienteId == clienteId) ); if (consultorId) { const c = consultoresData.find(c => c.Id == consultorId); if(c) doc.text(`Consultor: ${c.Nome}`, 14, finalY); finalY += 8;} if (clienteId) { const c = clientesData.find(c => c.Id == clienteId); if(c) doc.text(`Cliente: ${c.Nome}`, 14, finalY); finalY += 8;} if (finalY > 40) finalY += 4; const drawTable = (title, data) => { if (data.length > 0) { doc.setFontSize(12); doc.text(title, 14, finalY); finalY += 2; doc.autoTable({ startY: finalY, head: [['Cliente', 'Consultor', 'Data', 'Horário']], body: data.map(v => [ v.cliente_nome, v.consultor_nome, new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR'), `${v.HoraInicio} - ${v.HoraFim}`]), theme: 'striped', headStyles: { fillColor: [55, 55, 55] } }); finalY = doc.autoTable.previous.finalY + 10; } }; if (!status || status === "Todos") { const statusGroups = ['Agendada', 'Em Andamento', 'Concluída', 'Remarcada']; statusGroups.forEach(s => { const groupData = filteredVisitas.filter(v => v.Status === s); drawTable(`Visitas ${s}s`, groupData); }); } else { filteredVisitas = filteredVisitas.filter(v => v.Status === status); drawTable(`Visitas com Status: ${status}`, filteredVisitas); } if (filteredVisitas.length === 0) { doc.text('Nenhuma visita encontrada para os filtros selecionados.', 14, finalY); return; } if (finalY > 250) doc.addPage(); const totalMinutos = filteredVisitas.filter(v => v.Status === 'Concluída').reduce((sum, v) => sum + calculateDuration(v), 0); doc.setFontSize(12); doc.text('Resumo das Visitas', 14, finalY); doc.setFontSize(10); doc.text(`Total de Visitas no Relatório: ${filteredVisitas.length}`, 14, finalY + 7); doc.text(`Total de Horas Concluídas: ${Math.floor(totalMinutos/60)}h ${Math.round(totalMinutos%60)}m`, 14, finalY + 14); }
+    function handleTableDelete(button) { const row = button.closest('tr'); if (!row) return; const id = parseInt(row.dataset.id); const type = button.dataset.type; if (type) { activeDeleteItem = { id, type, element: row }; showModal(allElements.deleteConfirmModal); } }
 
     // --- Inicialização ---
     function initializeApp() {
@@ -1847,11 +1638,8 @@ document.addEventListener('DOMContentLoaded', function() {
         allElements.loginForm?.addEventListener('submit', handleLogin);
         document.body.addEventListener('click', handleGlobalClick);
         document.querySelectorAll('form').forEach(form => { 
-            if (form.id === 'report-form') {
-                form.addEventListener('submit', generatePdfReport);
-            } else if (form.id !== 'login-form') {
-                form.addEventListener('submit', handleFormSubmit);
-            }
+            if (form.id === 'report-form') { form.addEventListener('submit', generatePdfReport); } 
+            else if (form.id !== 'login-form') { form.addEventListener('submit', handleFormSubmit); }
         });
         document.getElementById('confirm-delete-btn')?.addEventListener('click', handleDelete);
         
@@ -1860,6 +1648,7 @@ document.addEventListener('DOMContentLoaded', function() {
         ['dash-fin-status', 'dash-fin-start', 'dash-fin-end'].forEach(id => document.getElementById(id)?.addEventListener('change', updateFinanceDashboard));
         ['dash-visit-start', 'dash-visit-end'].forEach(id => document.getElementById(id)?.addEventListener('change', updateVisitsDashboard));
         document.getElementById('report-type')?.addEventListener('change', toggleReportSubtype);
+        document.getElementById('requisicao-tipo')?.addEventListener('change', toggleRequisicaoFields);
         
         ['filter-receita-start-date', 'filter-receita-end-date', 'filter-receita-cliente', 'filter-receita-status'].forEach(id => document.getElementById(id)?.addEventListener('change', applyAndRenderReceitas));
         ['filter-custo-start-date', 'filter-custo-end-date', 'filter-custo-credor', 'filter-custo-status'].forEach(id => document.getElementById(id)?.addEventListener('change', applyAndRenderCustos));
