@@ -434,7 +434,7 @@ body {
                         <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
                             <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="requisicao-tabs">
                                 <li class="mr-2"><button class="requisicao-tab-btn inline-block p-4 border-b-2 rounded-t-lg border-brand-gold text-brand-gold" data-target="requisicoes-content">Requisições</button></li>
-                                <li class="mr-2"><button class="requisicao-tab-btn inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" data-target="itens-requisicao-content">Itens de Requisição</button></li>
+                                <li class="mr-2"><button class="requisicao-tab-btn inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" data-target="itens-requisicao-content">Catálogo de Itens</button></li>
                             </ul>
                         </div>
 
@@ -452,11 +452,9 @@ body {
                                     <label for="filter-req-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label>
                                     <select id="filter-req-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></select>
                                 </div>
-                                <div>
+                                <div style="display: none;">
                                     <label for="filter-req-tipo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo</label>
                                     <select id="filter-req-tipo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                        <option value="">Todos</option>
-                                        <option value="EPIs">EPIs</option>
                                         <option value="Consumo">Consumo</option>
                                     </select>
                                 </div>
@@ -503,7 +501,7 @@ body {
                                 <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-lg flex space-x-1" id="item-category-filters">
                                     <button class="item-category-filter-btn bg-white dark:bg-gray-800 px-3 py-1 rounded-md shadow-sm" data-category="Todos">Todas</button>
                                 </div>
-                                <button id="show-category-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Nova Categoria</button>
+                                <button id="show-new-item-btn" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Item</button>
                             </div>
                             <div id="item-management-container" class="space-y-6"></div>
                         </div>
@@ -794,43 +792,7 @@ body {
         <div class="w-full max-w-2xl p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate max-h-[90vh] flex flex-col">
             <h2 id="requisicao-modal-title" class="text-xl font-bold text-gray-900 dark:text-white mb-4">Nova Requisição</h2>
             <form id="requisicao-form" class="flex-grow overflow-y-auto">
-                <input type="hidden" id="requisicao-id">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label for="requisicao-tipo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo de Requisição</label>
-                        <select id="requisicao-tipo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
-                            <option value="">Selecione...</option>
-                            <option value="EPIs">EPIs</option>
-                            <option value="Consumo">Consumo</option>
-                        </select>
-                    </div>
-                     <div>
-                        <label for="requisicao-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label>
-                        <select id="requisicao-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></select>
-                    </div>
-                     <div>
-                        <label for="requisicao-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data/Hora</label>
-                        <input type="text" id="requisicao-data" class="bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" readonly>
-                    </div>
-                </div>
-
-                <div id="epis-fields" class="hidden mt-4 space-y-4">
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="epis-item" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Item</label>
-                            <select id="epis-item" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"></select>
-                        </div>
-                        <div>
-                            <label for="epis-quantidade" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Quantidade</label>
-                            <input type="number" id="epis-quantidade" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" min="1" value="1">
-                        </div>
-                    </div>
-                </div>
-
-                <div id="consumo-fields" class="hidden mt-4 space-y-4">
-                    <div id="consumo-categories-container" class="space-y-4"></div>
-                    <button type="button" id="add-consumo-category-btn" class="text-sm text-brand-gold hover:underline"><i class="fas fa-plus mr-1"></i> Adicionar Categoria de Consumo</button>
-                </div>
+                <!-- Conteúdo do formulário será gerado dinamicamente -->
             </form>
             <div class="flex justify-end mt-6 space-x-4 pt-4 border-t dark:border-gray-700">
                 <button type="button" id="cancel-requisicao-form" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
@@ -843,13 +805,12 @@ body {
         <div class="w-full max-w-lg p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
             <h2 id="item-modal-title" class="text-xl font-bold text-gray-900 dark:text-white mb-4">Novo Item</h2>
             <form id="item-form">
-                <input type="hidden" id="item-original-name">
-                <input type="hidden" id="item-category-name">
                 <div class="space-y-4">
                     <div>
                         <label for="item-name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nome do Item</label>
                         <input type="text" id="item-name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
                     </div>
+                    <!-- O campo de categoria será inserido aqui pelo JS -->
                     <div>
                         <label for="item-foto" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Foto do Item</label>
                         <input type="file" id="item-foto" accept="image/*" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
@@ -1078,7 +1039,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 id = form.dataset.id;
                 endpoint = id ? `Itens_Catalogo/${id}` : 'Itens_Catalogo';
                 const itemName = document.getElementById('item-name').value;
-                const itemCategory = document.getElementById('item-category-input').value;
+                const itemCategory = form.querySelector('#item-category-input').value; // Corrigido
                 body = { Nome: itemName, Categoria: itemCategory, Tipo: 'Consumo' };
                 const itemFotoInput = document.getElementById('item-foto');
                 if (itemFotoInput && itemFotoInput.files[0]) {
@@ -1466,7 +1427,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function applyFilters(){const s=document.getElementById('filter-start-date').value,e=document.getElementById('filter-end-date').value,c=document.getElementById('filter-consultor').value,cl=document.getElementById('filter-cliente').value,st=document.getElementById('filter-status').value; const f=visitsData.filter(v=>(!s||v.DataVisita>=s)&&(!e||v.DataVisita<=e)&&(!c||v.ConsultorId==c)&&(!cl||v.ClienteId==cl)&&(!st||v.Status===st)); renderAllVisits(f);}
     function clearFilters(){document.getElementById('filter-start-date').value=''; document.getElementById('filter-end-date').value=''; document.getElementById('filter-consultor').value=''; document.getElementById('filter-cliente').value=''; document.getElementById('filter-status').value=''; renderAllVisits(visitsData);}
     function renderAllVisits(d=visitsData){renderKanbanBoard(d.filter(v=>v.Status!=='Remarcada')); renderVisitsList(d); renderCalendarEvents(d);}
-    
     function renderKanbanBoard(d){ const c={'agendada':[],'em-andamento':[],'concluida':[]}; d.forEach(v=>{ const sK = v.Status.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(' ','-'); if(c[sK]) { c[sK].push(createKanbanCard(v)); } }); document.getElementById('kanban-agendada').innerHTML=c.agendada.join(''); document.getElementById('kanban-em-andamento').innerHTML=c['em-andamento'].join(''); document.getElementById('kanban-concluida').innerHTML=c.concluida.join(''); }
     function createKanbanCard(v){const{color,label}=sConf[v.Status] || {color: 'gray', label: v.Status}; const dF=new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR'); const rS=v.Remarcada&&v.Status==='Agendada'?'<span class="text-xs ml-2 font-semibold text-purple-800">(Remarcado)</span>':''; let acts=''; if(v.Status==='Agendada')acts=`<button data-id="${v.Id}" class="iniciar-visita-btn w-full bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Iniciar</button><button data-id="${v.Id}" class="remarcar-visita-btn w-full mt-2 bg-gray-500 text-white px-3 py-1 rounded-md text-sm hover:bg-gray-600">Remarcar</button>`; else if(v.Status==='Em Andamento')acts=`<button data-id="${v.Id}" class="encerrar-visita-btn w-full bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">Encerrar</button>`; let dur=''; if(v.Status==='Concluída'&&v.CheckIn&&v.CheckOut){const diff=(new Date(v.CheckOut)-new Date(v.CheckIn))/60000; dur=`<div class="text-xs text-center font-bold text-brand-gold mt-2 p-1 bg-yellow-100 dark:bg-yellow-900 rounded">Duração: ${Math.floor(diff/60)}h ${Math.round(diff%60)}min</div>`;} return`<div class="kanban-card bg-white dark:bg-gray-700 p-4 rounded-lg shadow" data-id="${v.Id}"><div class="flex justify-between items-start mb-2"><h4 class="font-bold text-gray-800 dark:text-white">${v.cliente_nome}${rS}</h4><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}</span></div><p class="text-sm text-gray-600 dark:text-gray-300">${v.consultor_nome}</p><p class="text-sm text-gray-600 dark:text-gray-300">${dF} - ${v.HoraInicio}</p>${dur}<div class="mt-4 border-t pt-2 dark:border-gray-600 visit-actions">${acts}</div></div>`;}
     function renderVisitsList(d){const tB=document.getElementById('visitas-table-body'); tB.innerHTML=''; d.forEach(v=>{const{color,label}=sConf[v.Status] || {color: 'gray', label: v.Status}; const s=label+(v.Remarcada&&v.Status==='Agendada'?' (Remarcado)':''); const r=tB.insertRow(); r.className='bg-white border-b dark:bg-gray-800 dark:border-gray-700'; r.dataset.id=v.Id; r.innerHTML=`<td class="px-6 py-4">${v.cliente_nome}</td><td class="px-6 py-4">${v.consultor_nome}</td><td class="px-6 py-4">${new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR')}</td><td class="px-6 py-4">${v.HoraInicio} - ${v.HoraFim}</td><td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${s}</span></td><td class="px-6 py-4 space-x-2"><button class="table-details-btn text-gray-500" data-type="visita"><i class="fas fa-eye"></i></button><button class="table-edit-btn text-blue-500" data-type="visita"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500" data-type="visita"><i class="fas fa-trash"></i></button></td>`;});}
@@ -1477,234 +1437,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function openVisitaModal(v=null){const f=allElements.visitaForm; f.reset(); document.getElementById('is-rescheduling').value='false'; if(v){document.getElementById('visita-modal-title').textContent="Editar Visita"; f.querySelector('#visita-id').value=v.Id; f.querySelector('#visita-consultor').value=v.ConsultorId; f.querySelector('#visita-cliente').value=v.ClienteId; f.querySelector('#visita-data').value=v.DataVisita; f.querySelector('#visita-inicio').value=v.HoraInicio; f.querySelector('#visita-fim').value=v.HoraFim; f.querySelector('#visita-descricao').value=v.Descricao;}else{document.getElementById('visita-modal-title').textContent="Agendar Nova Visita"; f.querySelector('#visita-id').value=''; f.querySelector('#visita-consultor').value=loggedInUser.Id;} showModal(allElements.visitaFormModal);}
     async function checkOverdueVisits(){const t=new Date(); t.setHours(0,0,0,0); const oD=visitsData.filter(v=>v.Status==='Agendada'&&new Date(v.DataVisita+'T23:59:59')<t); if(oD.length>0){showLoadingOverlay('Atualizando status...'); await Promise.all(oD.map(v=>nocoFetch(`Visitas/${v.Id}`,{method:'PATCH',body:JSON.stringify({Status:'Remarcada'})}))); await fetchVisitas(); applyFilters(); hideLoadingOverlay();}}
     function initializeCalendar(){if(document.getElementById('calendar')&&typeof FullCalendar!=='undefined'){calendar=new FullCalendar.Calendar(document.getElementById('calendar'),{initialView:'dayGridMonth',locale:'pt-br',buttonText:{today:'Hoje',month:'Mês',week:'Semana',list:'Lista'},headerToolbar:{left:'prev,next today',center:'title',right:'dayGridMonth,timeGridWeek,listWeek'},});}}
-    
-    // --- Funções da Tela de Requisição ---
-    function openRequisicaoModal(r=null) {
-        const form = allElements.requisicaoForm;
-        form.innerHTML = ''; 
-
-        form.innerHTML += `<input type="hidden" id="requisicao-id"><input type="hidden" id="requisicao-tipo" value="Consumo">`;
-        
-        const infoGrid = document.createElement('div');
-        infoGrid.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 mb-4';
-        infoGrid.innerHTML = `
-            <div>
-                <label for="requisicao-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label>
-                <select id="requisicao-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></select>
-            </div>
-            <div>
-                <label for="requisicao-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data/Hora</label>
-                <input type="text" id="requisicao-data" class="bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" readonly>
-            </div>`;
-        form.appendChild(infoGrid);
-        
-        populateConsultantSelects();
-        form.querySelector('#requisicao-consultor').value = loggedInUser.Id;
-        form.querySelector('#requisicao-data').value = new Date().toLocaleString('pt-BR');
-
-        const filterInput = document.createElement('div');
-        filterInput.className = 'relative mb-4';
-        filterInput.innerHTML = `
-            <label for="req-item-filter" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Buscar Item</label>
-            <input type="text" id="req-item-filter" placeholder="Digite para filtrar os itens..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
-        `;
-        form.appendChild(filterInput);
-
-        const itemsContainer = document.createElement('div');
-        itemsContainer.id = 'consumo-categories-container';
-        itemsContainer.className = 'space-y-4';
-        form.appendChild(itemsContainer);
-        
-        renderRequisitionConsumoFields();
-
-        form.querySelector('#req-item-filter').addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            form.querySelectorAll('.req-item-wrapper').forEach(itemWrapper => {
-                const itemName = itemWrapper.querySelector('label').textContent.toLowerCase();
-                itemWrapper.style.display = itemName.includes(searchTerm) ? 'flex' : 'none';
-            });
-            form.querySelectorAll('details.category-section').forEach(section => {
-                const visibleItems = Array.from(section.querySelectorAll('.req-item-wrapper')).filter(el => el.style.display !== 'none');
-                section.style.display = (visibleItems.length === 0 && searchTerm) ? 'none' : 'block';
-            });
-        });
-
-        showModal(allElements.requisicaoFormModal);
-    }
-
-    function renderRequisitionConsumoFields() {
-        const consumoContainer = document.getElementById('consumo-categories-container');
-        if (!consumoContainer) return;
-        consumoContainer.innerHTML = '';
-
-        Object.keys(itemData.consumo).sort().forEach(category => {
-            const items = itemData.consumo[category];
-            const details = document.createElement('details');
-            details.className = 'category-section';
-            details.open = true;
-
-            const summary = document.createElement('summary');
-            summary.className = 'font-semibold text-lg cursor-pointer py-2 text-gray-800 dark:text-gray-200';
-            summary.textContent = category;
-            details.appendChild(summary);
-
-            const categoryContent = document.createElement('div');
-            categoryContent.className = 'p-3 border rounded-lg dark:border-gray-600 grid grid-cols-1 md:grid-cols-2 gap-3';
-            
-            items.forEach(item => {
-                const itemWrapper = document.createElement('div');
-                itemWrapper.className = 'req-item-wrapper flex items-center justify-between';
-                itemWrapper.innerHTML = `
-                    <div class="flex items-center">
-                        <img src="${item.foto || 'https://placehold.co/100x100/e2e8f0/cbd5e0?text=Item'}" alt="${item.nome}" class="req-form-img w-10 h-10 object-contain mr-3 rounded cursor-pointer">
-                        <label for="item-qtd-${item.id}" class="text-sm">${item.nome}</label>
-                    </div>
-                    <input type="number" id="item-qtd-${item.id}" data-item-id="${item.id}" class="consumo-item-qtd bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-20 p-1.5 dark:bg-gray-700 dark:border-gray-600" min="0" placeholder="0">
-                `;
-                categoryContent.appendChild(itemWrapper);
-            });
-            
-            details.appendChild(categoryContent);
-            consumoContainer.appendChild(details);
-        });
-    }
-
-    function renderRequisicoes(data = requisicoesData) {
-        const tbody = document.getElementById('requisicoes-table-body');
-        if (!tbody) return;
-        tbody.innerHTML = data.map(r => {
-            let itensStr = 'N/A';
-            if (r.ItensDaRequisicao && r.ItensDaRequisicao.length > 0) {
-                itensStr = r.ItensDaRequisicao.map(itemJoin => {
-                    const itemInfo = allItems.find(i => i.Id === itemJoin['Itens_Catalogo-id'] || (itemJoin.Itens_Catalogo && i.Id === itemJoin.Itens_Catalogo.Id));
-                    return `${itemInfo ? itemInfo.Nome : 'Item desconhecido'} (${itemJoin.Quantidade})`;
-                }).join(', ');
-            }
-            return `
-                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}">
-                    <td class="px-6 py-4">${r.Tipo}</td>
-                    <td class="px-6 py-4 text-xs">${itensStr}</td>
-                    <td class="px-6 py-4">${r.consultor_nome}</td>
-                    <td class="px-6 py-4">${new Date(r.DataRequisicao).toLocaleString('pt-BR')}</td>
-                    <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.Status==='Entregue'?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">${r.Status}</span></td>
-                    <td class="px-6 py-4 space-x-2">
-                        <button class="table-details-btn text-gray-500" data-type="requisicao"><i class="fas fa-eye"></i></button>
-                        <button class="table-delete-btn text-red-500" data-type="requisicao"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
-
-    function renderItensDeRequisicao(filterCategory = 'Todos') {
-        const container = document.getElementById('item-management-container');
-        if(!container) return;
-        container.innerHTML = '';
-        const categoriesToRender = (filterCategory === 'Todos') ? Object.keys(itemData.consumo).sort() : [filterCategory];
-
-        categoriesToRender.forEach(category => {
-            if (!itemData.consumo[category] && category !== 'Todos') return;
-
-            const categoryDiv = document.createElement('div');
-            categoryDiv.className = 'p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md';
-            categoryDiv.dataset.category = category;
-
-            const header = document.createElement('div');
-            header.className = 'flex justify-between items-center mb-4';
-            header.innerHTML = `<h3 class="text-xl font-bold text-gray-800 dark:text-white">${category}</h3><button class="add-item-btn bg-brand-gold text-white px-3 py-1 rounded-md text-sm hover:bg-brand-gold-dark" data-category="${category}">Adicionar Item</button>`;
-            categoryDiv.appendChild(header);
-
-            const grid = document.createElement('div');
-            grid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4';
-            
-            const items = itemData.consumo[category] || [];
-            if (items.length > 0) {
-                grid.innerHTML = items.map(item => `
-                    <div class="item-card border dark:border-gray-700 rounded-lg p-2 text-center flex flex-col justify-between" data-id="${item.id}" data-category="${category}">
-                        <img src="${item.foto || 'https://placehold.co/100x100/e2e8f0/cbd5e0?text=Item'}" alt="${item.nome}" class="w-full h-24 object-contain mb-2 rounded cursor-pointer">
-                        <p class="text-sm font-medium flex-grow">${item.nome}</p>
-                        <div class="mt-2 flex justify-center space-x-2">
-                            <button class="item-action-btn edit-item-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button>
-                            <button class="item-action-btn delete-item-btn text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                `).join('');
-            } else {
-                grid.innerHTML = '<p class="text-gray-500 col-span-full">Nenhum item nesta categoria.</p>';
-            }
-            categoryDiv.appendChild(grid);
-            container.appendChild(categoryDiv);
-        });
-    }
-
-    function renderCategoryFilters(){
-        const container = document.getElementById('item-category-filters');
-        if(!container) return;
-        const categories = Object.keys(itemData.consumo).sort();
-        container.innerHTML = '<button class="item-category-filter-btn filter-btn-active px-3 py-1 rounded-md shadow-sm" data-category="Todos">Todas</button>';
-        categories.forEach(cat => {
-            container.innerHTML += `<button class="item-category-filter-btn px-3 py-1 rounded-md" data-category="${cat}">${cat}</button>`;
-        });
-    }
-
-    function handleCategoryFilterClick(btn) {
-        document.querySelectorAll('.item-category-filter-btn').forEach(b => b.classList.remove('filter-btn-active'));
-        btn.classList.add('filter-btn-active');
-        renderItensDeRequisicao(btn.dataset.category);
-    }
-    
-    function handleAddNewCategory() {
-       openItemModal();
-    }
-    
-    function openItemModal(category = '', item = null) {
-        const form = allElements.itemForm;
-        form.reset();
-        const modalTitle = document.getElementById('item-modal-title');
-        const preview = document.getElementById('item-foto-preview');
-
-        let categoryInput = form.querySelector('#item-category-input');
-        if (!categoryInput) {
-            const nameFieldDiv = form.querySelector('#item-name').parentElement;
-            const categoryFieldHTML = `
-                <div class="mt-4">
-                    <label for="item-category-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Categoria</label>
-                    <select id="item-category-input" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
-                        <option value="Placas">Placas</option>
-                        <option value="Planilhas">Planilhas</option>
-                        <option value="Outros">Outros</option>
-                    </select>
-                </div>
-            `;
-            nameFieldDiv.insertAdjacentHTML('afterend', categoryFieldHTML);
-            categoryInput = form.querySelector('#item-category-input');
-        }
-
-        preview.classList.add('hidden');
-        preview.src = '';
-        
-        if (item) {
-            modalTitle.textContent = 'Editar Item';
-            form.dataset.id = item.id || item.Id;
-            form.querySelector('#item-name').value = item.Nome || item.nome;
-            categoryInput.value = category; 
-            const currentItem = allItems.find(i => i.Id === (item.id || item.Id));
-            const photoUrl = currentItem?.Foto?.[0]?.signedPath ? `${NocoDB_BaseURL}/${currentItem.Foto[0].signedPath}` : item.foto;
-            if (photoUrl) {
-                preview.src = photoUrl;
-                preview.classList.remove('hidden');
-            }
-        } else {
-            modalTitle.textContent = 'Novo Item';
-            delete form.dataset.id;
-            categoryInput.value = category || 'Placas'; 
-        }
-        showModal(allElements.itemFormModal);
-    }
-
-
-    function applyRequisicaoFilters(){ const sD=document.getElementById('filter-req-start-date').value,eD=document.getElementById('filter-req-end-date').value,cId=document.getElementById('filter-req-consultor').value,status=document.getElementById('filter-req-status').value,item=document.getElementById('filter-req-item').value.toLowerCase(); let filtered=requisicoesData.filter(r=>(!sD||r.DataRequisicao>=sD)&&(!eD||r.DataRequisicao<=eD)&&(!cId||r['Consultores-id']==cId)&&(!status||r.Status===status)); if(item){filtered=filtered.filter(r=>{return r.ItensDaRequisicao.some(it=>{const itemInfo=allItems.find(i=>i.Id===it['Itens_Catalogo-id']); return itemInfo&&itemInfo.Nome.toLowerCase().includes(item);});});} renderRequisicoes(filtered); }
-    function clearRequisicaoFilters(){ document.getElementById('requisicoes-filters').querySelectorAll('input, select').forEach(el => { if(el.id !== 'filter-req-tipo') el.value = ''}); applyRequisicaoFilters(); }
     
     function applyAndRenderFerias(){ const nome = document.getElementById('ferias-filter-name').value.toLowerCase(); const inicio = document.getElementById('ferias-filter-start').value; const fim = document.getElementById('ferias-filter-end').value; const filtered = feriasData.filter(f => (!nome || f.consultor_nome.toLowerCase().includes(nome)) && (!inicio || f.DataInicio >= inicio) && (!fim || f.DataRetorno <= fim) ); renderFerias(filtered); }
     function applyAndRenderAtestados(){ const nome = document.getElementById('atestados-filter-name').value.toLowerCase(); const inicio = document.getElementById('atestados-filter-start').value; const fim = document.getElementById('atestados-filter-end').value; const filtered = atestadosData.filter(a => (!nome || a.consultor_nome.toLowerCase().includes(nome)) && (!inicio || a.DataInicio >= inicio) && (!fim || a.DataRetorno <= fim) ); renderAtestados(filtered); }
@@ -1779,5 +1511,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
 </script>
+
 </body>
 </html>
