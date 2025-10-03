@@ -864,6 +864,28 @@ body {
             </form>
         </div>
     </div>
+     <div id="requisicao-item-form-modal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
+        <div class="w-full max-w-lg p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
+            <h2 id="requisicao-item-modal-title" class="text-xl font-bold text-gray-900 dark:text-white mb-4">Adicionar Item à Requisição</h2>
+            <form id="requisicao-item-form">
+                <input type="hidden" id="requisicao-item-req-id">
+                <div class="space-y-4">
+                    <div>
+                        <label for="requisicao-item-catalogo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Item do Catálogo</label>
+                        <select id="requisicao-item-catalogo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></select>
+                    </div>
+                    <div>
+                        <label for="requisicao-item-qtd" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Quantidade</label>
+                        <input type="number" id="requisicao-item-qtd" value="1" min="1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-6 space-x-4">
+                    <button type="button" id="cancel-requisicao-item-form" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // --- Configuração da API NocoDB ---
@@ -914,6 +936,7 @@ document.addEventListener('DOMContentLoaded', function() {
         requisicaoForm: document.getElementById('requisicao-form'),
         itemFormModal: document.getElementById('item-form-modal'),
         itemForm: document.getElementById('item-form'),
+        requisicaoItemFormModal: document.getElementById('requisicao-item-form-modal'),
     };
 
     // --- Funções Auxiliares para Chamadas à API ---
@@ -974,7 +997,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!navigator.geolocation) {
                 reject(new Error('Geolocalização não é suportada por este navegador.'));
             } else {
-                // Solicita a localização com alta precisão
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         resolve({
@@ -997,7 +1019,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                         reject(new Error(errorMessage));
                     },
-                    { enableHighAccuracy: true } // Opção para maior precisão
+                    { enableHighAccuracy: true }
                 );
             }
         });
@@ -1101,33 +1123,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 callback = async () => { await fetchItensCatalogo(); renderItensDeRequisicao(); renderCategoryFilters(); hideModal(allElements.itemFormModal); };
                 break;
-
-            case 'requisicao-form':
-                const consultorReqId = form.querySelector('#requisicao-consultor').value;
-                const itensReq = [];
-
-                const qtdInputs = form.querySelectorAll('.consumo-item-qtd');
-                qtdInputs.forEach(input => {
-                    if (input.value > 0) {
-                        itensReq.push({ 
-                            Quantidade: parseInt(input.value), 
-                            "Itens_Catalogo-id": parseInt(input.dataset.itemId) 
-                        });
-                    }
-                });
-                
-                if (itensReq.length === 0) { alert('Adicione pelo menos um item à requisição.'); return; }
-                
-                body = {
-                    Tipo: 'Consumo',
-                    "Consultores-id": parseInt(consultorReqId),
-                    Status: 'Pendente',
-                    ItensDaRequisicao: itensReq
-                };
-                endpoint = 'Requisicoes';
-                callback = async () => { await fetchRequisicoes(); applyRequisicaoFilters(); hideModal(allElements.requisicaoFormModal); };
-                break;
             
+            case 'requisicao-item-form':
+                const requisicaoId = form.querySelector('#requisicao-item-req-id').value;
+                const catalogoId = form.querySelector('#requisicao-item-catalogo').value;
+                const quantidade = form.querySelector('#requisicao-item-qtd').value;
+
+                if (!requisicaoId || !catalogoId || !quantidade || quantidade < 1) {
+                    alert('Por favor, preencha todos os campos corretamente.');
+                    return;
+                }
+                
+                endpoint = 'Requisicoes_Itens'; 
+                body = {
+                    "Requisicoes": { "Id": parseInt(requisicaoId) },
+                    "Itens_Catalogo": { "Id": parseInt(catalogoId) },
+                    "Quantidade": parseInt(quantidade)
+                };
+                
+                callback = async () => {
+                    await fetchRequisicoes();
+                    applyRequisicaoFilters();
+                    hideModal(document.getElementById('requisicao-item-form-modal'));
+                };
+                break;
+
             case 'rh-form':
             case 'cliente-form': {
                 const isConsultor = form.id === 'rh-form';
@@ -1316,6 +1336,12 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleGlobalClick(e) { 
         const t = e.target; 
 
+        if (t.closest('.add-content-btn')) {
+            const reqId = t.closest('.add-content-btn').dataset.id;
+            openRequisicaoItemModal(reqId);
+            return;
+        }
+
         const itemImage = t.closest('.item-card img, .req-form-img');
         const isActionButton = t.closest('.item-action-btn');
 
@@ -1365,8 +1391,10 @@ document.addEventListener('DOMContentLoaded', function() {
             'show-report-modal-btn':()=>{toggleReportSubtype(); showModal(allElements.reportModal);},'close-report-modal':()=>hideModal(allElements.reportModal),
             'show-rh-form':()=>setupFormToggle('rh-cards-container','rh-form-container'),'cancel-rh-form':()=>hideFormToggle('rh-cards-container','rh-form-container'),
             'show-cliente-form':()=>setupFormToggle('cliente-cards-container','cliente-form-container'),'cancel-cliente-form':()=>hideFormToggle('cliente-cards-container','cliente-form-container'),
-            'show-visita-form':()=>openVisitaModal(),'cancel-visita-form':()=>hideModal(allElements.visitaFormModal),
-            'show-requisicao-form':()=>openRequisicaoModal(),'cancel-requisicao-form':()=>hideModal(allElements.requisicaoFormModal),
+            'show-visita-form':()=>openVisitaModal(),
+            'cancel-visita-form':()=>hideModal(allElements.visitaFormModal),
+            'show-requisicao-form': handleCreateNewRequisition,
+            'cancel-requisicao-item-form': () => hideModal(allElements.requisicaoItemFormModal),
             'show-new-item-btn': () => openItemModal(),
             'show-receita-form':()=>setupSubFormToggle('receitas-history-container','receita-form-container'),'cancel-receita-form':()=>hideSubFormToggle('receitas-history-container','receita-form-container'),
             'show-custo-form':()=>setupSubFormToggle('custos-history-container','custo-form-container'),'cancel-custo-form':()=>hideSubFormToggle('custos-history-container','custo-form-container'),
@@ -1525,7 +1553,6 @@ document.addEventListener('DOMContentLoaded', function() {
             dur=`<div class="text-xs text-center font-bold text-brand-gold mt-2 p-1 bg-yellow-100 dark:bg-yellow-900 rounded">Duração: ${Math.floor(diff/60)}h ${Math.round(diff%60)}min</div>`;
         }
         
-        // Mostra a localização e os horários de check-in/out
         let locInfo = '';
         const createMapLink = (label, color, locString) => {
             if (typeof locString !== 'string' || locString.indexOf(',') === -1) return '';
@@ -1566,19 +1593,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     function renderVisitsList(d){const tB=document.getElementById('visitas-table-body'); tB.innerHTML=''; d.forEach(v=>{const{color,label}=sConf[v.Status] || {color: 'gray', label: v.Status}; const s=label+(v.Remarcada&&v.Status==='Agendada'?' (Remarcado)':''); const r=tB.insertRow(); r.className='bg-white border-b dark:bg-gray-800 dark:border-gray-700'; r.dataset.id=v.Id; r.innerHTML=`<td class="px-6 py-4">${v.Clientes?.Nome || 'N/A'}</td><td class="px-6 py-4">${v.Consultores?.Nome || 'N/A'}</td><td class="px-6 py-4">${new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR')}</td><td class="px-6 py-4">${v.HoraInicio} - ${v.HoraFim}</td><td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${s}</span></td><td class="px-6 py-4 space-x-2"><button class="table-details-btn text-gray-500" data-type="visita"><i class="fas fa-eye"></i></button><button class="table-edit-btn text-blue-500" data-type="visita"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500" data-type="visita"><i class="fas fa-trash"></i></button></td>`;});}
     function renderCalendarEvents(d){if(!calendar)return; calendar.removeAllEvents(); calendar.addEventSource(d.map(v=>({id:v.Id, title:`${v.Clientes?.Nome || 'Cliente'} (${v.Consultores?.Nome || 'Consultor'})`, start:`${v.DataVisita}T${v.HoraInicio}`, end:`${v.DataVisita}T${v.HoraFim}`, color:(sConf[v.Status] || {color:'gray'}).color})));}
-async function handleStartVisit(vId){
+    async function handleStartVisit(vId){
         showLoadingOverlay('Iniciando e obtendo localização...');
         try {
             const location = await getCurrentLocation();
             const body = {
                 Status: 'Em Andamento',
                 CheckIn: new Date().toISOString(),
-                // CORREÇÃO: Formata a localização para o tipo string "latitude,longitude"
                 CheckInLocal: `${location.lat},${location.lng}`
             };
-            await nocoFetch(`Visitas/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
-            await fetchVisitas();
-            applyFilters();
+            const result = await nocoFetch(`Visitas/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
+            
+            if (result) {
+                await fetchVisitas();
+                applyFilters();
+            }
         } catch (error) {
             alert(`Erro ao iniciar visita: ${error.message}`);
         } finally {
@@ -1592,13 +1621,15 @@ async function handleStartVisit(vId){
             const body = {
                 Status: 'Concluída',
                 CheckOut: new Date().toISOString(),
-                // CORREÇÃO: Formata a localização para o tipo string "latitude,longitude"
                 CheckOutLocal: `${location.lat},${location.lng}`
             };
-            await nocoFetch(`Visitas/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
-            await fetchVisitas();
-            applyFilters();
-            updateAllDashboards();
+            const result = await nocoFetch(`Visitas/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
+
+            if (result) {
+                await fetchVisitas();
+                applyFilters();
+                updateAllDashboards();
+            }
         } catch (error) {
             alert(`Erro ao encerrar visita: ${error.message}`);
         } finally {
@@ -1612,117 +1643,60 @@ async function handleStartVisit(vId){
     function initializeCalendar(){if(document.getElementById('calendar')&&typeof FullCalendar!=='undefined'){calendar=new FullCalendar.Calendar(document.getElementById('calendar'),{initialView:'dayGridMonth',locale:'pt-br',buttonText:{today:'Hoje',month:'Mês',week:'Semana',list:'Lista'},headerToolbar:{left:'prev,next today',center:'title',right:'dayGridMonth,timeGridWeek,listWeek'},});}}
     
     // --- Funções da Tela de Requisição ---
-    function openRequisicaoModal(r=null) {
-        const form = allElements.requisicaoForm;
-        form.innerHTML = ''; 
-
-        form.innerHTML += `<input type="hidden" id="requisicao-id"><input type="hidden" id="requisicao-tipo" value="Consumo">`;
-        
-        const infoGrid = document.createElement('div');
-        infoGrid.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 mb-4';
-        infoGrid.innerHTML = `
-            <div>
-                <label for="requisicao-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label>
-                <select id="requisicao-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></select>
-            </div>
-            <div>
-                <label for="requisicao-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data/Hora</label>
-                <input type="text" id="requisicao-data" class="bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" readonly>
-            </div>`;
-        form.appendChild(infoGrid);
-        
-        populateConsultantSelects();
-        form.querySelector('#requisicao-consultor').value = loggedInUser.Id;
-        form.querySelector('#requisicao-data').value = new Date().toLocaleString('pt-BR');
-
-        const filterInput = document.createElement('div');
-        filterInput.className = 'relative mb-4';
-        filterInput.innerHTML = `
-            <label for="req-item-filter" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Buscar Item</label>
-            <input type="text" id="req-item-filter" placeholder="Digite para filtrar os itens..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
-        `;
-        form.appendChild(filterInput);
-
-        const itemsContainer = document.createElement('div');
-        itemsContainer.id = 'consumo-categories-container';
-        itemsContainer.className = 'space-y-4';
-        form.appendChild(itemsContainer);
-        
-        renderRequisitionConsumoFields();
-
-        form.querySelector('#req-item-filter').addEventListener('input', (e) => {
-            const searchTerm = e.target.value.toLowerCase();
-            form.querySelectorAll('.req-item-wrapper').forEach(itemWrapper => {
-                const itemName = itemWrapper.querySelector('label').textContent.toLowerCase();
-                itemWrapper.style.display = itemName.includes(searchTerm) ? 'flex' : 'none';
-            });
-            form.querySelectorAll('details.category-section').forEach(section => {
-                const visibleItems = Array.from(section.querySelectorAll('.req-item-wrapper')).filter(el => el.style.display !== 'none');
-                section.style.display = (visibleItems.length === 0 && searchTerm) ? 'none' : 'block';
-            });
-        });
-
-        showModal(allElements.requisicaoFormModal);
+    async function handleCreateNewRequisition() {
+        if (!loggedInUser) {
+            alert('Erro: Nenhum usuário logado.');
+            return;
+        }
+        showLoadingOverlay('Criando nova requisição...');
+        const body = {
+            "Consultores": { "Id": loggedInUser.Id },
+            "Status": "Pendente",
+            "DataRequisicao": new Date().toISOString()
+        };
+        const result = await nocoFetch('Requisicoes', { method: 'POST', body: JSON.stringify(body) });
+        if (result) {
+            await fetchRequisicoes();
+            applyRequisicaoFilters();
+        }
+        hideLoadingOverlay();
     }
 
-    function renderRequisitionConsumoFields() {
-        const consumoContainer = document.getElementById('consumo-categories-container');
-        if (!consumoContainer) return;
-        consumoContainer.innerHTML = '';
+    function populateRequisitionItemSelect() {
+        const itemsConsumo = allItems.filter(i => i.Tipo === 'Consumo');
+        populateSelectWithOptions('#requisicao-item-catalogo', itemsConsumo, 'Id', 'Nome', false);
+    }
 
-        Object.keys(itemData.consumo).sort().forEach(category => {
-            const items = itemData.consumo[category];
-            const details = document.createElement('details');
-            details.className = 'category-section';
-            details.open = true;
-
-            const summary = document.createElement('summary');
-            summary.className = 'font-semibold text-lg cursor-pointer py-2 text-gray-800 dark:text-gray-200';
-            summary.textContent = category;
-            details.appendChild(summary);
-
-            const categoryContent = document.createElement('div');
-            categoryContent.className = 'p-3 border rounded-lg dark:border-gray-600 grid grid-cols-1 md:grid-cols-2 gap-3';
-            
-            items.forEach(item => {
-                const itemWrapper = document.createElement('div');
-                itemWrapper.className = 'req-item-wrapper flex items-center justify-between';
-                itemWrapper.innerHTML = `
-                    <div class="flex items-center">
-                        <img src="${item.foto || 'https://placehold.co/100x100/e2e8f0/cbd5e0?text=Item'}" alt="${item.nome}" class="req-form-img w-10 h-10 object-contain mr-3 rounded cursor-pointer">
-                        <label for="item-qtd-${item.id}" class="text-sm">${item.nome}</label>
-                    </div>
-                    <input type="number" id="item-qtd-${item.id}" data-item-id="${item.id}" class="consumo-item-qtd bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-20 p-1.5 dark:bg-gray-700 dark:border-gray-600" min="0" placeholder="0">
-                `;
-                categoryContent.appendChild(itemWrapper);
-            });
-            
-            details.appendChild(categoryContent);
-            consumoContainer.appendChild(details);
-        });
+    function openRequisicaoItemModal(requisicaoId) {
+        const form = document.getElementById('requisicao-item-form');
+        if (!form) return;
+        form.reset();
+        form.querySelector('#requisicao-item-req-id').value = requisicaoId;
+        populateRequisitionItemSelect();
+        showModal(allElements.requisicaoItemFormModal);
     }
 
     function renderRequisicoes(data = requisicoesData) {
         const tbody = document.getElementById('requisicoes-table-body');
         if (!tbody) return;
         tbody.innerHTML = data.map(r => {
-            let itensStr = 'N/A';
+            let itensStr = 'Nenhum item adicionado';
             if (r.ItensDaRequisicao && r.ItensDaRequisicao.length > 0) {
                 itensStr = r.ItensDaRequisicao.map(itemJoin => {
                     const itemInfo = allItems.find(i => i.Id === itemJoin['Itens_Catalogo-id'] || (itemJoin.Itens_Catalogo && i.Id === itemJoin.Itens_Catalogo.Id));
-                    return `${itemInfo ? itemInfo.Nome : 'Item desconhecido'} (${itemJoin.Quantidade})`;
+                    return `${itemInfo ? itemInfo.Nome : 'Item'} (${itemJoin.Quantidade})`;
                 }).join(', ');
             }
             return `
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}">
-                    <td class="px-6 py-4">${r.Tipo}</td>
                     <td class="px-6 py-4 text-xs">${itensStr}</td>
                     <td class="px-6 py-4">${r.Consultores?.Nome || 'N/A'}</td>
                     <td class="px-6 py-4">${new Date(r.DataRequisicao).toLocaleString('pt-BR')}</td>
                     <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.Status==='Entregue'?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">${r.Status}</span></td>
                     <td class="px-6 py-4 space-x-2">
-                        <button class="table-details-btn text-gray-500" data-type="requisicao"><i class="fas fa-eye"></i></button>
-                        <button class="table-delete-btn text-red-500" data-type="requisicao"><i class="fas fa-trash"></i></button>
+                        <button class="add-content-btn text-green-500 hover:text-green-700" data-id="${r.Id}" title="Adicionar Conteúdo"><i class="fas fa-plus-circle"></i></button>
+                        <button class="table-details-btn text-gray-500" data-type="requisicao" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
+                        <button class="table-delete-btn text-red-500" data-type="requisicao" title="Apagar Requisição"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             `;
@@ -1835,9 +1809,37 @@ async function handleStartVisit(vId){
         showModal(allElements.itemFormModal);
     }
 
+    function applyRequisicaoFilters(){ 
+        const sD=document.getElementById('filter-req-start-date').value;
+        const eD=document.getElementById('filter-req-end-date').value;
+        const cId=document.getElementById('filter-req-consultor').value;
+        const status=document.getElementById('filter-req-status').value;
+        const item=document.getElementById('filter-req-item').value.toLowerCase(); 
+        
+        let filtered=requisicoesData.filter(r => 
+            (!sD || r.DataRequisicao >= sD) && 
+            (!eD || r.DataRequisicao <= eD) && 
+            (!cId || r.Consultores?.Id == cId) && 
+            (!status || r.Status === status)
+        ); 
+        
+        if(item){
+            filtered = filtered.filter(r => {
+                return r.ItensDaRequisicao && r.ItensDaRequisicao.some(it => {
+                    const itemInfo = allItems.find(i => i.Id === it['Itens_Catalogo-id']); 
+                    return itemInfo && itemInfo.Nome.toLowerCase().includes(item);
+                });
+            });
+        } 
+        renderRequisicoes(filtered); 
+    }
 
-    function applyRequisicaoFilters(){ const sD=document.getElementById('filter-req-start-date').value,eD=document.getElementById('filter-req-end-date').value,cId=document.getElementById('filter-req-consultor').value,status=document.getElementById('filter-req-status').value,item=document.getElementById('filter-req-item').value.toLowerCase(); let filtered=requisicoesData.filter(r=>(!sD||r.DataRequisicao>=sD)&&(!eD||r.DataRequisicao<=eD)&&(!cId||r.Consultores?.Id==cId)&&(!status||r.Status===status)); if(item){filtered=filtered.filter(r=>{return r.ItensDaRequisicao.some(it=>{const itemInfo=allItems.find(i=>i.Id===it['Itens_Catalogo-id']); return itemInfo&&itemInfo.Nome.toLowerCase().includes(item);});});} renderRequisicoes(filtered); }
-    function clearRequisicaoFilters(){ document.getElementById('requisicoes-filters').querySelectorAll('input, select').forEach(el => { if(el.id !== 'filter-req-tipo') el.value = ''}); applyRequisicaoFilters(); }
+    function clearRequisicaoFilters(){ 
+        document.getElementById('requisicoes-filters').querySelectorAll('input, select').forEach(el => {
+             el.value = '';
+        }); 
+        applyRequisicaoFilters(); 
+    }
     
     function applyAndRenderFerias(){ const nome = document.getElementById('ferias-filter-name').value.toLowerCase(); const inicio = document.getElementById('ferias-filter-start').value; const fim = document.getElementById('ferias-filter-end').value; const filtered = feriasData.filter(f => (!nome || (f.Consultores?.Nome || '').toLowerCase().includes(nome)) && (!inicio || f.DataInicio >= inicio) && (!fim || f.DataRetorno <= fim) ); renderFerias(filtered); }
     function applyAndRenderAtestados(){ const nome = document.getElementById('atestados-filter-name').value.toLowerCase(); const inicio = document.getElementById('atestados-filter-start').value; const fim = document.getElementById('atestados-filter-end').value; const filtered = atestadosData.filter(a => (!nome || (a.Consultores?.Nome || '').toLowerCase().includes(nome)) && (!inicio || a.DataInicio >= inicio) && (!fim || a.DataRetorno <= fim) ); renderAtestados(filtered); }
