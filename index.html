@@ -1669,16 +1669,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const categoryFieldHTML = `
                 <div class="mt-4">
                     <label for="item-category-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Categoria</label>
-                    <input type="text" id="item-category-input" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required list="category-datalist">
-                    <datalist id="category-datalist"></datalist>
+                    <select id="item-category-input" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                        <option value="Placas">Placas</option>
+                        <option value="Planilhas">Planilhas</option>
+                        <option value="Outros">Outros</option>
+                    </select>
                 </div>
             `;
             nameFieldDiv.insertAdjacentHTML('afterend', categoryFieldHTML);
             categoryInput = form.querySelector('#item-category-input');
         }
-
-        const datalist = form.querySelector('#category-datalist');
-        datalist.innerHTML = Object.keys(itemData.consumo).map(cat => `<option value="${cat}"></option>`).join('');
 
         preview.classList.add('hidden');
         preview.src = '';
@@ -1697,7 +1697,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             modalTitle.textContent = 'Novo Item';
             delete form.dataset.id;
-            categoryInput.value = category; 
+            categoryInput.value = category || 'Placas'; 
         }
         showModal(allElements.itemFormModal);
     }
