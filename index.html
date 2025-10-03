@@ -1093,7 +1093,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const consultorReqId = form.querySelector('#requisicao-consultor').value;
                 const itensReq = [];
 
-                const qtdInputs = form.querySelectorAll('#consumo-categories-container .consumo-item-qtd');
+                const qtdInputs = form.querySelectorAll('.consumo-item-qtd');
                 qtdInputs.forEach(input => {
                     if (input.value > 0) {
                         itensReq.push({ Quantidade: parseInt(input.value), "ItensDoCatalogo-id": parseInt(input.dataset.itemId) });
@@ -1253,7 +1253,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- Funções de UI, Eventos e Lógica Auxiliar ---
-    function showImageModal(src) {
+     function showImageModal(src) {
         const existingModal = document.getElementById('image-zoom-modal');
         if (existingModal) {
             document.body.removeChild(existingModal);
@@ -1408,13 +1408,27 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (type === 'custo') {
             contentHTML = `<p><strong>Credor:</strong> ${data.Credor}</p> <p><strong>Vencimento:</strong> ${new Date(data.Vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</p> <p><strong>Valor:</strong> ${(data.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p> <p><strong>Status:</strong> ${data.Status}</p> <p><strong>Observação:</strong> ${data.Observacao || 'N/A'}</p>`;
         } else if (type === 'requisicao') {
-            let itensStr = (data.ItensDaRequisicao && data.ItensDaRequisicao.length > 0) 
-                ? data.ItensDaRequisicao.map(itemJoin => {
-                    const itemInfo = allItems.find(i => i.Id === itemJoin['ItensDoCatalogo-id']);
-                    return `<li>${itemInfo ? itemInfo.Nome : 'Item desconhecido'} (Qtd: ${itemJoin.Quantidade})</li>`;
-                }).join('')
+            const groupedItems = (data.ItensDaRequisicao || []).reduce((acc, itemJoin) => {
+                const itemInfo = allItems.find(i => i.Id === itemJoin['ItensDoCatalogo-id']);
+                if (itemInfo) {
+                    const category = itemInfo.Categoria || 'Outros';
+                    if (!acc[category]) acc[category] = [];
+                    acc[category].push(`${itemInfo.Nome} (${itemJoin.Quantidade} unid)`);
+                }
+                return acc;
+            }, {});
+
+            let itensStr = Object.keys(groupedItems).length > 0
+                ? Object.entries(groupedItems).map(([category, items]) => 
+                    `<li><strong>${category}:</strong> ${items.join(', ')}</li>`
+                ).join('')
                 : '<li>Nenhum item.</li>';
-            contentHTML = `<p><strong>Consultor:</strong> ${data.consultor_nome}</p><p><strong>Data:</strong> ${new Date(data.DataRequisicao).toLocaleString('pt-BR')}</p><p><strong>Tipo:</strong> ${data.Tipo}</p><p><strong>Status:</strong> ${data.Status}</p><p><strong>Itens:</strong></p><ul class="list-disc list-inside">${itensStr}</ul>`;
+
+            contentHTML = `<p><strong>Data:</strong> ${new Date(data.DataRequisicao).toLocaleString('pt-BR')}</p>
+                           <p><strong>Consultor:</strong> ${data.consultor_nome}</p>
+                           <p><strong>Status:</strong> ${data.Status}</p>
+                           <p class="mt-2"><strong>Itens:</strong></p>
+                           <ul class="list-disc list-inside space-y-1">${itensStr}</ul>`;
         } else {
             contentHTML = Object.entries(data).map(([key, value]) => {
                 if (ignoredKeys.includes(key)) return '';
@@ -1464,47 +1478,105 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Funções da Tela de Requisição ---
     function openRequisicaoModal(r=null) {
         const form = allElements.requisicaoForm;
-        form.reset();
-        form.querySelector('#requisicao-id').value = '';
-        form.querySelector('#requisicao-data').value = new Date().toLocaleString('pt-BR');
-        form.querySelector('#requisicao-consultor').value = loggedInUser.Id;
+        form.innerHTML = ''; // Limpa o formulário para reconstrução
         
-        // Remove a necessidade de selecionar o tipo, já vai direto para o consumo
-        document.getElementById('requisicao-tipo').value = 'Consumo'; // Garante que o valor está setado
+        // Adiciona campos ocultos e de data/consultor
+        form.innerHTML += `<input type="hidden" id="requisicao-id"><input type="hidden" id="requisicao-tipo" value="Consumo">`;
+        
+        const infoGrid = document.createElement('div');
+        infoGrid.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 mb-4';
+        infoGrid.innerHTML = `
+            <div>
+                <label for="requisicao-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label>
+                <select id="requisicao-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></select>
+            </div>
+            <div>
+                <label for="requisicao-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data/Hora</label>
+                <input type="text" id="requisicao-data" class="bg-gray-200 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" readonly>
+            </div>`;
+        form.appendChild(infoGrid);
+        
+        populateConsultantSelects();
+        form.querySelector('#requisicao-consultor').value = loggedInUser.Id;
+        form.querySelector('#requisicao-data').value = new Date().toLocaleString('pt-BR');
+
+        // Adiciona o campo de filtro
+        const filterInput = document.createElement('div');
+        filterInput.className = 'relative mb-4';
+        filterInput.innerHTML = `
+            <label for="req-item-filter" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Buscar Item</label>
+            <input type="text" id="req-item-filter" placeholder="Digite para filtrar os itens..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+        `;
+        form.appendChild(filterInput);
+
+        const itemsContainer = document.createElement('div');
+        itemsContainer.id = 'consumo-categories-container';
+        itemsContainer.className = 'space-y-4';
+        form.appendChild(itemsContainer);
+        
+        // Popula os campos de consumo
         renderRequisitionConsumoFields();
+
+        // Adiciona o event listener para o filtro
+        form.querySelector('#req-item-filter').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            form.querySelectorAll('.req-item-wrapper').forEach(itemWrapper => {
+                const itemName = itemWrapper.querySelector('label').textContent.toLowerCase();
+                if (itemName.includes(searchTerm)) {
+                    itemWrapper.style.display = 'flex';
+                } else {
+                    itemWrapper.style.display = 'none';
+                }
+            });
+
+            // Oculta categorias vazias
+            form.querySelectorAll('details.category-section').forEach(section => {
+                const visibleItems = section.querySelectorAll('.req-item-wrapper[style*="display: flex"]');
+                if (visibleItems.length === 0 && searchTerm) {
+                    section.style.display = 'none';
+                } else {
+                    section.style.display = 'block';
+                }
+            });
+        });
 
         showModal(allElements.requisicaoFormModal);
     }
 
     function renderRequisitionConsumoFields() {
-        const episFields = document.getElementById('epis-fields');
-        const consumoFields = document.getElementById('consumo-fields');
         const consumoContainer = document.getElementById('consumo-categories-container');
-
-        episFields.classList.add('hidden'); // Oculta permanentemente os campos de EPI
+        if (!consumoContainer) return;
         consumoContainer.innerHTML = '';
 
         Object.keys(itemData.consumo).sort().forEach(category => {
             const items = itemData.consumo[category];
-            const categoryDiv = document.createElement('div');
-            categoryDiv.className = 'p-3 border rounded-lg dark:border-gray-600';
-            let itemsHTML = `<h4 class="font-semibold mb-2 text-gray-800 dark:text-gray-200">${category}</h4>`;
-            itemsHTML += '<div class="grid grid-cols-1 md:grid-cols-2 gap-2">';
+            const details = document.createElement('details');
+            details.className = 'category-section';
+            details.open = true;
+
+            const summary = document.createElement('summary');
+            summary.className = 'font-semibold text-lg cursor-pointer py-2 text-gray-800 dark:text-gray-200';
+            summary.textContent = category;
+            details.appendChild(summary);
+
+            const categoryContent = document.createElement('div');
+            categoryContent.className = 'p-3 border rounded-lg dark:border-gray-600 grid grid-cols-1 md:grid-cols-2 gap-3';
+            
             items.forEach(item => {
-                itemsHTML += `
-                    <div class="flex items-center justify-between">
-                        <label for="item-qtd-${item.id}" class="text-sm">${item.nome}</label>
-                        <input type="number" id="item-qtd-${item.id}" data-item-id="${item.id}" class="consumo-item-qtd bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-20 p-1.5 dark:bg-gray-700 dark:border-gray-600" min="0" placeholder="0">
-                    </div>
+                const itemWrapper = document.createElement('div');
+                itemWrapper.className = 'req-item-wrapper flex items-center justify-between';
+                itemWrapper.innerHTML = `
+                    <label for="item-qtd-${item.id}" class="text-sm">${item.nome}</label>
+                    <input type="number" id="item-qtd-${item.id}" data-item-id="${item.id}" class="consumo-item-qtd bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-20 p-1.5 dark:bg-gray-700 dark:border-gray-600" min="0" placeholder="0">
                 `;
+                categoryContent.appendChild(itemWrapper);
             });
-            itemsHTML += '</div>';
-            categoryDiv.innerHTML = itemsHTML;
-            consumoContainer.appendChild(categoryDiv);
+            
+            details.appendChild(categoryContent);
+            consumoContainer.appendChild(details);
         });
-        consumoFields.classList.remove('hidden');
     }
-    
+
     function renderRequisicoes(data = requisicoesData) {
         const tbody = document.getElementById('requisicoes-table-body');
         if (!tbody) return;
@@ -1653,6 +1725,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Inicialização ---
     function initializeApp() {
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+
+        // Oculta permanentemente os elementos de filtro e formulário de tipo de requisição
+        const filterReqTipo = document.getElementById('filter-req-tipo');
+        if (filterReqTipo) filterReqTipo.parentElement.style.display = 'none';
+
+        const formReqTipo = document.getElementById('requisicao-tipo');
+        if (formReqTipo) formReqTipo.parentElement.style.display = 'none';
+
 
         allElements.loginForm?.addEventListener('submit', handleLogin);
         document.body.addEventListener('click', handleGlobalClick);
