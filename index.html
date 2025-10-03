@@ -877,8 +877,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let custosData = [];
     let visitsData = [];
     let requisicoesData = [];
-    let itemData = { epis: [], consumo: {} }; // Alterado para armazenar objetos completos
-    let allItems = []; // Para facilitar a busca de itens por ID
+    let itemData = { epis: [], consumo: {} };
+    let allItems = [];
     let feriasData = [];
     let atestadosData = [];
     let episEntreguesData = [];
@@ -1079,7 +1079,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 endpoint = id ? `Itens_Catalogo/${id}` : 'Itens_Catalogo';
                 const itemName = document.getElementById('item-name').value;
                 const itemCategory = document.getElementById('item-category-name').value;
-                body = { Nome: itemName, Categoria: itemCategory, Tipo: 'Consumo' }; // Assumindo que só itens de consumo são gerenciados aqui
+                body = { Nome: itemName, Categoria: itemCategory, Tipo: 'Consumo' };
                 const itemFotoInput = document.getElementById('item-foto');
                 if (itemFotoInput && itemFotoInput.files[0]) {
                     showLoadingOverlay('Enviando imagem do item...');
@@ -1090,28 +1090,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 break;
 
             case 'requisicao-form':
-                const tipoReq = form.querySelector('#requisicao-tipo').value;
                 const consultorReqId = form.querySelector('#requisicao-consultor').value;
                 const itensReq = [];
 
-                if (tipoReq === 'EPIs') {
-                    const epiId = form.querySelector('#epis-item').value;
-                    const epiQtd = form.querySelector('#epis-quantidade').value;
-                    if (epiId && epiQtd > 0) {
-                        itensReq.push({ Quantidade: parseInt(epiQtd), "ItensDoCatalogo-id": parseInt(epiId) });
+                const qtdInputs = form.querySelectorAll('#consumo-categories-container .consumo-item-qtd');
+                qtdInputs.forEach(input => {
+                    if (input.value > 0) {
+                        itensReq.push({ Quantidade: parseInt(input.value), "ItensDoCatalogo-id": parseInt(input.dataset.itemId) });
                     }
-                } else if (tipoReq === 'Consumo') {
-                    const qtdInputs = form.querySelectorAll('#consumo-categories-container .consumo-item-qtd');
-                    qtdInputs.forEach(input => {
-                        if (input.value > 0) {
-                            itensReq.push({ Quantidade: parseInt(input.value), "ItensDoCatalogo-id": parseInt(input.dataset.itemId) });
-                        }
-                    });
-                }
+                });
+                
                 if (itensReq.length === 0) { alert('Adicione pelo menos um item à requisição.'); return; }
                 
                 body = {
-                    Tipo: tipoReq,
+                    Tipo: 'Consumo',
                     "Consultores-id": parseInt(consultorReqId),
                     Status: 'Pendente',
                     ItensDaRequisicao: itensReq
@@ -1119,7 +1111,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 endpoint = 'Requisicoes';
                 callback = async () => { await fetchRequisicoes(); applyRequisicaoFilters(); hideModal(allElements.requisicaoFormModal); };
                 break;
-            // Outros cases...
+            
             case 'rh-form':
             case 'cliente-form': {
                 const isConsultor = form.id === 'rh-form';
@@ -1261,6 +1253,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // --- Funções de UI, Eventos e Lógica Auxiliar ---
+    function showImageModal(src) {
+        const existingModal = document.getElementById('image-zoom-modal');
+        if (existingModal) {
+            document.body.removeChild(existingModal);
+        }
+
+        const overlay = document.createElement('div');
+        overlay.id = 'image-zoom-modal';
+        overlay.className = 'fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-80 cursor-pointer modal-bg-animate';
+        
+        const img = document.createElement('img');
+        img.src = src;
+        img.className = 'max-w-[90vw] max-h-[90vh] object-contain';
+        
+        overlay.appendChild(img);
+        
+        overlay.addEventListener('click', () => {
+            document.body.removeChild(overlay);
+        });
+        
+        document.body.appendChild(overlay);
+    }
+
     function showLoadingOverlay(m) { let o = document.getElementById('loading-overlay'); if (!o) { o = document.createElement('div'); o.id = 'loading-overlay'; o.className = 'fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-60'; o.innerHTML = `<div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl flex items-center"><div class="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-gold mr-3"></div><span class="text-gray-800 dark:text-white">${m}</span></div>`; document.body.appendChild(o); } o.querySelector('span').textContent = m; o.style.display = 'flex'; }
     function hideLoadingOverlay() { const o = document.getElementById('loading-overlay'); if (o) o.style.display = 'none'; }
     function updateAllCounters() { const curMonth = new Date().getMonth(); document.getElementById('birthday-count-badge').textContent = consultoresData.filter(c => c.DataNascimento && new Date(c.DataNascimento+'T00:00:00').getMonth()===curMonth).length; populateBirthdayCards(); document.getElementById('consultores-count-badge').textContent = consultoresData.length; document.getElementById('ferias-count-badge').textContent=feriasData.length; document.getElementById('atestados-count-badge').textContent=atestadosData.length; document.getElementById('epis-count-badge').textContent=episEntreguesData.length; document.getElementById('ativos-count-badge').textContent=ativosData.length; }
@@ -1271,6 +1286,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function handleGlobalClick(e) { 
         const t = e.target; 
+
+        const itemImage = t.closest('.item-card img');
+        const isActionButton = t.closest('.item-action-btn');
+
+        if (itemImage && !isActionButton) {
+            e.preventDefault();
+            showImageModal(itemImage.src);
+            return;
+        }
 
         const kanbanButton = t.closest('.kanban-card .visit-actions button');
         if(kanbanButton) {
@@ -1444,45 +1468,41 @@ document.addEventListener('DOMContentLoaded', function() {
         form.querySelector('#requisicao-id').value = '';
         form.querySelector('#requisicao-data').value = new Date().toLocaleString('pt-BR');
         form.querySelector('#requisicao-consultor').value = loggedInUser.Id;
-        toggleRequisicaoFields(); // Limpa os campos de itens
+        
+        // Remove a necessidade de selecionar o tipo, já vai direto para o consumo
+        document.getElementById('requisicao-tipo').value = 'Consumo'; // Garante que o valor está setado
+        renderRequisitionConsumoFields();
+
         showModal(allElements.requisicaoFormModal);
     }
 
-    function toggleRequisicaoFields() {
-        const tipo = document.getElementById('requisicao-tipo').value;
+    function renderRequisitionConsumoFields() {
         const episFields = document.getElementById('epis-fields');
         const consumoFields = document.getElementById('consumo-fields');
         const consumoContainer = document.getElementById('consumo-categories-container');
 
-        episFields.classList.add('hidden');
-        consumoFields.classList.add('hidden');
+        episFields.classList.add('hidden'); // Oculta permanentemente os campos de EPI
         consumoContainer.innerHTML = '';
 
-        if (tipo === 'EPIs') {
-            const epiSelect = document.getElementById('epis-item');
-            epiSelect.innerHTML = itemData.epis.map(epi => `<option value="${epi.Id}">${epi.Nome}</option>`).join('');
-            episFields.classList.remove('hidden');
-        } else if (tipo === 'Consumo') {
-            Object.keys(itemData.consumo).sort().forEach(category => {
-                const items = itemData.consumo[category];
-                const categoryDiv = document.createElement('div');
-                categoryDiv.className = 'p-3 border rounded-lg dark:border-gray-600';
-                let itemsHTML = `<h4 class="font-semibold mb-2 text-gray-800 dark:text-gray-200">${category}</h4>`;
-                itemsHTML += '<div class="grid grid-cols-1 md:grid-cols-2 gap-2">';
-                items.forEach(item => {
-                    itemsHTML += `
-                        <div class="flex items-center justify-between">
-                            <label for="item-qtd-${item.id}" class="text-sm">${item.nome}</label>
-                            <input type="number" id="item-qtd-${item.id}" data-item-id="${item.id}" class="consumo-item-qtd bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-20 p-1.5 dark:bg-gray-700 dark:border-gray-600" min="0" placeholder="0">
-                        </div>
-                    `;
-                });
-                itemsHTML += '</div>';
-                categoryDiv.innerHTML = itemsHTML;
-                consumoContainer.appendChild(categoryDiv);
+        Object.keys(itemData.consumo).sort().forEach(category => {
+            const items = itemData.consumo[category];
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = 'p-3 border rounded-lg dark:border-gray-600';
+            let itemsHTML = `<h4 class="font-semibold mb-2 text-gray-800 dark:text-gray-200">${category}</h4>`;
+            itemsHTML += '<div class="grid grid-cols-1 md:grid-cols-2 gap-2">';
+            items.forEach(item => {
+                itemsHTML += `
+                    <div class="flex items-center justify-between">
+                        <label for="item-qtd-${item.id}" class="text-sm">${item.nome}</label>
+                        <input type="number" id="item-qtd-${item.id}" data-item-id="${item.id}" class="consumo-item-qtd bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-20 p-1.5 dark:bg-gray-700 dark:border-gray-600" min="0" placeholder="0">
+                    </div>
+                `;
             });
-            consumoFields.classList.remove('hidden');
-        }
+            itemsHTML += '</div>';
+            categoryDiv.innerHTML = itemsHTML;
+            consumoContainer.appendChild(categoryDiv);
+        });
+        consumoFields.classList.remove('hidden');
     }
     
     function renderRequisicoes(data = requisicoesData) {
@@ -1537,7 +1557,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (items.length > 0) {
                 grid.innerHTML = items.map(item => `
                     <div class="item-card border dark:border-gray-700 rounded-lg p-2 text-center flex flex-col justify-between" data-id="${item.id}" data-category="${category}">
-                        <img src="${item.foto || 'https://placehold.co/100x100/e2e8f0/cbd5e0?text=Item'}" alt="${item.nome}" class="w-full h-24 object-contain mb-2 rounded">
+                        <img src="${item.foto || 'https://placehold.co/100x100/e2e8f0/cbd5e0?text=Item'}" alt="${item.nome}" class="w-full h-24 object-contain mb-2 rounded cursor-pointer">
                         <p class="text-sm font-medium flex-grow">${item.nome}</p>
                         <div class="mt-2 flex justify-center space-x-2">
                             <button class="item-action-btn edit-item-btn text-blue-500 hover:text-blue-700"><i class="fas fa-edit"></i></button>
@@ -1577,7 +1597,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 itemData.consumo[trimmedName] = [];
                 renderCategoryFilters();
                 renderItensDeRequisicao();
-                // Opcional: filtrar pela categoria recém-criada
                 const newFilterBtn = document.querySelector(`.item-category-filter-btn[data-category="${trimmedName}"]`);
                 if(newFilterBtn) handleCategoryFilterClick(newFilterBtn);
             } else {
@@ -1614,8 +1633,8 @@ document.addEventListener('DOMContentLoaded', function() {
         showModal(allElements.itemFormModal);
     }
 
-    function applyRequisicaoFilters(){ const sD=document.getElementById('filter-req-start-date').value,eD=document.getElementById('filter-req-end-date').value,cId=document.getElementById('filter-req-consultor').value,tipo=document.getElementById('filter-req-tipo').value,status=document.getElementById('filter-req-status').value,item=document.getElementById('filter-req-item').value.toLowerCase(); let filtered=requisicoesData.filter(r=>(!sD||r.DataRequisicao>=sD)&&(!eD||r.DataRequisicao<=eD)&&(!cId||r['Consultores-id']==cId)&&(!tipo||r.Tipo===tipo)&&(!status||r.Status===status)); if(item){filtered=filtered.filter(r=>{return r.ItensDaRequisicao.some(it=>{const itemInfo=allItems.find(i=>i.Id===it['ItensDoCatalogo-id']); return itemInfo&&itemInfo.Nome.toLowerCase().includes(item);});});} renderRequisicoes(filtered); }
-    function clearRequisicaoFilters(){ document.getElementById('requisicoes-filters').querySelectorAll('input, select').forEach(el => el.value = ''); applyRequisicaoFilters(); }
+    function applyRequisicaoFilters(){ const sD=document.getElementById('filter-req-start-date').value,eD=document.getElementById('filter-req-end-date').value,cId=document.getElementById('filter-req-consultor').value,status=document.getElementById('filter-req-status').value,item=document.getElementById('filter-req-item').value.toLowerCase(); let filtered=requisicoesData.filter(r=>(!sD||r.DataRequisicao>=sD)&&(!eD||r.DataRequisicao<=eD)&&(!cId||r['Consultores-id']==cId)&&(!status||r.Status===status)); if(item){filtered=filtered.filter(r=>{return r.ItensDaRequisicao.some(it=>{const itemInfo=allItems.find(i=>i.Id===it['ItensDoCatalogo-id']); return itemInfo&&itemInfo.Nome.toLowerCase().includes(item);});});} renderRequisicoes(filtered); }
+    function clearRequisicaoFilters(){ document.getElementById('requisicoes-filters').querySelectorAll('input, select').forEach(el => { if(el.id !== 'filter-req-tipo') el.value = ''}); applyRequisicaoFilters(); }
     
     function applyAndRenderFerias(){ const nome = document.getElementById('ferias-filter-name').value.toLowerCase(); const inicio = document.getElementById('ferias-filter-start').value; const fim = document.getElementById('ferias-filter-end').value; const filtered = feriasData.filter(f => (!nome || f.consultor_nome.toLowerCase().includes(nome)) && (!inicio || f.DataInicio >= inicio) && (!fim || f.DataRetorno <= fim) ); renderFerias(filtered); }
     function applyAndRenderAtestados(){ const nome = document.getElementById('atestados-filter-name').value.toLowerCase(); const inicio = document.getElementById('atestados-filter-start').value; const fim = document.getElementById('atestados-filter-end').value; const filtered = atestadosData.filter(a => (!nome || a.consultor_nome.toLowerCase().includes(nome)) && (!inicio || a.DataInicio >= inicio) && (!fim || a.DataRetorno <= fim) ); renderAtestados(filtered); }
@@ -1648,7 +1667,6 @@ document.addEventListener('DOMContentLoaded', function() {
         ['dash-fin-status', 'dash-fin-start', 'dash-fin-end'].forEach(id => document.getElementById(id)?.addEventListener('change', updateFinanceDashboard));
         ['dash-visit-start', 'dash-visit-end'].forEach(id => document.getElementById(id)?.addEventListener('change', updateVisitsDashboard));
         document.getElementById('report-type')?.addEventListener('change', toggleReportSubtype);
-        document.getElementById('requisicao-tipo')?.addEventListener('change', toggleRequisicaoFields);
         
         ['filter-receita-start-date', 'filter-receita-end-date', 'filter-receita-cliente', 'filter-receita-status'].forEach(id => document.getElementById(id)?.addEventListener('change', applyAndRenderReceitas));
         ['filter-custo-start-date', 'filter-custo-end-date', 'filter-custo-credor', 'filter-custo-status'].forEach(id => document.getElementById(id)?.addEventListener('change', applyAndRenderCustos));
@@ -1667,5 +1685,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
 </script>
+
 </body>
 </html>
