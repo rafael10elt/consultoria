@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR" class="light">
 <head>
@@ -968,7 +969,40 @@ document.addEventListener('DOMContentLoaded', function() {
             return null;
         }
     }
-    
+    function getCurrentLocation() {
+        return new Promise((resolve, reject) => {
+            if (!navigator.geolocation) {
+                reject(new Error('Geolocalização não é suportada por este navegador.'));
+            } else {
+                // Solicita a localização com alta precisão
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        resolve({
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        });
+                    },
+                    (error) => {
+                        let errorMessage = 'Não foi possível obter a localização.';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = "O usuário negou a permissão para geolocalização.";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = "A informação de localização está indisponível.";
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = "A requisição para obter a localização do usuário expirou.";
+                                break;
+                        }
+                        reject(new Error(errorMessage));
+                    },
+                    { enableHighAccuracy: true } // Opção para maior precisão
+                );
+            }
+        });
+    }
+
     // --- Funções de Carregamento de Dados (Fetch) ---
     async function fetchAllData() {
         showLoadingOverlay('Carregando dados...');
@@ -1476,11 +1510,102 @@ document.addEventListener('DOMContentLoaded', function() {
     function clearFilters(){document.getElementById('filter-start-date').value=''; document.getElementById('filter-end-date').value=''; document.getElementById('filter-consultor').value=''; document.getElementById('filter-cliente').value=''; document.getElementById('filter-status').value=''; renderAllVisits(visitsData);}
     function renderAllVisits(d=visitsData){renderKanbanBoard(d.filter(v=>v.Status!=='Remarcada')); renderVisitsList(d); renderCalendarEvents(d);}
     function renderKanbanBoard(d){ const c={'agendada':[],'em-andamento':[],'concluida':[]}; d.forEach(v=>{ const sK = v.Status.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(' ','-'); if(c[sK]) { c[sK].push(createKanbanCard(v)); } }); document.getElementById('kanban-agendada').innerHTML=c.agendada.join(''); document.getElementById('kanban-em-andamento').innerHTML=c['em-andamento'].join(''); document.getElementById('kanban-concluida').innerHTML=c.concluida.join(''); }
-    function createKanbanCard(v){const{color,label}=sConf[v.Status] || {color: 'gray', label: v.Status}; const dF=new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR'); const rS=v.Remarcada&&v.Status==='Agendada'?'<span class="text-xs ml-2 font-semibold text-purple-800">(Remarcado)</span>':''; let acts=''; if(v.Status==='Agendada')acts=`<button data-id="${v.Id}" class="iniciar-visita-btn w-full bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Iniciar</button><button data-id="${v.Id}" class="remarcar-visita-btn w-full mt-2 bg-gray-500 text-white px-3 py-1 rounded-md text-sm hover:bg-gray-600">Remarcar</button>`; else if(v.Status==='Em Andamento')acts=`<button data-id="${v.Id}" class="encerrar-visita-btn w-full bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">Encerrar</button>`; let dur=''; if(v.Status==='Concluída'&&v.CheckIn&&v.CheckOut){const diff=(new Date(v.CheckOut)-new Date(v.CheckIn))/60000; dur=`<div class="text-xs text-center font-bold text-brand-gold mt-2 p-1 bg-yellow-100 dark:bg-yellow-900 rounded">Duração: ${Math.floor(diff/60)}h ${Math.round(diff%60)}min</div>`;} return`<div class="kanban-card bg-white dark:bg-gray-700 p-4 rounded-lg shadow" data-id="${v.Id}"><div class="flex justify-between items-start mb-2"><h4 class="font-bold text-gray-800 dark:text-white">${v.Clientes?.Nome || 'N/A'}${rS}</h4><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}</span></div><p class="text-sm text-gray-600 dark:text-gray-300">${v.Consultores?.Nome || 'N/A'}</p><p class="text-sm text-gray-600 dark:text-gray-300">${dF} - ${v.HoraInicio}</p>${dur}<div class="mt-4 border-t pt-2 dark:border-gray-600 visit-actions">${acts}</div></div>`;}
+    function createKanbanCard(v){
+        const{color,label}=sConf[v.Status] || {color: 'gray', label: v.Status}; 
+        const dF=new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR'); 
+        const rS=v.Remarcada&&v.Status==='Agendada'?'<span class="text-xs ml-2 font-semibold text-purple-800">(Remarcado)</span>':''; 
+        
+        let acts=''; 
+        if(v.Status==='Agendada')acts=`<button data-id="${v.Id}" class="iniciar-visita-btn w-full bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Iniciar</button><button data-id="${v.Id}" class="remarcar-visita-btn w-full mt-2 bg-gray-500 text-white px-3 py-1 rounded-md text-sm hover:bg-gray-600">Remarcar</button>`; 
+        else if(v.Status==='Em Andamento')acts=`<button data-id="${v.Id}" class="encerrar-visita-btn w-full bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">Encerrar</button>`; 
+        
+        let dur=''; 
+        if(v.Status==='Concluída'&&v.CheckIn&&v.CheckOut){
+            const diff=(new Date(v.CheckOut)-new Date(v.CheckIn))/60000; 
+            dur=`<div class="text-xs text-center font-bold text-brand-gold mt-2 p-1 bg-yellow-100 dark:bg-yellow-900 rounded">Duração: ${Math.floor(diff/60)}h ${Math.round(diff%60)}min</div>`;
+        }
+        
+        // Mostra a localização e os horários de check-in/out
+        let locInfo = '';
+        const createMapLink = (label, color, locString) => {
+            if (typeof locString !== 'string' || locString.indexOf(',') === -1) return '';
+            return `<div><i class="fas fa-map-marker-alt text-${color}-500 mr-1"></i><strong>${label} Local:</strong> <a href="https://www.google.com/maps?q=${locString}" target="_blank" class="text-brand-gold hover:underline">Ver no Mapa</a></div>`;
+        };
+        
+        const formatTime = (isoString) => {
+            if (!isoString) return null;
+            return new Date(isoString).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        };
+
+        if (v.Status === 'Em Andamento' && (v.CheckInLocal || v.CheckIn)) {
+            const checkInTime = formatTime(v.CheckIn);
+            const checkInLink = createMapLink('Check-in', 'green', v.CheckInLocal);
+            if (checkInLink || checkInTime) {
+                locInfo = '<div class="text-xs text-left mt-2 border-t dark:border-gray-600 pt-2 space-y-1">';
+                if (checkInTime) locInfo += `<div><i class="far fa-clock text-green-500 mr-1"></i><strong>Início:</strong> ${checkInTime}</div>`;
+                locInfo += checkInLink;
+                locInfo += '</div>';
+            }
+        } else if (v.Status === 'Concluída' && (v.CheckInLocal || v.CheckOutLocal || v.CheckIn || v.CheckOut)) {
+            const checkInTime = formatTime(v.CheckIn);
+            const checkOutTime = formatTime(v.CheckOut);
+            const checkInLink = createMapLink('Check-in', 'green', v.CheckInLocal);
+            const checkOutLink = createMapLink('Check-out', 'red', v.CheckOutLocal);
+            
+            if (checkInLink || checkOutLink || checkInTime || checkOutTime) {
+                locInfo = '<div class="text-xs text-left mt-2 border-t dark:border-gray-600 pt-2 space-y-1">';
+                if (checkInTime) locInfo += `<div><i class="far fa-clock text-green-500 mr-1"></i><strong>Início:</strong> ${checkInTime}</div>`;
+                locInfo += checkInLink;
+                if (checkOutTime) locInfo += `<div><i class="far fa-clock text-red-500 mr-1"></i><strong>Final:</strong> ${checkOutTime}</div>`;
+                locInfo += checkOutLink;
+                locInfo += '</div>';
+            }
+        }
+
+        return`<div class="kanban-card bg-white dark:bg-gray-700 p-4 rounded-lg shadow" data-id="${v.Id}"><div class="flex justify-between items-start mb-2"><h4 class="font-bold text-gray-800 dark:text-white">${v.Clientes?.Nome || 'N/A'}${rS}</h4><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}</span></div><p class="text-sm text-gray-600 dark:text-gray-300">${v.Consultores?.Nome || 'N/A'}</p><p class="text-sm text-gray-600 dark:text-gray-300">${dF} - ${v.HoraInicio}</p>${locInfo}${dur}<div class="mt-4 border-t pt-2 dark:border-gray-600 visit-actions">${acts}</div></div>`;
+    }
     function renderVisitsList(d){const tB=document.getElementById('visitas-table-body'); tB.innerHTML=''; d.forEach(v=>{const{color,label}=sConf[v.Status] || {color: 'gray', label: v.Status}; const s=label+(v.Remarcada&&v.Status==='Agendada'?' (Remarcado)':''); const r=tB.insertRow(); r.className='bg-white border-b dark:bg-gray-800 dark:border-gray-700'; r.dataset.id=v.Id; r.innerHTML=`<td class="px-6 py-4">${v.Clientes?.Nome || 'N/A'}</td><td class="px-6 py-4">${v.Consultores?.Nome || 'N/A'}</td><td class="px-6 py-4">${new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR')}</td><td class="px-6 py-4">${v.HoraInicio} - ${v.HoraFim}</td><td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${s}</span></td><td class="px-6 py-4 space-x-2"><button class="table-details-btn text-gray-500" data-type="visita"><i class="fas fa-eye"></i></button><button class="table-edit-btn text-blue-500" data-type="visita"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500" data-type="visita"><i class="fas fa-trash"></i></button></td>`;});}
     function renderCalendarEvents(d){if(!calendar)return; calendar.removeAllEvents(); calendar.addEventSource(d.map(v=>({id:v.Id, title:`${v.Clientes?.Nome || 'Cliente'} (${v.Consultores?.Nome || 'Consultor'})`, start:`${v.DataVisita}T${v.HoraInicio}`, end:`${v.DataVisita}T${v.HoraFim}`, color:(sConf[v.Status] || {color:'gray'}).color})));}
-    async function handleStartVisit(vId){showLoadingOverlay('Iniciando...'); await nocoFetch(`Visitas/${vId}`,{method:'PATCH',body:JSON.stringify({Status:'Em Andamento',CheckIn:new Date().toISOString()})}); await fetchVisitas(); applyFilters(); hideLoadingOverlay();}
-    async function handleEndVisit(vId){showLoadingOverlay('Encerrando...'); await nocoFetch(`Visitas/${vId}`,{method:'PATCH',body:JSON.stringify({Status:'Concluída',CheckOut:new Date().toISOString()})}); await fetchVisitas(); applyFilters(); updateAllDashboards(); hideLoadingOverlay();}
+async function handleStartVisit(vId){
+        showLoadingOverlay('Iniciando e obtendo localização...');
+        try {
+            const location = await getCurrentLocation();
+            const body = {
+                Status: 'Em Andamento',
+                CheckIn: new Date().toISOString(),
+                // CORREÇÃO: Formata a localização para o tipo string "latitude,longitude"
+                CheckInLocal: `${location.lat},${location.lng}`
+            };
+            await nocoFetch(`Visitas/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
+            await fetchVisitas();
+            applyFilters();
+        } catch (error) {
+            alert(`Erro ao iniciar visita: ${error.message}`);
+        } finally {
+            hideLoadingOverlay();
+        }
+    }
+    async function handleEndVisit(vId){
+        showLoadingOverlay('Encerrando e obtendo localização...');
+        try {
+            const location = await getCurrentLocation();
+            const body = {
+                Status: 'Concluída',
+                CheckOut: new Date().toISOString(),
+                // CORREÇÃO: Formata a localização para o tipo string "latitude,longitude"
+                CheckOutLocal: `${location.lat},${location.lng}`
+            };
+            await nocoFetch(`Visitas/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
+            await fetchVisitas();
+            applyFilters();
+            updateAllDashboards();
+        } catch (error) {
+            alert(`Erro ao encerrar visita: ${error.message}`);
+        } finally {
+            hideLoadingOverlay();
+        }
+    }
+   
     function handleRescheduleVisit(vId){const v=visitsData.find(d=>d.Id==vId); if(v){document.getElementById('is-rescheduling').value='true'; openVisitaModal(v);}}
     function openVisitaModal(v=null){const f=allElements.visitaForm; f.reset(); document.getElementById('is-rescheduling').value='false'; if(v){document.getElementById('visita-modal-title').textContent="Editar Visita"; f.querySelector('#visita-id').value=v.Id; f.querySelector('#visita-consultor').value=v.Consultores?.Id; f.querySelector('#visita-cliente').value=v.Clientes?.Id; f.querySelector('#visita-data').value=v.DataVisita; f.querySelector('#visita-inicio').value=v.HoraInicio; f.querySelector('#visita-fim').value=v.HoraFim; f.querySelector('#visita-descricao').value=v.Descricao;}else{document.getElementById('visita-modal-title').textContent="Agendar Nova Visita"; f.querySelector('#visita-id').value=''; f.querySelector('#visita-consultor').value=loggedInUser.Id;} showModal(allElements.visitaFormModal);}
     async function checkOverdueVisits(){const t=new Date(); t.setHours(0,0,0,0); const oD=visitsData.filter(v=>v.Status==='Agendada'&&new Date(v.DataVisita+'T23:59:59')<t); if(oD.length>0){showLoadingOverlay('Atualizando status...'); await Promise.all(oD.map(v=>nocoFetch(`Visitas/${v.Id}`,{method:'PATCH',body:JSON.stringify({Status:'Remarcada'})}))); await fetchVisitas(); applyFilters(); hideLoadingOverlay();}}
