@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="pt-BR" class="light">
 <head>
@@ -486,8 +487,6 @@ body {
                                 <table class="w-full text-sm text-left text-gray-500 dark:text-gray-300">
                                     <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                         <tr>
-                                            <th scope="col" class="px-6 py-3">Tipo</th>
-                                            <th scope="col" class="px-6 py-3">Itens</th>
                                             <th scope="col" class="px-6 py-3">Consultor</th>
                                             <th scope="col" class="px-6 py-3">Data/Hora</th>
                                             <th scope="col" class="px-6 py-3">Status</th>
@@ -1384,6 +1383,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if(btn.classList.contains('cancel-sub-form')){ hideSubFormToggle(btn.dataset.history, btn.dataset.form); return; }
         if(btn.classList.contains('item-category-filter-btn')){ handleCategoryFilterClick(btn); return; }
         if (btn.classList.contains('add-item-btn')) { openItemModal(btn.dataset.category); return; }
+        if(btn.classList.contains('change-status-btn')) { handleChangeRequisitionStatus(btn); return; }
 
         const aM={
             'logout-button':()=>showModal(allElements.logoutConfirmModal),'cancel-logout-btn':()=>hideModal(allElements.logoutConfirmModal),'confirm-logout-btn':()=>{sessionStorage.clear(); location.reload();},
@@ -1662,9 +1662,12 @@ document.addEventListener('DOMContentLoaded', function() {
         hideLoadingOverlay();
     }
 
-    function populateRequisitionItemSelect() {
-        const itemsConsumo = allItems.filter(i => i.Tipo === 'Consumo');
-        populateSelectWithOptions('#requisicao-item-catalogo', itemsConsumo, 'Id', 'Nome', false);
+    function populateRequisitionItemSelect(category = 'Todos') {
+        let itemsToPopulate = allItems.filter(i => i.Tipo === 'Consumo');
+        if (category !== 'Todos') {
+            itemsToPopulate = itemsToPopulate.filter(i => i.Categoria === category);
+        }
+        populateSelectWithOptions('#requisicao-item-catalogo', itemsToPopulate, 'Id', 'Nome', false);
     }
 
     function openRequisicaoItemModal(requisicaoId) {
@@ -1672,8 +1675,55 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!form) return;
         form.reset();
         form.querySelector('#requisicao-item-req-id').value = requisicaoId;
-        populateRequisitionItemSelect();
+
+        const modalContent = form.parentElement;
+        let filterContainer = modalContent.querySelector('.category-filters');
+        if (!filterContainer) {
+            filterContainer = document.createElement('div');
+            filterContainer.className = 'category-filters flex flex-wrap gap-2 mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg';
+            form.prepend(filterContainer);
+        }
+
+        const categories = ['Todos', ...new Set(allItems.filter(i => i.Tipo === 'Consumo' && i.Categoria).map(i => i.Categoria).sort())];
+        filterContainer.innerHTML = categories.map(cat => 
+            `<button type="button" class="px-3 py-1 text-sm rounded-md transition-colors ${cat === 'Todos' ? 'bg-brand-gold text-white' : 'bg-gray-200 dark:bg-gray-600 hover:bg-gray-300'}" data-category="${cat}">${cat}</button>`
+        ).join('');
+
+        filterContainer.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                filterContainer.querySelectorAll('button').forEach(btn => {
+                    btn.classList.remove('bg-brand-gold', 'text-white');
+                    btn.classList.add('bg-gray-200', 'dark:bg-gray-600', 'hover:bg-gray-300');
+                });
+                e.target.classList.add('bg-brand-gold', 'text-white');
+                e.target.classList.remove('bg-gray-200', 'dark:bg-gray-600', 'hover:bg-gray-300');
+                populateRequisitionItemSelect(e.target.dataset.category);
+            }
+        });
+
+        populateRequisitionItemSelect('Todos');
         showModal(allElements.requisicaoItemFormModal);
+    }
+
+    async function handleChangeRequisitionStatus(btn) {
+        const id = btn.dataset.id;
+        const currentStatus = btn.dataset.status;
+        const newStatus = currentStatus === 'Pendente' ? 'Entregue' : 'Pendente';
+        
+        if (confirm(`Deseja realmente alterar o status desta requisição para "${newStatus}"?`)) {
+            showLoadingOverlay('Alterando status...');
+            const result = await nocoFetch(`Requisicoes/${id}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ Status: newStatus })
+            });
+            hideLoadingOverlay();
+            if (result) {
+                await fetchRequisicoes();
+                applyRequisicaoFilters();
+            } else {
+                alert('Não foi possível alterar o status.');
+            }
+        }
     }
 
     function renderRequisicoes(data = requisicoesData) {
@@ -1687,14 +1737,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     return `${itemInfo ? itemInfo.Nome : 'Item'} (${itemJoin.Quantidade})`;
                 }).join(', ');
             }
+            // NOTA: Para a tabela funcionar corretamente, o <thead> no HTML deve ser ajustado para ter 5 colunas:
+            // Itens, Consultor, Data/Hora, Status, Ações. A coluna "Tipo" deve ser removida.
             return `
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}">
-                    <td class="px-6 py-4 text-xs">${itensStr}</td>
                     <td class="px-6 py-4">${r.Consultores?.Nome || 'N/A'}</td>
                     <td class="px-6 py-4">${new Date(r.DataRequisicao).toLocaleString('pt-BR')}</td>
-                    <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.Status==='Entregue'?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">${r.Status}</span></td>
+                    <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.Status === 'Entregue' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${r.Status}</span></td>
                     <td class="px-6 py-4 space-x-2">
-                        <button class="add-content-btn text-green-500 hover:text-green-700" data-id="${r.Id}" title="Adicionar Conteúdo"><i class="fas fa-plus-circle"></i></button>
+                        <button class="add-content-btn text-green-500 hover:text-green-700" data-id="${r.Id}" title="Adicionar Itens"><i class="fas fa-plus-circle"></i></button>
+                        <button class="change-status-btn text-orange-500 hover:text-orange-700" data-id="${r.Id}" data-status="${r.Status}" title="Mudar Status"><i class="fas fa-toggle-on"></i></button>
                         <button class="table-details-btn text-gray-500" data-type="requisicao" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
                         <button class="table-delete-btn text-red-500" data-type="requisicao" title="Apagar Requisição"><i class="fas fa-trash"></i></button>
                     </td>
@@ -1914,6 +1966,5 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
 </script>
-
 </body>
 </html>
