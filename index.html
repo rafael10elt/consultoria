@@ -1078,7 +1078,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 id = form.dataset.id;
                 endpoint = id ? `Itens_Catalogo/${id}` : 'Itens_Catalogo';
                 const itemName = document.getElementById('item-name').value;
-                const itemCategory = document.getElementById('item-category-name').value;
+                const itemCategory = document.getElementById('item-category-input').value;
                 body = { Nome: itemName, Categoria: itemCategory, Tipo: 'Consumo' };
                 const itemFotoInput = document.getElementById('item-foto');
                 if (itemFotoInput && itemFotoInput.files[0]) {
@@ -1096,7 +1096,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const qtdInputs = form.querySelectorAll('.consumo-item-qtd');
                 qtdInputs.forEach(input => {
                     if (input.value > 0) {
-                        itensReq.push({ Quantidade: parseInt(input.value), "ItensDoCatalogo-id": parseInt(input.dataset.itemId) });
+                        itensReq.push({ 
+                            Quantidade: parseInt(input.value), 
+                            "Itens_Catalogo-id": parseInt(input.dataset.itemId) 
+                        });
                     }
                 });
                 
@@ -1287,7 +1290,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleGlobalClick(e) { 
         const t = e.target; 
 
-        const itemImage = t.closest('.item-card img');
+        const itemImage = t.closest('.item-card img, .req-form-img');
         const isActionButton = t.closest('.item-action-btn');
 
         if (itemImage && !isActionButton) {
@@ -1338,7 +1341,7 @@ document.addEventListener('DOMContentLoaded', function() {
             'show-cliente-form':()=>setupFormToggle('cliente-cards-container','cliente-form-container'),'cancel-cliente-form':()=>hideFormToggle('cliente-cards-container','cliente-form-container'),
             'show-visita-form':()=>openVisitaModal(),'cancel-visita-form':()=>hideModal(allElements.visitaFormModal),
             'show-requisicao-form':()=>openRequisicaoModal(),'cancel-requisicao-form':()=>hideModal(allElements.requisicaoFormModal),
-            'show-category-form': handleAddNewCategory,
+            'show-new-item-btn': () => openItemModal(),
             'show-receita-form':()=>setupSubFormToggle('receitas-history-container','receita-form-container'),'cancel-receita-form':()=>hideSubFormToggle('receitas-history-container','receita-form-container'),
             'show-custo-form':()=>setupSubFormToggle('custos-history-container','custo-form-container'),'cancel-custo-form':()=>hideSubFormToggle('custos-history-container','custo-form-container'),
             'show-ferias-form': () => setupSubFormToggle('ferias-history-container', 'ferias-form-container'),
@@ -1409,7 +1412,7 @@ document.addEventListener('DOMContentLoaded', function() {
             contentHTML = `<p><strong>Credor:</strong> ${data.Credor}</p> <p><strong>Vencimento:</strong> ${new Date(data.Vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</p> <p><strong>Valor:</strong> ${(data.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p> <p><strong>Status:</strong> ${data.Status}</p> <p><strong>Observação:</strong> ${data.Observacao || 'N/A'}</p>`;
         } else if (type === 'requisicao') {
             const groupedItems = (data.ItensDaRequisicao || []).reduce((acc, itemJoin) => {
-                const itemInfo = allItems.find(i => i.Id === itemJoin['ItensDoCatalogo-id']);
+                const itemInfo = allItems.find(i => i.Id === itemJoin['Itens_Catalogo-id'] || (itemJoin.Itens_Catalogo && i.Id === itemJoin.Itens_Catalogo.Id));
                 if (itemInfo) {
                     const category = itemInfo.Categoria || 'Outros';
                     if (!acc[category]) acc[category] = [];
@@ -1478,9 +1481,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Funções da Tela de Requisição ---
     function openRequisicaoModal(r=null) {
         const form = allElements.requisicaoForm;
-        form.innerHTML = ''; // Limpa o formulário para reconstrução
-        
-        // Adiciona campos ocultos e de data/consultor
+        form.innerHTML = ''; 
+
         form.innerHTML += `<input type="hidden" id="requisicao-id"><input type="hidden" id="requisicao-tipo" value="Consumo">`;
         
         const infoGrid = document.createElement('div');
@@ -1500,7 +1502,6 @@ document.addEventListener('DOMContentLoaded', function() {
         form.querySelector('#requisicao-consultor').value = loggedInUser.Id;
         form.querySelector('#requisicao-data').value = new Date().toLocaleString('pt-BR');
 
-        // Adiciona o campo de filtro
         const filterInput = document.createElement('div');
         filterInput.className = 'relative mb-4';
         filterInput.innerHTML = `
@@ -1514,29 +1515,17 @@ document.addEventListener('DOMContentLoaded', function() {
         itemsContainer.className = 'space-y-4';
         form.appendChild(itemsContainer);
         
-        // Popula os campos de consumo
         renderRequisitionConsumoFields();
 
-        // Adiciona o event listener para o filtro
         form.querySelector('#req-item-filter').addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
             form.querySelectorAll('.req-item-wrapper').forEach(itemWrapper => {
                 const itemName = itemWrapper.querySelector('label').textContent.toLowerCase();
-                if (itemName.includes(searchTerm)) {
-                    itemWrapper.style.display = 'flex';
-                } else {
-                    itemWrapper.style.display = 'none';
-                }
+                itemWrapper.style.display = itemName.includes(searchTerm) ? 'flex' : 'none';
             });
-
-            // Oculta categorias vazias
             form.querySelectorAll('details.category-section').forEach(section => {
-                const visibleItems = section.querySelectorAll('.req-item-wrapper[style*="display: flex"]');
-                if (visibleItems.length === 0 && searchTerm) {
-                    section.style.display = 'none';
-                } else {
-                    section.style.display = 'block';
-                }
+                const visibleItems = Array.from(section.querySelectorAll('.req-item-wrapper')).filter(el => el.style.display !== 'none');
+                section.style.display = (visibleItems.length === 0 && searchTerm) ? 'none' : 'block';
             });
         });
 
@@ -1566,7 +1555,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const itemWrapper = document.createElement('div');
                 itemWrapper.className = 'req-item-wrapper flex items-center justify-between';
                 itemWrapper.innerHTML = `
-                    <label for="item-qtd-${item.id}" class="text-sm">${item.nome}</label>
+                    <div class="flex items-center">
+                        <img src="${item.foto || 'https://placehold.co/100x100/e2e8f0/cbd5e0?text=Item'}" alt="${item.nome}" class="req-form-img w-10 h-10 object-contain mr-3 rounded cursor-pointer">
+                        <label for="item-qtd-${item.id}" class="text-sm">${item.nome}</label>
+                    </div>
                     <input type="number" id="item-qtd-${item.id}" data-item-id="${item.id}" class="consumo-item-qtd bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-20 p-1.5 dark:bg-gray-700 dark:border-gray-600" min="0" placeholder="0">
                 `;
                 categoryContent.appendChild(itemWrapper);
@@ -1584,7 +1576,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let itensStr = 'N/A';
             if (r.ItensDaRequisicao && r.ItensDaRequisicao.length > 0) {
                 itensStr = r.ItensDaRequisicao.map(itemJoin => {
-                    const itemInfo = allItems.find(i => i.Id === itemJoin['ItensDoCatalogo-id']);
+                    const itemInfo = allItems.find(i => i.Id === itemJoin['Itens_Catalogo-id'] || (itemJoin.Itens_Catalogo && i.Id === itemJoin.Itens_Catalogo.Id));
                     return `${itemInfo ? itemInfo.Nome : 'Item desconhecido'} (${itemJoin.Quantidade})`;
                 }).join(', ');
             }
@@ -1662,50 +1654,56 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function handleAddNewCategory() {
-        const categoryName = prompt('Digite o nome da nova categoria:');
-        if (categoryName && categoryName.trim() !== '') {
-            const trimmedName = categoryName.trim();
-            if (!itemData.consumo[trimmedName]) {
-                itemData.consumo[trimmedName] = [];
-                renderCategoryFilters();
-                renderItensDeRequisicao();
-                const newFilterBtn = document.querySelector(`.item-category-filter-btn[data-category="${trimmedName}"]`);
-                if(newFilterBtn) handleCategoryFilterClick(newFilterBtn);
-            } else {
-                alert('Esta categoria já existe.');
-            }
-        }
+       openItemModal();
     }
     
-    function openItemModal(category, item = null) {
+    function openItemModal(category = '', item = null) {
         const form = allElements.itemForm;
         form.reset();
         const modalTitle = document.getElementById('item-modal-title');
         const preview = document.getElementById('item-foto-preview');
+
+        let categoryInput = form.querySelector('#item-category-input');
+        if (!categoryInput) {
+            const nameFieldDiv = form.querySelector('#item-name').parentElement;
+            const categoryFieldHTML = `
+                <div class="mt-4">
+                    <label for="item-category-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Categoria</label>
+                    <input type="text" id="item-category-input" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required list="category-datalist">
+                    <datalist id="category-datalist"></datalist>
+                </div>
+            `;
+            nameFieldDiv.insertAdjacentHTML('afterend', categoryFieldHTML);
+            categoryInput = form.querySelector('#item-category-input');
+        }
+
+        const datalist = form.querySelector('#category-datalist');
+        datalist.innerHTML = Object.keys(itemData.consumo).map(cat => `<option value="${cat}"></option>`).join('');
+
         preview.classList.add('hidden');
         preview.src = '';
         
-        document.getElementById('item-category-name').value = category;
-
         if (item) {
             modalTitle.textContent = 'Editar Item';
-            form.dataset.id = item.id;
-            document.getElementById('item-name').value = item.Nome || item.nome;
-            if (item.Foto && item.Foto[0]?.signedPath) {
-                preview.src = `${NocoDB_BaseURL}/${item.Foto[0].signedPath}`;
+            form.dataset.id = item.id || item.Id;
+            form.querySelector('#item-name').value = item.Nome || item.nome;
+            categoryInput.value = category; 
+            const currentItem = allItems.find(i => i.Id === (item.id || item.Id));
+            const photoUrl = currentItem?.Foto?.[0]?.signedPath ? `${NocoDB_BaseURL}/${currentItem.Foto[0].signedPath}` : item.foto;
+            if (photoUrl) {
+                preview.src = photoUrl;
                 preview.classList.remove('hidden');
-            } else if (item.foto) {
-                 preview.src = item.foto;
-                 preview.classList.remove('hidden');
             }
         } else {
             modalTitle.textContent = 'Novo Item';
             delete form.dataset.id;
+            categoryInput.value = category; 
         }
         showModal(allElements.itemFormModal);
     }
 
-    function applyRequisicaoFilters(){ const sD=document.getElementById('filter-req-start-date').value,eD=document.getElementById('filter-req-end-date').value,cId=document.getElementById('filter-req-consultor').value,status=document.getElementById('filter-req-status').value,item=document.getElementById('filter-req-item').value.toLowerCase(); let filtered=requisicoesData.filter(r=>(!sD||r.DataRequisicao>=sD)&&(!eD||r.DataRequisicao<=eD)&&(!cId||r['Consultores-id']==cId)&&(!status||r.Status===status)); if(item){filtered=filtered.filter(r=>{return r.ItensDaRequisicao.some(it=>{const itemInfo=allItems.find(i=>i.Id===it['ItensDoCatalogo-id']); return itemInfo&&itemInfo.Nome.toLowerCase().includes(item);});});} renderRequisicoes(filtered); }
+
+    function applyRequisicaoFilters(){ const sD=document.getElementById('filter-req-start-date').value,eD=document.getElementById('filter-req-end-date').value,cId=document.getElementById('filter-req-consultor').value,status=document.getElementById('filter-req-status').value,item=document.getElementById('filter-req-item').value.toLowerCase(); let filtered=requisicoesData.filter(r=>(!sD||r.DataRequisicao>=sD)&&(!eD||r.DataRequisicao<=eD)&&(!cId||r['Consultores-id']==cId)&&(!status||r.Status===status)); if(item){filtered=filtered.filter(r=>{return r.ItensDaRequisicao.some(it=>{const itemInfo=allItems.find(i=>i.Id===it['Itens_Catalogo-id']); return itemInfo&&itemInfo.Nome.toLowerCase().includes(item);});});} renderRequisicoes(filtered); }
     function clearRequisicaoFilters(){ document.getElementById('requisicoes-filters').querySelectorAll('input, select').forEach(el => { if(el.id !== 'filter-req-tipo') el.value = ''}); applyRequisicaoFilters(); }
     
     function applyAndRenderFerias(){ const nome = document.getElementById('ferias-filter-name').value.toLowerCase(); const inicio = document.getElementById('ferias-filter-start').value; const fim = document.getElementById('ferias-filter-end').value; const filtered = feriasData.filter(f => (!nome || f.consultor_nome.toLowerCase().includes(nome)) && (!inicio || f.DataInicio >= inicio) && (!fim || f.DataRetorno <= fim) ); renderFerias(filtered); }
@@ -1726,12 +1724,28 @@ document.addEventListener('DOMContentLoaded', function() {
     function initializeApp() {
         document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
 
-        // Oculta permanentemente os elementos de filtro e formulário de tipo de requisição
+        // Ajustes de UI via JS
+        const reqTabButton = document.querySelector('#requisicao-tabs button[data-target="itens-requisicao-content"]');
+        if(reqTabButton) {
+            reqTabButton.firstChild.nodeValue = 'Catálogo de Itens '; // Mantém o span
+        }
+        const newItemButton = document.getElementById('show-category-form');
+        if(newItemButton) {
+            newItemButton.textContent = 'Novo Item';
+            newItemButton.id = 'show-new-item-btn'; // Re-ID para clareza e evitar conflitos
+        }
+
         const filterReqTipo = document.getElementById('filter-req-tipo');
         if (filterReqTipo) filterReqTipo.parentElement.style.display = 'none';
 
         const formReqTipo = document.getElementById('requisicao-tipo');
         if (formReqTipo) formReqTipo.parentElement.style.display = 'none';
+        
+        const episFields = document.getElementById('epis-fields');
+        if(episFields) episFields.style.display = 'none';
+
+        const addCategoryBtn = document.getElementById('add-consumo-category-btn');
+        if(addCategoryBtn) addCategoryBtn.style.display = 'none';
 
 
         allElements.loginForm?.addEventListener('submit', handleLogin);
@@ -1765,6 +1779,5 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
 });
 </script>
-
 </body>
 </html>
