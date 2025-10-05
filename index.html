@@ -262,6 +262,11 @@ body {
                                 <div class="relative w-full max-w-xs">
                                     <input type="text" id="rh-search" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Buscar consultor...">
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><i class="fas fa-search text-gray-400"></i></div>
+                                </div>                       
+                                <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-lg flex space-x-1" id="consultor-status-filters">
+                                    <button class="consultor-status-filter-btn filter-btn-active px-3 py-1 rounded-md shadow-sm" data-status="Todos">Todos</button>
+                                    <button class="consultor-status-filter-btn px-3 py-1 rounded-md" data-status="Ativo">Ativos</button>
+                                    <button class="consultor-status-filter-btn px-3 py-1 rounded-md" data-status="Inativo">Inativos</button>
                                 </div>
                                 <button id="show-rh-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors w-full sm:w-auto">Novo Consultor</button>
                             </div>
@@ -285,6 +290,13 @@ body {
                                     <div><label for="rh-cnpj" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">CNPJ</label><input type="text" id="rh-cnpj" name="cnpj" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
                                     <div><label for="rh-razao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Razão Social</label><input type="text" id="rh-razao" name="razao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
                                     <div><label for="rh-valor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor por Hora</label><input type="number" id="rh-valor" name="valor" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
+                                    <div>
+                                        <label for="rh-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
+                                        <select id="rh-status" name="status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                                            <option value="Ativo">Ativo</option>
+                                            <option value="Inativo">Inativo</option>
+                                        </select>
+                                    </div>
                                     <div class="flex items-center"><input id="rh-admin" type="checkbox" class="w-4 h-4 text-brand-gold bg-gray-100 border-gray-300 rounded focus:ring-brand-gold dark:focus:ring-brand-gold dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"><label for="rh-admin" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">É administrador?</label></div>
                                     <div class="md:col-span-2 lg:col-span-3"><label for="rh-endereco" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Endereço</label><input type="text" name="endereco" id="rh-endereco" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
                                     <div class="md:col-span-2 lg:col-span-3"><label for="rh-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label><textarea id="rh-obs" name="obs" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></textarea></div>
@@ -1102,8 +1114,23 @@ document.addEventListener('DOMContentLoaded', function() {
     async function authenticateUser(login, senha) { const endpoint = `Consultores?where=(Login,eq,${login})~and(Senha,eq,${senha})`; const result = await nocoFetch(endpoint); return (result && result.list && result.list.length > 0) ? result.list[0] : null; }
 
     // --- Funções de Renderização ---
-    function renderConsultores() { document.getElementById('rh-cards-container').innerHTML = consultoresData.map(c => createConsultorCard(c)).join(''); }
-    function createConsultorCard(c) { const fotoUrl = (c.Foto && c.Foto[0]?.signedPath) ? `${NocoDB_BaseURL}/${c.Foto[0].signedPath}` : `https://i.pravatar.cc/150?u=${c.Login || c.Nome}`; const dataset = Object.keys(c).map(k => `data-${k.toLowerCase()}="${c[k] && typeof c[k] === 'object' ? JSON.stringify(c[k]) : (c[k] || '')}"`).join(' '); return `<div class="rh-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset} data-nome="${c.Nome}"> <img src="${fotoUrl}" class="w-24 h-24 rounded-full object-cover mb-4"> <h4 class="font-bold text-lg text-gray-800 dark:text-white">${c.Nome}</h4> <p class="text-sm text-gray-500 dark:text-gray-400">${c.Email || ''}</p> <div class="flex space-x-4 mt-4"><a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a></div> </div>`; }
+    function renderConsultores(data = consultoresData) { 
+        document.getElementById('rh-cards-container').innerHTML = data.map(c => createConsultorCard(c)).join(''); 
+    }
+    function createConsultorCard(c) {
+        const fotoUrl = (c.Foto && c.Foto[0]?.signedPath) ? `${NocoDB_BaseURL}/${c.Foto[0].signedPath}` : `https://i.pravatar.cc/150?u=${c.Login || c.Nome}`;
+        const dataset = Object.keys(c).map(k => `data-${k.toLowerCase()}="${c[k] && typeof c[k] === 'object' ? JSON.stringify(c[k]) : (c[k] || '')}"`).join(' ');
+        const statusClass = c.Status === 'Ativo' ? 'bg-green-500' : 'bg-red-500';
+        return `<div class="rh-card relative bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset} data-nome="${c.Nome}" data-status="${c.Status || 'Ativo'}">
+                    <span class="absolute top-2 right-2 h-3 w-3 rounded-full ${statusClass}" title="Status: ${c.Status || 'Ativo'}"></span>
+                    <img src="${fotoUrl}" class="w-24 h-24 rounded-full object-cover mb-4">
+                    <h4 class="font-bold text-lg text-gray-800 dark:text-white">${c.Nome}</h4>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">${c.Email || ''}</p>
+                    <div class="flex space-x-4 mt-4">
+                        <a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a>
+                    </div>
+                </div>`;
+    }
     function renderClientes(data = clientesData) { document.getElementById('cliente-cards-container').innerHTML = data.map(c => createClienteCard(c)).join(''); }
     function createClienteCard(c) { 
         const fotoUrl = (c.Foto && c.Foto[0]?.signedPath) ? `${NocoDB_BaseURL}/${c.Foto[0].signedPath}` : `https://picsum.photos/seed/${c.Nome.replace(/\s/g, '')}/100/100`; 
@@ -1126,7 +1153,19 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderAtestados(data = atestadosData) { const tbody = document.getElementById('atestados-table-body'); if (!tbody) return; tbody.innerHTML = data.map(a => { const anexoUrl = a.Anexo && a.Anexo[0]?.signedPath ? `${NocoDB_BaseURL}/${a.Anexo[0].signedPath}` : '#'; return ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${a.Id}"> <td class="px-6 py-4">${a.Consultores?.Nome || 'N/A'}</td> <td class="px-6 py-4">${new Date(a.DataInicio + 'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${new Date(a.DataRetorno + 'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${a.Anexo && a.Anexo[0] ? `<a href="${anexoUrl}" target="_blank" class="text-brand-gold hover:underline"><i class="fas fa-paperclip"></i> Ver</a>` : 'Nenhum'}</td> <td class="px-6 py-4 space-x-2"> <button class="table-details-btn text-gray-500" data-type="atestado"><i class="fas fa-eye"></i></button> <button class="table-edit-btn text-blue-500" data-type="atestado"><i class="fas fa-edit"></i></button> <button class="table-delete-btn text-red-500" data-type="atestado"><i class="fas fa-trash"></i></button> </td> </tr> `}).join(''); }
     function renderEpis(data = episEntreguesData) { const tbody = document.getElementById('epis-table-body'); if (!tbody) return; tbody.innerHTML = data.map(e => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${e.Id}"> <td class="px-6 py-4">${e.Consultores?.Nome || 'N/A'}</td> <td class="px-6 py-4">${e.Item}</td> <td class="px-6 py-4">${e.Quantidade}</td> <td class="px-6 py-4">${new Date(e.DataEntrega + 'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4 space-x-2"> <button class="table-details-btn text-gray-500" data-type="epi"><i class="fas fa-eye"></i></button> <button class="table-edit-btn text-blue-500" data-type="epi"><i class="fas fa-edit"></i></button> <button class="table-delete-btn text-red-500" data-type="epi"><i class="fas fa-trash"></i></button> </td> </tr> `).join(''); }
     function renderAtivos(data = ativosData) { const tbody = document.getElementById('ativos-table-body'); if (!tbody) return; tbody.innerHTML = data.map(a => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${a.Id}"> <td class="px-6 py-4">${a.Consultores?.Nome || 'N/A'}</td> <td class="px-6 py-4">${a.Item}</td> <td class="px-6 py-4">${new Date(a.DataEntrega + 'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${a.DataDevolucao ? new Date(a.DataDevolucao + 'T00:00:00').toLocaleDateString('pt-BR') : 'Em uso'}</td> <td class="px-6 py-4 space-x-2"> <button class="table-details-btn text-gray-500" data-type="ativo"><i class="fas fa-eye"></i></button> <button class="table-edit-btn text-blue-500" data-type="ativo"><i class="fas fa-edit"></i></button> <button class="table-delete-btn text-red-500" data-type="ativo"><i class="fas fa-trash"></i></button> </td> </tr> `).join(''); }
+function applyConsultorFilters() {
+        const searchTerm = document.getElementById('rh-search').value.toLowerCase();
+        const statusFilterBtn = document.querySelector('#consultor-status-filters .filter-btn-active');
+        const statusFilter = statusFilterBtn ? statusFilterBtn.dataset.status : 'Todos';
 
+        const filteredData = consultoresData.filter(consultor => {
+            const nameMatch = consultor.Nome.toLowerCase().includes(searchTerm);
+            const statusMatch = (statusFilter === 'Todos') || (consultor.Status === statusFilter);
+            return nameMatch && statusMatch;
+        });
+
+        renderConsultores(filteredData);
+    }
     // --- Lógica de Submissão de Formulários (CRUD) ---
     async function handleFormSubmit(e) {
         e.preventDefault();
@@ -1192,9 +1231,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 endpoint = id ? `${table}/${id}` : table;
                 
                 if(isConsultor) {
-                    body = { Nome: form.querySelector('#rh-nome').value, DataNascimento: form.querySelector('#rh-nasc').value || null, Telefone: form.querySelector('#rh-tel').value, Email: form.querySelector('#rh-email').value, Login: form.querySelector('#rh-login').value, InicioVinculo: form.querySelector('#rh-inicio').value || null, FimVinculo: form.querySelector('#rh-fim').value || null, CNPJ: form.querySelector('#rh-cnpj').value, RazaoSocial: form.querySelector('#rh-razao').value, ValorHora: parseFloat(form.querySelector('#rh-valor').value) || 0, IsAdmin: form.querySelector('#rh-admin').checked, Endereco: form.querySelector('#rh-endereco').value, Observacao: form.querySelector('#rh-obs').value };
+                    body = { 
+                        Nome: form.querySelector('#rh-nome').value, 
+                        DataNascimento: form.querySelector('#rh-nasc').value || null, 
+                        Telefone: form.querySelector('#rh-tel').value, 
+                        Email: form.querySelector('#rh-email').value, 
+                        Login: form.querySelector('#rh-login').value, 
+                        InicioVinculo: form.querySelector('#rh-inicio').value || null, 
+                        FimVinculo: form.querySelector('#rh-fim').value || null, 
+                        CNPJ: form.querySelector('#rh-cnpj').value, 
+                        RazaoSocial: form.querySelector('#rh-razao').value, 
+                        ValorHora: parseFloat(form.querySelector('#rh-valor').value) || 0,
+                        Status: form.querySelector('#rh-status').value, 
+                        IsAdmin: form.querySelector('#rh-admin').checked, 
+                        Endereco: form.querySelector('#rh-endereco').value, 
+                        Observacao: form.querySelector('#rh-obs').value 
+                    };
                     const senha = form.querySelector('#rh-senha').value; if (senha) body.Senha = senha;
-                    callback = async () => { await fetchConsultores(); renderConsultores(); };
+                    callback = async () => { await fetchConsultores(); applyConsultorFilters(); };
                 } else {
                     body = { 
                         Nome: form.querySelector('#cliente-nome').value, 
@@ -1588,8 +1642,8 @@ const pageWidth = doc.internal.pageSize.getWidth();
     }
 
     function handleTableEdit(btn) { const row=btn.closest('tr'); if(!row)return; const id=parseInt(row.dataset.id); const type = btn.dataset.type; switch(type) { case 'visita': { const v=visitsData.find(d=>d.Id===id); if(v) openVisitaModal(v); break; } case 'receita': { const r=receitasData.find(d=>d.Id===id); if(r){setupSubFormToggle('receitas-history-container','receita-form-container'); const f=document.getElementById('receita-form'); f.dataset.id = r.Id; f.querySelector('#receita-cliente-form').value=r.Clientes?.Id; f.querySelector('#receita-vencimento').value=r.Vencimento; f.querySelector('#receita-valor').value=r.Valor; f.querySelector('#receita-status-form').value=r.Status; f.querySelector('#receita-obs').value=r.Observacao||'';} break; } case 'custo': { const c=custosData.find(d=>d.Id===id); if(c){setupSubFormToggle('custos-history-container','custo-form-container'); const f=document.getElementById('custo-form'); f.dataset.id = c.Id; f.querySelector('#custo-credor').value=c.Credor; f.querySelector('#custo-vencimento').value=c.Vencimento; f.querySelector('#custo-valor').value=c.Valor; f.querySelector('#custo-status-form').value=c.Status; f.querySelector('#custo-obs').value=c.Observacao||'';} break; } case 'ferias': { const data = feriasData.find(d => d.Id === id); if(data){ setupSubFormToggle('ferias-history-container', 'ferias-form-container'); const form = document.getElementById('ferias-form'); form.dataset.id = data.Id; form.querySelector('#ferias-consultor').value = data.Consultores?.Id; form.querySelector('#ferias-inicio').value = data.DataInicio; form.querySelector('#ferias-retorno').value = data.DataRetorno; } break; } case 'atestado': { const data = atestadosData.find(d => d.Id === id); if(data){ setupSubFormToggle('atestados-history-container', 'atestados-form-container'); const form = document.getElementById('atestados-form'); form.dataset.id = data.Id; form.querySelector('#atestados-consultor').value = data.Consultores?.Id; form.querySelector('#atestados-inicio').value = data.DataInicio; form.querySelector('#atestados-retorno').value = data.DataRetorno; } break; } case 'epi': { const data = episEntreguesData.find(d => d.Id === id); if(data){ setupSubFormToggle('epis-history-container', 'epis-form-container'); const form = document.getElementById('epis-form'); form.dataset.id = data.Id; form.querySelector('#epis-consultor').value = data.Consultores?.Id; form.querySelector('#epis-item').value = data.Item; form.querySelector('#epis-qtd').value = data.Quantidade; form.querySelector('#epis-data').value = data.DataEntrega; form.querySelector('#epis-obs').value = data.Observacao || ''; } break; } case 'ativo': { const data = ativosData.find(d => d.Id === id); if(data){ setupSubFormToggle('ativos-history-container', 'ativos-form-container'); const form = document.getElementById('ativos-form'); form.dataset.id = data.Id; form.querySelector('#ativos-consultor').value = data.Consultores?.Id; form.querySelector('#ativos-item').value = data.Item; form.querySelector('#ativos-entrega').value = data.DataEntrega; form.querySelector('#ativos-devolucao').value = data.DataDevolucao || ''; form.querySelector('#ativos-obs').value = data.Observacao || ''; } break; } } }
-    function handleCardEdit() { if (!activeCard) return; hideModal(allElements.detailsModal); const isConsultor = activeCard.classList.contains('rh-card'); const formContainerId = isConsultor ? 'rh-form-container' : 'cliente-form-container'; const cardsContainerId = isConsultor ? 'rh-cards-container' : 'cliente-cards-container'; const form = document.getElementById(formContainerId).querySelector('form'); const data = activeCard.dataset; form.reset(); let hiddenIdInput = form.querySelector('input[type="hidden"]'); if (!hiddenIdInput) { hiddenIdInput = document.createElement('input'); hiddenIdInput.type = 'hidden'; hiddenIdInput.id = isConsultor ? 'rh-id' : 'cliente-id'; form.prepend(hiddenIdInput); } hiddenIdInput.value = data.id; const fieldMapping = isConsultor 
-        ? {'rh-nome':'nome', /* ... outros campos de RH */ 'rh-obs':'observacao'} 
+    function handleCardEdit() { if (!activeCard) return; hideModal(allElements.detailsModal); const isConsultor = activeCard.classList.contains('rh-card'); const formContainerId = isConsultor ? 'rh-form-container' : 'cliente-form-container'; const cardsContainerId = isConsultor ? 'rh-cards-container' : 'cliente-cards-container'; const form = document.getElementById(formContainerId).querySelector('form'); const data = activeCard.dataset; form.reset(); let hiddenIdInput = form.querySelector('input[type="hidden"]'); if (!hiddenIdInput) { hiddenIdInput = document.createElement('input'); hiddenIdInput.type = 'hidden'; hiddenIdInput.id = isConsultor ? 'rh-id' : 'cliente-id'; form.prepend(hiddenIdInput); } hiddenIdInput.value = data.id;  const fieldMapping = isConsultor 
+        ? {'rh-nome':'nome', 'rh-nasc':'datanascimento', 'rh-tel':'telefone', 'rh-email':'email', 'rh-login':'login', 'rh-inicio':'iniciovinculo', 'rh-fim':'fimvinculo', 'rh-cnpj':'cnpj', 'rh-razao':'razaosocial', 'rh-valor':'valorhora', 'rh-status':'status', 'rh-admin':'isadmin', 'rh-endereco':'endereco', 'rh-obs':'observacao'} 
         : {'cliente-nome':'nome', 'cliente-razao':'razaosocial', 'cliente-cnpj':'cnpj', 'cliente-tel':'telefone', 'cliente-email':'email', 'cliente-horas':'horascontratadas', 'cliente-status':'status', 'cliente-responsavel':'responsavel', 'cliente-cpf':'cpfresponsavel', 'cliente-iptu':'iptu', 'cliente-senha-portal':'senhaportal', 'cliente-endereco':'endereco', 'cliente-obs':'observacao'};  for (const [fieldId, dataKey] of Object.entries(fieldMapping)) { const input = form.querySelector(`#${fieldId}`); if (input) { if (input.type === 'checkbox') { input.checked = data[dataKey] === 'true' || data[dataKey] === '1'; } else { input.value = data[dataKey] || ''; } } } if (isConsultor) { const passwordInput = form.querySelector('#rh-senha'); if (passwordInput) { passwordInput.value = ''; passwordInput.placeholder = "Deixe em branco para não alterar"; } } const imgPreview = form.querySelector('img'); if (imgPreview) { let fotoData; try { fotoData = data.foto ? JSON.parse(data.foto) : null; } catch(e) { fotoData = null; } imgPreview.src = (fotoData && fotoData[0]?.signedPath) ? `${NocoDB_BaseURL}/${fotoData[0].signedPath}` : `https://placehold.co/100x100/e2e8f0/cbd5e0?text=${isConsultor ? 'Foto' : 'Logo'}`; } document.getElementById(cardsContainerId).classList.add('hidden'); document.getElementById(formContainerId).classList.remove('hidden'); }
     const setupSearch=(iId,cS)=>{document.getElementById(iId)?.addEventListener('input',e=>{const sT=e.target.value.toLowerCase(); document.querySelectorAll(cS).forEach(c=>{const n=c.dataset.nome||''; c.style.display=n.toLowerCase().includes(sT)?'flex':'none';});});};
     const setupFormToggle=(cId,fId)=>{activeCard=null; const f=document.getElementById(fId).querySelector('form'); f?.reset(); let hId=f.querySelector('input[type="hidden"]'); if(hId)hId.value=''; document.getElementById(cId)?.classList.add('hidden'); document.getElementById(fId)?.classList.remove('hidden');};
@@ -1817,7 +1871,11 @@ const pageWidth = doc.internal.pageSize.getWidth();
     }
    
     function handleRescheduleVisit(vId){const v=visitsData.find(d=>d.Id==vId); if(v){document.getElementById('is-rescheduling').value='true'; openVisitaModal(v);}}
-    function openVisitaModal(v=null){const f=allElements.visitaForm; f.reset(); document.getElementById('is-rescheduling').value='false'; if(v){document.getElementById('visita-modal-title').textContent="Editar Visita"; f.querySelector('#visita-id').value=v.Id; f.querySelector('#visita-consultor').value=v.Consultores?.Id; f.querySelector('#visita-cliente').value=v.Clientes?.Id; f.querySelector('#visita-data').value=v.DataVisita; f.querySelector('#visita-inicio').value=v.HoraInicio; f.querySelector('#visita-fim').value=v.HoraFim; f.querySelector('#visita-atividades').value=v.Atividades;}else{document.getElementById('visita-modal-title').textContent="Agendar Nova Visita"; f.querySelector('#visita-id').value=''; f.querySelector('#visita-consultor').value=loggedInUser.Id;} showModal(allElements.visitaFormModal);}
+    function openVisitaModal(v=null){ const activeConsultores = consultoresData.filter(c => c.Status === 'Ativo');
+        const activeClientes = clientesData.filter(c => c.Status === 'Ativo');
+
+        populateSelectWithOptions('#visita-consultor', activeConsultores, 'Id', 'Nome', false);
+        populateSelectWithOptions('#visita-cliente', activeClientes, 'Id', 'Nome', false); const f=allElements.visitaForm; f.reset(); document.getElementById('is-rescheduling').value='false'; if(v){document.getElementById('visita-modal-title').textContent="Editar Visita"; f.querySelector('#visita-id').value=v.Id; f.querySelector('#visita-consultor').value=v.Consultores?.Id; f.querySelector('#visita-cliente').value=v.Clientes?.Id; f.querySelector('#visita-data').value=v.DataVisita; f.querySelector('#visita-inicio').value=v.HoraInicio; f.querySelector('#visita-fim').value=v.HoraFim; f.querySelector('#visita-atividades').value=v.Atividades;}else{document.getElementById('visita-modal-title').textContent="Agendar Nova Visita"; f.querySelector('#visita-id').value=''; f.querySelector('#visita-consultor').value=loggedInUser.Id;} showModal(allElements.visitaFormModal);}
     
     // INÍCIO DA CORREÇÃO: Função checkOverdueVisits que estava faltando
     async function checkOverdueVisits(){
@@ -2156,7 +2214,14 @@ const pageWidth = doc.internal.pageSize.getWidth();
         ['epis-filter-name', 'epis-filter-start', 'epis-filter-end'].forEach(id => document.getElementById(id)?.addEventListener('input', applyAndRenderEpis));
         ['ativos-filter-name', 'ativos-filter-start', 'ativos-filter-end'].forEach(id => document.getElementById(id)?.addEventListener('input', applyAndRenderAtivos));
 
-        setupSearch('rh-search', '.rh-card');
+        document.getElementById('rh-search')?.addEventListener('input', applyConsultorFilters);
+    document.getElementById('consultor-status-filters')?.addEventListener('click', e => {
+        if(e.target.classList.contains('consultor-status-filter-btn')) {
+            document.querySelectorAll('.consultor-status-filter-btn').forEach(btn => btn.classList.remove('filter-btn-active'));
+            e.target.classList.add('filter-btn-active');
+            applyConsultorFilters();
+        }
+    });
         document.getElementById('cliente-search')?.addEventListener('input', applyClienteFilters);
         document.getElementById('cliente-status-filters')?.addEventListener('click', e => {
             if(e.target.classList.contains('cliente-status-filter-btn')) {
