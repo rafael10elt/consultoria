@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="pt-BR" class="light">
 <head>
@@ -312,6 +313,13 @@ body {
                                 <input type="text" id="cliente-search" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" placeholder="Buscar cliente...">
                                 <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><i class="fas fa-search text-gray-400"></i></div>
                             </div>
+                            <!-- INÍCIO DA ALTERAÇÃO: Botões de filtro de status -->
+                            <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-lg flex space-x-1" id="cliente-status-filters">
+                                <button class="cliente-status-filter-btn filter-btn-active px-3 py-1 rounded-md shadow-sm" data-status="Todos">Todos</button>
+                                <button class="cliente-status-filter-btn px-3 py-1 rounded-md" data-status="Ativo">Ativos</button>
+                                <button class="cliente-status-filter-btn px-3 py-1 rounded-md" data-status="Inativo">Inativos</button>
+                            </div>
+                            <!-- FIM DA ALTERAÇÃO -->
                             <button id="show-cliente-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors w-full sm:w-auto">Novo Cliente</button>
                         </div>
                          <div id="cliente-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
@@ -329,6 +337,15 @@ body {
                                 <div><label for="cliente-tel" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Telefone</label><input type="tel" id="cliente-tel" name="telefone" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
                                 <div><label for="cliente-email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">E-mail</label><input type="email" id="cliente-email" name="email" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
                                 <div><label for="cliente-horas" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Horas Contratadas</label><input type="number" id="cliente-horas" name="horas" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
+                                <!-- INÍCIO DA ALTERAÇÃO: Campo de Status -->
+                                <div>
+                                    <label for="cliente-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
+                                    <select id="cliente-status" name="status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+                                        <option value="Ativo">Ativo</option>
+                                        <option value="Inativo">Inativo</option>
+                                    </select>
+                                </div>
+                                <!-- FIM DA ALTERAÇÃO -->
                                 <div><label for="cliente-responsavel" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Responsável</label><input type="text" id="cliente-responsavel" name="responsavel" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
                                 <div><label for="cliente-cpf" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">CPF do Responsável</label><input type="text" id="cliente-cpf" name="cpf" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
                                 <div><label for="cliente-iptu" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">IPTU</label><input type="text" id="cliente-iptu" name="iptu" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
@@ -1087,8 +1104,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Funções de Renderização ---
     function renderConsultores() { document.getElementById('rh-cards-container').innerHTML = consultoresData.map(c => createConsultorCard(c)).join(''); }
     function createConsultorCard(c) { const fotoUrl = (c.Foto && c.Foto[0]?.signedPath) ? `${NocoDB_BaseURL}/${c.Foto[0].signedPath}` : `https://i.pravatar.cc/150?u=${c.Login || c.Nome}`; const dataset = Object.keys(c).map(k => `data-${k.toLowerCase()}="${c[k] && typeof c[k] === 'object' ? JSON.stringify(c[k]) : (c[k] || '')}"`).join(' '); return `<div class="rh-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset} data-nome="${c.Nome}"> <img src="${fotoUrl}" class="w-24 h-24 rounded-full object-cover mb-4"> <h4 class="font-bold text-lg text-gray-800 dark:text-white">${c.Nome}</h4> <p class="text-sm text-gray-500 dark:text-gray-400">${c.Email || ''}</p> <div class="flex space-x-4 mt-4"><a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a></div> </div>`; }
-    function renderClientes() { document.getElementById('cliente-cards-container').innerHTML = clientesData.map(c => createClienteCard(c)).join(''); }
-    function createClienteCard(c) { const fotoUrl = (c.Foto && c.Foto[0]?.signedPath) ? `${NocoDB_BaseURL}/${c.Foto[0].signedPath}` : `https://picsum.photos/seed/${c.Nome.replace(/\s/g, '')}/100/100`; const dataset = Object.keys(c).map(k => `data-${k.toLowerCase()}="${c[k] && typeof c[k] === 'object' ? JSON.stringify(c[k]) : (c[k] || '')}"`).join(' '); return `<div class="cliente-card bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset} data-nome="${c.Nome}"> <img src="${fotoUrl}" class="w-24 h-24 rounded-lg object-cover mb-4"> <h4 class="font-bold text-lg text-gray-800 dark:text-white">${c.Nome}</h4> <p class="text-sm text-gray-500 dark:text-gray-400">Responsável: ${c.Responsavel || ''}</p> <div class="flex space-x-4 mt-4"> <a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a> <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.Endereco || '')}" target="_blank" class="text-blue-500 hover:text-blue-600"><i class="fas fa-map-marker-alt fa-2x"></i></a> </div> </div>`; }
+    function renderClientes(data = clientesData) { 
+        document.getElementById('cliente-cards-container').innerHTML = data.map(c => createClienteCard(c)).join(''); 
+    }
+    function createClienteCard(c) { 
+        const fotoUrl = (c.Foto && c.Foto[0]?.signedPath) ? `${NocoDB_BaseURL}/${c.Foto[0].signedPath}` : `https://picsum.photos/seed/${c.Nome.replace(/\s/g, '')}/100/100`; 
+        const dataset = Object.keys(c).map(k => `data-${k.toLowerCase()}="${c[k] && typeof c[k] === 'object' ? JSON.stringify(c[k]) : (c[k] || '')}"`).join(' '); 
+        const statusClass = c.Status === 'Ativo' ? 'bg-green-500' : 'bg-red-500';
+        return `<div class="cliente-card relative bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset} data-nome="${c.Nome}" data-status="${c.Status || 'Ativo'}"> 
+                    <span class="absolute top-2 right-2 h-3 w-3 rounded-full ${statusClass}" title="Status: ${c.Status || 'Ativo'}"></span>
+                    <img src="${fotoUrl}" class="w-24 h-24 rounded-lg object-cover mb-4"> 
+                    <h4 class="font-bold text-lg text-gray-800 dark:text-white">${c.Nome}</h4> 
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Responsável: ${c.Responsavel || ''}</p> 
+                    <div class="flex space-x-4 mt-4"> 
+                        <a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600"><i class="fab fa-whatsapp fa-2x"></i></a> 
+                        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.Endereco || '')}" target="_blank" class="text-blue-500 hover:text-blue-600"><i class="fas fa-map-marker-alt fa-2x"></i></a> 
+                    </div> 
+                </div>`; 
+    }
     function renderReceitas(data = receitasData) { const t = document.getElementById('receitas-table-body'); if(t) t.innerHTML = data.map(r => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}"> <td class="px-6 py-4">${r.Clientes?.Nome || 'N/A'}</td> <td class="px-6 py-4">${new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${(r.Valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td> <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.Status==='Pago'?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">${r.Status}</span></td> <td class="px-6 py-4 space-x-2"><button class="table-details-btn text-gray-500" data-type="receita"><i class="fas fa-eye"></i></button><button class="table-edit-btn text-blue-500" data-type="receita"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500" data-type="receita"><i class="fas fa-trash"></i></button></td> </tr> `).join(''); }
     function renderCustos(data = custosData) { const t = document.getElementById('custos-table-body'); if(t) t.innerHTML = data.map(c => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${c.Id}"> <td class="px-6 py-4">${c.Credor}</td> <td class="px-6 py-4">${new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${(c.Valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td> <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${c.Status==='Pago'?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">${c.Status}</span></td> <td class="px-6 py-4 space-x-2"><button class="table-details-btn text-gray-500" data-type="custo"><i class="fas fa-eye"></i></button><button class="table-edit-btn text-blue-500" data-type="custo"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500" data-type="custo"><i class="fas fa-trash"></i></button></td> </tr> `).join(''); }
     function renderFerias(data = feriasData) { const tbody = document.getElementById('ferias-table-body'); if (!tbody) return; tbody.innerHTML = data.map(f => { const inicio = new Date(f.DataInicio + 'T00:00:00'); const retorno = new Date(f.DataRetorno + 'T00:00:00'); const dias = Math.round((retorno - inicio) / (1000 * 60 * 60 * 24)) + 1; return ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${f.Id}"> <td class="px-6 py-4">${f.Consultores?.Nome || 'N/A'}</td> <td class="px-6 py-4">${inicio.toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${retorno.toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${dias}</td> <td class="px-6 py-4 space-x-2"> <button class="table-details-btn text-gray-500" data-type="ferias"><i class="fas fa-eye"></i></button> <button class="table-edit-btn text-blue-500" data-type="ferias"><i class="fas fa-edit"></i></button> <button class="table-delete-btn text-red-500" data-type="ferias"><i class="fas fa-trash"></i></button> </td> </tr> `; }).join(''); }
@@ -1165,8 +1198,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     const senha = form.querySelector('#rh-senha').value; if (senha) body.Senha = senha;
                     callback = async () => { await fetchConsultores(); renderConsultores(); };
                 } else {
-                    body = { Nome: form.querySelector('#cliente-nome').value, RazaoSocial: form.querySelector('#cliente-razao').value, CNPJ: form.querySelector('#cliente-cnpj').value, Telefone: form.querySelector('#cliente-tel').value, Email: form.querySelector('#cliente-email').value, HorasContratadas: parseInt(form.querySelector('#cliente-horas').value) || 0, Responsavel: form.querySelector('#cliente-responsavel').value, CPFResponsavel: form.querySelector('#cliente-cpf').value, IPTU: form.querySelector('#cliente-iptu').value, SenhaPortal: form.querySelector('#cliente-senha-portal').value, Endereco: form.querySelector('#cliente-endereco').value, Observacao: form.querySelector('#cliente-obs').value };
-                    callback = async () => { await fetchClientes(); renderClientes(); };
+                    body = { 
+                        Nome: form.querySelector('#cliente-nome').value, 
+                        RazaoSocial: form.querySelector('#cliente-razao').value, 
+                        CNPJ: form.querySelector('#cliente-cnpj').value, 
+                        Telefone: form.querySelector('#cliente-tel').value, 
+                        Email: form.querySelector('#cliente-email').value, 
+                        HorasContratadas: parseInt(form.querySelector('#cliente-horas').value) || 0, 
+                        // INÍCIO DA ALTERAÇÃO
+                        Status: form.querySelector('#cliente-status').value, 
+                        // FIM DA ALTERAÇÃO
+                        Responsavel: form.querySelector('#cliente-responsavel').value, 
+                        CPFResponsavel: form.querySelector('#cliente-cpf').value, 
+                        IPTU: form.querySelector('#cliente-iptu').value, 
+                        SenhaPortal: form.querySelector('#cliente-senha-portal').value, 
+                        Endereco: form.querySelector('#cliente-endereco').value, 
+                        Observacao: form.querySelector('#cliente-obs').value 
+                    };
+                    callback = async () => { await fetchClientes(); applyClienteFilters(); }; // Modificado para aplicar filtros após salvar
                 }
 
                 if (fileData) body.Foto = [fileData];
@@ -1331,7 +1380,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function handleGlobalClick(e) { 
         const t = e.target; 
-
+const clienteStatusBtn = t.closest('.cliente-status-filter-btn');
+        if (clienteStatusBtn) {
+            document.querySelectorAll('.cliente-status-filter-btn').forEach(b => b.classList.remove('filter-btn-active'));
+            clienteStatusBtn.classList.add('filter-btn-active');
+            applyClienteFilters();
+            return;
+        }
         if (t.closest('.add-content-btn')) {
             const reqId = t.closest('.add-content-btn').dataset.id;
             openRequisicaoItemModal(reqId);
@@ -1421,7 +1476,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleTabClick(btn) { const tC=btn.closest('ul'); tC.querySelectorAll('button').forEach(b=>{b.classList.remove('border-brand-gold','text-brand-gold'); b.classList.add('border-transparent');}); btn.classList.add('border-brand-gold','text-brand-gold'); const cC=btn.classList.contains('rh-tab-btn')?'.rh-tab-content':btn.classList.contains('requisicao-tab-btn')?'.requisicao-tab-content':'.financeiro-tab-content'; const pC=btn.closest('.page'); if(pC&&cC){pC.querySelectorAll(cC).forEach(c=>c.classList.add('hidden')); document.getElementById(btn.dataset.target)?.classList.remove('hidden');}}
     
     function handleTableEdit(btn) { const row=btn.closest('tr'); if(!row)return; const id=parseInt(row.dataset.id); const type = btn.dataset.type; switch(type) { case 'visita': { const v=visitsData.find(d=>d.Id===id); if(v) openVisitaModal(v); break; } case 'receita': { const r=receitasData.find(d=>d.Id===id); if(r){setupSubFormToggle('receitas-history-container','receita-form-container'); const f=document.getElementById('receita-form'); f.dataset.id = r.Id; f.querySelector('#receita-cliente-form').value=r.Clientes?.Id; f.querySelector('#receita-vencimento').value=r.Vencimento; f.querySelector('#receita-valor').value=r.Valor; f.querySelector('#receita-status-form').value=r.Status; f.querySelector('#receita-obs').value=r.Observacao||'';} break; } case 'custo': { const c=custosData.find(d=>d.Id===id); if(c){setupSubFormToggle('custos-history-container','custo-form-container'); const f=document.getElementById('custo-form'); f.dataset.id = c.Id; f.querySelector('#custo-credor').value=c.Credor; f.querySelector('#custo-vencimento').value=c.Vencimento; f.querySelector('#custo-valor').value=c.Valor; f.querySelector('#custo-status-form').value=c.Status; f.querySelector('#custo-obs').value=c.Observacao||'';} break; } case 'ferias': { const data = feriasData.find(d => d.Id === id); if(data){ setupSubFormToggle('ferias-history-container', 'ferias-form-container'); const form = document.getElementById('ferias-form'); form.dataset.id = data.Id; form.querySelector('#ferias-consultor').value = data.Consultores?.Id; form.querySelector('#ferias-inicio').value = data.DataInicio; form.querySelector('#ferias-retorno').value = data.DataRetorno; } break; } case 'atestado': { const data = atestadosData.find(d => d.Id === id); if(data){ setupSubFormToggle('atestados-history-container', 'atestados-form-container'); const form = document.getElementById('atestados-form'); form.dataset.id = data.Id; form.querySelector('#atestados-consultor').value = data.Consultores?.Id; form.querySelector('#atestados-inicio').value = data.DataInicio; form.querySelector('#atestados-retorno').value = data.DataRetorno; } break; } case 'epi': { const data = episEntreguesData.find(d => d.Id === id); if(data){ setupSubFormToggle('epis-history-container', 'epis-form-container'); const form = document.getElementById('epis-form'); form.dataset.id = data.Id; form.querySelector('#epis-consultor').value = data.Consultores?.Id; form.querySelector('#epis-item').value = data.Item; form.querySelector('#epis-qtd').value = data.Quantidade; form.querySelector('#epis-data').value = data.DataEntrega; form.querySelector('#epis-obs').value = data.Observacao || ''; } break; } case 'ativo': { const data = ativosData.find(d => d.Id === id); if(data){ setupSubFormToggle('ativos-history-container', 'ativos-form-container'); const form = document.getElementById('ativos-form'); form.dataset.id = data.Id; form.querySelector('#ativos-consultor').value = data.Consultores?.Id; form.querySelector('#ativos-item').value = data.Item; form.querySelector('#ativos-entrega').value = data.DataEntrega; form.querySelector('#ativos-devolucao').value = data.DataDevolucao || ''; form.querySelector('#ativos-obs').value = data.Observacao || ''; } break; } } }
-    function handleCardEdit() { if (!activeCard) return; hideModal(allElements.detailsModal); const isConsultor = activeCard.classList.contains('rh-card'); const formContainerId = isConsultor ? 'rh-form-container' : 'cliente-form-container'; const cardsContainerId = isConsultor ? 'rh-cards-container' : 'cliente-cards-container'; const form = document.getElementById(formContainerId).querySelector('form'); const data = activeCard.dataset; form.reset(); let hiddenIdInput = form.querySelector('input[type="hidden"]'); if (!hiddenIdInput) { hiddenIdInput = document.createElement('input'); hiddenIdInput.type = 'hidden'; hiddenIdInput.id = isConsultor ? 'rh-id' : 'cliente-id'; form.prepend(hiddenIdInput); } hiddenIdInput.value = data.id; const fieldMapping = isConsultor ? {'rh-nome':'nome', 'rh-nasc':'datanascimento', 'rh-tel':'telefone', 'rh-email':'email', 'rh-login':'login', 'rh-inicio':'iniciovinculo', 'rh-fim':'fimvinculo', 'rh-cnpj':'cnpj', 'rh-razao':'razaosocial', 'rh-valor':'valorhora', 'rh-admin':'isadmin', 'rh-endereco':'endereco', 'rh-obs':'observacao'} : {'cliente-nome':'nome', 'cliente-razao':'razaosocial', 'cliente-cnpj':'cnpj', 'cliente-tel':'telefone', 'cliente-email':'email', 'cliente-horas':'horascontratadas', 'cliente-responsavel':'responsavel', 'cliente-cpf':'cpfresponsavel', 'cliente-iptu':'iptu', 'cliente-senha-portal':'senhaportal', 'cliente-endereco':'endereco', 'cliente-obs':'observacao'}; for (const [fieldId, dataKey] of Object.entries(fieldMapping)) { const input = form.querySelector(`#${fieldId}`); if (input) { if (input.type === 'checkbox') { input.checked = data[dataKey] === 'true' || data[dataKey] === '1'; } else { input.value = data[dataKey] || ''; } } } if (isConsultor) { const passwordInput = form.querySelector('#rh-senha'); if (passwordInput) { passwordInput.value = ''; passwordInput.placeholder = "Deixe em branco para não alterar"; } } const imgPreview = form.querySelector('img'); if (imgPreview) { let fotoData; try { fotoData = data.foto ? JSON.parse(data.foto) : null; } catch(e) { fotoData = null; } imgPreview.src = (fotoData && fotoData[0]?.signedPath) ? `${NocoDB_BaseURL}/${fotoData[0].signedPath}` : `https://placehold.co/100x100/e2e8f0/cbd5e0?text=${isConsultor ? 'Foto' : 'Logo'}`; } document.getElementById(cardsContainerId).classList.add('hidden'); document.getElementById(formContainerId).classList.remove('hidden'); }
+    function handleCardEdit() { if (!activeCard) return; hideModal(allElements.detailsModal); const isConsultor = activeCard.classList.contains('rh-card'); const formContainerId = isConsultor ? 'rh-form-container' : 'cliente-form-container'; const cardsContainerId = isConsultor ? 'rh-cards-container' : 'cliente-cards-container'; const form = document.getElementById(formContainerId).querySelector('form'); const data = activeCard.dataset; form.reset(); let hiddenIdInput = form.querySelector('input[type="hidden"]'); if (!hiddenIdInput) { hiddenIdInput = document.createElement('input'); hiddenIdInput.type = 'hidden'; hiddenIdInput.id = isConsultor ? 'rh-id' : 'cliente-id'; form.prepend(hiddenIdInput); } hiddenIdInput.value = data.id; const fieldMapping = isConsultor 
+        ? {'rh-nome':'nome', /* ... outros campos de RH */ 'rh-obs':'observacao'} 
+        : {'cliente-nome':'nome', 'cliente-razao':'razaosocial', 'cliente-cnpj':'cnpj', 'cliente-tel':'telefone', 'cliente-email':'email', 'cliente-horas':'horascontratadas', 'cliente-status':'status', 'cliente-responsavel':'responsavel', 'cliente-cpf':'cpfresponsavel', 'cliente-iptu':'iptu', 'cliente-senha-portal':'senhaportal', 'cliente-endereco':'endereco', 'cliente-obs':'observacao'};  for (const [fieldId, dataKey] of Object.entries(fieldMapping)) { const input = form.querySelector(`#${fieldId}`); if (input) { if (input.type === 'checkbox') { input.checked = data[dataKey] === 'true' || data[dataKey] === '1'; } else { input.value = data[dataKey] || ''; } } } if (isConsultor) { const passwordInput = form.querySelector('#rh-senha'); if (passwordInput) { passwordInput.value = ''; passwordInput.placeholder = "Deixe em branco para não alterar"; } } const imgPreview = form.querySelector('img'); if (imgPreview) { let fotoData; try { fotoData = data.foto ? JSON.parse(data.foto) : null; } catch(e) { fotoData = null; } imgPreview.src = (fotoData && fotoData[0]?.signedPath) ? `${NocoDB_BaseURL}/${fotoData[0].signedPath}` : `https://placehold.co/100x100/e2e8f0/cbd5e0?text=${isConsultor ? 'Foto' : 'Logo'}`; } document.getElementById(cardsContainerId).classList.add('hidden'); document.getElementById(formContainerId).classList.remove('hidden'); }
     const setupSearch=(iId,cS)=>{document.getElementById(iId)?.addEventListener('input',e=>{const sT=e.target.value.toLowerCase(); document.querySelectorAll(cS).forEach(c=>{const n=c.dataset.nome||''; c.style.display=n.toLowerCase().includes(sT)?'flex':'none';});});};
     const setupFormToggle=(cId,fId)=>{activeCard=null; const f=document.getElementById(fId).querySelector('form'); f?.reset(); let hId=f.querySelector('input[type="hidden"]'); if(hId)hId.value=''; document.getElementById(cId)?.classList.add('hidden'); document.getElementById(fId)?.classList.remove('hidden');};
     const hideFormToggle=(cId,fId)=>{document.getElementById(fId).classList.add('hidden'); document.getElementById(cId).classList.remove('hidden');}
@@ -1430,7 +1487,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const hideModal=(m)=>m?.classList.replace('flex','hidden');
     const showModal=(m)=>m?.classList.replace('hidden','flex');
     const openDetailsModal=(card)=>{activeCard=card; activeDeleteItem={id:card.dataset.id, type:card.classList.contains('rh-card')?'consultor':'cliente', element:card}; document.getElementById('details-modal-actions').style.display='flex'; const data=card.dataset; const fm={datanascimento:v=>v?new Date(v+'T00:00:00').toLocaleDateString('pt-BR'):'N/A', valorhora:v=>v?parseFloat(v).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}):'N/A', iniciovinculo:v=>v?new Date(v+'T00:00:00').toLocaleDateString('pt-BR'):'N/A', fimvinculo:v=>v?new Date(v+'T00:00:00').toLocaleDateString('pt-BR'):'N/A'}; document.getElementById('modal-title').textContent=data.nome; document.getElementById('modal-content').innerHTML=Object.keys(data).map(k=>{if(k==='id'||k.toLowerCase().includes('foto')||k.toLowerCase().includes('senha'))return''; const l=k.replace(/([A-Z])/g,' $1').replace(/^./,s=>s.toUpperCase()); const v=fm[k]?fm[k](data[k]):(data[k]||'N/A'); return`<p><strong>${l}:</strong> ${v}</p>`;}).join(''); showModal(allElements.detailsModal);};
-    
+    function applyClienteFilters() {
+        const searchTerm = document.getElementById('cliente-search').value.toLowerCase();
+        const statusFilterBtn = document.querySelector('#cliente-status-filters .filter-btn-active');
+        const statusFilter = statusFilterBtn ? statusFilterBtn.dataset.status : 'Todos';
+
+        const filteredData = clientesData.filter(cliente => {
+            const nameMatch = cliente.Nome.toLowerCase().includes(searchTerm);
+            const statusMatch = (statusFilter === 'Todos') || (cliente.Status === statusFilter);
+            return nameMatch && statusMatch;
+        });
+
+        renderClientes(filteredData);
+    }
     function openDetailsModalForRow(btn) {
         const row = btn.closest('tr');
         if (!row) return;
@@ -1963,7 +2032,14 @@ document.addEventListener('DOMContentLoaded', function() {
         ['ativos-filter-name', 'ativos-filter-start', 'ativos-filter-end'].forEach(id => document.getElementById(id)?.addEventListener('input', applyAndRenderAtivos));
 
         setupSearch('rh-search', '.rh-card');
-        setupSearch('cliente-search', '.cliente-card');
+        document.getElementById('cliente-search')?.addEventListener('input', applyClienteFilters);
+    document.getElementById('cliente-status-filters')?.addEventListener('click', e => {
+        if(e.target.classList.contains('cliente-status-filter-btn')) {
+            document.querySelectorAll('.cliente-status-filter-btn').forEach(btn => btn.classList.remove('filter-btn-active'));
+            e.target.classList.add('filter-btn-active');
+            applyClienteFilters();
+        }
+    });
         
         checkSession();
     }
