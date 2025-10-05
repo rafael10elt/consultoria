@@ -2048,7 +2048,7 @@ function openRequisicaoItemModal(requisicaoId) {
         }
     }
 
-    function renderRequisicoes(data = requisicoesData) {
+function renderRequisicoes(data = requisicoesData) {
         const tbody = document.getElementById('requisicoes-table-body');
         if (!tbody) return;
         tbody.innerHTML = data.map(r => {
@@ -2059,13 +2059,20 @@ function openRequisicaoItemModal(requisicaoId) {
                     return `${itemInfo ? itemInfo.Nome : 'Item'} (${itemJoin.Quantidade})`;
                 }).join(', ');
             }
+
+            // INÍCIO DA ALTERAÇÃO: Lógica para mostrar o botão condicionalmente
+            const addBtnHtml = r.Status === 'Pendente' 
+                ? `<button class="add-content-btn text-green-500 hover:text-green-700" data-id="${r.Id}" title="Adicionar Itens"><i class="fas fa-plus-circle"></i></button>`
+                : '';
+            // FIM DA ALTERAÇÃO
+
             return `
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}">
                     <td class="px-6 py-4">${r.Consultores?.Nome || 'N/A'}</td>
                     <td class="px-6 py-4">${new Date(r.DataRequisicao).toLocaleString('pt-BR')}</td>
                     <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.Status === 'Entregue' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${r.Status}</span></td>
                     <td class="px-6 py-4 space-x-2">
-                        <button class="add-content-btn text-green-500 hover:text-green-700" data-id="${r.Id}" title="Adicionar Itens"><i class="fas fa-plus-circle"></i></button>
+                        ${addBtnHtml}
                         <button class="change-status-btn text-orange-500 hover:text-orange-700" data-id="${r.Id}" data-status="${r.Status}" title="Mudar Status"><i class="fas fa-toggle-on"></i></button>
                         <button class="table-details-btn text-gray-500" data-type="requisicao" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
                         <button class="table-delete-btn text-red-500" data-type="requisicao" title="Apagar Requisição"><i class="fas fa-trash"></i></button>
