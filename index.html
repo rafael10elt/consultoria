@@ -893,6 +893,13 @@ body {
                 <!-- Coluna da Esquerda: Seleção de Itens -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Catálogo de Itens</h3>
+                    <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-lg flex space-x-1 mb-2" id="requisicao-item-category-filters">
+                        <button class="item-catalogo-filter-btn filter-btn-active px-3 py-1 text-sm rounded-md" data-category="Todos">Todos</button>
+                        <button class="item-catalogo-filter-btn px-3 py-1 text-sm rounded-md" data-category="Placas">Placas</button>
+                        <button class="item-catalogo-filter-btn px-3 py-1 text-sm rounded-md" data-category="Planilhas">Planilhas</button>
+                        <button class="item-catalogo-filter-btn px-3 py-1 text-sm rounded-md" data-category="Outros">Outros</button>
+                    </div>
+
                     <!-- INÍCIO DA ALTERAÇÃO: Container para os cards visuais dos itens -->
                     <div id="requisicao-item-catalogo-visual" class="grid grid-cols-2 sm:grid-cols-3 gap-4 p-2 border rounded-lg h-64 overflow-y-auto bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
                         <!-- Os cards dos itens serão inseridos aqui pelo JavaScript -->
@@ -1034,6 +1041,30 @@ document.addEventListener('DOMContentLoaded', function() {
             alert(`Ocorreu um erro ao enviar o arquivo.\nDetalhes: ${error.message}`);
             return null;
         }
+    }
+    function renderVisualCatalogo(items) {
+        const catalogoContainer = document.getElementById('requisicao-item-catalogo-visual');
+        catalogoContainer.innerHTML = ''; // Limpa o conteúdo anterior
+
+        if (items.length === 0) {
+            catalogoContainer.innerHTML = '<p class="col-span-full text-center text-gray-500">Nenhum item encontrado.</p>';
+            return;
+        }
+
+        items.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'item-catalogo-card p-2 border dark:border-gray-600 rounded-lg cursor-pointer flex flex-col items-center hover:bg-gray-100 dark:hover:bg-gray-600';
+            card.dataset.itemId = item.Id;
+            card.innerHTML = `
+                <img src="${item.Foto && item.Foto[0]?.signedPath ? `${NocoDB_BaseURL}/${item.Foto[0].signedPath}` : 'https://placehold.co/80x80/e2e8f0/cbd5e0?text=Item'}" alt="${item.Nome}" class="w-16 h-16 object-contain mb-1 rounded">
+                <p class="text-xs text-center font-medium text-gray-800 dark:text-white">${item.Nome}</p>
+            `;
+            card.addEventListener('click', () => {
+                catalogoContainer.querySelectorAll('.item-catalogo-card').forEach(c => c.classList.remove('border-brand-gold', 'border-2'));
+                card.classList.add('border-brand-gold', 'border-2');
+            });
+            catalogoContainer.appendChild(card);
+        });
     }
     function getCurrentLocation() {
         return new Promise((resolve, reject) => {
@@ -1428,6 +1459,19 @@ function applyConsultorFilters() {
     
     function handleGlobalClick(e) { 
         const t = e.target; 
+        if (t.closest('.item-catalogo-filter-btn')) {
+            const btn = t.closest('.item-catalogo-filter-btn');
+            document.querySelectorAll('.item-catalogo-filter-btn').forEach(b => b.classList.remove('filter-btn-active'));
+            btn.classList.add('filter-btn-active');
+            
+            const category = btn.dataset.category;
+            const filteredItems = category === 'Todos' 
+                ? allItems 
+                : allItems.filter(item => item.Categoria === category);
+            
+            renderVisualCatalogo(filteredItems);
+            return;
+        }
         if (t.closest('#incluir-item-btn')) {
             const selectedItemCard = document.querySelector('.item-catalogo-card.border-brand-gold');
             if (!selectedItemCard) {
@@ -2000,30 +2044,16 @@ function renderItemsParaAdicionarList() {
         `).join('');
     }
 function openRequisicaoItemModal(requisicaoId) {
-        itemsParaAdicionar = []; // Limpa a lista temporária ao abrir o modal
+        itemsParaAdicionar = [];
         document.getElementById('requisicao-item-form-modal').dataset.requisicaoId = requisicaoId;
 
-        const catalogoContainer = document.getElementById('requisicao-item-catalogo-visual');
-        catalogoContainer.innerHTML = ''; // Limpa o conteúdo anterior
+        // Reseta os filtros para "Todos"
+        document.querySelectorAll('.item-catalogo-filter-btn').forEach(btn => btn.classList.remove('filter-btn-active'));
+        document.querySelector('.item-catalogo-filter-btn[data-category="Todos"]').classList.add('filter-btn-active');
 
-        // Cria e adiciona os cards de itens
-        allItems.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'item-catalogo-card p-2 border dark:border-gray-600 rounded-lg cursor-pointer flex flex-col items-center hover:bg-gray-100 dark:hover:bg-gray-600';
-            card.dataset.itemId = item.Id;
-            card.innerHTML = `
-                <img src="${item.Foto && item.Foto[0]?.signedPath ? `${NocoDB_BaseURL}/${item.Foto[0].signedPath}` : 'https://placehold.co/80x80/e2e8f0/cbd5e0?text=Item'}" alt="${item.Nome}" class="w-16 h-16 object-contain mb-1 rounded">
-                <p class="text-xs text-center font-medium text-gray-800 dark:text-white">${item.Nome}</p>
-            `;
-            // Adiciona o evento de clique para seleção
-            card.addEventListener('click', () => {
-                catalogoContainer.querySelectorAll('.item-catalogo-card').forEach(c => c.classList.remove('border-brand-gold', 'border-2'));
-                card.classList.add('border-brand-gold', 'border-2');
-            });
-            catalogoContainer.appendChild(card);
-        });
+        renderVisualCatalogo(allItems); // Renderiza todos os itens inicialmente
         
-        renderItemsParaAdicionarList(); // Renderiza a lista (vazia) de itens a adicionar
+        renderItemsParaAdicionarList();
         showModal(document.getElementById('requisicao-item-form-modal'));
     }
 
