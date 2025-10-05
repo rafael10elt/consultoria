@@ -885,26 +885,47 @@ body {
             </form>
         </div>
     </div>
-     <div id="requisicao-item-form-modal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
-        <div class="w-full max-w-lg p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
-            <h2 id="requisicao-item-modal-title" class="text-xl font-bold text-gray-900 dark:text-white mb-4">Adicionar Item à Requisição</h2>
-            <form id="requisicao-item-form">
-                <input type="hidden" id="requisicao-item-req-id">
-                <div class="space-y-4">
-                    <div>
-                        <label for="requisicao-item-catalogo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Item do Catálogo</label>
-                        <select id="requisicao-item-catalogo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></select>
+<div id="requisicao-item-form-modal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
+        <div class="w-full max-w-3xl p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate max-h-[90vh] flex flex-col">
+            <h2 id="requisicao-item-modal-title" class="text-xl font-bold text-gray-900 dark:text-white mb-4">Adicionar Itens à Requisição</h2>
+            
+            <div class="flex-grow overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Coluna da Esquerda: Seleção de Itens -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Catálogo de Itens</h3>
+                    <!-- INÍCIO DA ALTERAÇÃO: Container para os cards visuais dos itens -->
+                    <div id="requisicao-item-catalogo-visual" class="grid grid-cols-2 sm:grid-cols-3 gap-4 p-2 border rounded-lg h-64 overflow-y-auto bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                        <!-- Os cards dos itens serão inseridos aqui pelo JavaScript -->
                     </div>
-                    <div>
+                    <!-- FIM DA ALTERAÇÃO -->
+                    
+                    <div class="mt-4">
                         <label for="requisicao-item-qtd" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Quantidade</label>
                         <input type="number" id="requisicao-item-qtd" value="1" min="1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     </div>
+                    <button type="button" id="incluir-item-btn" class="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition-colors">Incluir Item</button>
                 </div>
-                <div class="flex justify-end mt-6 space-x-4">
-                    <button type="button" id="cancel-requisicao-item-form" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar Item</button>
+
+                <!-- Coluna da Direita: Lista de Itens a Adicionar -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Itens a Adicionar</h3>
+                    <!-- INÍCIO DA ALTERAÇÃO: Container para a lista de itens selecionados -->
+                    <div id="itens-para-adicionar-container" class="border rounded-lg p-2 h-80 overflow-y-auto bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                        <ul id="itens-para-adicionar-list" class="space-y-2">
+                            <!-- A lista de itens será inserida aqui pelo JavaScript -->
+                        </ul>
+                    </div>
+                    <!-- FIM DA ALTERAÇÃO -->
                 </div>
-            </form>
+            </div>
+
+            <!-- Botões de Ação do Modal -->
+            <div class="flex justify-end mt-6 space-x-4 pt-4 border-t dark:border-gray-700">
+                <button type="button" id="cancel-requisicao-item-form" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+                <!-- INÍCIO DA ALTERAÇÃO: Botão para salvar a lista final -->
+                <button type="button" id="salvar-conteudo-requisicao-btn" class="px-4 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar Conteúdo</button>
+                <!-- FIM DA ALTERAÇÃO -->
+            </div>
         </div>
     </div>
 <script>
@@ -928,6 +949,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let episEntreguesData = [];
     let ativosData = [];
     let loggedInUser = null;
+    let itemsParaAdicionar = [];
 
     // --- Variáveis de Estado da UI ---
     let activeCard = null;
@@ -1190,30 +1212,6 @@ function applyConsultorFilters() {
                 callback = async () => { await fetchItensCatalogo(); renderItensDeRequisicao(); renderCategoryFilters(); hideModal(allElements.itemFormModal); };
                 break;
             
-            case 'requisicao-item-form':
-                const requisicaoId = form.querySelector('#requisicao-item-req-id').value;
-                const catalogoId = form.querySelector('#requisicao-item-catalogo').value;
-                const quantidade = form.querySelector('#requisicao-item-qtd').value;
-
-                if (!requisicaoId || !catalogoId || !quantidade || quantidade < 1) {
-                    alert('Por favor, preencha todos os campos corretamente.');
-                    return;
-                }
-                
-                endpoint = 'Requisicoes_Itens'; 
-                body = {
-                    "Requisicoes": { "Id": parseInt(requisicaoId) },
-                    "Itens_Catalogo": { "Id": parseInt(catalogoId) },
-                    "Quantidade": parseInt(quantidade)
-                };
-                
-                callback = async () => {
-                    await fetchRequisicoes();
-                    applyRequisicaoFilters();
-                    hideModal(document.getElementById('requisicao-item-form-modal'));
-                };
-                break;
-
             case 'rh-form':
             case 'cliente-form': {
                 const isConsultor = form.id === 'rh-form';
@@ -1430,6 +1428,37 @@ function applyConsultorFilters() {
     
     function handleGlobalClick(e) { 
         const t = e.target; 
+        if (t.closest('#incluir-item-btn')) {
+            const selectedItemCard = document.querySelector('.item-catalogo-card.border-brand-gold');
+            if (!selectedItemCard) {
+                alert('Por favor, selecione um item do catálogo.');
+                return;
+            }
+            const itemId = selectedItemCard.dataset.itemId;
+            const item = allItems.find(i => i.Id == itemId);
+            const quantidade = parseInt(document.getElementById('requisicao-item-qtd').value);
+
+            if (item && quantidade > 0) {
+                itemsParaAdicionar.push({ itemId: item.Id, itemName: item.Nome, quantidade: quantidade });
+                renderItemsParaAdicionarList();
+                // Limpa a seleção para o próximo item
+                selectedItemCard.classList.remove('border-brand-gold', 'border-2');
+                document.getElementById('requisicao-item-qtd').value = 1;
+            }
+            return;
+        }
+
+        if (t.closest('.remover-item-temp-btn')) {
+            const indexToRemove = parseInt(t.closest('.remover-item-temp-btn').dataset.index);
+            itemsParaAdicionar.splice(indexToRemove, 1);
+            renderItemsParaAdicionarList();
+            return;
+        }
+
+        if (t.closest('#salvar-conteudo-requisicao-btn')) {
+            handleSaveRequisitionItems();
+            return;
+        }
         const clienteStatusBtn = t.closest('.cliente-status-filter-btn');
         if (clienteStatusBtn) {
             document.querySelectorAll('.cliente-status-filter-btn').forEach(b => b.classList.remove('filter-btn-active'));
@@ -1487,7 +1516,37 @@ function applyConsultorFilters() {
         if(btn.classList.contains('item-category-filter-btn')){ handleCategoryFilterClick(btn); return; }
         if (btn.classList.contains('add-item-btn')) { openItemModal(btn.dataset.category); return; }
         if(btn.classList.contains('change-status-btn')) { handleChangeRequisitionStatus(btn); return; }
+async function handleSaveRequisitionItems() {
+        const requisicaoId = document.getElementById('requisicao-item-form-modal').dataset.requisicaoId;
+        if (!requisicaoId || itemsParaAdicionar.length === 0) {
+            alert('Nenhum item para salvar.');
+            hideModal(document.getElementById('requisicao-item-form-modal'));
+            return;
+        }
 
+        showLoadingOverlay('Salvando itens...');
+
+        const savePromises = itemsParaAdicionar.map(item => {
+            const body = {
+                "Requisicoes": { "Id": parseInt(requisicaoId) },
+                "Itens_Catalogo": { "Id": parseInt(item.itemId) },
+                "Quantidade": item.quantidade
+            };
+            return nocoFetch('Requisicoes_Itens', { method: 'POST', body: JSON.stringify(body) });
+        });
+
+        try {
+            await Promise.all(savePromises);
+            hideLoadingOverlay();
+            hideModal(document.getElementById('requisicao-item-form-modal'));
+            await fetchRequisicoes();
+            applyRequisicaoFilters();
+        } catch (error) {
+            hideLoadingOverlay();
+            alert('Ocorreu um erro ao salvar um ou mais itens. Por favor, tente novamente.');
+            console.error('Erro ao salvar itens da requisição:', error);
+        }
+    }
         const aM={
             'logout-button':()=>showModal(allElements.logoutConfirmModal),'cancel-logout-btn':()=>hideModal(allElements.logoutConfirmModal),'confirm-logout-btn':()=>{sessionStorage.clear(); location.reload();},
             'sidebar-toggle':toggleMobileSidebar,'show-insights-btn':()=>{generateInsights(); showModal(allElements.insightsModal);},'close-insights-modal':()=>hideModal(allElements.insightsModal),
@@ -1921,44 +1980,51 @@ const pageWidth = doc.internal.pageSize.getWidth();
         }
         populateSelectWithOptions('#requisicao-item-catalogo', itemsToPopulate, 'Id', 'Nome', false);
     }
+function renderItemsParaAdicionarList() {
+        const listContainer = document.getElementById('itens-para-adicionar-list');
+        if (!listContainer) return;
 
-    function openRequisicaoItemModal(requisicaoId) {
-        const form = document.getElementById('requisicao-item-form');
-        if (!form) return;
-        form.reset();
-        form.querySelector('#requisicao-item-req-id').value = requisicaoId;
-
-        const modalContent = form.parentElement;
-        let filterContainer = modalContent.querySelector('.category-filters');
-        if (!filterContainer) {
-            filterContainer = document.createElement('div');
-            filterContainer.className = 'category-filters flex flex-wrap gap-2 mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg';
-            form.prepend(filterContainer);
+        if (itemsParaAdicionar.length === 0) {
+            listContainer.innerHTML = '<li class="text-sm text-gray-500 text-center">Nenhum item incluído.</li>';
+            return;
         }
 
-        const categories = ['Todos', ...new Set(allItems.map(i => i.Categoria || 'Outros').sort())];
-        filterContainer.innerHTML = categories.map(cat => 
-            `<button type="button" class="px-3 py-1 text-sm rounded-md transition-colors ${cat === 'Todos' ? 'bg-brand-gold text-white' : 'bg-gray-200 dark:bg-gray-600 hover:bg-gray-300'}" data-category="${cat}">${cat}</button>`
-        ).join('');
+        listContainer.innerHTML = itemsParaAdicionar.map((item, index) => `
+            <li class="flex justify-between items-center p-2 bg-white dark:bg-gray-800 rounded-md">
+                <span class="text-sm">${item.itemName}</span>
+                <span class="text-sm font-bold">Qtd: ${item.quantidade}</span>
+                <button type="button" class="remover-item-temp-btn text-red-500 hover:text-red-700" data-index="${index}" title="Remover">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+            </li>
+        `).join('');
+    }
+function openRequisicaoItemModal(requisicaoId) {
+        itemsParaAdicionar = []; // Limpa a lista temporária ao abrir o modal
+        document.getElementById('requisicao-item-form-modal').dataset.requisicaoId = requisicaoId;
 
-        if(!filterContainer.dataset.listenerAttached) {
-            filterContainer.addEventListener('click', (e) => {
-                if (e.target.tagName === 'BUTTON') {
-                    filterContainer.querySelectorAll('button').forEach(btn => {
-                        btn.classList.remove('bg-brand-gold', 'text-white');
-                        btn.classList.add('bg-gray-200', 'dark:bg-gray-600', 'hover:bg-gray-300');
-                    });
-                    e.target.classList.add('bg-brand-gold', 'text-white');
-                    e.target.classList.remove('bg-gray-200', 'dark:bg-gray-600', 'hover:bg-gray-300');
-                    populateRequisitionItemSelect(e.target.dataset.category);
-                }
+        const catalogoContainer = document.getElementById('requisicao-item-catalogo-visual');
+        catalogoContainer.innerHTML = ''; // Limpa o conteúdo anterior
+
+        // Cria e adiciona os cards de itens
+        allItems.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'item-catalogo-card p-2 border dark:border-gray-600 rounded-lg cursor-pointer flex flex-col items-center hover:bg-gray-100 dark:hover:bg-gray-600';
+            card.dataset.itemId = item.Id;
+            card.innerHTML = `
+                <img src="${item.Foto && item.Foto[0]?.signedPath ? `${NocoDB_BaseURL}/${item.Foto[0].signedPath}` : 'https://placehold.co/80x80/e2e8f0/cbd5e0?text=Item'}" alt="${item.Nome}" class="w-16 h-16 object-contain mb-1 rounded">
+                <p class="text-xs text-center font-medium text-gray-800 dark:text-white">${item.Nome}</p>
+            `;
+            // Adiciona o evento de clique para seleção
+            card.addEventListener('click', () => {
+                catalogoContainer.querySelectorAll('.item-catalogo-card').forEach(c => c.classList.remove('border-brand-gold', 'border-2'));
+                card.classList.add('border-brand-gold', 'border-2');
             });
-            filterContainer.dataset.listenerAttached = 'true';
-        }
-
-
-        populateRequisitionItemSelect('Todos');
-        showModal(allElements.requisicaoItemFormModal);
+            catalogoContainer.appendChild(card);
+        });
+        
+        renderItemsParaAdicionarList(); // Renderiza a lista (vazia) de itens a adicionar
+        showModal(document.getElementById('requisicao-item-form-modal'));
     }
 
     async function handleChangeRequisitionStatus(btn) {
