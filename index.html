@@ -767,6 +767,9 @@ body {
                 <button id="delete-btn" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Apagar</button>
                 <button id="edit-btn" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Editar</button>
             </div>
+             <div id="details-modal-item-actions" class="hidden justify-end mt-6 space-x-4">
+                <button id="save-req-item-changes-btn" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700">Salvar Alterações</button>
+            </div>
         </div>
     </div>
     <div id="delete-confirm-modal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
@@ -1459,6 +1462,18 @@ function applyConsultorFilters() {
     
     function handleGlobalClick(e) { 
         const t = e.target; 
+        if (t.closest('.remove-req-item-btn')) {
+            const btn = t.closest('.remove-req-item-btn');
+            const joinId = btn.dataset.joinId;
+            const itemElement = btn.closest('.req-item-details-row');
+            handleDeleteRequisitionItem(joinId, itemElement);
+            return;
+        }
+
+        if (t.id === 'save-req-item-changes-btn') {
+            handleSaveRequisitionItemChanges();
+            return;
+        }
         if (t.closest('.item-catalogo-filter-btn')) {
             const btn = t.closest('.item-catalogo-filter-btn');
             document.querySelectorAll('.item-catalogo-filter-btn').forEach(b => b.classList.remove('filter-btn-active'));
@@ -1769,12 +1784,68 @@ const pageWidth = doc.internal.pageSize.getWidth();
 
         renderClientes(filteredData);
     }
-    function openDetailsModalForRow(btn) {
+    async function handleSaveRequisitionItemChanges() {
+        const itemRows = document.querySelectorAll('.req-item-details-row');
+        const updatePromises = [];
+
+        showLoadingOverlay('Salvando alterações...');
+
+        itemRows.forEach(row => {
+            const joinId = row.dataset.joinId;
+            const input = row.querySelector('input[type="number"]');
+            const newQuantity = parseInt(input.value);
+            const originalQuantity = parseInt(input.dataset.originalValue);
+
+            if (newQuantity !== originalQuantity && newQuantity > 0) {
+                const body = { "Quantidade": newQuantity };
+                updatePromises.push(
+                    nocoFetch(`Requisicoes_Itens/${joinId}`, { method: 'PATCH', body: JSON.stringify(body) })
+                );
+            }
+        });
+
+        if (updatePromises.length === 0) {
+            hideLoadingOverlay();
+            alert('Nenhuma alteração para salvar.');
+            return;
+        }
+
+        try {
+            await Promise.all(updatePromises);
+            hideLoadingOverlay();
+            hideModal(allElements.detailsModal);
+            await fetchRequisicoes();
+            applyRequisicaoFilters();
+        } catch (error) {
+            hideLoadingOverlay();
+            alert('Erro ao salvar as alterações. Tente novamente.');
+        }
+    }
+
+    async function handleDeleteRequisitionItem(joinId, element) {
+        if (confirm('Tem certeza que deseja remover este item da requisição?')) {
+            showLoadingOverlay('Removendo item...');
+            const result = await nocoFetch(`Requisicoes_Itens/${joinId}`, { method: 'DELETE' });
+            
+            if (result && result.success) {
+                element.remove(); // Remove o item da lista visualmente
+                await fetchRequisicoes(); // Atualiza os dados em segundo plano
+                applyRequisicaoFilters();
+            } else {
+                alert('Não foi possível remover o item.');
+            }
+            hideLoadingOverlay();
+        }
+    }
+function openDetailsModalForRow(btn) {
         const row = btn.closest('tr');
         if (!row) return;
         const id = parseInt(row.dataset.id);
         const type = btn.dataset.type;
-        let dataArray, title, ignoredKeys = ['Id', 'id', 'startTime', 'endTime', 'nc_created_by', 'nc_updated_by', 'nc_order'];
+        let dataArray, title;
+
+        document.getElementById('details-modal-actions').style.display = 'none';
+        document.getElementById('details-modal-item-actions').style.display = 'none';
 
         switch (type) {
             case 'visita': dataArray = visitsData; title = 'Detalhes da Visita'; break;
@@ -1787,77 +1858,61 @@ const pageWidth = doc.internal.pageSize.getWidth();
             case 'requisicao': dataArray = requisicoesData; title = 'Detalhes da Requisição'; break;
             default: return;
         }
+
         const data = dataArray.find(d => d.Id === id);
         if (!data) return;
         document.getElementById('modal-title').textContent = title;
-
         let contentHTML = '';
-        if (type === 'visita') {
-            const { color, label } = sConf[data.Status] || { color: 'gray', label: data.Status };
-            contentHTML = `<p><strong>Cliente:</strong> ${data.Clientes?.Nome || 'N/A'}</p> <p><strong>Consultor:</strong> ${data.Consultores?.Nome || 'N/A'}</p> <p><strong>Data:</strong> ${new Date(data.DataVisita + 'T00:00:00').toLocaleDateString('pt-BR')}</p> <p><strong>Horário:</strong> ${data.HoraInicio} - ${data.HoraFim}</p> <p><strong>Atividades:</strong> ${data.Atividades || 'N/A'}</p> <p><strong>Status:</strong> <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}${data.Remarcada ? ' (Remarcado)' : ''}</span></p> ${data.CheckIn ? `<p><strong>Check-in:</strong> ${new Date(data.CheckIn).toLocaleString('pt-BR')}</p>` : ''} ${data.CheckOut ? `<p><strong>Check-out:</strong> ${new Date(data.CheckOut).toLocaleString('pt-BR')}</p>` : ''}`;
-        
-        } else if (type === 'receita') {
-            contentHTML = `<p><strong>Cliente:</strong> ${data.Clientes?.Nome || 'N/A'}</p> <p><strong>Vencimento:</strong> ${new Date(data.Vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</p> <p><strong>Valor:</strong> ${(data.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p> <p><strong>Status:</strong> ${data.Status}</p> <p><strong>Observação:</strong> ${data.Observacao || 'N/A'}</p>`;
-        } else if (type === 'custo') {
-            contentHTML = `<p><strong>Credor:</strong> ${data.Credor}</p> <p><strong>Vencimento:</strong> ${new Date(data.Vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</p> <p><strong>Valor:</strong> ${(data.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p> <p><strong>Status:</strong> ${data.Status}</p> <p><strong>Observação:</strong> ${data.Observacao || 'N/A'}</p>`;
-        } else if (type === 'requisicao') {
-            const groupedItems = (data.ItensDaRequisicao || []).reduce((acc, itemJoin) => {
-                const itemInfo = allItems.find(i => i.Id === itemJoin['Itens_Catalogo-id'] || (itemJoin.Itens_Catalogo && i.Id === itemJoin.Itens_Catalogo.Id));
-                if (itemInfo) {
-                    const category = itemInfo.Categoria || 'Outros';
-                    if (!acc[category]) acc[category] = [];
-                    acc[category].push(`${itemInfo.Nome} (${itemJoin.Quantidade} unid)`);
-                }
-                return acc;
-            }, {});
 
-            let itensStr = Object.keys(groupedItems).length > 0
-                ? Object.entries(groupedItems).map(([category, items]) => 
-                    `<li><strong>${category}:</strong> ${items.join(', ')}</li>`
-                ).join('')
-                : '<li>Nenhum item.</li>';
+        if (type === 'requisicao') {
+            contentHTML = `
+                <p><strong>Data:</strong> ${new Date(data.DataRequisicao).toLocaleString('pt-BR')}</p>
+                <p><strong>Consultor:</strong> ${data.Consultores?.Nome || 'N/A'}</p>
+                <p><strong>Status:</strong> ${data.Status}</p>
+                <p class="mt-4 font-bold">Itens da Requisição:</p>
+            `;
 
-            contentHTML = `<p><strong>Data:</strong> ${new Date(data.DataRequisicao).toLocaleString('pt-BR')}</p>
-                           <p><strong>Consultor:</strong> ${data.Consultores?.Nome || 'N/A'}</p>
-                           <p><strong>Status:</strong> ${data.Status}</p>
-                           <p class="mt-2"><strong>Itens:</strong></p>
-                           <ul class="list-disc list-inside space-y-1">${itensStr}</ul>`;
-        } else {
-             contentHTML = Object.entries(data).map(([key, value]) => {
-                if (ignoredKeys.includes(key) || typeof value === 'object' && value !== null && !Array.isArray(value)) return '';
-                
-                let label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                let displayValue = value || 'N/A';
-                
-                if (key === 'Consultores' || key === 'Clientes') return '';
-                if (key.toLowerCase().includes('data')) {
-                    displayValue = value ? new Date(value + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
-                }
-
-                if (type === 'ferias' || type === 'atestado' || type === 'epi' || type === 'ativo') {
-                    if (key === 'Consultores' || key === 'ConsultorId') {
-                        label = 'Consultor';
-                        displayValue = data.Consultores?.Nome || 'N/A';
-                    }
-                }
-
-                if (Array.isArray(value) && value[0]?.signedPath) {
-                    return `<p><strong>${label}:</strong> <a href="${NocoDB_BaseURL}/${value[0].signedPath}" target="_blank" class="text-brand-gold hover:underline">Ver Anexo</a></p>`;
-                }
-                
-                return `<p><strong>${label}:</strong> ${displayValue}</p>`;
-            }).join('');
+            let itensListHTML = '<ul class="space-y-2 mt-2">';
+            // INÍCIO DA ALTERAÇÃO: Usar 'Requisicoes_Items' em vez de 'ItensDaRequisicao'
+            if (data.Requisicoes_Items && data.Requisicoes_Items.length > 0) {
+                data.Requisicoes_Items.forEach(itemJoin => {
+            // FIM DA ALTERAÇÃO
+                    const itemInfo = allItems.find(i => i.Id === itemJoin['Itens_Catalogo-id']);
+                    const joinId = itemJoin.Id;
+                    
+                    itensListHTML += `
+                        <li class="req-item-details-row flex items-center justify-between p-2 bg-gray-100 dark:bg-gray-700 rounded-md" data-join-id="${joinId}">
+                            <img src="${itemInfo?.Foto?.[0]?.signedPath ? `${NocoDB_BaseURL}/${itemInfo.Foto[0].signedPath}` : 'https://placehold.co/50x50/e2e8f0/cbd5e0?text=Item'}" class="w-12 h-12 object-contain rounded-md mr-3">
+                            <span class="flex-grow text-sm font-medium">${itemInfo?.Nome || 'Item não encontrado'}</span>
+                            <div class="flex items-center">
+                                <label for="qty-${joinId}" class="text-sm mr-2">Qtd:</label>
+                                <input type="number" id="qty-${joinId}" value="${itemJoin.Quantidade}" data-original-value="${itemJoin.Quantidade}" class="w-16 p-1 text-center border rounded-md dark:bg-gray-600 dark:border-gray-500">
+                            </div>
+                            <button class="remove-req-item-btn text-red-500 hover:text-red-700 ml-3" data-join-id="${joinId}" title="Remover Item">
+                                <i class="fas fa-trash-alt fa-lg"></i>
+                            </button>
+                        </li>
+                    `;
+                });
+            } else {
+                itensListHTML += '<li class="text-sm text-gray-500">Nenhum item nesta requisição.</li>';
+            }
+            itensListHTML += '</ul>';
+            contentHTML += itensListHTML;
             
-            if (data.Consultores) {
-                contentHTML = `<p><strong>Consultor:</strong> ${data.Consultores.Nome}</p>` + contentHTML;
+            // INÍCIO DA ALTERAÇÃO: Usar 'Requisicoes_Items' para a condição do botão
+            if (data.Requisicoes_Items && data.Requisicoes_Items.length > 0) {
+                document.getElementById('details-modal-item-actions').style.display = 'flex';
             }
-             if (data.Clientes) {
-                contentHTML = `<p><strong>Cliente:</strong> ${data.Clientes.Nome}</p>` + contentHTML;
-            }
+            // FIM DA ALTERAÇÃO
+
+        } else {
+            document.getElementById('details-modal-actions').style.display = 'flex';
+            // Lógica para outros tipos de detalhes...
+            contentHTML = `<p>Detalhes para '${type}' ainda não implementados nesta visualização.</p>`; 
         }
         
         document.getElementById('modal-content').innerHTML = contentHTML;
-        document.getElementById('details-modal-actions').style.display = 'none';
         showModal(allElements.detailsModal);
     }
 
