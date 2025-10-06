@@ -1410,14 +1410,37 @@ function applyConsultorFilters() {
                 endpoint = id ? `Visitas/${id}` : 'Visitas';
                 const isRescheduling = form.querySelector('#is-rescheduling').value === 'true';
                 body = { 
-                    "Consultores": { "Id": parseInt(form.querySelector('#visita-consultor').value) }, 
-                    "Clientes": { "Id": parseInt(form.querySelector('#visita-cliente').value) }, 
                     DataVisita: form.querySelector('#visita-data').value, 
                     HoraInicio: form.querySelector('#visita-inicio').value, 
                     HoraFim: form.querySelector('#visita-fim').value, 
                     Atividades: form.querySelector('#visita-atividades').value 
                 };
-                if(isRescheduling) { body.Status = 'Agendada'; body.Remarcada = true; } else if (!id) { body.Status = 'Agendada'; }
+
+                // 2. Obtém os IDs dos campos de relacionamento.
+                const consultorIdVisita = parseInt(form.querySelector('#visita-consultor').value);
+                const clienteIdVisita = parseInt(form.querySelector('#visita-cliente').value);
+
+                // 3. Adiciona os campos de relacionamento no formato correto (PATCH vs POST).
+                if (id) {
+                    // Se 'id' existe, é uma EDIÇÃO. Usa o formato _id.
+                    body.Consultores_id = consultorIdVisita;
+                    body.Clientes_id = clienteIdVisita;
+                } else {
+                    // Se 'id' não existe, é uma CRIAÇÃO. Usa o formato de objeto.
+                    body.Consultores = { "Id": consultorIdVisita };
+                    body.Clientes = { "Id": clienteIdVisita };
+                }
+
+                // --- FIM DA ALTERAÇÃO ---
+
+                // A lógica de status (agendamento, remarcação) permanece a mesma.
+                if(isRescheduling) { 
+                    body.Status = 'Agendada'; 
+                    body.Remarcada = true; 
+                } else if (!id) { 
+                    body.Status = 'Agendada'; 
+                }
+                
                 callback = async () => { await fetchVisitas(); applyFilters(); hideModal(allElements.visitaFormModal); };
                 break;
             case 'ferias-form':
