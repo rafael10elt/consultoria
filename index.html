@@ -1379,12 +1379,24 @@ function applyConsultorFilters() {
                 id = form.dataset.id;
                 endpoint = id ? `Receitas/${id}` : 'Receitas';
                 body = { 
-                    "Clientes": { "Id": parseInt(form.querySelector('#receita-cliente-form').value) }, 
                     Vencimento: form.querySelector('#receita-vencimento').value, 
                     Valor: parseFloat(form.querySelector('#receita-valor').value), 
                     Status: form.querySelector('#receita-status-form').value, 
                     Observacao: form.querySelector('#receita-obs').value 
                 };
+
+                const clienteId = parseInt(form.querySelector('#receita-cliente-form').value);
+
+                // Agora, adicionamos o campo de cliente no formato correto.
+                if (id) { 
+                    // Se 'id' existe, é uma EDIÇÃO (PATCH).
+                    // Enviamos o ID da chave estrangeira diretamente.
+                    body.Clientes_id = clienteId; 
+                } else { 
+                    // Se 'id' não existe, é uma CRIAÇÃO (POST).
+                    // Enviamos o objeto de relacionamento.
+                    body.Clientes = { "Id": clienteId }; 
+                }
                 callback = async () => { await fetchReceitas(); applyAndRenderReceitas(); };
                 break;
             case 'custo-form':
@@ -1411,13 +1423,37 @@ function applyConsultorFilters() {
             case 'ferias-form':
                 id = form.dataset.id;
                 endpoint = id ? `Ferias/${id}` : 'Ferias';
-                body = { "Consultores": { "Id": parseInt(form.querySelector('#ferias-consultor').value) }, DataInicio: form.querySelector('#ferias-inicio').value, DataRetorno: form.querySelector('#ferias-retorno').value };
+                body = { 
+                    DataInicio: form.querySelector('#ferias-inicio').value, 
+                    DataRetorno: form.querySelector('#ferias-retorno').value 
+                };
+                const consultorIdFerias = parseInt(form.querySelector('#ferias-consultor').value);
+
+                if (id) { // Se for edição
+                    body.Consultores_id = consultorIdFerias;
+                } else { // Se for criação
+                    body.Consultores = { "Id": consultorIdFerias };
+                }
+                // --- FIM DA ALTERAÇÃO ---
+
                 callback = async () => { await fetchFerias(); applyAndRenderFerias(); };
                 break;
             case 'atestados-form':
                 id = form.dataset.id;
                 endpoint = id ? `Atestados/${id}` : 'Atestados';
-                body = { "Consultores": { "Id": parseInt(form.querySelector('#atestados-consultor').value) }, DataInicio: form.querySelector('#atestados-inicio').value, DataRetorno: form.querySelector('#atestados-retorno').value };
+                body = { 
+                    DataInicio: form.querySelector('#atestados-inicio').value, 
+                    DataRetorno: form.querySelector('#atestados-retorno').value 
+                };
+                const consultorIdAtestados = parseInt(form.querySelector('#atestados-consultor').value);
+
+                if (id) { // Se for edição
+                    body.Consultores_id = consultorIdAtestados;
+                } else { // Se for criação
+                    body.Consultores = { "Id": consultorIdAtestados };
+                }
+                // --- FIM DA ALTERAÇÃO ---
+                
                 const anexoInput = form.querySelector('#atestados-anexo');
                 if (anexoInput && anexoInput.files[0]) {
                     showLoadingOverlay('Enviando anexo...');
@@ -1430,13 +1466,41 @@ function applyConsultorFilters() {
             case 'epis-form':
                 id = form.dataset.id;
                 endpoint = id ? `Epis_Entregues/${id}` : 'Epis_Entregues';
-                body = { "Consultores": { "Id": parseInt(form.querySelector('#epis-consultor').value) }, Item: form.querySelector('#epis-item').value, Quantidade: parseInt(form.querySelector('#epis-qtd').value), DataEntrega: form.querySelector('#epis-data').value, Observacao: form.querySelector('#epis-obs').value };
+                 body = { 
+                    Item: form.querySelector('#epis-item').value, 
+                    Quantidade: parseInt(form.querySelector('#epis-qtd').value), 
+                    DataEntrega: form.querySelector('#epis-data').value, 
+                    Observacao: form.querySelector('#epis-obs').value 
+                };
+                const consultorIdEpis = parseInt(form.querySelector('#epis-consultor').value);
+
+                if (id) { // Se for edição
+                    body.Consultores_id = consultorIdEpis;
+                } else { // Se for criação
+                    body.Consultores = { "Id": consultorIdEpis };
+                }
+                // --- FIM DA ALTERAÇÃO ---
+                
                 callback = async () => { await fetchEpis(); applyAndRenderEpis(); };
                 break;
             case 'ativos-form':
                 id = form.dataset.id;
                 endpoint = id ? `Ativos_Entregues/${id}` : 'Ativos_Entregues';
-                body = { "Consultores": { "Id": parseInt(form.querySelector('#ativos-consultor').value) }, Item: form.querySelector('#ativos-item').value, DataEntrega: form.querySelector('#ativos-entrega').value, DataDevolucao: form.querySelector('#ativos-devolucao').value || null, Observacao: form.querySelector('#ativos-obs').value };
+                 body = { 
+                    Item: form.querySelector('#ativos-item').value, 
+                    DataEntrega: form.querySelector('#ativos-entrega').value, 
+                    DataDevolucao: form.querySelector('#ativos-devolucao').value || null, 
+                    Observacao: form.querySelector('#ativos-obs').value 
+                };
+                const consultorIdAtivos = parseInt(form.querySelector('#ativos-consultor').value);
+
+                if (id) { // Se for edição
+                    body.Consultores_id = consultorIdAtivos;
+                } else { // Se for criação
+                    body.Consultores = { "Id": consultorIdAtivos };
+                }
+                // --- FIM DA ALTERAÇÃO ---
+                
                 callback = async () => { await fetchAtivos(); applyAndRenderAtivos(); };
                 break;
             default: return;
