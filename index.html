@@ -1093,37 +1093,69 @@ function renderModalCatalogoGrid(category = 'Todos') {
     });
 }
     // --- Funções de Carregamento de Dados (Fetch) ---
-    async function fetchAllData() {
-        showLoadingOverlay('Carregando dados...');
-        await Promise.all([ fetchConsultores(), fetchClientes(), fetchCustos(), fetchItensCatalogo() ]);
-        await Promise.all([ fetchVisitas(), fetchReceitas(), fetchRequisicoes(), fetchFerias(), fetchAtestados(), fetchEpis(), fetchAtivos(), fetchRequisicoesItens() ]);
-        
-        renderConsultores();
-        applyClienteFilters(); // Usar a função de filtro para renderização inicial
-        populateConsultantSelects();
-        populateClientSelects();
-        populateSelectWithOptions('#report-consultor', consultoresData, 'Id', 'Nome', true);
-        populateSelectWithOptions('#report-cliente', clientesData, 'Id', 'Nome', true);
+async function fetchAllData() {
+    showLoadingOverlay('Carregando dados...');
+    await Promise.all([ fetchConsultores(), fetchClientes(), fetchCustos(), fetchItensCatalogo() ]);
+    await Promise.all([ fetchVisitas(), fetchReceitas(), fetchRequisicoes(), fetchFerias(), fetchAtestados(), fetchEpis(), fetchAtivos(), fetchRequisicoesItens() ]);
+    
+    renderConsultores();
+    applyClienteFilters();
+    populateConsultantSelects();
+    populateClientSelects();
+    populateSelectWithOptions('#report-consultor', consultoresData, 'Id', 'Nome', true);
+    populateSelectWithOptions('#report-cliente', clientesData, 'Id', 'Nome', true);
 
-        updateAllCounters();
-        
-        applyAndRenderReceitas();
-        applyAndRenderCustos();
-        applyAndRenderFerias();
-        applyAndRenderAtestados();
-        applyAndRenderEpis();
-        applyAndRenderAtivos();
+    // --- INÍCIO DA ALTERAÇÃO ---
+    // Lógica movida para cá. É executada DEPOIS que populateConsultantSelects() já criou as opções.
+    if (loggedInUser && !loggedInUser.IsAdmin) {
+        // Se NÃO for admin, pré-seleciona e desabilita os filtros.
+        const consultorFilterVisitas = document.getElementById('filter-consultor');
+        const consultorFilterReqs = document.getElementById('filter-req-consultor');
 
-        updateAllDashboards();
-        await checkOverdueVisits(); // Correção: Adicionado 'await'
-        initializeCalendar();
-        applyFilters();
-        renderCategoryFilters();
-        renderItensDeRequisicao();
-        applyRequisicaoFilters();
-        
-        hideLoadingOverlay();
+        if (consultorFilterVisitas) {
+            consultorFilterVisitas.value = loggedInUser.Id;
+            consultorFilterVisitas.disabled = true;
+        }
+        if (consultorFilterReqs) {
+            consultorFilterReqs.value = loggedInUser.Id;
+            consultorFilterReqs.disabled = true;
+        }
+    } else {
+        // Se FOR admin, garante que os filtros estejam habilitados e sem valor selecionado.
+        const consultorFilterVisitas = document.getElementById('filter-consultor');
+        const consultorFilterReqs = document.getElementById('filter-req-consultor');
+
+        if (consultorFilterVisitas) {
+            consultorFilterVisitas.disabled = false;
+            // A linha abaixo garante que, se um admin logar após um não-admin, o filtro seja limpo.
+            consultorFilterVisitas.value = '';
+        }
+        if (consultorFilterReqs) {
+            consultorFilterReqs.disabled = false;
+            consultorFilterReqs.value = '';
+        }
     }
+    // --- FIM DA ALTERAÇÃO ---
+
+    updateAllCounters();
+    
+    applyAndRenderReceitas();
+    applyAndRenderCustos();
+    applyAndRenderFerias();
+    applyAndRenderAtestados();
+    applyAndRenderEpis();
+    applyAndRenderAtivos();
+
+    updateAllDashboards();
+    await checkOverdueVisits();
+    initializeCalendar();
+    applyFilters();
+    renderCategoryFilters();
+    renderItensDeRequisicao();
+    applyRequisicaoFilters();
+    
+    hideLoadingOverlay();
+}
 
     async function fetchConsultores() { const result = await nocoFetch('Consultores?nested[all]=true'); if (result && result.list) consultoresData = result.list; }
     async function fetchClientes() { const result = await nocoFetch('Clientes?nested[all]=true'); if (result && result.list) clientesData = result.list; }
@@ -1175,35 +1207,21 @@ async function fetchRequisicoesItens() {
     allElements.loginScreen.classList.add('hidden');
     allElements.mainApp.classList.remove('hidden');
 
-    // --- INÍCIO DA ALTERAÇÃO ---
-    // Agora, o bloco if/else trata AMBOS os casos, garantindo o estado correto a cada login.
+    // --- LÓGICA DE FILTROS REMOVIDA DAQUI ---
+    // Apenas a lógica de visibilidade do menu permanece
     if (!loggedInUser.IsAdmin) {
-        // Se NÃO for admin:
         const allowedPages = ['visitas', 'requisicao']; 
         document.querySelectorAll('.nav-link').forEach(link => {
             const target = link.dataset.target;
-            if (!allowedPages.includes(target)) {
-                link.style.display = 'none'; // Esconde os menus não permitidos
-            }
+            link.style.display = allowedPages.includes(target) ? 'flex' : 'none';
         });
-        
-        // Desabilita os filtros de consultor
-        document.getElementById('filter-consultor').disabled = true;
-        document.getElementById('filter-req-consultor').disabled = true;
     } else {
-        // Se FOR admin:
-        // Garante que todos os links de menu estejam visíveis (usando 'flex' para manter o layout)
         document.querySelectorAll('.nav-link').forEach(link => {
             link.style.display = 'flex';
         });
-
-        // Garante que os filtros de consultor estejam HABILITADOS
-        document.getElementById('filter-consultor').disabled = false;
-        document.getElementById('filter-req-consultor').disabled = false;
     }
-    // --- FIM DA ALTERAÇÃO ---
     
-    await fetchAllData();
+    await fetchAllData(); // Chamamos a função que agora contém a lógica correta
 
     let savedPage = sessionStorage.getItem('currentPage');
     
