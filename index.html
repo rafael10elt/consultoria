@@ -1398,7 +1398,48 @@ function applyConsultorFilters() {
         hideModal(allElements.deleteConfirmModal);
         activeDeleteItem = { id: null, type: null, element: null };
     }
+async function handleEditItemQuantity(itemJoinId, currentQty, itemName) {
+        const newQty = prompt(`Qual a nova quantidade para o item "${itemName}"?`, currentQty);
 
+        if (newQty === null || newQty === '' || isNaN(newQty) || parseInt(newQty) <= 0) {
+            alert('Quantidade inválida. Por favor, insira um número maior que zero.');
+            return;
+        }
+
+        showLoadingOverlay('Atualizando quantidade...');
+        const result = await nocoFetch(`Requisicoes_Itens/${itemJoinId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ "Quantidade": parseInt(newQty) })
+        });
+        hideLoadingOverlay();
+
+        if (result) {
+            // Atualiza os dados locais e reabre o modal para refletir a mudança
+            await Promise.all([fetchRequisicoes(), fetchRequisicoesItens()]);
+            const requisicaoId = result.Requisicoes_id;
+            const btn = document.querySelector(`#requisicoes-table-body tr[data-id='${requisicaoId}'] .table-details-btn`);
+            if (btn) openDetailsModalForRow(btn);
+        } else {
+            alert('Falha ao atualizar a quantidade.');
+        }
+    }
+
+    async function handleDeleteItemFromRequisition(itemJoinId, requisicaoId) {
+        if (confirm('Tem certeza que deseja remover este item da requisição?')) {
+            showLoadingOverlay('Removendo item...');
+            const result = await nocoFetch(`Requisicoes_Itens/${itemJoinId}`, { method: 'DELETE' });
+            hideLoadingOverlay();
+
+            if (result && result.success) {
+                // Atualiza os dados locais e reabre o modal para refletir a mudança
+                await Promise.all([fetchRequisicoes(), fetchRequisicoesItens()]);
+                const btn = document.querySelector(`#requisicoes-table-body tr[data-id='${requisicaoId}'] .table-details-btn`);
+                if (btn) openDetailsModalForRow(btn);
+            } else {
+                alert('Falha ao remover o item.');
+            }
+        }
+    }
     // --- Funções de UI, Eventos e Lógica Auxiliar ---
      function showImageModal(src) {
         const existingModal = document.getElementById('image-zoom-modal');
