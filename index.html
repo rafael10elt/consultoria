@@ -486,7 +486,7 @@ body {
                         </div>
 
                         <div id="requisicoes-content" class="requisicao-tab-content">
-                            <div id="requisicoes-filters" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                           <div id="requisicoes-filters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
                                 <div>
                                     <label for="filter-req-start-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label>
                                     <input type="date" id="filter-req-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
@@ -511,7 +511,7 @@ body {
                                     <label for="filter-req-item" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Item</label>
                                     <input type="text" id="filter-req-item" placeholder="Buscar item..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
                                 </div>
-                                <div class="lg:col-span-6 flex justify-end space-x-2">
+                                <div class="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-5 flex justify-end space-x-2">
                                     <button id="clear-req-filters-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Limpar Filtros</button>
                                     <button id="apply-req-filters-btn" class="px-4 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Filtrar</button>
                                 </div>
@@ -1904,7 +1904,34 @@ function handleViewToggle(e) {
             }
         }
     }
-    function handleTabClick(btn) { const tC=btn.closest('ul'); tC.querySelectorAll('button').forEach(b=>{b.classList.remove('border-brand-gold','text-brand-gold'); b.classList.add('border-transparent');}); btn.classList.add('border-brand-gold','text-brand-gold'); const cC=btn.classList.contains('rh-tab-btn')?'.rh-tab-content':btn.classList.contains('requisicao-tab-btn')?'.requisicao-tab-content':'.financeiro-tab-content'; const pC=btn.closest('.page'); if(pC&&cC){pC.querySelectorAll(cC).forEach(c=>c.classList.add('hidden')); document.getElementById(btn.dataset.target)?.classList.remove('hidden');}}
+    function handleTabClick(btn) {
+        const tC = btn.closest('ul');
+        tC.querySelectorAll('button').forEach(b => {
+            b.classList.remove('border-brand-gold', 'text-brand-gold');
+            b.classList.add('border-transparent');
+        });
+        btn.classList.add('border-brand-gold', 'text-brand-gold');
+        const cC = btn.classList.contains('rh-tab-btn') ? '.rh-tab-content' : btn.classList.contains('requisicao-tab-btn') ? '.requisicao-tab-content' : '.financeiro-tab-content';
+        const pC = btn.closest('.page');
+        if (pC && cC) {
+            pC.querySelectorAll(cC).forEach(c => c.classList.add('hidden'));
+            document.getElementById(btn.dataset.target)?.classList.remove('hidden');
+        }
+
+        // --- INÍCIO DA ALTERAÇÃO ---
+        // Controla a visibilidade do botão principal "Novo Item"
+        const newItemButton = document.getElementById('show-new-item-btn');
+        if (newItemButton) {
+            // Mostra o botão somente se a aba for 'itens-requisicao-content' E o usuário for admin
+            if (btn.dataset.target === 'itens-requisicao-content' && loggedInUser && loggedInUser.IsAdmin) {
+                newItemButton.style.display = 'block';
+            } else {
+                // Esconde o botão em todas as outras condições
+                newItemButton.style.display = 'none';
+            }
+        }
+        // --- FIM DA ALTERAÇÃO ---
+    }
     
   function generateAgendaPdf() {
         const startDate = document.getElementById('filter-start-date').value;
@@ -2544,7 +2571,7 @@ function renderRequisicoes(data = requisicoesData) {
             `;
         }).join('');
     }
-      function renderItensDeRequisicao(filterCategory = 'Todos') {
+function renderItensDeRequisicao(filterCategory = 'Todos') {
         const container = document.getElementById('item-management-container');
         if(!container) return;
         container.innerHTML = '';
@@ -2559,11 +2586,28 @@ function renderRequisicoes(data = requisicoesData) {
 
             const header = document.createElement('div');
             header.className = 'flex justify-between items-center mb-4';
-            header.innerHTML = `<h3 class="text-xl font-bold text-gray-800 dark:text-white">${category}</h3><button class="add-item-btn bg-brand-gold text-white px-3 py-1 rounded-md text-sm hover:bg-brand-gold-dark" data-category="${category}">Adicionar Item</button>`;
+            
+            // --- INÍCIO DA ALTERAÇÃO 1: Botão "Adicionar Item" condicional ---
+            const addItemButtonHTML = (loggedInUser && loggedInUser.IsAdmin)
+                ? `<button class="add-item-btn bg-brand-gold text-white px-3 py-1 rounded-md text-sm hover:bg-brand-gold-dark" data-category="${category}">Adicionar Item</button>`
+                : ''; // Se não for admin, o botão não é criado.
+
+            header.innerHTML = `<h3 class="text-xl font-bold text-gray-800 dark:text-white">${category}</h3>${addItemButtonHTML}`;
+            // --- FIM DA ALTERAÇÃO 1 ---
+
             categoryDiv.appendChild(header);
 
             const grid = document.createElement('div');
             grid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4';
+            
+            // --- INÍCIO DA ALTERAÇÃO 2: Botões de ação dos cards condicionais ---
+            const itemActionsHTML = (loggedInUser && loggedInUser.IsAdmin)
+                ? `<div class="mt-2 flex justify-center space-x-2">
+                        <button class="item-action-btn edit-item-btn text-blue-500 hover:text-blue-700" title="Editar"><i class="fas fa-edit"></i></button>
+                        <button class="item-action-btn delete-item-btn text-red-500 hover:text-red-700" title="Apagar"><i class="fas fa-trash"></i></button>
+                    </div>`
+                : ''; // Se não for admin, os botões não são criados.
+            // --- FIM DA ALTERAÇÃO 2 ---
             
             const items = itemData.consumo[category] || [];
             if (items.length > 0) {
@@ -2574,10 +2618,7 @@ function renderRequisicoes(data = requisicoesData) {
                             <p class="text-sm font-semibold text-gray-800 dark:text-white">${item.nome}</p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">${item.categoria}</p>
                         </div>
-                        <div class="mt-2 flex justify-center space-x-2">
-                            <button class="item-action-btn edit-item-btn text-blue-500 hover:text-blue-700" title="Editar"><i class="fas fa-edit"></i></button>
-                            <button class="item-action-btn delete-item-btn text-red-500 hover:text-red-700" title="Apagar"><i class="fas fa-trash"></i></button>
-                        </div>
+                        ${itemActionsHTML}
                     </div>
                 `).join('');
             } else {
