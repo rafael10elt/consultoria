@@ -1409,6 +1409,7 @@ function applyConsultorFilters() {
                 id = form.querySelector('#visita-id').value;
                 endpoint = id ? `Visitas/${id}` : 'Visitas';
                 const isRescheduling = form.querySelector('#is-rescheduling').value === 'true';
+
                 body = { 
                     DataVisita: form.querySelector('#visita-data').value, 
                     HoraInicio: form.querySelector('#visita-inicio').value, 
@@ -1416,24 +1417,38 @@ function applyConsultorFilters() {
                     Atividades: form.querySelector('#visita-atividades').value 
                 };
 
-                // 2. Obtém os IDs dos campos de relacionamento.
                 const consultorIdVisita = parseInt(form.querySelector('#visita-consultor').value);
                 const clienteIdVisita = parseInt(form.querySelector('#visita-cliente').value);
 
-                // 3. Adiciona os campos de relacionamento no formato correto (PATCH vs POST).
                 if (id) {
-                    // Se 'id' existe, é uma EDIÇÃO. Usa o formato _id.
+                    // Se for uma EDIÇÃO (PATCH)
                     body.Consultores_id = consultorIdVisita;
                     body.Clientes_id = clienteIdVisita;
+
+                    // --- INÍCIO DA ALTERAÇÃO 1: LÓGICA DE REMARCAÇÃO AUTOMÁTICA ---
+                    // Pega a visita original para comparar as datas/horas
+                    const originalVisit = visitsData.find(v => v.Id == id);
+                    if (originalVisit) {
+                        const newDate = form.querySelector('#visita-data').value;
+                        const newStart = form.querySelector('#visita-inicio').value;
+                        const newEnd = form.querySelector('#visita-fim').value;
+
+                        // Compara se houve alguma alteração na data ou nos horários
+                        if (originalVisit.DataVisita !== newDate || originalVisit.HoraInicio !== newStart || originalVisit.HoraFim !== newEnd) {
+                            // Se mudou, marca como Remarcada e redefine o status para Agendada
+                            body.Remarcada = true;
+                            body.Status = 'Agendada';
+                        }
+                    }
+                    // --- FIM DA ALTERAÇÃO 1 ---
+
                 } else {
-                    // Se 'id' não existe, é uma CRIAÇÃO. Usa o formato de objeto.
+                    // Se for uma CRIAÇÃO (POST)
                     body.Consultores = { "Id": consultorIdVisita };
                     body.Clientes = { "Id": clienteIdVisita };
                 }
 
-                // --- FIM DA ALTERAÇÃO ---
-
-                // A lógica de status (agendamento, remarcação) permanece a mesma.
+                // Esta lógica original do botão "Remarcar" ainda funciona como um backup
                 if(isRescheduling) { 
                     body.Status = 'Agendada'; 
                     body.Remarcada = true; 
@@ -2215,59 +2230,64 @@ function openDetailsModalForRow(btn) {
     document.getElementById('kanban-em-andamento').innerHTML=c['em-andamento'].join(''); 
     document.getElementById('kanban-concluida').innerHTML=c.concluida.join(''); 
 }
-    function createKanbanCard(v){
-        const{color,label}=sConf[v.Status] || {color: 'gray', label: v.Status}; 
-        const dF=new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR'); 
-        const rS=v.Remarcada&&v.Status==='Agendada'?'<span class="text-xs ml-2 font-semibold text-purple-800">(Remarcado)</span>':''; 
-        
-        let acts=''; 
-        if(v.Status==='Agendada')acts=`<button data-id="${v.Id}" class="iniciar-visita-btn w-full bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Iniciar</button><button data-id="${v.Id}" class="remarcar-visita-btn w-full mt-2 bg-gray-500 text-white px-3 py-1 rounded-md text-sm hover:bg-gray-600">Remarcar</button>`; 
-        else if(v.Status==='Em Andamento')acts=`<button data-id="${v.Id}" class="encerrar-visita-btn w-full bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">Encerrar</button>`; 
-        
-        let dur=''; 
-        if(v.Status==='Concluída'&&v.CheckIn&&v.CheckOut){
-            const diff=(new Date(v.CheckOut)-new Date(v.CheckIn))/60000; 
-            dur=`<div class="text-xs text-center font-bold text-brand-gold mt-2 p-1 bg-yellow-100 dark:bg-yellow-900 rounded">Duração: ${Math.floor(diff/60)}h ${Math.round(diff%60)}min</div>`;
-        }
-        
-        let locInfo = '';
-        const createMapLink = (label, color, locString) => {
-            if (typeof locString !== 'string' || locString.indexOf(',') === -1) return '';
-            return `<div><i class="fas fa-map-marker-alt text-${color}-500 mr-1"></i><strong>${label} Local:</strong> <a href="https://www.google.com/maps?q=${locString}" target="_blank" class="text-brand-gold hover:underline">Ver no Mapa</a></div>`;
-        };
-        
-        const formatTime = (isoString) => {
-            if (!isoString) return null;
-            return new Date(isoString).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        };
+function createKanbanCard(v){
+    const{color,label}=sConf[v.Status] || {color: 'gray', label: v.Status}; 
+    const dF=new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR'); 
 
-        if (v.Status === 'Em Andamento' && (v.CheckInLocal || v.CheckIn)) {
-            const checkInTime = formatTime(v.CheckIn);
-            const checkInLink = createMapLink('Check-in', 'green', v.CheckInLocal);
-            if (checkInLink || checkInTime) {
-                locInfo = '<div class="text-xs text-left mt-2 border-t dark:border-gray-600 pt-2 space-y-1">';
-                if (checkInTime) locInfo += `<div><i class="far fa-clock text-green-500 mr-1"></i><strong>Início:</strong> ${checkInTime}</div>`;
-                locInfo += checkInLink;
-                locInfo += '</div>';
-            }
-        } else if (v.Status === 'Concluída' && (v.CheckInLocal || v.CheckOutLocal || v.CheckIn || v.CheckOut)) {
-            const checkInTime = formatTime(v.CheckIn);
-            const checkOutTime = formatTime(v.CheckOut);
-            const checkInLink = createMapLink('Check-in', 'green', v.CheckInLocal);
-            const checkOutLink = createMapLink('Check-out', 'red', v.CheckOutLocal);
-            
-            if (checkInLink || checkOutLink || checkInTime || checkOutTime) {
-                locInfo = '<div class="text-xs text-left mt-2 border-t dark:border-gray-600 pt-2 space-y-1">';
-                if (checkInTime) locInfo += `<div><i class="far fa-clock text-green-500 mr-1"></i><strong>Início:</strong> ${checkInTime}</div>`;
-                locInfo += checkInLink;
-                if (checkOutTime) locInfo += `<div><i class="far fa-clock text-red-500 mr-1"></i><strong>Final:</strong> ${checkOutTime}</div>`;
-                locInfo += checkOutLink;
-                locInfo += '</div>';
-            }
-        }
-
-        return`<div class="kanban-card bg-white dark:bg-gray-700 p-4 rounded-lg shadow" data-id="${v.Id}"><div class="flex justify-between items-start mb-2"><h4 class="font-bold text-gray-800 dark:text-white">${v.Clientes?.Nome || 'N/A'}${rS}</h4><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}</span></div><p class="text-sm text-gray-600 dark:text-gray-300">${v.Consultores?.Nome || 'N/A'}</p><p class="text-sm text-gray-600 dark:text-gray-300">${dF} - ${v.HoraInicio}</p>${locInfo}${dur}<div class="mt-4 border-t pt-2 dark:border-gray-600 visit-actions">${acts}</div></div>`;
+    // --- INÍCIO DA ALTERAÇÃO 2: CRIA O ÍCONE SE A VISITA FOR REMARCADA ---
+    // Em vez de texto, agora criamos um ícone com uma dica de ferramenta (tooltip)
+    const rescheduledIconHTML = v.Remarcada ? `<span title="Visita Remarcada"><i class="fas fa-history text-purple-500 ml-2"></i></span>` : '';
+    // --- FIM DA ALTERAÇÃO 2 ---
+    
+    let acts=''; 
+    if(v.Status==='Agendada')acts=`<button data-id="${v.Id}" class="iniciar-visita-btn w-full bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Iniciar</button><button data-id="${v.Id}" class="remarcar-visita-btn w-full mt-2 bg-gray-500 text-white px-3 py-1 rounded-md text-sm hover:bg-gray-600">Remarcar</button>`; 
+    else if(v.Status==='Em Andamento')acts=`<button data-id="${v.Id}" class="encerrar-visita-btn w-full bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">Encerrar</button>`; 
+    
+    let dur=''; 
+    if(v.Status==='Concluída'&&v.CheckIn&&v.CheckOut){
+        const diff=(new Date(v.CheckOut)-new Date(v.CheckIn))/60000; 
+        dur=`<div class="text-xs text-center font-bold text-brand-gold mt-2 p-1 bg-yellow-100 dark:bg-yellow-900 rounded">Duração: ${Math.floor(diff/60)}h ${Math.round(diff%60)}min</div>`;
     }
+    
+    let locInfo = '';
+    const createMapLink = (label, color, locString) => {
+        if (typeof locString !== 'string' || locString.indexOf(',') === -1) return '';
+        return `<div><i class="fas fa-map-marker-alt text-${color}-500 mr-1"></i><strong>${label} Local:</strong> <a href="https://www.google.com/maps?q=${locString}" target="_blank" class="text-brand-gold hover:underline">Ver no Mapa</a></div>`;
+    };
+    
+    const formatTime = (isoString) => {
+        if (!isoString) return null;
+        return new Date(isoString).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    };
+
+    if (v.Status === 'Em Andamento' && (v.CheckInLocal || v.CheckIn)) {
+        const checkInTime = formatTime(v.CheckIn);
+        const checkInLink = createMapLink('Check-in', 'green', v.CheckInLocal);
+        if (checkInLink || checkInTime) {
+            locInfo = '<div class="text-xs text-left mt-2 border-t dark:border-gray-600 pt-2 space-y-1">';
+            if (checkInTime) locInfo += `<div><i class="far fa-clock text-green-500 mr-1"></i><strong>Início:</strong> ${checkInTime}</div>`;
+            locInfo += checkInLink;
+            locInfo += '</div>';
+        }
+    } else if (v.Status === 'Concluída' && (v.CheckInLocal || v.CheckOutLocal || v.CheckIn || v.CheckOut)) {
+        const checkInTime = formatTime(v.CheckIn);
+        const checkOutTime = formatTime(v.CheckOut);
+        const checkInLink = createMapLink('Check-in', 'green', v.CheckInLocal);
+        const checkOutLink = createMapLink('Check-out', 'red', v.CheckOutLocal);
+        
+        if (checkInLink || checkOutLink || checkInTime || checkOutTime) {
+            locInfo = '<div class="text-xs text-left mt-2 border-t dark:border-gray-600 pt-2 space-y-1">';
+            if (checkInTime) locInfo += `<div><i class="far fa-clock text-green-500 mr-1"></i><strong>Início:</strong> ${checkInTime}</div>`;
+            locInfo += checkInLink;
+            if (checkOutTime) locInfo += `<div><i class="far fa-clock text-red-500 mr-1"></i><strong>Final:</strong> ${checkOutTime}</div>`;
+            locInfo += checkOutLink;
+            locInfo += '</div>';
+        }
+    }
+
+    // A variável 'rescheduledIconHTML' é inserida aqui no título.
+    return`<div class="kanban-card bg-white dark:bg-gray-700 p-4 rounded-lg shadow" data-id="${v.Id}"><div class="flex justify-between items-start mb-2"><h4 class="font-bold text-gray-800 dark:text-white">${v.Clientes?.Nome || 'N/A'}${rescheduledIconHTML}</h4><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}</span></div><p class="text-sm text-gray-600 dark:text-gray-300">${v.Consultores?.Nome || 'N/A'}</p><p class="text-sm text-gray-600 dark:text-gray-300">${dF} - ${v.HoraInicio}</p>${locInfo}${dur}<div class="mt-4 border-t pt-2 dark:border-gray-600 visit-actions">${acts}</div></div>`;
+}
     function renderVisitsList(d){const tB=document.getElementById('visitas-table-body'); tB.innerHTML=''; d.forEach(v=>{const{color,label}=sConf[v.Status] || {color: 'gray', label: v.Status}; const s=label+(v.Remarcada&&v.Status==='Agendada'?' (Remarcado)':''); const r=tB.insertRow(); r.className='bg-white border-b dark:bg-gray-800 dark:border-gray-700'; r.dataset.id=v.Id; r.innerHTML=`<td class="px-6 py-4">${v.Clientes?.Nome || 'N/A'}</td><td class="px-6 py-4">${v.Consultores?.Nome || 'N/A'}</td><td class="px-6 py-4">${new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR')}</td><td class="px-6 py-4">${v.HoraInicio} - ${v.HoraFim}</td><td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${s}</span></td><td class="px-6 py-4 space-x-2"><button class="table-details-btn text-gray-500" data-type="visita"><i class="fas fa-eye"></i></button><button class="table-edit-btn text-blue-500" data-type="visita"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500" data-type="visita"><i class="fas fa-trash"></i></button></td>`;});}
     function renderCalendarEvents(d){if(!calendar)return; calendar.removeAllEvents(); calendar.addEventSource(d.map(v=>({id:v.Id, title:`${v.Clientes?.Nome || 'Cliente'} (${v.Consultores?.Nome || 'Consultor'})`, start:`${v.DataVisita}T${v.HoraInicio}`, end:`${v.DataVisita}T${v.HoraFim}`, color:(sConf[v.Status] || {color:'gray'}).color})));}
     async function handleStartVisit(vId){
