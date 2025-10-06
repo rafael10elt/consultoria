@@ -2171,14 +2171,18 @@ function renderRequisicoes(data = requisicoesData) {
             
             // --- INÍCIO DA ALTERAÇÃO ---
 
-            // Botão "Adicionar Itens": Só aparece se o status for 'Pendente'.
+            // Botão "Adicionar Itens": Visível apenas se o status for 'Pendente'. (Lógica já existente)
             const addContentBtnHTML = r.Status === 'Pendente' ? `
                 <button class="add-content-btn text-green-500 hover:text-green-700" data-id="${r.Id}" title="Adicionar Itens"><i class="fas fa-plus-circle"></i></button>
             ` : '';
 
-            // Botões "Mudar Status" e "Apagar": Só aparecem para Admins.
-            const adminActionsHTML = loggedInUser.IsAdmin ? `
+            // Botão "Mudar Status": Permanece visível apenas para Admins.
+            const changeStatusBtnHTML = loggedInUser.IsAdmin ? `
                 <button class="change-status-btn text-orange-500 hover:text-orange-700" data-id="${r.Id}" data-status="${r.Status}" title="Mudar Status"><i class="fas fa-toggle-on"></i></button>
+            ` : '';
+
+            // Botão "Apagar Requisição": Agora é visível para Admins OU se o status da requisição for 'Pendente'.
+            const deleteRequisitionBtnHTML = (loggedInUser.IsAdmin || r.Status === 'Pendente') ? `
                 <button class="table-delete-btn text-red-500" data-type="requisicao" title="Apagar Requisição"><i class="fas fa-trash"></i></button>
             ` : '';
             
@@ -2192,13 +2196,13 @@ function renderRequisicoes(data = requisicoesData) {
                     <td class="px-6 py-4 space-x-2">
                         ${addContentBtnHTML}
                         <button class="table-details-btn text-gray-500" data-type="requisicao" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
-                        ${adminActionsHTML}
+                        ${changeStatusBtnHTML}
+                        ${deleteRequisitionBtnHTML}
                     </td>
                 </tr>
             `;
         }).join('');
     }
-
       function renderItensDeRequisicao(filterCategory = 'Todos') {
         const container = document.getElementById('item-management-container');
         if(!container) return;
