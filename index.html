@@ -2285,6 +2285,7 @@ function openRequisicaoItemModal(requisicaoId) {
                 });
             });
         } 
+        filtered.sort((a, b) => new Date(b.DataRequisicao) - new Date(a.DataRequisicao));
         renderRequisicoes(filtered); 
     }
 
