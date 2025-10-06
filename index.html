@@ -890,6 +890,9 @@ body {
                 <!-- Coluna da Esquerda: Seleção de Itens -->
                 <div>
                     <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Catálogo de Itens</h3>
+                    <div id="modal-item-category-filters" class="p-1 bg-gray-200 dark:bg-gray-700 rounded-lg flex space-x-1 mb-2 overflow-x-auto">
+                    <!-- Os botões de filtro serão inseridos aqui pelo JavaScript -->
+                </div>
                     <!-- INÍCIO DA ALTERAÇÃO: Container para os cards visuais dos itens -->
                     <div id="requisicao-item-catalogo-visual" class="grid grid-cols-2 sm:grid-cols-3 gap-4 p-2 border rounded-lg h-64 overflow-y-auto bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
                         <!-- Os cards dos itens serão inseridos aqui pelo JavaScript -->
@@ -1065,7 +1068,30 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+function renderModalCatalogoGrid(category = 'Todos') {
+    const catalogoContainer = document.getElementById('requisicao-item-catalogo-visual');
+    catalogoContainer.innerHTML = ''; // Limpa o conteúdo anterior
 
+    const itemsToRender = (category === 'Todos')
+        ? allItems
+        : allItems.filter(item => item.Categoria === category);
+
+    itemsToRender.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'item-catalogo-card p-2 border dark:border-gray-600 rounded-lg cursor-pointer flex flex-col items-center hover:bg-gray-100 dark:hover:bg-gray-600';
+        card.dataset.itemId = item.Id;
+        card.innerHTML = `
+            <img src="${item.Foto && item.Foto[0]?.signedPath ? `${NocoDB_BaseURL}/${item.Foto[0].signedPath}` : 'https://placehold.co/80x80/e2e8f0/cbd5e0?text=Item'}" alt="${item.Nome}" class="w-16 h-16 object-contain mb-1 rounded">
+            <p class="text-xs text-center font-medium text-gray-800 dark:text-white">${item.Nome}</p>
+        `;
+        // Adiciona o evento de clique para seleção
+        card.addEventListener('click', () => {
+            catalogoContainer.querySelectorAll('.item-catalogo-card').forEach(c => c.classList.remove('border-brand-gold', 'border-2'));
+            card.classList.add('border-brand-gold', 'border-2');
+        });
+        catalogoContainer.appendChild(card);
+    });
+}
     // --- Funções de Carregamento de Dados (Fetch) ---
     async function fetchAllData() {
         showLoadingOverlay('Carregando dados...');
@@ -1488,6 +1514,16 @@ async function handleEditItemQuantity(itemJoinId, currentQty, itemName) {
     
     function handleGlobalClick(e) { 
         const t = e.target; 
+         const modalFilterBtn = t.closest('.item-modal-category-filter-btn');
+    if (modalFilterBtn) {
+        const category = modalFilterBtn.dataset.category;
+        // Atualiza a classe 'ativa'
+        document.querySelectorAll('.item-modal-category-filter-btn').forEach(b => b.classList.remove('filter-btn-active'));
+        modalFilterBtn.classList.add('filter-btn-active');
+        // Re-renderiza a grade de itens com a categoria selecionada
+        renderModalCatalogoGrid(category);
+        return; // Impede que o resto da função execute
+    }
         if (t.closest('#incluir-item-btn')) {
             const selectedItemCard = document.querySelector('.item-catalogo-card.border-brand-gold');
             if (!selectedItemCard) {
@@ -1817,7 +1853,11 @@ function openDetailsModalForRow(btn) {
         if (type === 'requisicao') {
             const itensFiltrados = requisicoesItensData.filter(item => item.Requisicoes_id === id);
             
-            let itensTableHTML = `
+            const showActions = loggedInUser.IsAdmin || data.Status === 'Pendente';
+            
+            const actionsHeader = showActions ? '<th scope="col" class="px-6 py-3 text-center">Ações</th>' : '';
+            
+             let itensTableHTML = `
                 <div class="mt-4 relative overflow-x-auto shadow-md sm:rounded-lg">
                     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -1825,7 +1865,7 @@ function openDetailsModalForRow(btn) {
                                 <th scope="col" class="px-4 py-3">Foto</th>
                                 <th scope="col" class="px-6 py-3">Item</th>
                                 <th scope="col" class="px-6 py-3 text-center">Qtd.</th>
-                                <th scope="col" class="px-6 py-3 text-center">Ações</th>
+                                ${actionsHeader}
                             </tr>
                         </thead>
                         <tbody>
@@ -1839,6 +1879,12 @@ function openDetailsModalForRow(btn) {
                     
                     // Escapa as aspas no nome do item para não quebrar o HTML do onclick
                     const safeItemName = itemName.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                    const actionsCell = showActions ? `
+                        <td class="px-6 py-4 text-center space-x-3">
+                            <button onclick="handleEditItemQuantity(${itemJoin.Id}, ${itemJoin.Quantidade}, '${safeItemName}')" class="text-blue-500 hover:text-blue-700" title="Editar Quantidade"><i class="fas fa-edit"></i></button>
+                            <button onclick="handleDeleteItemFromRequisition(${itemJoin.Id}, ${id})" class="text-red-500 hover:text-red-700" title="Apagar Item"><i class="fas fa-trash"></i></button>
+                        </td>
+                    ` : '';
 
                     itensTableHTML += `
                         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
@@ -1847,16 +1893,14 @@ function openDetailsModalForRow(btn) {
                             </td>
                             <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">${itemName}</td>
                             <td class="px-6 py-4 text-center">${itemJoin.Quantidade}</td>
-                            <td class="px-6 py-4 text-center space-x-3">
-                                <button onclick="handleEditItemQuantity(${itemJoin.Id}, ${itemJoin.Quantidade}, '${safeItemName}', ${id})" class="text-blue-500 hover:text-blue-700" title="Editar Quantidade"><i class="fas fa-edit"></i></button>
-            <button onclick="handleDeleteItemFromRequisition(${itemJoin.Id}, ${id})" class="text-red-500 hover:text-red-700" title="Apagar Item"><i class="fas fa-trash"></i></button>
-        </td>
-    </tr>
+                            ${actionsCell}
+                        </tr>
                     `;
                 });
             } else {
-                itensTableHTML += `<tr><td colspan="4" class="px-6 py-4 text-center">Nenhum item adicionado a esta requisição.</td></tr>`;
-            }
+                const colspan = isAdmin ? 4 : 3;
+               itensTableHTML += `<tr><td colspan="${colspan}" class="px-6 py-4 text-center">Nenhum item adicionado a esta requisição.</td></tr>`;
+             }
 
             itensTableHTML += `</tbody></table></div>`;
 
@@ -2079,32 +2123,25 @@ function renderItemsParaAdicionarList() {
         `).join('');
     }
 function openRequisicaoItemModal(requisicaoId) {
-        itemsParaAdicionar = []; // Limpa a lista temporária ao abrir o modal
-        document.getElementById('requisicao-item-form-modal').dataset.requisicaoId = requisicaoId;
+    itemsParaAdicionar = []; // Limpa a lista temporária
+    document.getElementById('requisicao-item-form-modal').dataset.requisicaoId = requisicaoId;
 
-        const catalogoContainer = document.getElementById('requisicao-item-catalogo-visual');
-        catalogoContainer.innerHTML = ''; // Limpa o conteúdo anterior
-
-        // Cria e adiciona os cards de itens
-        allItems.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'item-catalogo-card p-2 border dark:border-gray-600 rounded-lg cursor-pointer flex flex-col items-center hover:bg-gray-100 dark:hover:bg-gray-600';
-            card.dataset.itemId = item.Id;
-            card.innerHTML = `
-                <img src="${item.Foto && item.Foto[0]?.signedPath ? `${NocoDB_BaseURL}/${item.Foto[0].signedPath}` : 'https://placehold.co/80x80/e2e8f0/cbd5e0?text=Item'}" alt="${item.Nome}" class="w-16 h-16 object-contain mb-1 rounded">
-                <p class="text-xs text-center font-medium text-gray-800 dark:text-white">${item.Nome}</p>
-            `;
-            // Adiciona o evento de clique para seleção
-            card.addEventListener('click', () => {
-                catalogoContainer.querySelectorAll('.item-catalogo-card').forEach(c => c.classList.remove('border-brand-gold', 'border-2'));
-                card.classList.add('border-brand-gold', 'border-2');
-            });
-            catalogoContainer.appendChild(card);
-        });
-        
-        renderItemsParaAdicionarList(); // Renderiza a lista (vazia) de itens a adicionar
-        showModal(document.getElementById('requisicao-item-form-modal'));
-    }
+    // Popula os botões de filtro do modal
+    const filterContainer = document.getElementById('modal-item-category-filters');
+    const categories = [...new Set(allItems.map(item => item.Categoria))].sort();
+    filterContainer.innerHTML = '<button class="item-modal-category-filter-btn filter-btn-active flex-shrink-0 px-3 py-1 rounded-md shadow-sm" data-category="Todos">Todas</button>';
+    categories.forEach(cat => {
+        if(cat) { // Garante que categorias nulas não criem botões
+            filterContainer.innerHTML += `<button class="item-modal-category-filter-btn flex-shrink-0 px-3 py-1 rounded-md" data-category="${cat}">${cat}</button>`;
+        }
+    });
+    
+    // Renderiza a grade de itens (inicialmente com "Todos")
+    renderModalCatalogoGrid('Todos'); 
+    
+    renderItemsParaAdicionarList(); // Renderiza a lista (vazia) de itens a adicionar
+    showModal(document.getElementById('requisicao-item-form-modal'));
+}
 
     async function handleChangeRequisitionStatus(btn) {
         const id = btn.dataset.id;
@@ -2127,27 +2164,35 @@ function openRequisicaoItemModal(requisicaoId) {
         }
     }
 
-    function renderRequisicoes(data = requisicoesData) {
+function renderRequisicoes(data = requisicoesData) {
         const tbody = document.getElementById('requisicoes-table-body');
         if (!tbody) return;
         tbody.innerHTML = data.map(r => {
-            let itensStr = 'Nenhum item adicionado';
-            if (r.ItensDaRequisicao && r.ItensDaRequisicao.length > 0) {
-                itensStr = r.ItensDaRequisicao.map(itemJoin => {
-                    const itemInfo = allItems.find(i => i.Id === itemJoin['Itens_Catalogo-id'] || (itemJoin.Itens_Catalogo && i.Id === itemJoin.Itens_Catalogo.Id));
-                    return `${itemInfo ? itemInfo.Nome : 'Item'} (${itemJoin.Quantidade})`;
-                }).join(', ');
-            }
+            
+            // --- INÍCIO DA ALTERAÇÃO ---
+
+            // Botão "Adicionar Itens": Só aparece se o status for 'Pendente'.
+            const addContentBtnHTML = r.Status === 'Pendente' ? `
+                <button class="add-content-btn text-green-500 hover:text-green-700" data-id="${r.Id}" title="Adicionar Itens"><i class="fas fa-plus-circle"></i></button>
+            ` : '';
+
+            // Botões "Mudar Status" e "Apagar": Só aparecem para Admins.
+            const adminActionsHTML = loggedInUser.IsAdmin ? `
+                <button class="change-status-btn text-orange-500 hover:text-orange-700" data-id="${r.Id}" data-status="${r.Status}" title="Mudar Status"><i class="fas fa-toggle-on"></i></button>
+                <button class="table-delete-btn text-red-500" data-type="requisicao" title="Apagar Requisição"><i class="fas fa-trash"></i></button>
+            ` : '';
+            
+            // --- FIM DA ALTERAÇÃO ---
+
             return `
                 <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}">
                     <td class="px-6 py-4">${r.Consultores?.Nome || 'N/A'}</td>
                     <td class="px-6 py-4">${new Date(r.DataRequisicao).toLocaleString('pt-BR')}</td>
                     <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.Status === 'Entregue' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${r.Status}</span></td>
                     <td class="px-6 py-4 space-x-2">
-                        <button class="add-content-btn text-green-500 hover:text-green-700" data-id="${r.Id}" title="Adicionar Itens"><i class="fas fa-plus-circle"></i></button>
-                        <button class="change-status-btn text-orange-500 hover:text-orange-700" data-id="${r.Id}" data-status="${r.Status}" title="Mudar Status"><i class="fas fa-toggle-on"></i></button>
+                        ${addContentBtnHTML}
                         <button class="table-details-btn text-gray-500" data-type="requisicao" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
-                        <button class="table-delete-btn text-red-500" data-type="requisicao" title="Apagar Requisição"><i class="fas fa-trash"></i></button>
+                        ${adminActionsHTML}
                     </td>
                 </tr>
             `;
