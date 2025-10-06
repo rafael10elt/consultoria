@@ -457,7 +457,7 @@ body {
                     <div id="requisicao" class="page hidden">
                         <div class="mb-4">
                             <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Requisições</h2>
-                            <p class="text-gray-600 dark:text-gray-300">Gerenciamento de requisições de EPIs e Consumo.</p>
+                            <p class="text-gray-600 dark:text-gray-300">Gerenciamento de requisições de materiais.</p>
                         </div>
 
                         <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
@@ -1162,7 +1162,54 @@ async function fetchRequisicoesItens() {
     
     // --- Lógica de Autenticação e Sessão ---
     async function handleLogin(e) { e.preventDefault(); const username = document.getElementById('username').value, password = document.getElementById('password').value; if (!username || !password) { alert('Por favor, preencha usuário e senha.'); return; } showLoadingOverlay('Autenticando...'); const user = await authenticateUser(username, password); if (user) { sessionStorage.setItem('loggedInUser', JSON.stringify(user)); await initializeUserSession(user); } else { hideLoadingOverlay(); alert('Usuário ou senha inválidos.'); } }
-    async function initializeUserSession(user) { loggedInUser = user; document.getElementById('logged-user-name').textContent = loggedInUser.Nome; document.querySelector('#logged-user-name + p').textContent = loggedInUser.IsAdmin ? 'Administrador' : 'Consultor'; const userAvatar = document.querySelector('#logged-user-name').closest('div').nextElementSibling; if (userAvatar && loggedInUser.Foto && loggedInUser.Foto[0]?.signedPath) { userAvatar.src = `${NocoDB_BaseURL}/${loggedInUser.Foto[0].signedPath}`; } else if(userAvatar) { userAvatar.src = `https://i.pravatar.cc/150?u=${loggedInUser.Login || loggedInUser.Nome}`; } allElements.loginScreen.classList.add('hidden'); allElements.mainApp.classList.remove('hidden'); await fetchAllData(); const savedPage = sessionStorage.getItem('currentPage') || 'dashboard'; navigateTo(savedPage, true); hideLoadingOverlay(); }
+    async function initializeUserSession(user) {
+    loggedInUser = user;
+    document.getElementById('logged-user-name').textContent = loggedInUser.Nome;
+    document.querySelector('#logged-user-name + p').textContent = loggedInUser.IsAdmin ? 'Administrador' : 'Consultor';
+    const userAvatar = document.querySelector('#logged-user-name').closest('div').nextElementSibling;
+    if (userAvatar && loggedInUser.Foto && loggedInUser.Foto[0]?.signedPath) {
+        userAvatar.src = `${NocoDB_BaseURL}/${loggedInUser.Foto[0].signedPath}`;
+    } else if(userAvatar) {
+        userAvatar.src = `https://i.pravatar.cc/150?u=${loggedInUser.Login || loggedInUser.Nome}`;
+    }
+    allElements.loginScreen.classList.add('hidden');
+    allElements.mainApp.classList.remove('hidden');
+
+    // --- INÍCIO DA ALTERAÇÃO 1: Controla a visibilidade dos itens de menu ---
+    // Verifica se o usuário logado NÃO é um administrador.
+    if (!loggedInUser.IsAdmin) {
+        const allowedPages = ['visitas', 'requisicao']; // Telas permitidas
+        document.querySelectorAll('.nav-link').forEach(link => {
+            const target = link.dataset.target;
+            if (!allowedPages.includes(target)) {
+                link.style.display = 'none'; // Esconde os links não permitidos (Dashboard, Financeiro, etc.)
+            }
+        });
+    }
+    // --- FIM DA ALTERAÇÃO 1 ---
+
+    await fetchAllData();
+
+    // --- INÍCIO DA ALTERAÇÃO 2: Define a página inicial correta após o login ---
+    let savedPage = sessionStorage.getItem('currentPage');
+    
+    if (!loggedInUser.IsAdmin) {
+        // Se não for admin, a página inicial padrão é 'visitas'.
+        // Também garante que, se houver uma página salva, ela seja uma das permitidas.
+        const allowedPages = ['visitas', 'requisicao'];
+        if (!savedPage || !allowedPages.includes(savedPage)) {
+            savedPage = 'visitas';
+        }
+    } else {
+        // Para admins, o padrão continua sendo o dashboard se não houver página salva.
+        savedPage = savedPage || 'dashboard';
+    }
+    
+    navigateTo(savedPage, true);
+    // --- FIM DA ALTERAÇÃO 2 ---
+    
+    hideLoadingOverlay();
+}
     async function checkSession() { const userString = sessionStorage.getItem('loggedInUser'); if (userString) { allElements.loginScreen.classList.add('hidden'); allElements.mainApp.classList.remove('hidden'); showLoadingOverlay('Restaurando sessão...'); await initializeUserSession(JSON.parse(userString)); } else { allElements.loginScreen.classList.remove('hidden'); } }
     async function authenticateUser(login, senha) { const endpoint = `Consultores?where=(Login,eq,${login})~and(Senha,eq,${senha})`; const result = await nocoFetch(endpoint); return (result && result.list && result.list.length > 0) ? result.list[0] : null; }
 
