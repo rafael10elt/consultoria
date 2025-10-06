@@ -1402,8 +1402,7 @@ async function handleEditItemQuantity(itemJoinId, currentQty, itemName) {
         const newQty = prompt(`Qual a nova quantidade para o item "${itemName}"?`, currentQty);
 
         if (newQty === null || newQty === '' || isNaN(newQty) || parseInt(newQty) <= 0) {
-            alert('Quantidade inválida. Por favor, insira um número maior que zero.');
-            return;
+            return; // Sai da função se o usuário cancelar ou inserir valor inválido
         }
 
         showLoadingOverlay('Atualizando quantidade...');
@@ -1414,27 +1413,42 @@ async function handleEditItemQuantity(itemJoinId, currentQty, itemName) {
         hideLoadingOverlay();
 
         if (result) {
-            // Atualiza os dados locais e reabre o modal para refletir a mudança
-            await Promise.all([fetchRequisicoes(), fetchRequisicoesItens()]);
-            const requisicaoId = result.Requisicoes_id;
-            const btn = document.querySelector(`#requisicoes-table-body tr[data-id='${requisicaoId}'] .table-details-btn`);
-            if (btn) openDetailsModalForRow(btn);
+            // --- INÍCIO DA ALTERAÇÃO ---
+
+            // 1. Busca os dados mais recentes dos itens em segundo plano.
+            await fetchRequisicoesItens();
+            
+            // 2. Fecha o modal de detalhes automaticamente.
+            hideModal(allElements.detailsModal);
+
+            // 3. Re-renderiza a lista principal de requisições (a tabela atrás do modal).
+            applyRequisicaoFilters();
+            
+            // --- FIM DA ALTERAÇÃO ---
         } else {
             alert('Falha ao atualizar a quantidade.');
         }
     }
 
-    async function handleDeleteItemFromRequisition(itemJoinId, requisicaoId) {
+   async function handleDeleteItemFromRequisition(itemJoinId, requisicaoId) {
         if (confirm('Tem certeza que deseja remover este item da requisição?')) {
             showLoadingOverlay('Removendo item...');
             const result = await nocoFetch(`Requisicoes_Itens/${itemJoinId}`, { method: 'DELETE' });
             hideLoadingOverlay();
 
             if (result && result.success) {
-                // Atualiza os dados locais e reabre o modal para refletir a mudança
-                await Promise.all([fetchRequisicoes(), fetchRequisicoesItens()]);
-                const btn = document.querySelector(`#requisicoes-table-body tr[data-id='${requisicaoId}'] .table-details-btn`);
-                if (btn) openDetailsModalForRow(btn);
+                // --- INÍCIO DA ALTERAÇÃO ---
+
+                // 1. Busca os dados mais recentes para garantir que a lista local esteja correta.
+                await fetchRequisicoesItens();
+
+                // 2. Fecha o modal de detalhes.
+                hideModal(allElements.detailsModal);
+
+                // 3. Atualiza a tabela principal de requisições.
+                applyRequisicaoFilters();
+
+                // --- FIM DA ALTERAÇÃO ---
             } else {
                 alert('Falha ao remover o item.');
             }
@@ -1800,13 +1814,7 @@ function openDetailsModalForRow(btn) {
         document.getElementById('modal-title').textContent = title;
 
         let contentHTML = '';
-        
         if (type === 'requisicao') {
-            // Mostra os botões de ação APENAS para requisições
-            actionsContainer.style.display = 'flex';
-            
-            // ================= INÍCIO DA IMPLEMENTAÇÃO DO TESTE =================
-            // Filtra a lista global de 'Requisicoes_Itens' para encontrar os que pertencem a esta requisição
             const itensFiltrados = requisicoesItensData.filter(item => item.Requisicoes_id === id);
             
             let itensTableHTML = `
@@ -1814,8 +1822,10 @@ function openDetailsModalForRow(btn) {
                     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                             <tr>
+                                <th scope="col" class="px-4 py-3">Foto</th>
                                 <th scope="col" class="px-6 py-3">Item</th>
-                                <th scope="col" class="px-6 py-3 text-center">Quantidade</th>
+                                <th scope="col" class="px-6 py-3 text-center">Qtd.</th>
+                                <th scope="col" class="px-6 py-3 text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1823,20 +1833,32 @@ function openDetailsModalForRow(btn) {
 
             if (itensFiltrados.length > 0) {
                 itensFiltrados.forEach(itemJoin => {
-                    const itemName = itemJoin.Itens_Catalogo?.Nome || 'Item não encontrado';
+                    const itemInfo = allItems.find(i => i.Id === itemJoin.Itens_Catalogo?.Id);
+                    const itemName = itemInfo ? itemInfo.Nome : 'Item não encontrado';
+                    const itemFotoUrl = itemInfo?.Foto?.[0]?.signedPath ? `${NocoDB_BaseURL}/${itemInfo.Foto[0].signedPath}` : 'https://placehold.co/80x80/e2e8f0/cbd5e0?text=Item';
+                    
+                    // Escapa as aspas no nome do item para não quebrar o HTML do onclick
+                    const safeItemName = itemName.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
                     itensTableHTML += `
                         <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                            <td class="p-2">
+                                <img src="${itemFotoUrl}" alt="${itemName}" class="w-12 h-12 object-contain rounded cursor-pointer" onclick="showImageModal(this.src)">
+                            </td>
                             <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">${itemName}</td>
                             <td class="px-6 py-4 text-center">${itemJoin.Quantidade}</td>
-                        </tr>
+                            <td class="px-6 py-4 text-center space-x-3">
+                                <button onclick="handleEditItemQuantity(${itemJoin.Id}, ${itemJoin.Quantidade}, '${safeItemName}', ${id})" class="text-blue-500 hover:text-blue-700" title="Editar Quantidade"><i class="fas fa-edit"></i></button>
+            <button onclick="handleDeleteItemFromRequisition(${itemJoin.Id}, ${id})" class="text-red-500 hover:text-red-700" title="Apagar Item"><i class="fas fa-trash"></i></button>
+        </td>
+    </tr>
                     `;
                 });
             } else {
-                itensTableHTML += `<tr><td colspan="2" class="px-6 py-4 text-center">Nenhum item adicionado a esta requisição.</td></tr>`;
+                itensTableHTML += `<tr><td colspan="4" class="px-6 py-4 text-center">Nenhum item adicionado a esta requisição.</td></tr>`;
             }
 
             itensTableHTML += `</tbody></table></div>`;
-            // ================= FIM DA IMPLEMENTAÇÃO DO TESTE =================
 
             contentHTML = `<p><strong>Data:</strong> ${new Date(data.DataRequisicao).toLocaleString('pt-BR')}</p>
                            <p><strong>Consultor:</strong> ${data.Consultores?.Nome || 'N/A'}</p>
@@ -1844,6 +1866,7 @@ function openDetailsModalForRow(btn) {
                            ${itensTableHTML}`;
 
         } else {
+      
             // Esconde os botões para todos os outros tipos
             actionsContainer.style.display = 'none';
 
@@ -2352,8 +2375,12 @@ function openRequisicaoItemModal(requisicaoId) {
                 applyClienteFilters();
             }
         });
-        
+        window.handleEditItemQuantity = handleEditItemQuantity;
+    window.handleDeleteItemFromRequisition = handleDeleteItemFromRequisition;
+    window.showImageModal = showImageModal;
+
         checkSession();
+
     }
 
     initializeApp();
