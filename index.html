@@ -1162,7 +1162,7 @@ async function fetchRequisicoesItens() {
     
     // --- Lógica de Autenticação e Sessão ---
     async function handleLogin(e) { e.preventDefault(); const username = document.getElementById('username').value, password = document.getElementById('password').value; if (!username || !password) { alert('Por favor, preencha usuário e senha.'); return; } showLoadingOverlay('Autenticando...'); const user = await authenticateUser(username, password); if (user) { sessionStorage.setItem('loggedInUser', JSON.stringify(user)); await initializeUserSession(user); } else { hideLoadingOverlay(); alert('Usuário ou senha inválidos.'); } }
-    async function initializeUserSession(user) {
+ async function initializeUserSession(user) {
     loggedInUser = user;
     document.getElementById('logged-user-name').textContent = loggedInUser.Nome;
     document.querySelector('#logged-user-name + p').textContent = loggedInUser.IsAdmin ? 'Administrador' : 'Consultor';
@@ -1175,38 +1175,48 @@ async function fetchRequisicoesItens() {
     allElements.loginScreen.classList.add('hidden');
     allElements.mainApp.classList.remove('hidden');
 
-    // --- INÍCIO DA ALTERAÇÃO 1: Controla a visibilidade dos itens de menu ---
-    // Verifica se o usuário logado NÃO é um administrador.
+    // --- INÍCIO DA ALTERAÇÃO ---
+    // Agora, o bloco if/else trata AMBOS os casos, garantindo o estado correto a cada login.
     if (!loggedInUser.IsAdmin) {
-        const allowedPages = ['visitas', 'requisicao']; // Telas permitidas
+        // Se NÃO for admin:
+        const allowedPages = ['visitas', 'requisicao']; 
         document.querySelectorAll('.nav-link').forEach(link => {
             const target = link.dataset.target;
             if (!allowedPages.includes(target)) {
-                link.style.display = 'none'; // Esconde os links não permitidos (Dashboard, Financeiro, etc.)
+                link.style.display = 'none'; // Esconde os menus não permitidos
             }
         });
-    }
-    // --- FIM DA ALTERAÇÃO 1 ---
+        
+        // Desabilita os filtros de consultor
+        document.getElementById('filter-consultor').disabled = true;
+        document.getElementById('filter-req-consultor').disabled = true;
+    } else {
+        // Se FOR admin:
+        // Garante que todos os links de menu estejam visíveis (usando 'flex' para manter o layout)
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.style.display = 'flex';
+        });
 
+        // Garante que os filtros de consultor estejam HABILITADOS
+        document.getElementById('filter-consultor').disabled = false;
+        document.getElementById('filter-req-consultor').disabled = false;
+    }
+    // --- FIM DA ALTERAÇÃO ---
+    
     await fetchAllData();
 
-    // --- INÍCIO DA ALTERAÇÃO 2: Define a página inicial correta após o login ---
     let savedPage = sessionStorage.getItem('currentPage');
     
     if (!loggedInUser.IsAdmin) {
-        // Se não for admin, a página inicial padrão é 'visitas'.
-        // Também garante que, se houver uma página salva, ela seja uma das permitidas.
         const allowedPages = ['visitas', 'requisicao'];
         if (!savedPage || !allowedPages.includes(savedPage)) {
             savedPage = 'visitas';
         }
     } else {
-        // Para admins, o padrão continua sendo o dashboard se não houver página salva.
         savedPage = savedPage || 'dashboard';
     }
     
     navigateTo(savedPage, true);
-    // --- FIM DA ALTERAÇÃO 2 ---
     
     hideLoadingOverlay();
 }
@@ -2457,31 +2467,41 @@ function renderRequisicoes(data = requisicoesData) {
         showModal(allElements.itemFormModal);
     }
 
-    function applyRequisicaoFilters(){ 
-        const sD=document.getElementById('filter-req-start-date').value;
-        const eD=document.getElementById('filter-req-end-date').value;
-        const cId=document.getElementById('filter-req-consultor').value;
-        const status=document.getElementById('filter-req-status').value;
-        const item=document.getElementById('filter-req-item').value.toLowerCase(); 
-        
-        let filtered=requisicoesData.filter(r => 
-            (!sD || r.DataRequisicao >= sD) && 
-            (!eD || r.DataRequisicao <= eD) && 
-            (!cId || r.Consultores?.Id == cId) && 
-            (!status || r.Status === status)
-        ); 
-        
-        if(item){
-            filtered = filtered.filter(r => {
-                return r.ItensDaRequisicao && r.ItensDaRequisicao.some(it => {
-                    const itemInfo = allItems.find(i => i.Id === it['Itens_Catalogo-id']); 
-                    return itemInfo && itemInfo.Nome.toLowerCase().includes(item);
-                });
-            });
-        } 
-        filtered.sort((a, b) => new Date(b.DataRequisicao) - new Date(a.DataRequisicao));
-        renderRequisicoes(filtered); 
+function applyRequisicaoFilters(){ 
+    const sD=document.getElementById('filter-req-start-date').value;
+    const eD=document.getElementById('filter-req-end-date').value;
+    const cId=document.getElementById('filter-req-consultor').value;
+    const status=document.getElementById('filter-req-status').value;
+    const item=document.getElementById('filter-req-item').value.toLowerCase(); 
+    
+    // --- INÍCIO DA ALTERAÇÃO ---
+    let baseData = requisicoesData;
+
+    // Se o usuário logado NÃO for um admin, pré-filtramos os dados para mostrar apenas os seus.
+    if (loggedInUser && !loggedInUser.IsAdmin) {
+        baseData = requisicoesData.filter(r => r.Consultores?.Id == loggedInUser.Id);
     }
+    // --- FIM DA ALTERAÇÃO ---
+
+    // O restante da filtragem agora opera sobre o conjunto de dados já permitido ('baseData')
+    let filtered = baseData.filter(r => 
+        (!sD || r.DataRequisicao >= sD) && 
+        (!eD || r.DataRequisicao <= eD) && 
+        (!cId || r.Consultores?.Id == cId) && 
+        (!status || r.Status === status)
+    ); 
+    
+    if(item){
+        filtered = filtered.filter(r => {
+            return r.ItensDaRequisicao && r.ItensDaRequisicao.some(it => {
+                const itemInfo = allItems.find(i => i.Id === it['Itens_Catalogo-id']); 
+                return itemInfo && itemInfo.Nome.toLowerCase().includes(item);
+            });
+        });
+    } 
+    filtered.sort((a, b) => new Date(b.DataRequisicao) - new Date(a.DataRequisicao));
+    renderRequisicoes(filtered); 
+}
 
     function clearRequisicaoFilters(){ 
         document.getElementById('requisicoes-filters').querySelectorAll('input, select').forEach(el => {
