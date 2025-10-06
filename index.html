@@ -89,22 +89,24 @@ body {
   background-color: var(--brand-gold) !important;
   color: white !important;
 }
-@media (max-width: 767px) {
-    /* Quando estiver na visualização de lista ou calendário em telas pequenas... */
-    .page.view-is-list #visitas-filters,
-    .page.view-is-calendar #visitas-filters {
-        padding: 0.75rem; /* Reduz o espaçamento interno (p-3) */
-        gap: 0.5rem;      /* Reduz o espaço entre os campos (gap-2) */
-        margin-bottom: 0.75rem; /* Reduz a margem inferior (mb-3) */
-    }
-
-    /* Também podemos diminuir um pouco as labels para economizar espaço vertical */
-    .page.view-is-list #visitas-filters label,
-    .page.view-is-calendar #visitas-filters label {
-        font-size: 0.75rem; /* Equivalente a text-xs */
-        margin-bottom: 0.25rem; /* mb-1 */
-    }
-}
+/* Adicione este novo código no final da sua tag <style> */
+        @media (max-width: 1023px) {
+            /* 
+              Esta classe é adicionada via JS ao contêiner .flex-col.flex-1
+              quando as visualizações de lista ou calendário estão ativas no mobile.
+              Isso impede que o container principal se alargue, corrigindo o
+              posicionamento de modais com `position: fixed`.
+            */
+            .is-overflowing-view {
+                overflow-x: hidden;
+            }
+        }
+        /* Adicione este código para ocultar o botão do calendário no mobile */
+        @media (max-width: 1023px) {
+            .view-toggle-btn[data-view="calendar-view"] {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-300 transition-colors duration-300">
@@ -403,7 +405,7 @@ body {
                             </div>
                         </div>
                         
-                        <div id="visitas-filters" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+                        <div id="visitas-filters" class="grid grid-cols-2 lg:grid-cols-5 gap-x-4 gap-y-3 mb-4 p-3 bg-white dark:bg-gray-800 rounded-lg shadow">
                             <div>
                                 <label for="filter-start-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label>
                                 <input type="date" id="filter-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
@@ -806,21 +808,21 @@ body {
         <div class="w-full max-w-lg p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
             <h2 id="visita-modal-title" class="text-xl font-bold text-gray-900 dark:text-white mb-4">Agendar Nova Visita</h2>
             <form id="visita-form">
-                <input type="hidden" id="visita-id">
-                <input type="hidden" id="is-rescheduling" value="false">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div><label for="visita-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><select id="visita-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></select></div>
-                    <div><label for="visita-cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label><select id="visita-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></select></div>
-                    <div><label for="visita-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data da Visita</label><input type="date" id="visita-data" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></div>
-                    <div><label for="visita-inicio" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hora Início</label><input type="time" id="visita-inicio" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></div>
-                    <div><label for="visita-fim" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hora Fim</label><input type="time" id="visita-fim" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></div>
-                    <div class="md:col-span-2"><label for="visita-atividades" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Atividades</label><textarea id="visita-atividades" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600" required></textarea></div>
-                </div>
-                <div class="flex justify-end mt-6 space-x-4">
-                    <button type="button" id="cancel-visita-form" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button>
-                </div>
-            </form>
+    <input type="hidden" id="visita-id">
+    <input type="hidden" id="is-rescheduling" value="false">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label for="visita-consultor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Consultor</label><select id="visita-consultor" class="consultor-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></select></div>
+        <div><label for="visita-cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label><select id="visita-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></select></div>
+        <div><label for="visita-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data da Visita</label><input type="date" id="visita-data" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></div>
+        <div><label for="visita-inicio" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hora Início</label><input type="time" id="visita-inicio" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></div>
+        <div><label for="visita-fim" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Hora Fim</label><input type="time" id="visita-fim" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required></div>
+        <div class="md:col-span-2"><label for="visita-atividades" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Atividades</label><textarea id="visita-atividades" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600" required></textarea></div>
+    </div>
+    <div class="flex justify-end mt-6 space-x-4">
+        <button type="button" id="cancel-visita-form" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button>
+    </div>
+</form>
         </div>
     </div>
     
@@ -1871,31 +1873,37 @@ async function handleSaveRequisitionItems() {
     function handleNavClick(e) { const navLink = e.currentTarget; const targetId = navLink.dataset.target; sessionStorage.setItem('currentPage', targetId); navigateTo(targetId); if (window.innerWidth < 1024) toggleMobileSidebar(); }
     function toggleMobileSidebar() { allElements.sidebar.classList.toggle('-translate-x-full'); allElements.sidebarOverlay.classList.toggle('hidden'); }
     function handleDashboardNav(btn) { document.querySelectorAll('.dashboard-nav-btn').forEach(b=>{b.classList.remove('border-brand-gold','text-brand-gold'); b.classList.add('border-transparent');}); btn.classList.add('border-brand-gold','text-brand-gold'); document.querySelectorAll('.dashboard-content').forEach(c=>c.classList.add('hidden')); document.getElementById(btn.dataset.target).classList.remove('hidden');}
-    function handleViewToggle(e) {
-    const btn = e.currentTarget;
-    const viewId = btn.dataset.view; // Ex: 'list-view'
-    const pageContainer = document.getElementById('visitas'); // O contêiner da página
+function handleViewToggle(e) {
+        const btn = e.currentTarget;
+        const viewId = btn.dataset.view;
+        const pageContainer = document.getElementById('visitas');
 
-    // Primeiro, removemos qualquer classe de visualização anterior
-    pageContainer.classList.remove('view-is-kanban', 'view-is-list', 'view-is-calendar');
+        // --- INÍCIO DA ALTERAÇÃO ---
+        // Pega o contêiner pai da área de conteúdo principal
+        const mainContentWrapper = document.querySelector('main.flex-1')?.parentElement;
 
-    // Em seguida, adicionamos a nova classe com base na visualização clicada
-    // Ex: 'list-view' se torna 'view-is-list'
-    const viewClass = `view-is-${viewId.replace('-view', '')}`;
-    pageContainer.classList.add(viewClass);
+        if (mainContentWrapper) {
+            // Remove a classe de controle de overflow antes de qualquer ação
+            mainContentWrapper.classList.remove('is-overflowing-view');
+            // Adiciona a classe de controle apenas se a visualização for lista ou calendário
+            if (viewId === 'list-view' || viewId === 'calendar-view') {
+                mainContentWrapper.classList.add('is-overflowing-view');
+            }
+        }
+        // --- FIM DA ALTERAÇÃO ---
 
-    // O resto da lógica original da função permanece
-    document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.remove('bg-white', 'dark:bg-gray-800', 'shadow-sm'));
-    btn.classList.add('bg-white', 'dark:bg-gray-800', 'shadow-sm');
-    document.querySelectorAll('.visitas-view').forEach(v => v.classList.add('hidden'));
-    const targetView = document.getElementById(viewId);
-    if (targetView) {
-        targetView.classList.remove('hidden');
-        if (viewId === 'calendar-view' && calendar) {
-            setTimeout(() => calendar.render(), 1);
+        document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.remove('bg-white', 'dark:bg-gray-800', 'shadow-sm'));
+        btn.classList.add('bg-white', 'dark:bg-gray-800', 'shadow-sm');
+        document.querySelectorAll('.visitas-view').forEach(v => v.classList.add('hidden'));
+        
+        const targetView = document.getElementById(viewId);
+        if (targetView) {
+            targetView.classList.remove('hidden');
+            if (viewId === 'calendar-view' && calendar) {
+                setTimeout(() => calendar.render(), 1);
+            }
         }
     }
-}
     function handleTabClick(btn) { const tC=btn.closest('ul'); tC.querySelectorAll('button').forEach(b=>{b.classList.remove('border-brand-gold','text-brand-gold'); b.classList.add('border-transparent');}); btn.classList.add('border-brand-gold','text-brand-gold'); const cC=btn.classList.contains('rh-tab-btn')?'.rh-tab-content':btn.classList.contains('requisicao-tab-btn')?'.requisicao-tab-content':'.financeiro-tab-content'; const pC=btn.closest('.page'); if(pC&&cC){pC.querySelectorAll(cC).forEach(c=>c.classList.add('hidden')); document.getElementById(btn.dataset.target)?.classList.remove('hidden');}}
     
   function generateAgendaPdf() {
@@ -2802,6 +2810,29 @@ function applyRequisicaoFilters(){
                 applyClienteFilters();
             }
         });
+        // Cole esta função e o event listener dentro da sua função initializeApp()
+
+    function checkCalendarViewOnResize() {
+        const isMobile = window.innerWidth < 1024;
+        const calendarView = document.getElementById('calendar-view');
+        const kanbanButton = document.querySelector('button[data-view="kanban-view"]');
+
+        // Se estiver no modo mobile e a visualização de calendário estiver ativa...
+        if (isMobile && calendarView && !calendarView.classList.contains('hidden')) {
+            // ...muda para a visualização Kanban por padrão.
+            document.querySelectorAll('.visitas-view').forEach(v => v.classList.add('hidden'));
+            document.getElementById('kanban-view').classList.remove('hidden');
+
+            // Atualiza o estilo dos botões para refletir a nova visualização ativa
+            document.querySelectorAll('.view-toggle-btn').forEach(b => b.classList.remove('bg-white', 'dark:bg-gray-800', 'shadow-sm'));
+            if (kanbanButton) {
+                kanbanButton.classList.add('bg-white', 'dark:bg-gray-800', 'shadow-sm');
+            }
+        }
+    }
+
+    // Adiciona o listener para executar a função sempre que a janela for redimensionada
+    window.addEventListener('resize', checkCalendarViewOnResize);
         window.handleEditItemQuantity = handleEditItemQuantity;
     window.handleDeleteItemFromRequisition = handleDeleteItemFromRequisition;
     window.showImageModal = showImageModal;
