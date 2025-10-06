@@ -1729,16 +1729,12 @@ function openDetailsModalForRow(btn) {
         const type = btn.dataset.type;
         let dataArray, title, ignoredKeys = ['Id', 'id', 'startTime', 'endTime', 'nc_created_by', 'nc_updated_by', 'nc_order'];
 
-        // ================= INÍCIO DA IMPLEMENTAÇÃO =================
         const actionsContainer = document.getElementById('details-modal-actions');
         const editBtn = document.getElementById('edit-btn');
-        const deleteBtn = document.getElementById('delete-btn');
-
-        // 1. Esconde os botões por padrão para todos os tipos de registro
+        
+        // Regra 1: Esconde os botões de ação por padrão para todos os modais.
         actionsContainer.style.display = 'none';
-        // Garante que o botão de editar (se escondido antes) reapareça quando necessário
-        editBtn.style.display = 'inline-block'; 
-        // ================= FIM DA IMPLEMENTAÇÃO =================
+        editBtn.style.display = 'inline-block'; // Garante que o botão de editar esteja visível para outros modais se necessário
 
         switch (type) {
             case 'visita': dataArray = visitsData; title = 'Detalhes da Visita'; break;
@@ -1761,41 +1757,63 @@ function openDetailsModalForRow(btn) {
 
         let contentHTML = '';
         
+        // ================= INÍCIO DA IMPLEMENTAÇÃO =================
         if (type === 'requisicao') {
             
-            // ================= INÍCIO DA IMPLEMENTAÇÃO =================
-            // 2. Mostra os botões especificamente para a requisição
+            // Regra 2: Mostra os botões de ação APENAS para requisições
             actionsContainer.style.display = 'flex';
-            // O botão "Editar" não tem uma função clara aqui, então o escondemos. Apenas "Apagar" é relevante.
-            editBtn.style.display = 'none';
-            // ================= FIM DA IMPLEMENTAÇÃO =================
+            editBtn.style.display = 'none'; // Esconde o botão 'Editar', pois não tem função aqui
 
             const itensDaRequisicaoArray = data.ItensDaRequisicao?.list || [];
             
-            const groupedItems = itensDaRequisicaoArray.reduce((acc, itemJoin) => {
-                const itemInfo = allItems.find(i => i.Id === itemJoin['Itens_Catalogo-id'] || (itemJoin.Itens_Catalogo && i.Id === itemJoin.Itens_Catalogo.Id));
-                
-                if (itemInfo) {
-                    const category = itemInfo.Categoria || 'Outros';
-                    if (!acc[category]) acc[category] = [];
-                    acc[category].push(`${itemInfo.Nome} (${itemJoin.Quantidade} unid)`);
-                }
-                return acc;
-            }, {});
+            // Constrói o cabeçalho da tabela de itens
+            let itensTableHTML = `
+                <div class="mt-4 relative overflow-x-auto shadow-md sm:rounded-lg">
+                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Item</th>
+                                <th scope="col" class="px-6 py-3 text-center">Quantidade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
 
-            let itensStr = Object.keys(groupedItems).length > 0
-                ? Object.entries(groupedItems).map(([category, items]) => 
-                    `<li><strong>${category}:</strong> ${items.join(', ')}</li>`
-                ).join('')
-                : '<li>Nenhum item adicionado a esta requisição.</li>';
+            if (itensDaRequisicaoArray.length > 0) {
+                // Itera sobre cada item da requisição para criar uma linha na tabela
+                itensDaRequisicaoArray.forEach(itemJoin => {
+                    const itemInfo = allItems.find(i => i.Id === itemJoin['Itens_Catalogo-id']);
+                    const itemName = itemInfo ? itemInfo.Nome : 'Item não encontrado';
+                    const itemQty = itemJoin.Quantidade;
 
+                    itensTableHTML += `
+                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">${itemName}</td>
+                            <td class="px-6 py-4 text-center">${itemQty}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                // Mensagem caso não haja itens
+                itensTableHTML += `
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                        <td colspan="2" class="px-6 py-4 text-center">Nenhum item adicionado a esta requisição.</td>
+                    </tr>
+                `;
+            }
+
+            itensTableHTML += `</tbody></table></div>`;
+
+            // Junta as informações gerais da requisição com a nova tabela de itens
             contentHTML = `<p><strong>Data:</strong> ${new Date(data.DataRequisicao).toLocaleString('pt-BR')}</p>
                            <p><strong>Consultor:</strong> ${data.Consultores?.Nome || 'N/A'}</p>
                            <p><strong>Status:</strong> ${data.Status}</p>
-                           <p class="mt-2"><strong>Itens:</strong></p>
-                           <ul class="list-disc list-inside space-y-1">${itensStr}</ul>`;
+                           ${itensTableHTML}`;
 
         } else if (type === 'visita') {
+            // ... (código existente para outros tipos permanece o mesmo)
+        // ================= FIM DA IMPLEMENTAÇÃO =================
+
             const { color, label } = sConf[data.Status] || { color: 'gray', label: data.Status };
             contentHTML = `<p><strong>Cliente:</strong> ${data.Clientes?.Nome || 'N/A'}</p> <p><strong>Consultor:</strong> ${data.Consultores?.Nome || 'N/A'}</p> <p><strong>Data:</strong> ${new Date(data.DataVisita + 'T00:00:00').toLocaleDateString('pt-BR')}</p> <p><strong>Horário:</strong> ${data.HoraInicio} - ${data.HoraFim}</p> <p><strong>Atividades:</strong> ${data.Atividades || 'N/A'}</p> <p><strong>Status:</strong> <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}${data.Remarcada ? ' (Remarcado)' : ''}</span></p> ${data.CheckIn ? `<p><strong>Check-in:</strong> ${new Date(data.CheckIn).toLocaleString('pt-BR')}</p>` : ''} ${data.CheckOut ? `<p><strong>Check-out:</strong> ${new Date(data.CheckOut).toLocaleString('pt-BR')}</p>` : ''}`;
         
