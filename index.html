@@ -1926,6 +1926,8 @@ function openDetailsModalForRow(btn) {
 
         let contentHTML = '';
         if (type === 'requisicao') {
+            actionsContainer.style.display = 'none';
+
             const itensFiltrados = requisicoesItensData.filter(item => item.Requisicoes_id === id);
             
             const showActions = loggedInUser.IsAdmin || data.Status === 'Pendente';
@@ -1987,7 +1989,7 @@ function openDetailsModalForRow(btn) {
         } else {
       
             // Esconde os botões para todos os outros tipos
-            actionsContainer.style.display = 'none';
+            actionsContainer.style.display = 'flex';
 
             // ... (o resto da sua lógica para outros modais)
             if (type === 'visita') {
