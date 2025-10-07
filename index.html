@@ -1242,18 +1242,50 @@ async function fetchRequisicoesItens() {
 
     // --- LÓGICA DE FILTROS REMOVIDA DAQUI ---
     // Apenas a lógica de visibilidade do menu permanece
-    if (loggedInUser.Role === 'Standard') { 
-        const allowedPages = ['visitas', 'requisicao']; 
+    if (loggedInUser.Role === 'Admin') {
+        // Admin vê todas as páginas, não precisa de filtro.
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.style.display = 'flex';
+        });
+    } else {
+        if (loggedInUser.Role === 'Manager') {
+            allowedPages = ['dashboard', 'visitas', 'requisicao'];
+        } else if (loggedInUser.Role === 'Standard') {
+            allowedPages = ['visitas', 'requisicao'];
+        }
+
+        // Aplica o filtro de páginas para Manager e Standard
         document.querySelectorAll('.nav-link').forEach(link => {
             const target = link.dataset.target;
             link.style.display = allowedPages.includes(target) ? 'flex' : 'none';
         });
-    } else {
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.style.display = 'flex';
-        });
     }
-    
+     const financeiroTab = document.querySelector('.dashboard-nav-btn[data-target="dashboard-financeiro"]');
+    const visitasTab = document.querySelector('.dashboard-nav-btn[data-target="dashboard-visitas"]');
+    const financeiroContent = document.getElementById('dashboard-financeiro');
+    const visitasContent = document.getElementById('dashboard-visitas');
+
+    if (financeiroTab && visitasTab && financeiroContent && visitasContent) {
+        if (loggedInUser.Role === 'Manager') {
+            // 1. Esconde a aba "Financeiro"
+            financeiroTab.parentElement.style.display = 'none';
+
+            // 2. Garante que a aba "Visitas" seja a ativa por padrão
+            financeiroTab.classList.remove('border-brand-gold', 'text-brand-gold');
+            visitasTab.classList.add('border-brand-gold', 'text-brand-gold');
+
+            // 3. Mostra o conteúdo de "Visitas" e esconde o de "Financeiro"
+            financeiroContent.classList.add('hidden');
+            visitasContent.classList.remove('hidden');
+        } else {
+            // Garante que para outros roles (Admin), a aba esteja visível e o dashboard volte ao padrão
+            financeiroTab.parentElement.style.display = ''; // Reverte o 'display: none'
+            visitasTab.classList.remove('border-brand-gold', 'text-brand-gold');
+            financeiroTab.classList.add('border-brand-gold', 'text-brand-gold');
+            visitasContent.classList.add('hidden');
+            financeiroContent.classList.remove('hidden');
+        }
+    }
     await fetchAllData(); // Chamamos a função que agora contém a lógica correta
 
     let savedPage = sessionStorage.getItem('currentPage');
