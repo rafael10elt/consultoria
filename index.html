@@ -426,8 +426,8 @@ body {
                                     <div>
     <label for="rh-role" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Função</label>
     <select id="rh-role" name="role" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
-        <option value="Standard">Standard</option>
-        <option value="Manager">Manager</option>
+        <option value="Consultor">Consultor</option>
+        <option value="Gestor">Gestor</option>
         <option value="Admin">Admin</option>
     </select>
 </div>
@@ -1417,7 +1417,7 @@ async function fetchAllData() {
 
     // --- INÍCIO DA ALTERAÇÃO ---
     // Lógica movida para cá. É executada DEPOIS que populateConsultantSelects() já criou as opções.
-    if (loggedInUser && loggedInUser.Role === 'Standard') { 
+    if (loggedInUser && loggedInUser.Role === 'Consultor') { 
         // Se NÃO for admin, pré-seleciona e desabilita os filtros.
         const consultorFilterVisitas = document.getElementById('filter-consultor');
         const consultorFilterReqs = document.getElementById('filter-req-consultor');
@@ -1509,10 +1509,52 @@ async function fetchRequisicoesItens() {
     document.getElementById('logged-user-name').textContent = loggedInUser.Nome;
     document.querySelector('#logged-user-name + p').textContent = loggedInUser.Role || 'Consultor';
     const userAvatar = document.querySelector('#logged-user-name').closest('div').nextElementSibling;
-     const consultorFilterWrapper = document.getElementById('dash-visit-consultor-wrapper');
+    const consultorFilterWrapper = document.getElementById('dash-visit-consultor-wrapper');
     const clienteFilterWrapper = document.getElementById('dash-visit-cliente-wrapper');
+    // --- INÍCIO DA ALTERAÇÃO: Restringir abas do Dashboard para Gestor ---
+    const balancoTab = document.querySelector('.dashboard-nav-btn[data-target="dashboard-balanco"]');
+    const receitasTab = document.querySelector('.dashboard-nav-btn[data-target="dashboard-receitas"]');
+    const custosTab = document.querySelector('.dashboard-nav-btn[data-target="dashboard-custos"]');
+    // A aba de visitas já foi selecionada anteriormente, mas vamos pegá-la de novo para clareza
+    const visitasTabGestor = document.querySelector('.dashboard-nav-btn[data-target="dashboard-visitas"]'); 
+
+    // Conteúdos das abas
+    const balancoContent = document.getElementById('dashboard-balanco');
+    const receitasContent = document.getElementById('dashboard-receitas');
+    const custosContent = document.getElementById('dashboard-custos');
+    const visitasContentGestor = document.getElementById('dashboard-visitas');
+
+    if (loggedInUser.Role === 'Gestor') {
+        // Esconde as abas indesejadas
+        if (balancoTab) balancoTab.parentElement.style.display = 'none';
+        if (receitasTab) receitasTab.parentElement.style.display = 'none';
+        if (custosTab) custosTab.parentElement.style.display = 'none';
+
+        // Garante que a aba Visitas seja a única ativa
+        if (visitasTabGestor) {
+             // Remove a classe de ativa de todas as outras abas, caso alguma tenha
+            document.querySelectorAll('.dashboard-nav-btn').forEach(btn => {
+                btn.classList.remove('border-brand-gold', 'text-brand-gold');
+            });
+            visitasTabGestor.classList.add('border-brand-gold', 'text-brand-gold');
+        }
+        
+        // Garante que apenas o conteúdo de Visitas seja exibido
+        if (balancoContent) balancoContent.classList.add('hidden');
+        if (receitasContent) receitasContent.classList.add('hidden');
+        if (custosContent) custosContent.classList.add('hidden');
+        if (visitasContentGestor) visitasContentGestor.classList.remove('hidden');
+
+    } else if (loggedInUser.Role === 'Admin') {
+        // Bloco ELSE para garantir que o Admin sempre veja tudo
+        // Reverte as alterações caso um Admin faça login após um Gestor
+        if (balancoTab) balancoTab.parentElement.style.display = '';
+        if (receitasTab) receitasTab.parentElement.style.display = '';
+        if (custosTab) custosTab.parentElement.style.display = '';
+    }
+    // --- FIM DA ALTERAÇÃO ---
     if (consultorFilterWrapper && clienteFilterWrapper) {
-        if (loggedInUser && (loggedInUser.Role === 'Admin' || loggedInUser.Role === 'Manager')) {
+        if (loggedInUser && (loggedInUser.Role === 'Admin' || loggedInUser.Role === 'Gestor')) {
             consultorFilterWrapper.classList.remove('hidden');
             clienteFilterWrapper.classList.remove('hidden');
         } else {
@@ -1536,13 +1578,13 @@ async function fetchRequisicoesItens() {
             link.style.display = 'flex';
         });
     } else {
-        if (loggedInUser.Role === 'Manager') {
+        if (loggedInUser.Role === 'Gestor') {
             allowedPages = ['dashboard', 'visitas', 'requisicao'];
-        } else if (loggedInUser.Role === 'Standard') {
+        } else if (loggedInUser.Role === 'Consultor') {
             allowedPages = ['visitas', 'requisicao'];
         }
 
-        // Aplica o filtro de páginas para Manager e Standard
+        // Aplica o filtro de páginas para Gestor e Consultor
         document.querySelectorAll('.nav-link').forEach(link => {
             const target = link.dataset.target;
             link.style.display = allowedPages.includes(target) ? 'flex' : 'none';
@@ -1554,7 +1596,7 @@ async function fetchRequisicoesItens() {
     const visitasContent = document.getElementById('dashboard-visitas');
 
     if (financeiroTab && visitasTab && financeiroContent && visitasContent) {
-        if (loggedInUser.Role === 'Manager') {
+        if (loggedInUser.Role === 'Gestor') {
             // 1. Esconde a aba "Financeiro"
             financeiroTab.parentElement.style.display = 'none';
 
@@ -2421,7 +2463,7 @@ function handleTableEdit(btn) {
     function handleCardEdit() { if (!activeCard) return; hideModal(allElements.detailsModal); const isConsultor = activeCard.classList.contains('rh-card'); const formContainerId = isConsultor ? 'rh-form-container' : 'cliente-form-container'; const cardsContainerId = isConsultor ? 'rh-cards-container' : 'cliente-cards-container'; const form = document.getElementById(formContainerId).querySelector('form'); const data = activeCard.dataset; form.reset(); let hiddenIdInput = form.querySelector('input[type="hidden"]'); if (!hiddenIdInput) { hiddenIdInput = document.createElement('input'); hiddenIdInput.type = 'hidden'; hiddenIdInput.id = isConsultor ? 'rh-id' : 'cliente-id'; form.prepend(hiddenIdInput); } hiddenIdInput.value = data.id;  const fieldMapping = isConsultor 
         ? {'rh-nome':'nome', 'rh-nasc':'datanascimento', 'rh-tel':'telefone', 'rh-email':'email', 'rh-login':'login', 'rh-inicio':'iniciovinculo', 'rh-fim':'fimvinculo', 'rh-cnpj':'cnpj', 'rh-razao':'razaosocial', 'rh-valor':'valorhora', 'rh-status':'status', 'rh-role':'role', 'rh-endereco':'endereco', 'rh-obs':'observacao'} 
         : {'cliente-nome':'nome', 'cliente-razao':'razaosocial', 'cliente-cnpj':'cnpj', 'cliente-tel':'telefone', 'cliente-email':'email', 'cliente-horas':'horascontratadas', 'cliente-status':'status', 'cliente-responsavel':'responsavel', 'cliente-cpf':'cpfresponsavel', 'cliente-iptu':'iptu', 'cliente-senha-portal':'senhaportal', 'cliente-endereco':'endereco', 'cliente-obs':'observacao'};  for (const [fieldId, dataKey] of Object.entries(fieldMapping)) { const input = form.querySelector(`#${fieldId}`); if (input) { if (dataKey === 'role' && !data[dataKey]) {
-        input.value = 'Standard'; } else { input.value = data[dataKey] || ''; } } } if (isConsultor) { const passwordInput = form.querySelector('#rh-senha'); if (passwordInput) { passwordInput.value = ''; passwordInput.placeholder = "Deixe em branco para não alterar"; } } const imgPreview = form.querySelector('img'); if (imgPreview) { let fotoData; try { fotoData = data.foto ? JSON.parse(data.foto) : null; } catch(e) { fotoData = null; } imgPreview.src = (fotoData && fotoData[0]?.signedPath) ? `${NocoDB_BaseURL}/${fotoData[0].signedPath}` : `https://placehold.co/100x100/e2e8f0/cbd5e0?text=${isConsultor ? 'Foto' : 'Logo'}`; } document.getElementById(cardsContainerId).classList.add('hidden'); document.getElementById(formContainerId).classList.remove('hidden'); }
+        input.value = 'Consultor'; } else { input.value = data[dataKey] || ''; } } } if (isConsultor) { const passwordInput = form.querySelector('#rh-senha'); if (passwordInput) { passwordInput.value = ''; passwordInput.placeholder = "Deixe em branco para não alterar"; } } const imgPreview = form.querySelector('img'); if (imgPreview) { let fotoData; try { fotoData = data.foto ? JSON.parse(data.foto) : null; } catch(e) { fotoData = null; } imgPreview.src = (fotoData && fotoData[0]?.signedPath) ? `${NocoDB_BaseURL}/${fotoData[0].signedPath}` : `https://placehold.co/100x100/e2e8f0/cbd5e0?text=${isConsultor ? 'Foto' : 'Logo'}`; } document.getElementById(cardsContainerId).classList.add('hidden'); document.getElementById(formContainerId).classList.remove('hidden'); }
     const setupSearch=(iId,cS)=>{document.getElementById(iId)?.addEventListener('input',e=>{const sT=e.target.value.toLowerCase(); document.querySelectorAll(cS).forEach(c=>{const n=c.dataset.nome||''; c.style.display=n.toLowerCase().includes(sT)?'flex':'none';});});};
     const setupFormToggle=(cId,fId)=>{activeCard=null; const f=document.getElementById(fId).querySelector('form'); f?.reset(); let hId=f.querySelector('input[type="hidden"]'); if(hId)hId.value=''; document.getElementById(cId)?.classList.add('hidden'); document.getElementById(fId)?.classList.remove('hidden');};
     const hideFormToggle=(cId,fId)=>{document.getElementById(fId).classList.add('hidden'); document.getElementById(cId).classList.remove('hidden');}
@@ -2776,9 +2818,9 @@ function applyFilters() {
     let dataToDisplay = visitsData;
 
     // --- INÍCIO DA CORREÇÃO ---
-    // A verificação agora é explícita para o Role 'Standard'.
-    // Admin e Manager não entrarão neste 'if'.
-    if (loggedInUser && loggedInUser.Role === 'Standard') {
+    // A verificação agora é explícita para o Role 'Consultor'.
+    // Admin e Gestor não entrarão neste 'if'.
+    if (loggedInUser && loggedInUser.Role === 'Consultor') {
         dataToDisplay = visitsData.filter(v => v.Consultores?.Id == loggedInUser.Id);
     }
     // --- FIM DA CORREÇÃO ---
@@ -3085,8 +3127,8 @@ function renderRequisicoes(data = requisicoesData) {
 
     data.forEach(r => {
         const addContentBtnHTML = r.Status === 'Pendente' ? `<button class="add-content-btn text-green-500 hover:text-green-700" data-id="${r.Id}" title="Adicionar Itens"><i class="fas fa-plus-circle"></i></button>` : '';
-        const changeStatusBtnHTML = (loggedInUser && (loggedInUser.Role === 'Admin' || loggedInUser.Role === 'Manager')) ? `<button class="change-status-btn text-orange-500 hover:text-orange-700" data-id="${r.Id}" data-status="${r.Status}" title="Mudar Status"><i class="fas fa-toggle-on"></i></button>` : '';
-        const deleteRequisitionBtnHTML = ((loggedInUser && (loggedInUser.Role === 'Admin' || loggedInUser.Role === 'Manager')) || r.Status === 'Pendente') ? `<button class="table-delete-btn text-red-500" data-type="requisicao" title="Apagar Requisição"><i class="fas fa-trash"></i></button>` : '';
+        const changeStatusBtnHTML = (loggedInUser && (loggedInUser.Role === 'Admin' || loggedInUser.Role === 'Gestor')) ? `<button class="change-status-btn text-orange-500 hover:text-orange-700" data-id="${r.Id}" data-status="${r.Status}" title="Mudar Status"><i class="fas fa-toggle-on"></i></button>` : '';
+        const deleteRequisitionBtnHTML = ((loggedInUser && (loggedInUser.Role === 'Admin' || loggedInUser.Role === 'Gestor')) || r.Status === 'Pendente') ? `<button class="table-delete-btn text-red-500" data-type="requisicao" title="Apagar Requisição"><i class="fas fa-trash"></i></button>` : '';
         const actionsHTML = `
             ${addContentBtnHTML}
             <button class="table-details-btn text-gray-500" data-type="requisicao" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
@@ -3315,7 +3357,7 @@ function generateInsights() {
         }
         // --- FIM DA ALTERAÇÃO ---
 
-        // Insights de visitas são visíveis para Admin e Manager
+        // Insights de visitas são visíveis para Admin e Gestor
         const visitasConcluidas = visitsData.filter(v => v.Status === 'Concluída');
         if (visitasConcluidas.length > 0) {
             const stats = visitasConcluidas.reduce((acc, v) => {
@@ -3342,12 +3384,12 @@ function generateInsights() {
         const reportTypeSelect = document.getElementById('report-type');
         const financeOption = reportTypeSelect.querySelector('option[value="financeiro"]');
 
-        if (loggedInUser && loggedInUser.Role === 'Manager') {
+        if (loggedInUser && loggedInUser.Role === 'Gestor') {
             // Esconde a opção "Financeiro"
             financeOption.style.display = 'none';
             // Força a seleção de "Visitas"
             reportTypeSelect.value = 'visitas';
-            // Desabilita o campo para que o Manager não possa trocar
+            // Desabilita o campo para que o Gestor não possa trocar
             reportTypeSelect.disabled = true;
         } else {
             // Garante que para Admins a opção esteja visível e o campo habilitado
