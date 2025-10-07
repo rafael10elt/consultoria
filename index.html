@@ -92,8 +92,9 @@ body {
 /* Adicione este CSS para tornar os rankings roláveis */
         #dash-top-consultants-hours,
         #dash-top-consultants-count,
-        #dash-top-clients-list {
-            max-height: 250px; /* Ajuste a altura conforme necessário */
+        #dash-top-clients-list,
+        #dash-top-clients-hours-list { /* <-- ID ADICIONADO AQUI */
+            max-height: 250px;
             overflow-y: auto;
         }
 /* Adicione este novo código no final da sua tag <style> */
@@ -273,19 +274,33 @@ body {
                                 </div>
                             </div> <!-- Este é o fechamento do grid principal -->
 
-                            <!-- ADICIONE ESTE NOVO BLOCO DE CÓDIGO AQUI -->
+                            <!-- Bloco de análise de clientes por Nº de Visitas -->
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                                 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                                    <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Clientes Mais Visitados</h4>
+                                    <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Clientes por Nº de Visitas</h4>
                                     <canvas id="clients-visits-chart"></canvas>
                                 </div>
                                 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                                    <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Ranking de Clientes (Visitas Concluídas)</h4>
+                                    <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Ranking de Clientes (por Nº de Visitas)</h4>
                                     <ul id="dash-top-clients-list" class="space-y-3">
-                                        <!-- O ranking será inserido aqui -->
+                                        <!-- Ranking por contagem será inserido aqui -->
                                     </ul>
                                 </div>
-                            </div>                            
+                            </div>
+
+                            <!-- NOVO Bloco de análise de clientes por Horas -->
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                    <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Horas por Cliente</h4>
+                                    <canvas id="clients-hours-chart"></canvas>
+                                </div>
+                                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                                    <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Ranking de Clientes (por Horas)</h4>
+                                    <ul id="dash-top-clients-hours-list" class="space-y-3">
+                                        <!-- Ranking por horas será inserido aqui -->
+                                    </ul>
+                                </div>
+                            </div>       
                         </div>
                     </div>
 
@@ -1022,7 +1037,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let activeCard = null;
     let activeTableRow = null;
     let calendar;
-    let financeChart, visitsStatusChart, clientsVisitsChart;
+    let financeChart, visitsStatusChart, clientsVisitsChart, clientsHoursChart;
     let activeDeleteItem = { id: null, type: null, element: null };
 
     // --- Seletores Globais ---
@@ -2347,7 +2362,7 @@ function openDetailsModalForRow(btn) {
     function updateAllDashboards(){updateFinanceDashboard(); updateVisitsDashboard();}
     function setDateFilter(e, p) { const period=e.target.dataset.period; document.querySelectorAll(`.dash-${p}-quick-filter`).forEach(b=>b.classList.remove('filter-btn-active')); e.target.classList.add('filter-btn-active'); const endI=document.getElementById(`dash-${p}-end`), startI=document.getElementById(`dash-${p}-start`), today=new Date(); endI.valueAsDate=today; let sD=new Date(); if(period==='week')sD.setDate(today.getDate()-today.getDay()); else if(period==='month')sD=new Date(today.getFullYear(),today.getMonth(),1); else if(period==='year')sD=new Date(today.getFullYear(),0,1); startI.valueAsDate=sD; if(p==='fin')updateFinanceDashboard(); else updateVisitsDashboard();}
     function updateFinanceDashboard() { const s=document.getElementById('dash-fin-status').value, st=document.getElementById('dash-fin-start').value, e=document.getElementById('dash-fin-end').value; const fR=receitasData.filter(r=>(!s||r.Status===s)&&(!st||r.Vencimento>=st)&&(!e||r.Vencimento<=e)); const fC=custosData.filter(c=>(!s||c.Status===s)&&(!st||c.Vencimento>=st)&&(!e||c.Vencimento<=e)); const tR=fR.reduce((sum,r)=>sum+(r.Valor||0),0), tC=fC.reduce((sum,c)=>sum+(c.Valor||0),0), bal=tR-tC; const tRP=receitasData.filter(r=>r.Status==='Pendente'&&(!st||r.Vencimento>=st)&&(!e||r.Vencimento<=e)).reduce((sum,r)=>sum+(r.Valor||0),0); const tCP=custosData.filter(c=>c.Status==='Pendente'&&(!st||c.Vencimento>=st)&&(!e||c.Vencimento<=e)).reduce((sum,c)=>sum+(c.Valor||0),0); const f=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); document.getElementById('dash-revenue').textContent=f(tR); document.getElementById('dash-costs').textContent=f(tC); document.getElementById('dash-balance').textContent=f(bal); document.getElementById('dash-revenue-pending').textContent=f(tRP); document.getElementById('dash-costs-pending').textContent=f(tCP); document.getElementById('dash-balance').classList.toggle('text-green-500',bal>=0); document.getElementById('dash-balance').classList.toggle('text-red-500',bal<0); updateFinanceChart(fR,fC); }
-        function updateTopClients(visits) {
+        function updateTopClientsByCount(visits) {
         const comp = visits.filter(v => v.Status === 'Concluída');
         const stats = comp.reduce((acc, v) => {
             const clientName = v.Clientes?.Nome || 'N/A';
@@ -2407,6 +2422,66 @@ function openDetailsModalForRow(btn) {
             });
         }
     }
+    function updateTopClientsByHours(visits) {
+        const comp = visits.filter(v => v.Status === 'Concluída');
+        const stats = comp.reduce((acc, v) => {
+            const clientName = v.Clientes?.Nome || 'N/A';
+            // Em vez de contar, somamos a duração em minutos
+            acc[clientName] = (acc[clientName] || 0) + calculateDuration(v);
+            return acc;
+        }, {});
+
+        const sortedClients = Object.entries(stats).sort((a, b) => b[1] - a[1]); // Ordena por minutos
+        const fM = m => `${Math.floor(m / 60)}h ${Math.round(m % 60)}m`;
+
+        // Renderiza o novo ranking por horas
+        const listContainer = document.getElementById('dash-top-clients-hours-list');
+        listContainer.innerHTML = sortedClients.map(([name, minutes]) =>
+            `<li class="flex justify-between items-center text-sm">
+                <span>${name}</span>
+                <span class="font-bold text-brand-gold">${fM(minutes)}</span>
+            </li>`
+        ).join('') || '<li>Nenhum dado para exibir.</li>';
+
+        // Renderiza o novo gráfico de barras por horas
+        const top5 = sortedClients.slice(0, 5);
+        const labels = top5.map(item => item[0]);
+        const data = top5.map(item => (item[1] / 60).toFixed(2)); // Converte minutos para horas com 2 casas decimais
+
+        const ctx = document.getElementById('clients-hours-chart').getContext('2d');
+        const isDark = document.documentElement.classList.contains('dark');
+        const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+        const labelColor = isDark ? '#e5e7eb' : '#373737';
+
+        if (clientsHoursChart) {
+            clientsHoursChart.data.labels = labels;
+            clientsHoursChart.data.datasets[0].data = data;
+            clientsHoursChart.update();
+        } else {
+            clientsHoursChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Horas',
+                        data: data,
+                        backgroundColor: '#a68a5a', // Um tom diferente de dourado para diferenciar
+                        borderColor: '#8b6e4b',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { title: { display: true, text: 'Horas', color: labelColor }, ticks: { color: labelColor }, grid: { color: gridColor } },
+                        y: { ticks: { color: labelColor }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+    }
     function updateVisitsDashboard() { 
     const st=document.getElementById('dash-visit-start').value, e=document.getElementById('dash-visit-end').value; 
     consultorId = document.getElementById('dash-visit-consultor')?.value, // Adicionado
@@ -2428,7 +2503,8 @@ function openDetailsModalForRow(btn) {
     document.getElementById('dash-hours-scheduled').textContent=fM(cM(fV.filter(v=>v.Status==='Agendada'))); 
     updateVisitsStatusChart(fV); 
     updateTopConsultants(fV); 
-    updateTopClients(fV);
+    updateTopClientsByCount(fV); // <-- Chamada para a função renomeada
+        updateTopClientsByHours(fV); // <-- Chamada para a nova função
 }
     function updateTopConsultants(visits) { 
     const comp=visits.filter(v=>v.Status==='Concluída'); 
