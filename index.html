@@ -1627,22 +1627,30 @@ async function fetchRequisicoesItens() {
 
     let savedPage = sessionStorage.getItem('currentPage');
     
-    if (!loggedInUser.IsAdmin) {
-        const allowedPages = ['visitas', 'requisicao'];
-        if (!savedPage || !allowedPages.includes(savedPage)) {
-            savedPage = 'visitas';
-        }
-    } else {
-        savedPage = savedPage || 'dashboard';
-    }
-    
+    savedPage = savedPage || (loggedInUser.Role === 'Admin' ? 'dashboard' : 'visitas');
     navigateTo(savedPage, true);
-    
+    restoreSubTabState();
     hideLoadingOverlay();
 }
     async function checkSession() { const userString = sessionStorage.getItem('loggedInUser'); if (userString) { allElements.loginScreen.classList.add('hidden'); allElements.mainApp.classList.remove('hidden'); showLoadingOverlay('Restaurando sessão...'); await initializeUserSession(JSON.parse(userString)); } else { allElements.loginScreen.classList.remove('hidden'); } }
     async function authenticateUser(login, senha) { const endpoint = `Consultores?where=(Login,eq,${login})~and(Senha,eq,${senha})`; const result = await nocoFetch(endpoint); return (result && result.list && result.list.length > 0) ? result.list[0] : null; }
+ function restoreSubTabState() {
+        const currentPageId = sessionStorage.getItem('currentPage');
+        if (!currentPageId) return;
 
+        const subTabKey = `activeSubTab_${currentPageId}`;
+        const savedSubTabId = sessionStorage.getItem(subTabKey);
+
+        if (savedSubTabId) {
+            // Encontra o botão da sub-aba correspondente na página que está sendo carregada
+            const subTabButton = document.querySelector(`#${currentPageId} button[data-target="${savedSubTabId}"]`);
+            
+            if (subTabButton) {
+                // Simula o clique no botão para ativar a aba e seu conteúdo corretamente
+                handleTabClick(subTabButton);
+            }
+        }
+    }
     // --- Funções de Renderização ---
     function renderConsultores(data = consultoresData) { 
         document.getElementById('rh-cards-container').innerHTML = data.map(c => createConsultorCard(c)).join(''); 
@@ -1677,6 +1685,7 @@ async function fetchRequisicoesItens() {
                     </div> 
                 </div>`; 
     }
+    
     function renderReceitas(data = receitasData) {
     const tbody = document.getElementById('receitas-table-body');
     const cardsContainer = document.getElementById('receitas-cards-container');
@@ -2501,7 +2510,13 @@ async function handleSaveRequisitionItems() {
     }
     
     function navigateTo(targetId, isInitial = false) { allElements.pages.forEach(page => page.classList.add('hidden')); const targetPage = document.getElementById(targetId); if (targetPage) { targetPage.classList.remove('hidden'); if (targetId === 'visitas' && calendar) setTimeout(() => calendar.render(), 1); if (targetId === 'dashboard') setTimeout(() => updateAllDashboards(), 1); } const navLink = document.querySelector(`.nav-link[data-target="${targetId}"]`); if (navLink) { document.querySelectorAll('.nav-link').forEach(l => { l.classList.remove('bg-brand-gold', 'text-white'); l.classList.add('text-gray-400', 'hover:bg-brand-gold', 'hover:text-white'); }); navLink.classList.add('bg-brand-gold', 'text-white'); navLink.classList.remove('text-gray-400'); if (document.getElementById('page-title')) document.getElementById('page-title').textContent = navLink.title; } }
-    function handleNavClick(e) { const navLink = e.currentTarget; const targetId = navLink.dataset.target; sessionStorage.setItem('currentPage', targetId); navigateTo(targetId); if (window.innerWidth < 1024) toggleMobileSidebar(); }
+    function handleNavClick(e) {
+    const navLink = e.currentTarget;
+    const targetId = navLink.dataset.target;
+    sessionStorage.setItem('currentPage', targetId); // <-- ADICIONE ESTA LINHA
+    navigateTo(targetId);
+    if (window.innerWidth < 1024) toggleMobileSidebar();
+}
     function toggleMobileSidebar() { allElements.sidebar.classList.toggle('-translate-x-full'); allElements.sidebarOverlay.classList.toggle('hidden'); }
     function handleDashboardNav(btn) { document.querySelectorAll('.dashboard-nav-btn').forEach(b=>{b.classList.remove('border-brand-gold','text-brand-gold'); b.classList.add('border-transparent');}); btn.classList.add('border-brand-gold','text-brand-gold'); document.querySelectorAll('.dashboard-content').forEach(c=>c.classList.add('hidden')); document.getElementById(btn.dataset.target).classList.remove('hidden');}
 function handleViewToggle(e) {
@@ -2535,7 +2550,7 @@ function handleViewToggle(e) {
             }
         }
     }
-    function handleTabClick(btn) {
+function handleTabClick(btn) {
         const tC = btn.closest('ul');
         tC.querySelectorAll('button').forEach(b => {
             b.classList.remove('border-brand-gold', 'text-brand-gold');
@@ -2549,19 +2564,23 @@ function handleViewToggle(e) {
             document.getElementById(btn.dataset.target)?.classList.remove('hidden');
         }
 
-        // --- INÍCIO DA ALTERAÇÃO ---
-        // Controla a visibilidade do botão principal "Novo Item"
+        // --- INÍCIO DA ALTERAÇÃO 1: Salvar a sub-aba ativa ---
+        if (pC) {
+            const pageId = pC.id;
+            const targetId = btn.dataset.target;
+            // Salva a sub-aba ativa usando uma chave única para a página atual (ex: 'activeSubTab_rh')
+            sessionStorage.setItem(`activeSubTab_${pageId}`, targetId);
+        }
+        // --- FIM DA ALTERAÇÃO 1 ---
+
         const newItemButton = document.getElementById('show-new-item-btn');
         if (newItemButton) {
-            // Mostra o botão somente se a aba for 'itens-requisicao-content' E o usuário for admin
             if (btn.dataset.target === 'itens-requisicao-content' && loggedInUser && loggedInUser.Role === 'Admin') {
                 newItemButton.style.display = 'block';
             } else {
-                // Esconde o botão em todas as outras condições
                 newItemButton.style.display = 'none';
             }
         }
-        // --- FIM DA ALTERAÇÃO ---
     }
     
   function generateAgendaPdf() {
