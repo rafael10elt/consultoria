@@ -2653,11 +2653,13 @@ function openDetailsModalForRow(btn) {
     // --- INÍCIO DA ALTERAÇÃO ---
     // Verifica o tipo de modal. Se for 'visita', esconde os botões de ação.
     // Para todos os outros tipos, garante que os botões estejam visíveis.
-    if (type === 'visita') {
-        actionsContainer.style.display = 'none';
-    } else {
-        actionsContainer.style.display = 'flex';
-    }
+    const typesWithoutActions = ['visita', 'ferias', 'atestado', 'epi', 'ativo'];
+
+if (typesWithoutActions.includes(type)) {
+    actionsContainer.style.display = 'none'; // Esconde os botões se o tipo estiver na lista
+} else {
+    actionsContainer.style.display = 'flex'; // Mostra os botões para todos os outros tipos
+}
     // --- FIM DA ALTERAÇÃO ---
 
     switch (type) {
