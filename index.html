@@ -717,20 +717,21 @@ body {
                                         </select>
                                     </div>
                                 </div>
-                                <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-300">
-                                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                            <tr>
-                                                <th scope="col" class="px-6 py-3">Cliente</th>
-                                                <th scope="col" class="px-6 py-3">Vencimento</th>
-                                                <th scope="col" class="px-6 py-3">Valor</th>
-                                                <th scope="col" class="px-6 py-3">Status</th>
-                                                <th scope="col" class="px-6 py-3">Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="receitas-table-body"></tbody>
-                                    </table>
-                                </div>
+                                <div class="relative overflow-x-auto shadow-md sm:rounded-lg hidden md:block">
+    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-300">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+                <th scope="col" class="px-6 py-3">Cliente</th>
+                <th scope="col" class="px-6 py-3">Vencimento</th>
+                <th scope="col" class="px-6 py-3">Valor</th>
+                <th scope="col" class="px-6 py-3">Status</th>
+                <th scope="col" class="px-6 py-3">Ações</th>
+            </tr>
+        </thead>
+        <tbody id="receitas-table-body"></tbody>
+    </table>
+</div>
+<div id="receitas-cards-container" class="grid grid-cols-1 gap-4 md:hidden"></div>
                             </div>
                             <div id="receita-form-container" class="hidden mt-6 p-6 bg-white rounded-lg shadow-md dark:bg-gray-800">
                                 <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Lançar Nova Receita</h3>
@@ -792,20 +793,21 @@ body {
                                         </select>
                                     </div>
                                 </div>
-                                <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-300">
-                                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                            <tr>
-                                                <th scope="col" class="px-6 py-3">Credor</th>
-                                                <th scope="col" class="px-6 py-3">Vencimento</th>
-                                                <th scope="col" class="px-6 py-3">Valor</th>
-                                                <th scope="col" class="px-6 py-3">Status</th>
-                                                <th scope="col" class="px-6 py-3">Ações</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="custos-table-body"></tbody>
-                                    </table>
-                                </div>
+                                <div class="relative overflow-x-auto shadow-md sm:rounded-lg hidden md:block">
+    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-300">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+                <th scope="col" class="px-6 py-3">Credor</th>
+                <th scope="col" class="px-6 py-3">Vencimento</th>
+                <th scope="col" class="px-6 py-3">Valor</th>
+                <th scope="col" class="px-6 py-3">Status</th>
+                <th scope="col" class="px-6 py-3">Ações</th>
+            </tr>
+        </thead>
+        <tbody id="custos-table-body"></tbody>
+    </table>
+</div>
+<div id="custos-cards-container" class="grid grid-cols-1 gap-4 md:hidden"></div>
                             </div>
                             <div id="custo-form-container" class="hidden mt-6 p-6 bg-white rounded-lg shadow-md dark:bg-gray-800">
                                 <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Lançar Novo Custo</h3>
@@ -1675,8 +1677,86 @@ async function fetchRequisicoesItens() {
                     </div> 
                 </div>`; 
     }
-    function renderReceitas(data = receitasData) { const t = document.getElementById('receitas-table-body'); if(t) t.innerHTML = data.map(r => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}"> <td class="px-6 py-4">${r.Clientes?.Nome || 'N/A'}</td> <td class="px-6 py-4">${new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${(r.Valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td> <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.Status==='Pago'?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">${r.Status}</span></td> <td class="px-6 py-4 space-x-2"><button class="table-details-btn text-gray-500" data-type="receita"><i class="fas fa-eye"></i></button><button class="table-edit-btn text-blue-500" data-type="receita"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500" data-type="receita"><i class="fas fa-trash"></i></button></td> </tr> `).join(''); }
-    function renderCustos(data = custosData) { const t = document.getElementById('custos-table-body'); if(t) t.innerHTML = data.map(c => ` <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${c.Id}"> <td class="px-6 py-4">${c.Credor}</td> <td class="px-6 py-4">${new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td> <td class="px-6 py-4">${(c.Valor||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}</td> <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${c.Status==='Pago'?'bg-green-200 text-green-800':'bg-yellow-200 text-yellow-800'}">${c.Status}</span></td> <td class="px-6 py-4 space-x-2"><button class="table-details-btn text-gray-500" data-type="custo"><i class="fas fa-eye"></i></button><button class="table-edit-btn text-blue-500" data-type="custo"><i class="fas fa-edit"></i></button><button class="table-delete-btn text-red-500" data-type="custo"><i class="fas fa-trash"></i></button></td> </tr> `).join(''); }
+    function renderReceitas(data = receitasData) {
+    const tbody = document.getElementById('receitas-table-body');
+    const cardsContainer = document.getElementById('receitas-cards-container');
+    if (!tbody || !cardsContainer) return;
+
+    tbody.innerHTML = '';
+    cardsContainer.innerHTML = '';
+
+    data.forEach(r => {
+        const statusClass = r.Status === 'Pago' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800';
+        const actionsHTML = `
+            <button class="table-details-btn text-gray-500" data-type="receita"><i class="fas fa-eye"></i></button>
+            <button class="table-edit-btn text-blue-500" data-type="receita"><i class="fas fa-edit"></i></button>
+            <button class="table-delete-btn text-red-500" data-type="receita"><i class="fas fa-trash"></i></button>`;
+
+        // Tabela Desktop
+        tbody.innerHTML += `
+            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}">
+                <td class="px-6 py-4">${r.Clientes?.Nome || 'N/A'}</td>
+                <td class="px-6 py-4">${new Date(r.Vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td class="px-6 py-4">${(r.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${statusClass}">${r.Status}</span></td>
+                <td class="px-6 py-4 space-x-2">${actionsHTML}</td>
+            </tr>`;
+
+        // Card Mobile
+        cardsContainer.innerHTML += `
+            <div class="p-4 bg-white rounded-lg shadow dark:bg-gray-800 border dark:border-gray-700" data-id="${r.Id}">
+                <div class="flex justify-between items-start">
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white">${r.Clientes?.Nome || 'N/A'}</p>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${statusClass}">${r.Status}</span>
+                </div>
+                <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    <p><strong>Vencimento:</strong> ${new Date(r.Vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
+                    <p><strong>Valor:</strong> ${(r.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                </div>
+                <div class="flex justify-end pt-2 mt-2 border-t dark:border-gray-600 space-x-2">${actionsHTML}</div>
+            </div>`;
+    });
+}
+function renderCustos(data = custosData) {
+    const tbody = document.getElementById('custos-table-body');
+    const cardsContainer = document.getElementById('custos-cards-container');
+    if (!tbody || !cardsContainer) return;
+
+    tbody.innerHTML = '';
+    cardsContainer.innerHTML = '';
+
+    data.forEach(c => {
+        const statusClass = c.Status === 'Pago' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800';
+        const actionsHTML = `
+            <button class="table-details-btn text-gray-500" data-type="custo"><i class="fas fa-eye"></i></button>
+            <button class="table-edit-btn text-blue-500" data-type="custo"><i class="fas fa-edit"></i></button>
+            <button class="table-delete-btn text-red-500" data-type="custo"><i class="fas fa-trash"></i></button>`;
+
+        // Tabela Desktop
+        tbody.innerHTML += `
+            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${c.Id}">
+                <td class="px-6 py-4">${c.Credor}</td>
+                <td class="px-6 py-4">${new Date(c.Vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td class="px-6 py-4">${(c.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${statusClass}">${c.Status}</span></td>
+                <td class="px-6 py-4 space-x-2">${actionsHTML}</td>
+            </tr>`;
+
+        // Card Mobile
+        cardsContainer.innerHTML += `
+            <div class="p-4 bg-white rounded-lg shadow dark:bg-gray-800 border dark:border-gray-700" data-id="${c.Id}">
+                <div class="flex justify-between items-start">
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white">${c.Credor}</p>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${statusClass}">${c.Status}</span>
+                </div>
+                <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    <p><strong>Vencimento:</strong> ${new Date(c.Vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
+                    <p><strong>Valor:</strong> ${(c.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                </div>
+                <div class="flex justify-end pt-2 mt-2 border-t dark:border-gray-600 space-x-2">${actionsHTML}</div>
+            </div>`;
+    });
+}
     function renderFerias(data = feriasData) {
     const tbody = document.getElementById('ferias-table-body');
     const cardsContainer = document.getElementById('ferias-cards-container');
