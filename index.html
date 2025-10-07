@@ -312,7 +312,14 @@ body {
                                             <option value="Inativo">Inativo</option>
                                         </select>
                                     </div>
-                                    <div class="flex items-center"><input id="rh-admin" type="checkbox" class="w-4 h-4 text-brand-gold bg-gray-100 border-gray-300 rounded focus:ring-brand-gold dark:focus:ring-brand-gold dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"><label for="rh-admin" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">É administrador?</label></div>
+                                    <div>
+    <label for="rh-role" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Função</label>
+    <select id="rh-role" name="role" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
+        <option value="Standard">Standard</option>
+        <option value="Manager">Manager</option>
+        <option value="Admin">Admin</option>
+    </select>
+</div>
                                     <div class="md:col-span-2 lg:col-span-3"><label for="rh-endereco" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Endereço</label><input type="text" name="endereco" id="rh-endereco" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
                                     <div class="md:col-span-2 lg:col-span-3"><label for="rh-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label><textarea id="rh-obs" name="obs" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></textarea></div>
                                     <div class="md:col-span-2 lg:col-span-3 flex justify-end space-x-4">
@@ -1223,7 +1230,7 @@ async function fetchRequisicoesItens() {
  async function initializeUserSession(user) {
     loggedInUser = user;
     document.getElementById('logged-user-name').textContent = loggedInUser.Nome;
-    document.querySelector('#logged-user-name + p').textContent = loggedInUser.IsAdmin ? 'Administrador' : 'Consultor';
+    document.querySelector('#logged-user-name + p').textContent = loggedInUser.Role || 'Consultor';
     const userAvatar = document.querySelector('#logged-user-name').closest('div').nextElementSibling;
     if (userAvatar && loggedInUser.Foto && loggedInUser.Foto[0]?.signedPath) {
         userAvatar.src = `${NocoDB_BaseURL}/${loggedInUser.Foto[0].signedPath}`;
@@ -1235,7 +1242,7 @@ async function fetchRequisicoesItens() {
 
     // --- LÓGICA DE FILTROS REMOVIDA DAQUI ---
     // Apenas a lógica de visibilidade do menu permanece
-    if (!loggedInUser.IsAdmin) {
+    if (loggedInUser.Role === 'Standard') { 
         const allowedPages = ['visitas', 'requisicao']; 
         document.querySelectorAll('.nav-link').forEach(link => {
             const target = link.dataset.target;
@@ -1373,7 +1380,7 @@ function applyConsultorFilters() {
                         RazaoSocial: form.querySelector('#rh-razao').value, 
                         ValorHora: parseFloat(form.querySelector('#rh-valor').value) || 0,
                         Status: form.querySelector('#rh-status').value, 
-                        IsAdmin: form.querySelector('#rh-admin').checked, 
+                        Role: form.querySelector('#rh-role').value, 
                         Endereco: form.querySelector('#rh-endereco').value, 
                         Observacao: form.querySelector('#rh-obs').value 
                     };
@@ -1952,7 +1959,7 @@ function handleViewToggle(e) {
         const newItemButton = document.getElementById('show-new-item-btn');
         if (newItemButton) {
             // Mostra o botão somente se a aba for 'itens-requisicao-content' E o usuário for admin
-            if (btn.dataset.target === 'itens-requisicao-content' && loggedInUser && loggedInUser.IsAdmin) {
+            if (btn.dataset.target === 'itens-requisicao-content' && loggedInUser && loggedInUser.Role === 'Admin') {
                 newItemButton.style.display = 'block';
             } else {
                 // Esconde o botão em todas as outras condições
@@ -2092,8 +2099,9 @@ function handleTableEdit(btn) {
     }
 }
     function handleCardEdit() { if (!activeCard) return; hideModal(allElements.detailsModal); const isConsultor = activeCard.classList.contains('rh-card'); const formContainerId = isConsultor ? 'rh-form-container' : 'cliente-form-container'; const cardsContainerId = isConsultor ? 'rh-cards-container' : 'cliente-cards-container'; const form = document.getElementById(formContainerId).querySelector('form'); const data = activeCard.dataset; form.reset(); let hiddenIdInput = form.querySelector('input[type="hidden"]'); if (!hiddenIdInput) { hiddenIdInput = document.createElement('input'); hiddenIdInput.type = 'hidden'; hiddenIdInput.id = isConsultor ? 'rh-id' : 'cliente-id'; form.prepend(hiddenIdInput); } hiddenIdInput.value = data.id;  const fieldMapping = isConsultor 
-        ? {'rh-nome':'nome', 'rh-nasc':'datanascimento', 'rh-tel':'telefone', 'rh-email':'email', 'rh-login':'login', 'rh-inicio':'iniciovinculo', 'rh-fim':'fimvinculo', 'rh-cnpj':'cnpj', 'rh-razao':'razaosocial', 'rh-valor':'valorhora', 'rh-status':'status', 'rh-admin':'isadmin', 'rh-endereco':'endereco', 'rh-obs':'observacao'} 
-        : {'cliente-nome':'nome', 'cliente-razao':'razaosocial', 'cliente-cnpj':'cnpj', 'cliente-tel':'telefone', 'cliente-email':'email', 'cliente-horas':'horascontratadas', 'cliente-status':'status', 'cliente-responsavel':'responsavel', 'cliente-cpf':'cpfresponsavel', 'cliente-iptu':'iptu', 'cliente-senha-portal':'senhaportal', 'cliente-endereco':'endereco', 'cliente-obs':'observacao'};  for (const [fieldId, dataKey] of Object.entries(fieldMapping)) { const input = form.querySelector(`#${fieldId}`); if (input) { if (input.type === 'checkbox') { input.checked = data[dataKey] === 'true' || data[dataKey] === '1'; } else { input.value = data[dataKey] || ''; } } } if (isConsultor) { const passwordInput = form.querySelector('#rh-senha'); if (passwordInput) { passwordInput.value = ''; passwordInput.placeholder = "Deixe em branco para não alterar"; } } const imgPreview = form.querySelector('img'); if (imgPreview) { let fotoData; try { fotoData = data.foto ? JSON.parse(data.foto) : null; } catch(e) { fotoData = null; } imgPreview.src = (fotoData && fotoData[0]?.signedPath) ? `${NocoDB_BaseURL}/${fotoData[0].signedPath}` : `https://placehold.co/100x100/e2e8f0/cbd5e0?text=${isConsultor ? 'Foto' : 'Logo'}`; } document.getElementById(cardsContainerId).classList.add('hidden'); document.getElementById(formContainerId).classList.remove('hidden'); }
+        ? {'rh-nome':'nome', 'rh-nasc':'datanascimento', 'rh-tel':'telefone', 'rh-email':'email', 'rh-login':'login', 'rh-inicio':'iniciovinculo', 'rh-fim':'fimvinculo', 'rh-cnpj':'cnpj', 'rh-razao':'razaosocial', 'rh-valor':'valorhora', 'rh-status':'status', 'rh-role':'role', 'rh-endereco':'endereco', 'rh-obs':'observacao'} 
+        : {'cliente-nome':'nome', 'cliente-razao':'razaosocial', 'cliente-cnpj':'cnpj', 'cliente-tel':'telefone', 'cliente-email':'email', 'cliente-horas':'horascontratadas', 'cliente-status':'status', 'cliente-responsavel':'responsavel', 'cliente-cpf':'cpfresponsavel', 'cliente-iptu':'iptu', 'cliente-senha-portal':'senhaportal', 'cliente-endereco':'endereco', 'cliente-obs':'observacao'};  for (const [fieldId, dataKey] of Object.entries(fieldMapping)) { const input = form.querySelector(`#${fieldId}`); if (input) { if (dataKey === 'role' && !data[dataKey]) {
+        input.value = 'Standard'; } else { input.value = data[dataKey] || ''; } } } if (isConsultor) { const passwordInput = form.querySelector('#rh-senha'); if (passwordInput) { passwordInput.value = ''; passwordInput.placeholder = "Deixe em branco para não alterar"; } } const imgPreview = form.querySelector('img'); if (imgPreview) { let fotoData; try { fotoData = data.foto ? JSON.parse(data.foto) : null; } catch(e) { fotoData = null; } imgPreview.src = (fotoData && fotoData[0]?.signedPath) ? `${NocoDB_BaseURL}/${fotoData[0].signedPath}` : `https://placehold.co/100x100/e2e8f0/cbd5e0?text=${isConsultor ? 'Foto' : 'Logo'}`; } document.getElementById(cardsContainerId).classList.add('hidden'); document.getElementById(formContainerId).classList.remove('hidden'); }
     const setupSearch=(iId,cS)=>{document.getElementById(iId)?.addEventListener('input',e=>{const sT=e.target.value.toLowerCase(); document.querySelectorAll(cS).forEach(c=>{const n=c.dataset.nome||''; c.style.display=n.toLowerCase().includes(sT)?'flex':'none';});});};
     const setupFormToggle=(cId,fId)=>{activeCard=null; const f=document.getElementById(fId).querySelector('form'); f?.reset(); let hId=f.querySelector('input[type="hidden"]'); if(hId)hId.value=''; document.getElementById(cId)?.classList.add('hidden'); document.getElementById(fId)?.classList.remove('hidden');};
     const hideFormToggle=(cId,fId)=>{document.getElementById(fId).classList.add('hidden'); document.getElementById(cId).classList.remove('hidden');}
@@ -2610,8 +2618,8 @@ function renderRequisicoes(data = requisicoesData) {
 
     data.forEach(r => {
         const addContentBtnHTML = r.Status === 'Pendente' ? `<button class="add-content-btn text-green-500 hover:text-green-700" data-id="${r.Id}" title="Adicionar Itens"><i class="fas fa-plus-circle"></i></button>` : '';
-        const changeStatusBtnHTML = loggedInUser.IsAdmin ? `<button class="change-status-btn text-orange-500 hover:text-orange-700" data-id="${r.Id}" data-status="${r.Status}" title="Mudar Status"><i class="fas fa-toggle-on"></i></button>` : '';
-        const deleteRequisitionBtnHTML = (loggedInUser.IsAdmin || r.Status === 'Pendente') ? `<button class="table-delete-btn text-red-500" data-type="requisicao" title="Apagar Requisição"><i class="fas fa-trash"></i></button>` : '';
+        const changeStatusBtnHTML = (loggedInUser && (loggedInUser.Role === 'Admin' || loggedInUser.Role === 'Manager')) ? `<button class="change-status-btn text-orange-500 hover:text-orange-700" data-id="${r.Id}" data-status="${r.Status}" title="Mudar Status"><i class="fas fa-toggle-on"></i></button>` : '';
+        const deleteRequisitionBtnHTML = ((loggedInUser && (loggedInUser.Role === 'Admin' || loggedInUser.Role === 'Manager')) || r.Status === 'Pendente') ? `<button class="table-delete-btn text-red-500" data-type="requisicao" title="Apagar Requisição"><i class="fas fa-trash"></i></button>` : '';
         const actionsHTML = `
             ${addContentBtnHTML}
             <button class="table-details-btn text-gray-500" data-type="requisicao" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
@@ -2666,8 +2674,7 @@ function renderItensDeRequisicao(filterCategory = 'Todos') {
             header.className = 'flex justify-between items-center mb-4';
             
             // --- INÍCIO DA ALTERAÇÃO 1: Botão "Adicionar Item" condicional ---
-            const addItemButtonHTML = (loggedInUser && loggedInUser.IsAdmin)
-                ? `<button class="add-item-btn bg-brand-gold text-white px-3 py-1 rounded-md text-sm hover:bg-brand-gold-dark" data-category="${category}">Adicionar Item</button>`
+            const addItemButtonHTML = (loggedInUser && loggedInUser.Role === 'Admin') ?  `<button class="add-item-btn bg-brand-gold text-white px-3 py-1 rounded-md text-sm hover:bg-brand-gold-dark" data-category="${category}">Adicionar Item</button>`
                 : ''; // Se não for admin, o botão não é criado.
 
             header.innerHTML = `<h3 class="text-xl font-bold text-gray-800 dark:text-white">${category}</h3>${addItemButtonHTML}`;
@@ -2679,8 +2686,7 @@ function renderItensDeRequisicao(filterCategory = 'Todos') {
             grid.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4';
             
             // --- INÍCIO DA ALTERAÇÃO 2: Botões de ação dos cards condicionais ---
-            const itemActionsHTML = (loggedInUser && loggedInUser.IsAdmin)
-                ? `<div class="mt-2 flex justify-center space-x-2">
+            const itemActionsHTML = (loggedInUser && loggedInUser.Role === 'Admin') ? `<div class="mt-2 flex justify-center space-x-2">
                         <button class="item-action-btn edit-item-btn text-blue-500 hover:text-blue-700" title="Editar"><i class="fas fa-edit"></i></button>
                         <button class="item-action-btn delete-item-btn text-red-500 hover:text-red-700" title="Apagar"><i class="fas fa-trash"></i></button>
                     </div>`
