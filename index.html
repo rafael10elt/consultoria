@@ -1908,7 +1908,7 @@ async function handleSaveRequisitionItems() {
         const aM={
             'logout-button':()=>showModal(allElements.logoutConfirmModal),'cancel-logout-btn':()=>hideModal(allElements.logoutConfirmModal),'confirm-logout-btn':()=>{sessionStorage.clear(); location.reload();},
             'sidebar-toggle':toggleMobileSidebar,'show-insights-btn':()=>{generateInsights(); showModal(allElements.insightsModal);},'close-insights-modal':()=>hideModal(allElements.insightsModal),
-            'show-report-modal-btn':()=>{toggleReportSubtype(); showModal(allElements.reportModal);},'close-report-modal':()=>hideModal(allElements.reportModal),
+            'show-report-modal-btn': openReportModal,'close-report-modal':()=>hideModal(allElements.reportModal),
             'show-rh-form':()=>setupFormToggle('rh-cards-container','rh-form-container'),'cancel-rh-form':()=>hideFormToggle('rh-cards-container','rh-form-container'),
             'show-cliente-form':()=>setupFormToggle('cliente-cards-container','cliente-form-container'),'cancel-cliente-form':()=>hideFormToggle('cliente-cards-container','cliente-form-container'),
             'show-visita-form':()=>openVisitaModal(),
@@ -2873,41 +2873,71 @@ function applyRequisicaoFilters(){
     function applyAndRenderReceitas(){const s=document.getElementById('filter-receita-start-date').value,e=document.getElementById('filter-receita-end-date').value,c=document.getElementById('filter-receita-cliente').value,st=document.getElementById('filter-receita-status').value; const f=receitasData.filter(r=>(!s||r.Vencimento>=s)&&(!e||r.Vencimento<=e)&&(!c||r.Clientes?.Id==c)&&(!st||r.Status===st)); renderReceitas(f);}
     function applyAndRenderCustos(){const s=document.getElementById('filter-custo-start-date').value,e=document.getElementById('filter-custo-end-date').value,cr=document.getElementById('filter-custo-credor').value.toLowerCase(),st=document.getElementById('filter-custo-status').value; const f=custosData.filter(c=>(!s||c.Vencimento>=s)&&(!e||c.Vencimento<=e)&&(!cr||c.Credor.toLowerCase().includes(cr))&&(!st||c.Status===st)); renderCustos(f);}
     
-    function generateInsights(){ 
-    const f = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); 
-    const insightsContent = document.getElementById('insights-content'); 
-    let insightsHTML = ''; 
-    const totalReceitas = receitasData.reduce((sum, r) => sum + (r.Valor || 0), 0); 
-    const totalCustos = custosData.reduce((sum, c) => sum + (c.Valor || 0), 0); 
-    const balanco = totalReceitas - totalCustos; 
-    insightsHTML += `<p class="p-2 rounded-lg ${balanco >= 0 ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'}"><strong>Balanço Financeiro Geral:</strong> <span class="font-bold ${balanco >= 0 ? 'text-green-600 dark:text-green-300' : 'text-red-600 dark:text-red-300'}">${f(balanco)}</span>.</p>`; 
-    const receitasPendentes = receitasData.filter(r => r.Status === 'Pendente').reduce((sum, r) => sum + r.Valor, 0); 
-    if (receitasPendentes > 0) { 
-        insightsHTML += `<p class="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900"><strong>Atenção:</strong> Existem <strong>${f(receitasPendentes)}</strong> em receitas pendentes.</p>`; 
-    } 
-    const visitasConcluidas = visitsData.filter(v => v.Status === 'Concluída'); 
-    if (visitasConcluidas.length > 0) { 
-        const stats = visitasConcluidas.reduce((acc, v) => { 
-            const name = v.Consultores?.Nome || 'N/A'; 
-            acc[name] = (acc[name] || 0) + calculateDuration(v); 
-            return acc; 
-        }, {}); 
-        const [topConsultor, topHoras] = Object.entries(stats).sort((a, b) => b[1] - a[1])[0] || [null, 0]; 
-        if (topConsultor) { 
-            // --- INÍCIO DA ALTERAÇÃO ---
-            // Adicionado Math.round() para arredondar os minutos
-            insightsHTML += `<p class="p-2 rounded-lg bg-blue-100 dark:bg-blue-900"><strong>Destaque de Produtividade:</strong> O consultor <strong>${topConsultor}</strong> foi o que mais registrou horas (${Math.floor(topHoras/60)}h ${Math.round(topHoras%60)}m).</p>`; 
-            // --- FIM DA ALTERAÇÃO ---
-        } 
-    } else { 
-        insightsHTML += `<p class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700">Nenhuma visita concluída para análise de produtividade.</p>`; 
-    } 
-    const totalVisitasAgendadas = visitsData.filter(v => v.Status === 'Agendada').length; 
-    if(totalVisitasAgendadas > 0){ 
-        insightsHTML += `<p class="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900">Existem <strong>${totalVisitasAgendadas}</strong> visitas agendadas no sistema.</p>`; 
-    } 
-    insightsContent.innerHTML = insightsHTML || '<p>Não há dados suficientes para gerar insights.</p>'; 
-}
+function generateInsights() {
+        const f = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        const insightsContent = document.getElementById('insights-content');
+        let insightsHTML = '';
+
+        // --- INÍCIO DA ALTERAÇÃO ---
+        // Apenas Admin pode ver insights financeiros.
+        if (loggedInUser && loggedInUser.Role === 'Admin') {
+            const totalReceitas = receitasData.reduce((sum, r) => sum + (r.Valor || 0), 0);
+            const totalCustos = custosData.reduce((sum, c) => sum + (c.Valor || 0), 0);
+            const balanco = totalReceitas - totalCustos;
+            insightsHTML += `<p class="p-2 rounded-lg ${balanco >= 0 ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'}"><strong>Balanço Financeiro Geral:</strong> <span class="font-bold ${balanco >= 0 ? 'text-green-600 dark:text-green-300' : 'text-red-600 dark:text-red-300'}">${f(balanco)}</span>.</p>`;
+            
+            const receitasPendentes = receitasData.filter(r => r.Status === 'Pendente').reduce((sum, r) => sum + r.Valor, 0);
+            if (receitasPendentes > 0) {
+                insightsHTML += `<p class="p-2 rounded-lg bg-yellow-100 dark:bg-yellow-900"><strong>Atenção:</strong> Existem <strong>${f(receitasPendentes)}</strong> em receitas pendentes.</p>`;
+            }
+        }
+        // --- FIM DA ALTERAÇÃO ---
+
+        // Insights de visitas são visíveis para Admin e Manager
+        const visitasConcluidas = visitsData.filter(v => v.Status === 'Concluída');
+        if (visitasConcluidas.length > 0) {
+            const stats = visitasConcluidas.reduce((acc, v) => {
+                const name = v.Consultores?.Nome || 'N/A';
+                acc[name] = (acc[name] || 0) + calculateDuration(v);
+                return acc;
+            }, {});
+            const [topConsultor, topHoras] = Object.entries(stats).sort((a, b) => b[1] - a[1])[0] || [null, 0];
+            if (topConsultor) {
+                insightsHTML += `<p class="p-2 rounded-lg bg-blue-100 dark:bg-blue-900"><strong>Destaque de Produtividade:</strong> O consultor <strong>${topConsultor}</strong> foi o que mais registrou horas (${Math.floor(topHoras/60)}h ${Math.round(topHoras%60)}m).</p>`;
+            }
+        } else {
+            insightsHTML += `<p class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700">Nenhuma visita concluída para análise de produtividade.</p>`;
+        }
+        
+        const totalVisitasAgendadas = visitsData.filter(v => v.Status === 'Agendada').length;
+        if (totalVisitasAgendadas > 0) {
+            insightsHTML += `<p class="p-2 rounded-lg bg-indigo-100 dark:bg-indigo-900">Existem <strong>${totalVisitasAgendadas}</strong> visitas agendadas no sistema.</p>`;
+        }
+        
+        insightsContent.innerHTML = insightsHTML || '<p>Não há dados suficientes para gerar insights.</p>';
+    }
+    function openReportModal() {
+        const reportTypeSelect = document.getElementById('report-type');
+        const financeOption = reportTypeSelect.querySelector('option[value="financeiro"]');
+
+        if (loggedInUser && loggedInUser.Role === 'Manager') {
+            // Esconde a opção "Financeiro"
+            financeOption.style.display = 'none';
+            // Força a seleção de "Visitas"
+            reportTypeSelect.value = 'visitas';
+            // Desabilita o campo para que o Manager não possa trocar
+            reportTypeSelect.disabled = true;
+        } else {
+            // Garante que para Admins a opção esteja visível e o campo habilitado
+            financeOption.style.display = '';
+            reportTypeSelect.value = 'financeiro'; // Volta ao padrão
+            reportTypeSelect.disabled = false;
+        }
+
+        // Continua com a lógica original de abrir o modal
+        toggleReportSubtype();
+        showModal(allElements.reportModal);
+    }
     function toggleReportSubtype(){ const reportType = document.getElementById('report-type').value; const visitsFilters = document.getElementById('report-visits-filters'); let financeFilters = document.getElementById('report-finance-filters'); if (!financeFilters) { financeFilters = document.createElement('div'); financeFilters.id = 'report-finance-filters'; visitsFilters.parentElement.insertBefore(financeFilters, visitsFilters); financeFilters.innerHTML = ` <div> <label for="report-finance-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label> <select id="report-finance-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"> <option value="">Todos</option> <option value="Pago">Pago</option> <option value="Pendente">Pendente</option> </select> </div>`; } let visitsStatusFilter = document.getElementById('report-visits-status'); if (!visitsStatusFilter) { const statusDiv = document.createElement('div'); visitsFilters.appendChild(statusDiv); statusDiv.innerHTML = ` <label for="report-visits-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status da Visita</label> <select id="report-visits-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"> <option value="">Todos</option> <option value="Agendada">Agendada</option> <option value="Em Andamento">Em Andamento</option> <option value="Concluída">Concluída</option> <option value="Remarcada">Remarcada</option> </select> `; } document.getElementById('report-subtype').parentElement.style.display = 'none'; if (reportType === 'visitas') { visitsFilters.classList.remove('hidden'); financeFilters.classList.add('hidden'); } else { visitsFilters.classList.add('hidden'); financeFilters.classList.remove('hidden'); } }
     function generatePdfReport(e){ e.preventDefault(); const startDate = document.getElementById('report-start-date').value; const endDate = document.getElementById('report-end-date').value; if (!startDate || !endDate) { alert('Por favor, preencha as datas de início e fim do período para gerar o relatório.'); return; } const { jsPDF } = window.jspdf; const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' }); const type = document.getElementById('report-type').value; doc.setFontSize(18); doc.text(`Relatório de ${type.charAt(0).toUpperCase() + type.slice(1)}`, 14, 22); doc.setFontSize(11); doc.setTextColor(100); doc.text(`Período: ${new Date(startDate+'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(endDate+'T00:00:00').toLocaleDateString('pt-BR')}`, 14, 30); if (type === 'financeiro') { const status = document.getElementById('report-finance-status').value; generateFinanceReport(doc, { startDate, endDate, status }); } else if (type === 'visitas') { const consultorId = document.getElementById('report-consultor').value; const clienteId = document.getElementById('report-cliente').value; const status = document.getElementById('report-visits-status').value; generateVisitReport(doc, { startDate, endDate, consultorId, clienteId, status }); } doc.save(`relatorio_${type}_${new Date().toISOString().slice(0,10)}.pdf`); hideModal(allElements.reportModal); }
     function generateFinanceReport(doc, filters) { const { startDate, endDate, status } = filters; const f = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); let finalY = 40; const baseReceitas = receitasData.filter(r => (!startDate || r.Vencimento >= startDate) && (!endDate || r.Vencimento <= endDate)); const baseCustos = custosData.filter(c => (!startDate || c.Vencimento >= startDate) && (!endDate || c.Vencimento <= endDate)); const drawTable = (title, head, body) => { if (body.length > 0) { doc.setFontSize(12); doc.text(title, 14, finalY); finalY += 2; doc.autoTable({ startY: finalY, head: [head], body: body, theme: 'striped', headStyles: { fillColor: [55, 55, 55] } }); finalY = doc.autoTable.previous.finalY + 10; } }; if (status === "" || status === "Todos") { const receitasPagas = baseReceitas.filter(r => r.Status === 'Pago'); const receitasPendentes = baseReceitas.filter(r => r.Status === 'Pendente'); const custosPagos = baseCustos.filter(c => c.Status === 'Pago'); const custosPendentes = baseCustos.filter(c => c.Status === 'Pendente'); drawTable('Receitas Pagas', ['Cliente', 'Vencimento', 'Valor'], receitasPagas.map(r => [r.Clientes?.Nome || 'N/A', new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)])); drawTable('Custos Pagos', ['Credor', 'Vencimento', 'Valor'], custosPagos.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)])); drawTable('Receitas Pendentes', ['Cliente', 'Vencimento', 'Valor'], receitasPendentes.map(r => [r.Clientes?.Nome || 'N/A', new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)])); drawTable('Custos Pendentes', ['Credor', 'Vencimento', 'Valor'], custosPendentes.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)])); } else { const filteredReceitas = baseReceitas.filter(r => r.Status === status); const filteredCustos = baseCustos.filter(c => c.Status === status); drawTable(`Receitas com Status: ${status}`, ['Cliente', 'Vencimento', 'Valor'], filteredReceitas.map(r => [r.Clientes?.Nome || 'N/A', new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)])); drawTable(`Custos com Status: ${status}`, ['Credor', 'Vencimento', 'Valor'], filteredCustos.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)])); } if (finalY > 250) doc.addPage(); const totalReceitas = baseReceitas.reduce((sum, r) => sum + r.Valor, 0); const totalCustos = baseCustos.reduce((sum, c) => sum + c.Valor, 0); const balanco = totalReceitas - totalCustos; doc.setFontSize(12); doc.text('Resumo Financeiro do Período', 14, finalY); doc.setFontSize(10); doc.text(`Total de Receitas: ${f(totalReceitas)}`, 14, finalY + 7); doc.text(`Total de Custos: ${f(totalCustos)}`, 14, finalY + 14); doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text(`Balanço Final: ${f(balanco)}`, 14, finalY + 21); }
