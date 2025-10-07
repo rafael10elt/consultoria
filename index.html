@@ -511,28 +511,34 @@ body {
                                     <label for="filter-req-item" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Item</label>
                                     <input type="text" id="filter-req-item" placeholder="Buscar item..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
                                 </div>
-                                <div class="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-5 flex justify-end space-x-2">
-                                    <button id="clear-req-filters-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Limpar Filtros</button>
-                                    <button id="apply-req-filters-btn" class="px-4 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Filtrar</button>
-                                </div>
+                                <div class="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-5 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
+    <button id="clear-req-filters-btn" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Limpar Filtros</button>
+    <button id="apply-req-filters-btn" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Filtrar</button>
+</div>
                             </div>
 
                              <div class="flex justify-end items-center mb-4">
                                 <button id="show-requisicao-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Nova Requisição</button>
                             </div>
-                            <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-300">
-                                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                        <tr>
-                                            <th scope="col" class="px-6 py-3">Consultor</th>
-                                            <th scope="col" class="px-6 py-3">Data/Hora</th>
-                                            <th scope="col" class="px-6 py-3">Status</th>
-                                            <th scope="col" class="px-6 py-3">Ações</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="requisicoes-table-body"></tbody>
-                                </table>
-                            </div>
+                            <!-- Tabela para Desktop (Visível a partir de telas 'md') -->
+<div class="relative overflow-x-auto shadow-md sm:rounded-lg hidden md:block">
+    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-300">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+                <th scope="col" class="px-6 py-3">Consultor</th>
+                <th scope="col" class="px-6 py-3">Data/Hora</th>
+                <th scope="col" class="px-6 py-3">Status</th>
+                <th scope="col" class="px-6 py-3">Ações</th>
+            </tr>
+        </thead>
+        <tbody id="requisicoes-table-body"></tbody>
+    </table>
+</div>
+
+<!-- Container de Cards para Mobile (Visível apenas em telas pequenas) -->
+<div id="requisicoes-cards-container" class="grid grid-cols-1 gap-4 md:hidden">
+    <!-- Cards serão inseridos aqui via JS -->
+</div>
                         </div>
 
                         <div id="itens-requisicao-content" class="requisicao-tab-content hidden">
@@ -1618,37 +1624,57 @@ function applyConsultorFilters() {
         hideModal(allElements.deleteConfirmModal);
         activeDeleteItem = { id: null, type: null, element: null };
     }
-async function handleEditItemQuantity(itemJoinId, currentQty, itemName) {
-        const newQty = prompt(`Qual a nova quantidade para o item "${itemName}"?`, currentQty);
-
-        if (newQty === null || newQty === '' || isNaN(newQty) || parseInt(newQty) <= 0) {
-            return; // Sai da função se o usuário cancelar ou inserir valor inválido
-        }
-
-        showLoadingOverlay('Atualizando quantidade...');
-        const result = await nocoFetch(`Requisicoes_Itens/${itemJoinId}`, {
-            method: 'PATCH',
-            body: JSON.stringify({ "Quantidade": parseInt(newQty) })
-        });
-        hideLoadingOverlay();
-
-        if (result) {
-            // --- INÍCIO DA ALTERAÇÃO ---
-
-            // 1. Busca os dados mais recentes dos itens em segundo plano.
-            await fetchRequisicoesItens();
-            
-            // 2. Fecha o modal de detalhes automaticamente.
-            hideModal(allElements.detailsModal);
-
-            // 3. Re-renderiza a lista principal de requisições (a tabela atrás do modal).
-            applyRequisicaoFilters();
-            
-            // --- FIM DA ALTERAÇÃO ---
-        } else {
-            alert('Falha ao atualizar a quantidade.');
-        }
+async function handleEditItemQuantity(itemJoinId, currentQty, itemName, requisicaoId) {
+    const newQtyStr = prompt(`Qual a nova quantidade para o item "${itemName}"?`, currentQty);
+    
+    // Retorna se o usuário cancelar o prompt
+    if (newQtyStr === null) {
+        return; 
     }
+
+    const newQty = parseInt(newQtyStr);
+
+    if (isNaN(newQty) || newQty < 0) {
+        alert("Por favor, insira um número válido para a quantidade.");
+        return; // Retorna se a entrada for inválida
+    }
+
+    showLoadingOverlay('Atualizando quantidade...');
+    const result = await nocoFetch(`Requisicoes_Itens/${itemJoinId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ "Quantidade": newQty })
+    });
+    hideLoadingOverlay();
+
+    if (result) {
+        // 1. Atualiza o array de dados local para consistência
+        const itemInLocalData = requisicoesItensData.find(item => item.Id === itemJoinId);
+        if (itemInLocalData) {
+            itemInLocalData.Quantidade = newQty;
+        }
+
+        // 2. Atualiza a UI diretamente no modal aberto
+        const tableQtyElement = document.getElementById(`item-qty-table-${itemJoinId}`);
+        if (tableQtyElement) {
+            tableQtyElement.textContent = newQty;
+        }
+
+        const cardQtyElement = document.getElementById(`item-qty-card-${itemJoinId}`);
+        if (cardQtyElement) {
+            cardQtyElement.textContent = `Quantidade: ${newQty}`;
+        }
+        
+        // 3. Atualiza o atributo onclick do botão de edição para refletir a nova quantidade
+        const safeItemName = itemName.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+        const editButtons = document.querySelectorAll(`button[onclick^="handleEditItemQuantity(${itemJoinId},"]`);
+        editButtons.forEach(button => {
+            button.setAttribute('onclick', `handleEditItemQuantity(${itemJoinId}, ${newQty}, '${safeItemName}', ${requisicaoId})`);
+        });
+
+    } else {
+        alert('Falha ao atualizar a quantidade.');
+    }
+}
 
    async function handleDeleteItemFromRequisition(itemJoinId, requisicaoId) {
         if (confirm('Tem certeza que deseja remover este item da requisição?')) {
@@ -2047,7 +2073,21 @@ const pageWidth = doc.internal.pageSize.getWidth();
         doc.save(`Agenda_Lumi_${startDate}_a_${endDate}.pdf`);
     }
 
-    function handleTableEdit(btn) { const row=btn.closest('tr'); if(!row)return; const id=parseInt(row.dataset.id); const type = btn.dataset.type; switch(type) { case 'visita': { const v=visitsData.find(d=>d.Id===id); if(v) openVisitaModal(v); break; } case 'receita': { const r=receitasData.find(d=>d.Id===id); if(r){setupSubFormToggle('receitas-history-container','receita-form-container'); const f=document.getElementById('receita-form'); f.dataset.id = r.Id; f.querySelector('#receita-cliente-form').value=r.Clientes?.Id; f.querySelector('#receita-vencimento').value=r.Vencimento; f.querySelector('#receita-valor').value=r.Valor; f.querySelector('#receita-status-form').value=r.Status; f.querySelector('#receita-obs').value=r.Observacao||'';} break; } case 'custo': { const c=custosData.find(d=>d.Id===id); if(c){setupSubFormToggle('custos-history-container','custo-form-container'); const f=document.getElementById('custo-form'); f.dataset.id = c.Id; f.querySelector('#custo-credor').value=c.Credor; f.querySelector('#custo-vencimento').value=c.Vencimento; f.querySelector('#custo-valor').value=c.Valor; f.querySelector('#custo-status-form').value=c.Status; f.querySelector('#custo-obs').value=c.Observacao||'';} break; } case 'ferias': { const data = feriasData.find(d => d.Id === id); if(data){ setupSubFormToggle('ferias-history-container', 'ferias-form-container'); const form = document.getElementById('ferias-form'); form.dataset.id = data.Id; form.querySelector('#ferias-consultor').value = data.Consultores?.Id; form.querySelector('#ferias-inicio').value = data.DataInicio; form.querySelector('#ferias-retorno').value = data.DataRetorno; } break; } case 'atestado': { const data = atestadosData.find(d => d.Id === id); if(data){ setupSubFormToggle('atestados-history-container', 'atestados-form-container'); const form = document.getElementById('atestados-form'); form.dataset.id = data.Id; form.querySelector('#atestados-consultor').value = data.Consultores?.Id; form.querySelector('#atestados-inicio').value = data.DataInicio; form.querySelector('#atestados-retorno').value = data.DataRetorno; } break; } case 'epi': { const data = episEntreguesData.find(d => d.Id === id); if(data){ setupSubFormToggle('epis-history-container', 'epis-form-container'); const form = document.getElementById('epis-form'); form.dataset.id = data.Id; form.querySelector('#epis-consultor').value = data.Consultores?.Id; form.querySelector('#epis-item').value = data.Item; form.querySelector('#epis-qtd').value = data.Quantidade; form.querySelector('#epis-data').value = data.DataEntrega; form.querySelector('#epis-obs').value = data.Observacao || ''; } break; } case 'ativo': { const data = ativosData.find(d => d.Id === id); if(data){ setupSubFormToggle('ativos-history-container', 'ativos-form-container'); const form = document.getElementById('ativos-form'); form.dataset.id = data.Id; form.querySelector('#ativos-consultor').value = data.Consultores?.Id; form.querySelector('#ativos-item').value = data.Item; form.querySelector('#ativos-entrega').value = data.DataEntrega; form.querySelector('#ativos-devolucao').value = data.DataDevolucao || ''; form.querySelector('#ativos-obs').value = data.Observacao || ''; } break; } } }
+function handleTableEdit(btn) {
+    const dataContainer = btn.closest('[data-id]');
+    if (!dataContainer) return;
+    const id = parseInt(dataContainer.dataset.id);
+    const type = btn.dataset.type;
+    switch (type) {
+        case 'visita': { const v = visitsData.find(d => d.Id === id); if (v) openVisitaModal(v); break; }
+        case 'receita': { const r = receitasData.find(d => d.Id === id); if (r) { setupSubFormToggle('receitas-history-container', 'receita-form-container'); const f = document.getElementById('receita-form'); f.dataset.id = r.Id; f.querySelector('#receita-cliente-form').value = r.Clientes?.Id; f.querySelector('#receita-vencimento').value = r.Vencimento; f.querySelector('#receita-valor').value = r.Valor; f.querySelector('#receita-status-form').value = r.Status; f.querySelector('#receita-obs').value = r.Observacao || ''; } break; }
+        case 'custo': { const c = custosData.find(d => d.Id === id); if (c) { setupSubFormToggle('custos-history-container', 'custo-form-container'); const f = document.getElementById('custo-form'); f.dataset.id = c.Id; f.querySelector('#custo-credor').value = c.Credor; f.querySelector('#custo-vencimento').value = c.Vencimento; f.querySelector('#custo-valor').value = c.Valor; f.querySelector('#custo-status-form').value = c.Status; f.querySelector('#custo-obs').value = c.Observacao || ''; } break; }
+        case 'ferias': { const data = feriasData.find(d => d.Id === id); if (data) { setupSubFormToggle('ferias-history-container', 'ferias-form-container'); const form = document.getElementById('ferias-form'); form.dataset.id = data.Id; form.querySelector('#ferias-consultor').value = data.Consultores?.Id; form.querySelector('#ferias-inicio').value = data.DataInicio; form.querySelector('#ferias-retorno').value = data.DataRetorno; } break; }
+        case 'atestado': { const data = atestadosData.find(d => d.Id === id); if (data) { setupSubFormToggle('atestados-history-container', 'atestados-form-container'); const form = document.getElementById('atestados-form'); form.dataset.id = data.Id; form.querySelector('#atestados-consultor').value = data.Consultores?.Id; form.querySelector('#atestados-inicio').value = data.DataInicio; form.querySelector('#atestados-retorno').value = data.DataRetorno; } break; }
+        case 'epi': { const data = episEntreguesData.find(d => d.Id === id); if (data) { setupSubFormToggle('epis-history-container', 'epis-form-container'); const form = document.getElementById('epis-form'); form.dataset.id = data.Id; form.querySelector('#epis-consultor').value = data.Consultores?.Id; form.querySelector('#epis-item').value = data.Item; form.querySelector('#epis-qtd').value = data.Quantidade; form.querySelector('#epis-data').value = data.DataEntrega; form.querySelector('#epis-obs').value = data.Observacao || ''; } break; }
+        case 'ativo': { const data = ativosData.find(d => d.Id === id); if (data) { setupSubFormToggle('ativos-history-container', 'ativos-form-container'); const form = document.getElementById('ativos-form'); form.dataset.id = data.Id; form.querySelector('#ativos-consultor').value = data.Consultores?.Id; form.querySelector('#ativos-item').value = data.Item; form.querySelector('#ativos-entrega').value = data.DataEntrega; form.querySelector('#ativos-devolucao').value = data.DataDevolucao || ''; form.querySelector('#ativos-obs').value = data.Observacao || ''; } break; }
+    }
+}
     function handleCardEdit() { if (!activeCard) return; hideModal(allElements.detailsModal); const isConsultor = activeCard.classList.contains('rh-card'); const formContainerId = isConsultor ? 'rh-form-container' : 'cliente-form-container'; const cardsContainerId = isConsultor ? 'rh-cards-container' : 'cliente-cards-container'; const form = document.getElementById(formContainerId).querySelector('form'); const data = activeCard.dataset; form.reset(); let hiddenIdInput = form.querySelector('input[type="hidden"]'); if (!hiddenIdInput) { hiddenIdInput = document.createElement('input'); hiddenIdInput.type = 'hidden'; hiddenIdInput.id = isConsultor ? 'rh-id' : 'cliente-id'; form.prepend(hiddenIdInput); } hiddenIdInput.value = data.id;  const fieldMapping = isConsultor 
         ? {'rh-nome':'nome', 'rh-nasc':'datanascimento', 'rh-tel':'telefone', 'rh-email':'email', 'rh-login':'login', 'rh-inicio':'iniciovinculo', 'rh-fim':'fimvinculo', 'rh-cnpj':'cnpj', 'rh-razao':'razaosocial', 'rh-valor':'valorhora', 'rh-status':'status', 'rh-admin':'isadmin', 'rh-endereco':'endereco', 'rh-obs':'observacao'} 
         : {'cliente-nome':'nome', 'cliente-razao':'razaosocial', 'cliente-cnpj':'cnpj', 'cliente-tel':'telefone', 'cliente-email':'email', 'cliente-horas':'horascontratadas', 'cliente-status':'status', 'cliente-responsavel':'responsavel', 'cliente-cpf':'cpfresponsavel', 'cliente-iptu':'iptu', 'cliente-senha-portal':'senhaportal', 'cliente-endereco':'endereco', 'cliente-obs':'observacao'};  for (const [fieldId, dataKey] of Object.entries(fieldMapping)) { const input = form.querySelector(`#${fieldId}`); if (input) { if (input.type === 'checkbox') { input.checked = data[dataKey] === 'true' || data[dataKey] === '1'; } else { input.value = data[dataKey] || ''; } } } if (isConsultor) { const passwordInput = form.querySelector('#rh-senha'); if (passwordInput) { passwordInput.value = ''; passwordInput.placeholder = "Deixe em branco para não alterar"; } } const imgPreview = form.querySelector('img'); if (imgPreview) { let fotoData; try { fotoData = data.foto ? JSON.parse(data.foto) : null; } catch(e) { fotoData = null; } imgPreview.src = (fotoData && fotoData[0]?.signedPath) ? `${NocoDB_BaseURL}/${fotoData[0].signedPath}` : `https://placehold.co/100x100/e2e8f0/cbd5e0?text=${isConsultor ? 'Foto' : 'Logo'}`; } document.getElementById(cardsContainerId).classList.add('hidden'); document.getElementById(formContainerId).classList.remove('hidden'); }
@@ -2073,125 +2113,149 @@ const pageWidth = doc.internal.pageSize.getWidth();
         renderClientes(filteredData);
     }
 function openDetailsModalForRow(btn) {
-        const row = btn.closest('tr');
-        if (!row) return;
-        const id = parseInt(row.dataset.id);
-        const type = btn.dataset.type;
-        let dataArray, title;
+    // CORREÇÃO: Altera de .closest('tr') para .closest('[data-id]')
+    // para funcionar tanto na tabela (tr) quanto nos cards (div).
+    const dataContainer = btn.closest('[data-id]');
+    if (!dataContainer) return;
 
-        const actionsContainer = document.getElementById('details-modal-actions');
-        
-        switch (type) {
-            case 'visita': dataArray = visitsData; title = 'Detalhes da Visita'; break;
-            case 'receita': dataArray = receitasData; title = 'Detalhes da Receita'; break;
-            case 'custo': dataArray = custosData; title = 'Detalhes do Custo'; break;
-            case 'ferias': dataArray = feriasData; title = 'Detalhes das Férias'; break;
-            case 'atestado': dataArray = atestadosData; title = 'Detalhes do Atestado'; break;
-            case 'epi': dataArray = episEntreguesData; title = 'Detalhes da Entrega de EPI'; break;
-            case 'ativo': dataArray = ativosData; title = 'Detalhes do Ativo'; break;
-            case 'requisicao': dataArray = requisicoesData; title = 'Detalhes da Requisição'; break;
-            default: return;
-        }
-        const data = dataArray.find(d => d.Id === id);
-        if (!data) return;
-        
-        activeTableRow = row;
-        activeDeleteItem = { id, type, element: row };
+    const id = parseInt(dataContainer.dataset.id);
+    const type = btn.dataset.type;
+    let dataArray, title;
 
-        document.getElementById('modal-title').textContent = title;
+    const actionsContainer = document.getElementById('details-modal-actions');
 
-        let contentHTML = '';
-        if (type === 'requisicao') {
-            actionsContainer.style.display = 'none';
-
-            const itensFiltrados = requisicoesItensData.filter(item => item.Requisicoes_id === id);
-            
-            const showActions = loggedInUser.IsAdmin || data.Status === 'Pendente';
-            
-            const actionsHeader = showActions ? '<th scope="col" class="px-6 py-3 text-center">Ações</th>' : '';
-            
-             let itensTableHTML = `
-                <div class="mt-4 relative overflow-x-auto shadow-md sm:rounded-lg">
-                    <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                            <tr>
-                                <th scope="col" class="px-4 py-3">Foto</th>
-                                <th scope="col" class="px-6 py-3">Item</th>
-                                <th scope="col" class="px-6 py-3 text-center">Qtd.</th>
-                                ${actionsHeader}
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-
-            if (itensFiltrados.length > 0) {
-                itensFiltrados.forEach(itemJoin => {
-                    const itemInfo = allItems.find(i => i.Id === itemJoin.Itens_Catalogo?.Id);
-                    const itemName = itemInfo ? itemInfo.Nome : 'Item não encontrado';
-                    const itemFotoUrl = itemInfo?.Foto?.[0]?.signedPath ? `${NocoDB_BaseURL}/${itemInfo.Foto[0].signedPath}` : 'https://placehold.co/80x80/e2e8f0/cbd5e0?text=Item';
-                    
-                    // Escapa as aspas no nome do item para não quebrar o HTML do onclick
-                    const safeItemName = itemName.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-                    const actionsCell = showActions ? `
-                        <td class="px-6 py-4 text-center space-x-3">
-                            <button onclick="handleEditItemQuantity(${itemJoin.Id}, ${itemJoin.Quantidade}, '${safeItemName}')" class="text-blue-500 hover:text-blue-700" title="Editar Quantidade"><i class="fas fa-edit"></i></button>
-                            <button onclick="handleDeleteItemFromRequisition(${itemJoin.Id}, ${id})" class="text-red-500 hover:text-red-700" title="Apagar Item"><i class="fas fa-trash"></i></button>
-                        </td>
-                    ` : '';
-
-                    itensTableHTML += `
-                        <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                            <td class="p-2">
-                                <img src="${itemFotoUrl}" alt="${itemName}" class="w-12 h-12 object-contain rounded cursor-pointer" onclick="showImageModal(this.src)">
-                            </td>
-                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">${itemName}</td>
-                            <td class="px-6 py-4 text-center">${itemJoin.Quantidade}</td>
-                            ${actionsCell}
-                        </tr>
-                    `;
-                });
-            } else {
-                const colspan = isAdmin ? 4 : 3;
-               itensTableHTML += `<tr><td colspan="${colspan}" class="px-6 py-4 text-center">Nenhum item adicionado a esta requisição.</td></tr>`;
-             }
-
-            itensTableHTML += `</tbody></table></div>`;
-
-            contentHTML = `<p><strong>Data:</strong> ${new Date(data.DataRequisicao).toLocaleString('pt-BR')}</p>
-                           <p><strong>Consultor:</strong> ${data.Consultores?.Nome || 'N/A'}</p>
-                           <p><strong>Status:</strong> ${data.Status}</p>
-                           ${itensTableHTML}`;
-
-        } else {
-      
-            // Esconde os botões para todos os outros tipos
-            actionsContainer.style.display = 'flex';
-
-            // ... (o resto da sua lógica para outros modais)
-            if (type === 'visita') {
-                const { color, label } = sConf[data.Status] || { color: 'gray', label: data.Status };
-                contentHTML = `<p><strong>Cliente:</strong> ${data.Clientes?.Nome || 'N/A'}</p> <p><strong>Consultor:</strong> ${data.Consultores?.Nome || 'N/A'}</p> <p><strong>Data:</strong> ${new Date(data.DataVisita + 'T00:00:00').toLocaleDateString('pt-BR')}</p> <p><strong>Horário:</strong> ${data.HoraInicio} - ${data.HoraFim}</p> <p><strong>Atividades:</strong> ${data.Atividades || 'N/A'}</p> <p><strong>Status:</strong> <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}${data.Remarcada ? ' (Remarcado)' : ''}</span></p> ${data.CheckIn ? `<p><strong>Check-in:</strong> ${new Date(data.CheckIn).toLocaleString('pt-BR')}</p>` : ''} ${data.CheckOut ? `<p><strong>Check-out:</strong> ${new Date(data.CheckOut).toLocaleString('pt-BR')}</p>` : ''}`;
-            } else if (type === 'receita' || type === 'custo') {
-                contentHTML = type === 'receita' ? `<p><strong>Cliente:</strong> ${data.Clientes?.Nome || 'N/A'}</p>` : `<p><strong>Credor:</strong> ${data.Credor}</p>`;
-                contentHTML += `<p><strong>Vencimento:</strong> ${new Date(data.Vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</p> <p><strong>Valor:</strong> ${(data.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p> <p><strong>Status:</strong> ${data.Status}</p> <p><strong>Observação:</strong> ${data.Observacao || 'N/A'}</p>`;
-            } else {
-                let ignoredKeys = ['Id', 'id', 'startTime', 'endTime', 'nc_created_by', 'nc_updated_by', 'nc_order'];
-                contentHTML = Object.entries(data).map(([key, value]) => {
-                    if (ignoredKeys.includes(key) || typeof value === 'object' && value !== null && !Array.isArray(value)) return '';
-                    let label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-                    let displayValue = value || 'N/A';
-                    if (key.toLowerCase().includes('data')) { displayValue = value ? new Date(value + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A'; }
-                    if (Array.isArray(value) && value[0]?.signedPath) { return `<p><strong>${label}:</strong> <a href="${NocoDB_BaseURL}/${value[0].signedPath}" target="_blank" class="text-brand-gold hover:underline">Ver Anexo</a></p>`;}
-                    return `<p><strong>${label}:</strong> ${displayValue}</p>`;
-                }).join('');
-                if (data.Consultores) { contentHTML = `<p><strong>Consultor:</strong> ${data.Consultores.Nome}</p>` + contentHTML; }
-                if (data.Clientes) { contentHTML = `<p><strong>Cliente:</strong> ${data.Clientes.Nome}</p>` + contentHTML; }
-            }
-        }
-        
-        document.getElementById('modal-content').innerHTML = contentHTML;
-        showModal(allElements.detailsModal);
+    switch (type) {
+        case 'visita': dataArray = visitsData; title = 'Detalhes da Visita'; break;
+        case 'receita': dataArray = receitasData; title = 'Detalhes da Receita'; break;
+        case 'custo': dataArray = custosData; title = 'Detalhes do Custo'; break;
+        case 'ferias': dataArray = feriasData; title = 'Detalhes das Férias'; break;
+        case 'atestado': dataArray = atestadosData; title = 'Detalhes do Atestado'; break;
+        case 'epi': dataArray = episEntreguesData; title = 'Detalhes da Entrega de EPI'; break;
+        case 'ativo': dataArray = ativosData; title = 'Detalhes do Ativo'; break;
+        case 'requisicao': dataArray = requisicoesData; title = 'Detalhes da Requisição'; break;
+        default: return;
     }
+    const data = dataArray.find(d => d.Id === id);
+    if (!data) return;
+    
+    activeTableRow = dataContainer; 
+    activeDeleteItem = { id, type, element: dataContainer };
+
+    document.getElementById('modal-title').textContent = title;
+
+    let contentHTML = '';
+    if (type === 'requisicao') {
+        actionsContainer.style.display = 'none';
+
+        const itensFiltrados = requisicoesItensData.filter(item => item.Requisicoes_id === id);
+        const showActions = loggedInUser.IsAdmin || data.Status === 'Pendente';
+
+        const actionsHeader = showActions ? '<th scope="col" class="px-6 py-3 text-center">Ações</th>' : '';
+        let tableRowsHTML = '';
+        if (itensFiltrados.length > 0) {
+            itensFiltrados.forEach(itemJoin => {
+                const itemInfo = allItems.find(i => i.Id === itemJoin.Itens_Catalogo?.Id);
+                const itemName = itemInfo ? itemInfo.Nome : 'Item não encontrado';
+                const itemFotoUrl = itemInfo?.Foto?.[0]?.signedPath ? `${NocoDB_BaseURL}/${itemInfo.Foto[0].signedPath}` : 'https://placehold.co/80x80/e2e8f0/cbd5e0?text=Item';
+                const safeItemName = itemName.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                
+                const actionsCell = showActions ? `
+                    <td class="px-6 py-4 text-center space-x-3">
+                        <button onclick="handleEditItemQuantity(${itemJoin.Id}, ${itemJoin.Quantidade}, '${safeItemName}', ${id})" class="text-blue-500 hover:text-blue-700" title="Editar Quantidade"><i class="fas fa-edit"></i></button>
+                        <button onclick="handleDeleteItemFromRequisition(${itemJoin.Id}, ${id})" class="text-red-500 hover:text-red-700" title="Apagar Item"><i class="fas fa-trash"></i></button>
+                    </td>` : '';
+
+                tableRowsHTML += `
+                    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                        <td class="p-2">
+                            <img src="${itemFotoUrl}" alt="${itemName}" class="w-12 h-12 object-contain rounded cursor-pointer" onclick="showImageModal(this.src)">
+                        </td>
+                        <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">${itemName}</td>
+                        <td class="px-6 py-4 text-center" id="item-qty-table-${itemJoin.Id}">${itemJoin.Quantidade}</td>
+                        ${actionsCell}
+                    </tr>`;
+            });
+        } else {
+            const colspan = showActions ? 4 : 3;
+            tableRowsHTML = `<tr><td colspan="${colspan}" class="px-6 py-4 text-center">Nenhum item adicionado.</td></tr>`;
+        }
+
+        const tableHTML = `
+            <div class="mt-4 relative overflow-x-auto shadow-md sm:rounded-lg hidden md:block">
+                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th scope="col" class="px-4 py-3">Foto</th>
+                            <th scope="col" class="px-6 py-3">Item</th>
+                            <th scope="col" class="px-6 py-3 text-center">Qtd.</th>
+                            ${actionsHeader}
+                        </tr>
+                    </thead>
+                    <tbody>${tableRowsHTML}</tbody>
+                </table>
+            </div>`;
+        
+        let cardsHTML = '';
+        if (itensFiltrados.length > 0) {
+            itensFiltrados.forEach(itemJoin => {
+                const itemInfo = allItems.find(i => i.Id === itemJoin.Itens_Catalogo?.Id);
+                const itemName = itemInfo ? itemInfo.Nome : 'Item não encontrado';
+                const itemFotoUrl = itemInfo?.Foto?.[0]?.signedPath ? `${NocoDB_BaseURL}/${itemInfo.Foto[0].signedPath}` : 'https://placehold.co/80x80/e2e8f0/cbd5e0?text=Item';
+                const safeItemName = itemName.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+
+                const actionsButtons = showActions ? `
+                    <div class="flex items-center space-x-4">
+                        <button onclick="handleEditItemQuantity(${itemJoin.Id}, ${itemJoin.Quantidade}, '${safeItemName}', ${id})" class="text-blue-500 hover:text-blue-700 p-2" title="Editar Quantidade"><i class="fas fa-edit fa-lg"></i></button>
+                        <button onclick="handleDeleteItemFromRequisition(${itemJoin.Id}, ${id})" class="text-red-500 hover:text-red-700 p-2" title="Apagar Item"><i class="fas fa-trash fa-lg"></i></button>
+                    </div>` : '';
+
+                cardsHTML += `
+                    <div class="flex items-center p-2 bg-white dark:bg-gray-800 border-b dark:border-gray-700 last:border-b-0">
+                        <img src="${itemFotoUrl}" alt="${itemName}" class="w-16 h-16 object-contain rounded cursor-pointer mr-4 flex-shrink-0" onclick="showImageModal(this.src)">
+                        <div class="flex-grow">
+                            <p class="font-semibold text-gray-900 dark:text-white">${itemName}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400" id="item-qty-card-${itemJoin.Id}">Quantidade: ${itemJoin.Quantidade}</p>
+                        </div>
+                        ${actionsButtons}
+                    </div>`;
+            });
+        } else {
+            cardsHTML = `<p class="text-center text-gray-500 py-4">Nenhum item adicionado.</p>`;
+        }
+
+        const mobileCardsContainerHTML = `<div class="mt-4 border dark:border-gray-700 rounded-lg md:hidden">${cardsHTML}</div>`;
+
+        contentHTML = `<p><strong>Data:</strong> ${new Date(data.DataRequisicao).toLocaleString('pt-BR')}</p>
+                       <p><strong>Consultor:</strong> ${data.Consultores?.Nome || 'N/A'}</p>
+                       <p><strong>Status:</strong> ${data.Status}</p>
+                       ${tableHTML}
+                       ${mobileCardsContainerHTML}`;
+    } else {
+        actionsContainer.style.display = 'flex';
+        if (type === 'visita') {
+            const { color, label } = sConf[data.Status] || { color: 'gray', label: data.Status };
+            contentHTML = `<p><strong>Cliente:</strong> ${data.Clientes?.Nome || 'N/A'}</p> <p><strong>Consultor:</strong> ${data.Consultores?.Nome || 'N/A'}</p> <p><strong>Data:</strong> ${new Date(data.DataVisita + 'T00:00:00').toLocaleDateString('pt-BR')}</p> <p><strong>Horário:</strong> ${data.HoraInicio} - ${data.HoraFim}</p> <p><strong>Atividades:</strong> ${data.Atividades || 'N/A'}</p> <p><strong>Status:</strong> <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-${color}-200 text-${color}-800">${label}${data.Remarcada ? ' (Remarcado)' : ''}</span></p> ${data.CheckIn ? `<p><strong>Check-in:</strong> ${new Date(data.CheckIn).toLocaleString('pt-BR')}</p>` : ''} ${data.CheckOut ? `<p><strong>Check-out:</strong> ${new Date(data.CheckOut).toLocaleString('pt-BR')}</p>` : ''}`;
+        } else if (type === 'receita' || type === 'custo') {
+            contentHTML = type === 'receita' ? `<p><strong>Cliente:</strong> ${data.Clientes?.Nome || 'N/A'}</p>` : `<p><strong>Credor:</strong> ${data.Credor}</p>`;
+            contentHTML += `<p><strong>Vencimento:</strong> ${new Date(data.Vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</p> <p><strong>Valor:</strong> ${(data.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p> <p><strong>Status:</strong> ${data.Status}</p> <p><strong>Observação:</strong> ${data.Observacao || 'N/A'}</p>`;
+        } else {
+            let ignoredKeys = ['Id', 'id', 'startTime', 'endTime', 'nc_created_by', 'nc_updated_by', 'nc_order'];
+            contentHTML = Object.entries(data).map(([key, value]) => {
+                if (ignoredKeys.includes(key) || typeof value === 'object' && value !== null && !Array.isArray(value)) return '';
+                let label = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                let displayValue = value || 'N/A';
+                if (key.toLowerCase().includes('data')) { displayValue = value ? new Date(value + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A'; }
+                if (Array.isArray(value) && value[0]?.signedPath) { return `<p><strong>${label}:</strong> <a href="${NocoDB_BaseURL}/${value[0].signedPath}" target="_blank" class="text-brand-gold hover:underline">Ver Anexo</a></p>`;}
+                return `<p><strong>${label}:</strong> ${displayValue}</p>`;
+            }).join('');
+            if (data.Consultores) { contentHTML = `<p><strong>Consultor:</strong> ${data.Consultores.Nome}</p>` + contentHTML; }
+            if (data.Clientes) { contentHTML = `<p><strong>Cliente:</strong> ${data.Clientes.Nome}</p>` + contentHTML; }
+        }
+    }
+    
+    document.getElementById('modal-content').innerHTML = contentHTML;
+    showModal(allElements.detailsModal);
+}
 
     function updateAllDashboards(){updateFinanceDashboard(); updateVisitsDashboard();}
     function setDateFilter(e, p) { const period=e.target.dataset.period; document.querySelectorAll(`.dash-${p}-quick-filter`).forEach(b=>b.classList.remove('filter-btn-active')); e.target.classList.add('filter-btn-active'); const endI=document.getElementById(`dash-${p}-end`), startI=document.getElementById(`dash-${p}-start`), today=new Date(); endI.valueAsDate=today; let sD=new Date(); if(period==='week')sD.setDate(today.getDate()-today.getDay()); else if(period==='month')sD=new Date(today.getFullYear(),today.getMonth(),1); else if(period==='year')sD=new Date(today.getFullYear(),0,1); startI.valueAsDate=sD; if(p==='fin')updateFinanceDashboard(); else updateVisitsDashboard();}
@@ -2533,44 +2597,55 @@ function openRequisicaoItemModal(requisicaoId) {
     }
 
 function renderRequisicoes(data = requisicoesData) {
-        const tbody = document.getElementById('requisicoes-table-body');
-        if (!tbody) return;
-        tbody.innerHTML = data.map(r => {
-            
-            // --- INÍCIO DA ALTERAÇÃO ---
+    const tbody = document.getElementById('requisicoes-table-body');
+    const cardsContainer = document.getElementById('requisicoes-cards-container');
 
-            // Botão "Adicionar Itens": Visível apenas se o status for 'Pendente'. (Lógica já existente)
-            const addContentBtnHTML = r.Status === 'Pendente' ? `
-                <button class="add-content-btn text-green-500 hover:text-green-700" data-id="${r.Id}" title="Adicionar Itens"><i class="fas fa-plus-circle"></i></button>
-            ` : '';
+    if (!tbody || !cardsContainer) return;
 
-            // Botão "Mudar Status": Permanece visível apenas para Admins.
-            const changeStatusBtnHTML = loggedInUser.IsAdmin ? `
-                <button class="change-status-btn text-orange-500 hover:text-orange-700" data-id="${r.Id}" data-status="${r.Status}" title="Mudar Status"><i class="fas fa-toggle-on"></i></button>
-            ` : '';
+    tbody.innerHTML = '';
+    cardsContainer.innerHTML = '';
 
-            // Botão "Apagar Requisição": Agora é visível para Admins OU se o status da requisição for 'Pendente'.
-            const deleteRequisitionBtnHTML = (loggedInUser.IsAdmin || r.Status === 'Pendente') ? `
-                <button class="table-delete-btn text-red-500" data-type="requisicao" title="Apagar Requisição"><i class="fas fa-trash"></i></button>
-            ` : '';
-            
-            // --- FIM DA ALTERAÇÃO ---
+    data.forEach(r => {
+        const addContentBtnHTML = r.Status === 'Pendente' ? `<button class="add-content-btn text-green-500 hover:text-green-700" data-id="${r.Id}" title="Adicionar Itens"><i class="fas fa-plus-circle"></i></button>` : '';
+        const changeStatusBtnHTML = loggedInUser.IsAdmin ? `<button class="change-status-btn text-orange-500 hover:text-orange-700" data-id="${r.Id}" data-status="${r.Status}" title="Mudar Status"><i class="fas fa-toggle-on"></i></button>` : '';
+        const deleteRequisitionBtnHTML = (loggedInUser.IsAdmin || r.Status === 'Pendente') ? `<button class="table-delete-btn text-red-500" data-type="requisicao" title="Apagar Requisição"><i class="fas fa-trash"></i></button>` : '';
+        const actionsHTML = `
+            ${addContentBtnHTML}
+            <button class="table-details-btn text-gray-500" data-type="requisicao" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
+            ${changeStatusBtnHTML}
+            ${deleteRequisitionBtnHTML}
+        `;
 
-            return `
-                <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}">
-                    <td class="px-6 py-4">${r.Consultores?.Nome || 'N/A'}</td>
-                    <td class="px-6 py-4">${new Date(r.DataRequisicao).toLocaleString('pt-BR')}</td>
-                    <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.Status === 'Entregue' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${r.Status}</span></td>
-                    <td class="px-6 py-4 space-x-2">
-                        ${addContentBtnHTML}
-                        <button class="table-details-btn text-gray-500" data-type="requisicao" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
-                        ${changeStatusBtnHTML}
-                        ${deleteRequisitionBtnHTML}
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
+        // 1. Popula a tabela (desktop)
+        const tableRowHTML = `
+            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}">
+                <td class="px-6 py-4">${r.Consultores?.Nome || 'N/A'}</td>
+                <td class="px-6 py-4">${new Date(r.DataRequisicao).toLocaleString('pt-BR')}</td>
+                <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.Status === 'Entregue' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${r.Status}</span></td>
+                <td class="px-6 py-4 space-x-2">${actionsHTML}</td>
+            </tr>`;
+        tbody.insertAdjacentHTML('beforeend', tableRowHTML);
+
+        // 2. Popula os cards (mobile)
+        const cardHTML = `
+            <div class="p-4 bg-white rounded-lg shadow dark:bg-gray-800 border dark:border-gray-700" data-id="${r.Id}">
+                <div class="flex justify-between items-center mb-2">
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white">${r.Consultores?.Nome || 'N/A'}</p>
+                    <span class="px-2 py-1 text-xs font-medium rounded-full ${r.Status === 'Entregue' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'}">
+                        ${r.Status}
+                    </span>
+                </div>
+                <div class="mb-3 text-sm text-gray-600 dark:text-gray-400">
+                    <strong>Data:</strong> ${new Date(r.DataRequisicao).toLocaleString('pt-BR')}
+                </div>
+                <div class="flex justify-end pt-2 border-t dark:border-gray-600 space-x-2">
+                    ${actionsHTML}
+                </div>
+            </div>
+        `;
+        cardsContainer.insertAdjacentHTML('beforeend', cardHTML);
+    });
+}
 function renderItensDeRequisicao(filterCategory = 'Todos') {
         const container = document.getElementById('item-management-container');
         if(!container) return;
@@ -2783,7 +2858,16 @@ function applyRequisicaoFilters(){
     function generatePdfReport(e){ e.preventDefault(); const startDate = document.getElementById('report-start-date').value; const endDate = document.getElementById('report-end-date').value; if (!startDate || !endDate) { alert('Por favor, preencha as datas de início e fim do período para gerar o relatório.'); return; } const { jsPDF } = window.jspdf; const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' }); const type = document.getElementById('report-type').value; doc.setFontSize(18); doc.text(`Relatório de ${type.charAt(0).toUpperCase() + type.slice(1)}`, 14, 22); doc.setFontSize(11); doc.setTextColor(100); doc.text(`Período: ${new Date(startDate+'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(endDate+'T00:00:00').toLocaleDateString('pt-BR')}`, 14, 30); if (type === 'financeiro') { const status = document.getElementById('report-finance-status').value; generateFinanceReport(doc, { startDate, endDate, status }); } else if (type === 'visitas') { const consultorId = document.getElementById('report-consultor').value; const clienteId = document.getElementById('report-cliente').value; const status = document.getElementById('report-visits-status').value; generateVisitReport(doc, { startDate, endDate, consultorId, clienteId, status }); } doc.save(`relatorio_${type}_${new Date().toISOString().slice(0,10)}.pdf`); hideModal(allElements.reportModal); }
     function generateFinanceReport(doc, filters) { const { startDate, endDate, status } = filters; const f = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); let finalY = 40; const baseReceitas = receitasData.filter(r => (!startDate || r.Vencimento >= startDate) && (!endDate || r.Vencimento <= endDate)); const baseCustos = custosData.filter(c => (!startDate || c.Vencimento >= startDate) && (!endDate || c.Vencimento <= endDate)); const drawTable = (title, head, body) => { if (body.length > 0) { doc.setFontSize(12); doc.text(title, 14, finalY); finalY += 2; doc.autoTable({ startY: finalY, head: [head], body: body, theme: 'striped', headStyles: { fillColor: [55, 55, 55] } }); finalY = doc.autoTable.previous.finalY + 10; } }; if (status === "" || status === "Todos") { const receitasPagas = baseReceitas.filter(r => r.Status === 'Pago'); const receitasPendentes = baseReceitas.filter(r => r.Status === 'Pendente'); const custosPagos = baseCustos.filter(c => c.Status === 'Pago'); const custosPendentes = baseCustos.filter(c => c.Status === 'Pendente'); drawTable('Receitas Pagas', ['Cliente', 'Vencimento', 'Valor'], receitasPagas.map(r => [r.Clientes?.Nome || 'N/A', new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)])); drawTable('Custos Pagos', ['Credor', 'Vencimento', 'Valor'], custosPagos.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)])); drawTable('Receitas Pendentes', ['Cliente', 'Vencimento', 'Valor'], receitasPendentes.map(r => [r.Clientes?.Nome || 'N/A', new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)])); drawTable('Custos Pendentes', ['Credor', 'Vencimento', 'Valor'], custosPendentes.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)])); } else { const filteredReceitas = baseReceitas.filter(r => r.Status === status); const filteredCustos = baseCustos.filter(c => c.Status === status); drawTable(`Receitas com Status: ${status}`, ['Cliente', 'Vencimento', 'Valor'], filteredReceitas.map(r => [r.Clientes?.Nome || 'N/A', new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)])); drawTable(`Custos com Status: ${status}`, ['Credor', 'Vencimento', 'Valor'], filteredCustos.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)])); } if (finalY > 250) doc.addPage(); const totalReceitas = baseReceitas.reduce((sum, r) => sum + r.Valor, 0); const totalCustos = baseCustos.reduce((sum, c) => sum + c.Valor, 0); const balanco = totalReceitas - totalCustos; doc.setFontSize(12); doc.text('Resumo Financeiro do Período', 14, finalY); doc.setFontSize(10); doc.text(`Total de Receitas: ${f(totalReceitas)}`, 14, finalY + 7); doc.text(`Total de Custos: ${f(totalCustos)}`, 14, finalY + 14); doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text(`Balanço Final: ${f(balanco)}`, 14, finalY + 21); }
     function generateVisitReport(doc, filters) { const { startDate, endDate, consultorId, clienteId, status } = filters; let finalY = 40; let filteredVisitas = visitsData.filter(v => (!startDate || v.DataVisita >= startDate) && (!endDate || v.DataVisita <= endDate) && (!consultorId || v.Consultores?.Id == consultorId) && (!clienteId || v.Clientes?.Id == clienteId) ); if (consultorId) { const c = consultoresData.find(c => c.Id == consultorId); if(c) doc.text(`Consultor: ${c.Nome}`, 14, finalY); finalY += 8;} if (clienteId) { const c = clientesData.find(c => c.Id == clienteId); if(c) doc.text(`Cliente: ${c.Nome}`, 14, finalY); finalY += 8;} if (finalY > 40) finalY += 4; const drawTable = (title, data) => { if (data.length > 0) { doc.setFontSize(12); doc.text(title, 14, finalY); finalY += 2; doc.autoTable({ startY: finalY, head: [['Cliente', 'Consultor', 'Data', 'Horário']], body: data.map(v => [ v.Clientes?.Nome || 'N/A', v.Consultores?.Nome || 'N/A', new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR'), `${v.HoraInicio} - ${v.HoraFim}`]), theme: 'striped', headStyles: { fillColor: [55, 55, 55] } }); finalY = doc.autoTable.previous.finalY + 10; } }; if (!status || status === "Todos") { const statusGroups = ['Agendada', 'Em Andamento', 'Concluída', 'Remarcada']; statusGroups.forEach(s => { const groupData = filteredVisitas.filter(v => v.Status === s); drawTable(`Visitas ${s}s`, groupData); }); } else { filteredVisitas = filteredVisitas.filter(v => v.Status === status); drawTable(`Visitas com Status: ${status}`, filteredVisitas); } if (filteredVisitas.length === 0) { doc.text('Nenhuma visita encontrada para os filtros selecionados.', 14, finalY); return; } if (finalY > 250) doc.addPage(); const totalMinutos = filteredVisitas.filter(v => v.Status === 'Concluída').reduce((sum, v) => sum + calculateDuration(v), 0); doc.setFontSize(12); doc.text('Resumo das Visitas', 14, finalY); doc.setFontSize(10); doc.text(`Total de Visitas no Relatório: ${filteredVisitas.length}`, 14, finalY + 7); doc.text(`Total de Horas Concluídas: ${Math.floor(totalMinutos/60)}h ${Math.round(totalMinutos%60)}m`, 14, finalY + 14); }
-    function handleTableDelete(button) { const row = button.closest('tr'); if (!row) return; const id = parseInt(row.dataset.id); const type = button.dataset.type; if (type) { activeDeleteItem = { id, type, element: row }; showModal(allElements.deleteConfirmModal); } }
+    function handleTableDelete(button) {
+    const dataContainer = button.closest('[data-id]');
+    if (!dataContainer) return;
+    const id = parseInt(dataContainer.dataset.id);
+    const type = button.dataset.type;
+    if (type) {
+        activeDeleteItem = { id, type, element: dataContainer };
+        showModal(allElements.deleteConfirmModal);
+    }
+}
 
     // --- Inicialização ---
     function initializeApp() {
@@ -2874,7 +2958,7 @@ function applyRequisicaoFilters(){
 
     // Adiciona o listener para executar a função sempre que a janela for redimensionada
     window.addEventListener('resize', checkCalendarViewOnResize);
-        window.handleEditItemQuantity = handleEditItemQuantity;
+    window.handleEditItemQuantity = handleEditItemQuantity;
     window.handleDeleteItemFromRequisition = handleDeleteItemFromRequisition;
     window.showImageModal = showImageModal;
 
