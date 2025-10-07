@@ -542,11 +542,14 @@ body {
                         </div>
 
                         <div id="itens-requisicao-content" class="requisicao-tab-content hidden">
-                           <div class="flex items-center justify-between mb-4">
-                                <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-lg flex space-x-1" id="item-category-filters">
-                                    <button class="item-category-filter-btn bg-white dark:bg-gray-800 px-3 py-1 rounded-md shadow-sm" data-category="Todos">Todas</button>
+                           <!-- Container principal alterado para empilhar em telas pequenas (flex-col) e adicionar um espaçamento (gap-4) -->
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
+                                <!-- Container dos filtros alterado para permitir quebra de linha (flex-wrap) e usar gap -->
+                                <div class="p-2 bg-gray-200 dark:bg-gray-700 rounded-lg flex flex-wrap gap-2" id="item-category-filters">
+                                    <!-- Os botões de filtro são inseridos aqui pelo JavaScript -->
                                 </div>
-                                <button id="show-category-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Nova Categoria</button>
+                                <!-- Botão "Novo Item" agora ocupa a largura total em telas pequenas (w-full). O ID e o texto foram atualizados para corresponder ao que o seu JS já faz. -->
+                                <button id="show-new-item-btn" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors w-full sm:w-auto" style="display: none;">Novo Item</button>
                             </div>
                             <div id="item-management-container" class="space-y-6"></div>
                         </div>
