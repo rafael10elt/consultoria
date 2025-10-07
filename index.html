@@ -1140,7 +1140,7 @@ async function fetchAllData() {
 
     // --- INÍCIO DA ALTERAÇÃO ---
     // Lógica movida para cá. É executada DEPOIS que populateConsultantSelects() já criou as opções.
-    if (loggedInUser && !loggedInUser.IsAdmin) {
+    if (loggedInUser && loggedInUser.Role === 'Standard') { 
         // Se NÃO for admin, pré-seleciona e desabilita os filtros.
         const consultorFilterVisitas = document.getElementById('filter-consultor');
         const consultorFilterReqs = document.getElementById('filter-req-consultor');
@@ -2312,22 +2312,25 @@ function openDetailsModalForRow(btn) {
     function updateFinanceChart(r,c) { const ctx=document.getElementById('finance-chart').getContext('2d'), iD=document.documentElement.classList.contains('dark'), gC=iD?'rgba(255,255,255,0.1)':'rgba(0,0,0,0.1)', lC=iD?'#e5e7eb':'#373737', dM={}; const p=(d,t)=>{d.forEach(i=>{const m=new Date(i.Vencimento+'T00:00:00').toLocaleString('pt-BR',{month:'short',year:'2-digit'}); dM[m]=dM[m]||{receitas:0,custos:0}; dM[m][t]+=(i.Valor||0);});}; p(r,'receitas'); p(c,'custos'); const sM=Object.keys(dM).sort((a,b)=>{const[m1,y1]=a.split('/'),[m2,y2]=b.split('/'); return new Date(`20${y1}`,'jan,fev,mar,abr,mai,jun,jul,ago,set,out,nov,dez'.split(',').indexOf(m1.toLowerCase()),1)-new Date(`20${y2}`,'jan,fev,mar,abr,mai,jun,jul,ago,set,out,nov,dez'.split(',').indexOf(m2.toLowerCase()),1);}); const cD={labels:sM, datasets:[{label:'Receitas',data:sM.map(m=>dM[m].receitas),backgroundColor:'rgba(59,130,246,0.7)'},{label:'Custos',data:sM.map(m=>dM[m].custos),backgroundColor:'rgba(239,68,68,0.7)'}]}; if(financeChart){Object.assign(financeChart.data,cD); Object.assign(financeChart.options.scales.x.ticks,{color:lC}); Object.assign(financeChart.options.scales.y.ticks,{color:lC}); Object.assign(financeChart.options.scales.x.grid,{color:gC}); Object.assign(financeChart.options.scales.y.grid,{color:gC}); Object.assign(financeChart.options.plugins.legend.labels,{color:lC}); financeChart.update();}else{financeChart=new Chart(ctx,{type:'bar',data:cD,options:{responsive:true,scales:{x:{ticks:{color:lC},grid:{color:gC}},y:{ticks:{color:lC},grid:{color:gC}}},plugins:{legend:{labels:{color:lC}}}}});}}
     function updateVisitsStatusChart(v) { const ctx=document.getElementById('visits-status-chart').getContext('2d'), iD=document.documentElement.classList.contains('dark'), lC=iD?'#e5e7eb':'#373737', sC=v.reduce((a,v)=>{a[v.Status]=(a[v.Status]||0)+1; return a;},{}); const cD={labels:Object.keys(sC), datasets:[{data:Object.values(sC), backgroundColor:Object.keys(sC).map(s=>({'Agendada':'#3B82F6','Concluída':'#10B981','Em Andamento':'#F59E0B','Remarcada':'#8B5CF6'}[s]||'#6B7280'))}]}; if(visitsStatusChart){Object.assign(visitsStatusChart.data,cD); Object.assign(visitsStatusChart.options.plugins.legend.labels,{color:lC}); visitsStatusChart.update();}else{visitsStatusChart=new Chart(ctx,{type:'doughnut',data:cD,options:{responsive:true,plugins:{legend:{position:'top',labels:{color:lC}}}}});}}
     const sConf={'Agendada':{color:'blue',label:'Agendada'},'Em Andamento':{color:'yellow',label:'Em Andamento'},'Concluída':{color:'green',label:'Concluída'},'Remarcada':{color:'purple',label:'Remarcada'}};
-function applyFilters(){
-    const s=document.getElementById('filter-start-date').value,
-          e=document.getElementById('filter-end-date').value,
-          c=document.getElementById('filter-consultor').value,
-          cl=document.getElementById('filter-cliente').value,
-          st=document.getElementById('filter-status').value;
+function applyFilters() {
+    const s = document.getElementById('filter-start-date').value,
+        e = document.getElementById('filter-end-date').value,
+        c = document.getElementById('filter-consultor').value,
+        cl = document.getElementById('filter-cliente').value,
+        st = document.getElementById('filter-status').value;
 
     let dataToDisplay = visitsData;
 
-    // Se o usuário logado NÃO for um admin, pré-filtramos os dados para mostrar apenas os seus.
-    if (loggedInUser && !loggedInUser.IsAdmin) {
+    // --- INÍCIO DA CORREÇÃO ---
+    // A verificação agora é explícita para o Role 'Standard'.
+    // Admin e Manager não entrarão neste 'if'.
+    if (loggedInUser && loggedInUser.Role === 'Standard') {
         dataToDisplay = visitsData.filter(v => v.Consultores?.Id == loggedInUser.Id);
     }
+    // --- FIM DA CORREÇÃO ---
 
     // Aplica os filtros da tela sobre os dados já permitidos (dataToDisplay)
-    const f = dataToDisplay.filter(v => 
+    const f = dataToDisplay.filter(v =>
         (!s || v.DataVisita >= s) &&
         (!e || v.DataVisita <= e) &&
         (!c || v.Consultores?.Id == c) &&
@@ -2335,19 +2338,13 @@ function applyFilters(){
         (!st || v.Status === st)
     );
 
-    // --- INÍCIO DA ALTERAÇÃO ---
-    // Ordena o array filtrado. 
-    // Primeiro, pela data (b - a = decrescente, mais recentes primeiro).
-    // Se as datas forem iguais, ordena pela hora de início (a - b = crescente, mais cedo primeiro).
     f.sort((a, b) => {
         const dateComparison = new Date(b.DataVisita) - new Date(a.DataVisita);
         if (dateComparison !== 0) {
             return dateComparison;
         }
-        // As horas são strings 'HH:MM', a comparação com localeCompare funciona perfeitamente.
         return a.HoraInicio.localeCompare(b.HoraInicio);
     });
-    // --- FIM DA ALTERAÇÃO ---
 
     renderAllVisits(f);
 }
@@ -2400,10 +2397,26 @@ function createKanbanCard(v){
     const rescheduledIconHTML = v.Remarcada ? `<span title="Visita Remarcada"><i class="fas fa-history text-purple-500 ml-2"></i></span>` : '';
     // --- FIM DA ALTERAÇÃO 2 ---
     
-    let acts=''; 
-    if(v.Status==='Agendada')acts=`<button data-id="${v.Id}" class="iniciar-visita-btn w-full bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Iniciar</button><button data-id="${v.Id}" class="remarcar-visita-btn w-full mt-2 bg-gray-500 text-white px-3 py-1 rounded-md text-sm hover:bg-gray-600">Remarcar</button>`; 
-    else if(v.Status==='Em Andamento')acts=`<button data-id="${v.Id}" class="encerrar-visita-btn w-full bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">Encerrar</button>`; 
-    
+    let acts = '';
+    // Condição: O usuário é Admin OU o ID do consultor da visita é o mesmo do usuário logado.
+    const canStartOrEnd = loggedInUser && (loggedInUser.Role === 'Admin' || v.Consultores?.Id == loggedInUser.Id);
+
+    if (v.Status === 'Agendada') {
+        // Só mostra o botão 'Iniciar' se a condição for verdadeira.
+        if (canStartOrEnd) {
+            acts += `<button data-id="${v.Id}" class="iniciar-visita-btn w-full bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Iniciar</button>`;
+        }
+        
+        // O botão 'Remarcar' continua visível para todos que podem ver o card.
+        // Adiciona uma margem superior apenas se o botão 'Iniciar' também estiver visível.
+        acts += `<button data-id="${v.Id}" class="remarcar-visita-btn w-full ${acts ? 'mt-2' : ''} bg-gray-500 text-white px-3 py-1 rounded-md text-sm hover:bg-gray-600">Remarcar</button>`;
+        
+    } else if (v.Status === 'Em Andamento') {
+        // Só mostra o botão 'Encerrar' se a condição for verdadeira.
+        if (canStartOrEnd) {
+            acts = `<button data-id="${v.Id}" class="encerrar-visita-btn w-full bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">Encerrar</button>`;
+        }
+    }
     let dur=''; 
     if(v.Status==='Concluída'&&v.CheckIn&&v.CheckOut){
         const diff=(new Date(v.CheckOut)-new Date(v.CheckIn))/60000; 
