@@ -2594,9 +2594,10 @@ function handleTabClick(btn) {
         const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
 const pageWidth = doc.internal.pageSize.getWidth();
         const logoWidth = 30; // Largura do logo em mm
-        const logoHeight = 20; // Altura do logo em mm
-        const pageMargin = 8;
-        doc.addImage(logoBase64, 'PNG', pageWidth - logoWidth - pageMargin, 8, logoWidth, logoHeight);
+        const logoHeight = 15; // Altura do logo em mm
+        const pageMargin = 14;
+        // DEPOIS (Alinhado à esquerda)
+doc.addImage(logoBase64, 'PNG', pageMargin, 15, logoWidth, logoHeight);
 
         let finalY = 25;
 
