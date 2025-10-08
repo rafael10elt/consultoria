@@ -2596,7 +2596,7 @@ const pageWidth = doc.internal.pageSize.getWidth();
         const logoWidth = 40; // Largura do logo em mm
         const logoHeight = 30; // Altura do logo em mm
         const pageMargin = 10;
-        doc.addImage(logoBase64, 'PNG', pageMargin, 10, logoWidth, logoHeight);
+        doc.addImage(logoBase64, 'PNG', pageWidth - logoWidth - pageMargin, 10, logoWidth, logoHeight);
 
         let finalY = 25;
 
