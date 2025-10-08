@@ -2593,11 +2593,11 @@ function handleTabClick(btn) {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
 const pageWidth = doc.internal.pageSize.getWidth();
-        const logoWidth = 40; // Largura do logo em mm
-        const logoHeight = 30; // Altura do logo em mm
-        const pageMargin = 14;
+        const logoWidth = 35; // Largura do logo em mm
+        const logoHeight = 25; // Altura do logo em mm
+        const pageMargin = 13;
         // DEPOIS (Alinhado à esquerda)
-        doc.addImage(logoBase64, 'PNG', pageMargin, 5, logoWidth, logoHeight);
+        doc.addImage(logoBase64, 'PNG', pageMargin, 7, logoWidth, logoHeight);
 
         let finalY = 25;
 
