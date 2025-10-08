@@ -1450,7 +1450,6 @@ async function fetchAllData() {
     applyAndRenderAtivos();
 
     updateAllDashboards();
-    await checkOverdueVisits();
     initializeCalendar();
     applyFilters();
     renderCategoryFilters();
@@ -3260,21 +3259,6 @@ function createKanbanCard(v){
         populateSelectWithOptions('#visita-consultor', activeConsultores, 'Id', 'Nome', false);
         populateSelectWithOptions('#visita-cliente', activeClientes, 'Id', 'Nome', false); const f=allElements.visitaForm; f.reset(); document.getElementById('is-rescheduling').value='false'; if(v){document.getElementById('visita-modal-title').textContent="Editar Visita"; f.querySelector('#visita-id').value=v.Id; f.querySelector('#visita-consultor').value=v.Consultores?.Id; f.querySelector('#visita-cliente').value=v.Clientes?.Id; f.querySelector('#visita-data').value=v.DataVisita; f.querySelector('#visita-inicio').value=v.HoraInicio; f.querySelector('#visita-fim').value=v.HoraFim; f.querySelector('#visita-atividades').value=v.Atividades;}else{document.getElementById('visita-modal-title').textContent="Agendar Nova Visita"; f.querySelector('#visita-id').value=''; f.querySelector('#visita-consultor').value=loggedInUser.Id;} showModal(allElements.visitaFormModal);}
     
-    // INÍCIO DA CORREÇÃO: Função checkOverdueVisits que estava faltando
-    async function checkOverdueVisits(){
-        const t=new Date(); 
-        t.setHours(0,0,0,0); 
-        const oD=visitsData.filter(v=>v.Status==='Agendada'&&new Date(v.DataVisita+'T23:59:59')<t); 
-        if(oD.length>0){
-            showLoadingOverlay('Atualizando status de visitas vencidas...'); 
-            await Promise.all(oD.map(v=>nocoFetch(`Visitas/${v.Id}`,{method:'PATCH',body:JSON.stringify({Status:'Agendada'})}))); 
-            await fetchVisitas(); 
-            applyFilters(); 
-            // Não chamar hideLoadingOverlay aqui, pois a função principal (fetchAllData) já faz isso.
-        }
-    }
-    // FIM DA CORREÇÃO
-
     function initializeCalendar(){if(document.getElementById('calendar')&&typeof FullCalendar!=='undefined'){calendar=new FullCalendar.Calendar(document.getElementById('calendar'),{initialView:'dayGridMonth',locale:'pt-br',buttonText:{today:'Hoje',month:'Mês',week:'Semana',list:'Lista'},headerToolbar:{left:'prev,next today',center:'title',right:'dayGridMonth,timeGridWeek,listWeek'},});}}
     
     // --- Funções da Tela de Requisição ---
