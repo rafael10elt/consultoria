@@ -2595,9 +2595,9 @@ function handleTabClick(btn) {
 const pageWidth = doc.internal.pageSize.getWidth();
         const logoWidth = 30; // Largura do logo em mm
         const logoHeight = 20; // Altura do logo em mm
-        const pageMargin = 14;
+        const pageMargin = 8;
         // DEPOIS (Alinhado à esquerda)
-doc.addImage(logoBase64, 'PNG', pageMargin, 10, logoWidth, logoHeight);
+        doc.addImage(logoBase64, 'PNG', pageMargin, 10, logoWidth, logoHeight);
 
         let finalY = 25;
 
