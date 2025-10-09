@@ -134,7 +134,7 @@ body {
         <div class="flex h-screen bg-gray-100 dark:bg-gray-900">
             <aside id="sidebar" class="absolute z-30 flex-col items-center w-20 text-white transform -translate-x-full lg:relative lg:flex lg:translate-x-0 transition-transform duration-200 ease-in-out bg-brand-dark dark:bg-gray-800">
                 <div class="logo-symbol">
-                <img src="images/LogoLumi.png" alt="Logo Lumitech" style="width: 58px; height: 50px; object-fit: contain; position: absolute; left: 18px; top: 15px; z-index: 2; pointer-events: none;" />
+                <img src="iimages/ponteslogosfundo.png" alt="Logo Lumitech" style="width: 58px; height: 50px; object-fit: contain; position: absolute; left: 18px; top: 15px; z-index: 2; pointer-events: none;" />
                </div>
                 <nav class="flex-1 mt-6">
                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg bg-brand-gold text-white" data-target="dashboard" title="Dashboard"><i class="fas fa-chart-pie"></i></a>
@@ -153,7 +153,7 @@ body {
                 <header class="flex items-center justify-between h-20 px-6 bg-white border-b dark:bg-gray-800 dark:border-gray-700">
                     <div class="flex items-center">
                         <button id="sidebar-toggle" class="text-gray-500 dark:text-gray-400 focus:outline-none lg:hidden"><i class="fas fa-bars fa-lg"></i></button>
-                        <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white ml-4 lg:ml-0">Lumi Consultoria</h1>
+                        <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 dark:text-white ml-4 lg:ml-0">Pontes Consultoria</h1>
                     </div>
                     <div class="flex items-center space-x-2 sm:space-x-4">
                         <div class="text-right">
@@ -1353,25 +1353,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    async function uploadFile(tableName, columnName, file) {
+async function uploadFile(tableName, columnName, file) {
     return new Promise((resolve, reject) => {
-        // Usa o FileReader para converter o arquivo em uma string base64
         const reader = new FileReader();
         reader.readAsDataURL(file);
 
         reader.onload = async () => {
             try {
-                // Remove o prefixo da string base64 (ex: "data:image/png;base64,")
                 const base64File = reader.result.split(',')[1];
-                
-                // Define o caminho no servidor, como antes
                 const projectPath = API_URL.substring(API_URL.indexOf('/noco/')).substring(1);
                 const path = `${projectPath}/${tableName}/${columnName}`;
 
-                // Envia os dados para a NOSSA função serverless /upload
                 const response = await fetch('/.netlify/functions/upload', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    // --- INÍCIO DA CORREÇÃO ---
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'xc-token': API_TOKEN // Adiciona o token de autenticação à chamada
+                    },
+                    // --- FIM DA CORREÇÃO ---
                     body: JSON.stringify({
                         file: base64File,
                         fileName: file.name,
@@ -1381,12 +1381,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
 
                 if (!response.ok) {
-                    throw new Error('Falha na resposta do servidor de upload.');
+                    // Tenta obter uma mensagem de erro mais clara do corpo da resposta
+                    const errorBody = await response.text();
+                    console.error("Erro do servidor de upload:", errorBody);
+                    throw new Error(`Falha na resposta do servidor de upload. Status: ${response.status}`);
                 }
 
                 const result = await response.json();
-                
-                // Retorna o resultado com sucesso
                 resolve(Array.isArray(result) ? result[0] : result);
 
             } catch (error) {
