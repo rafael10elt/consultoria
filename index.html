@@ -1353,25 +1353,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-async function uploadFile(tableName, columnName, file) {
+    async function uploadFile(tableName, columnName, file) {
     return new Promise((resolve, reject) => {
+        // Usa o FileReader para converter o arquivo em uma string base64
         const reader = new FileReader();
         reader.readAsDataURL(file);
 
         reader.onload = async () => {
             try {
+                // Remove o prefixo da string base64 (ex: "data:image/png;base64,")
                 const base64File = reader.result.split(',')[1];
+                
+                // Define o caminho no servidor, como antes
                 const projectPath = API_URL.substring(API_URL.indexOf('/noco/')).substring(1);
                 const path = `${projectPath}/${tableName}/${columnName}`;
 
+                // Envia os dados para a NOSSA função serverless /upload
                 const response = await fetch('/.netlify/functions/upload', {
                     method: 'POST',
-                    // --- INÍCIO DA CORREÇÃO ---
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'xc-token': API_TOKEN // Adiciona o token de autenticação à chamada
-                    },
-                    // --- FIM DA CORREÇÃO ---
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         file: base64File,
                         fileName: file.name,
@@ -1381,13 +1381,12 @@ async function uploadFile(tableName, columnName, file) {
                 });
 
                 if (!response.ok) {
-                    // Tenta obter uma mensagem de erro mais clara do corpo da resposta
-                    const errorBody = await response.text();
-                    console.error("Erro do servidor de upload:", errorBody);
-                    throw new Error(`Falha na resposta do servidor de upload. Status: ${response.status}`);
+                    throw new Error('Falha na resposta do servidor de upload.');
                 }
 
                 const result = await response.json();
+                
+                // Retorna o resultado com sucesso
                 resolve(Array.isArray(result) ? result[0] : result);
 
             } catch (error) {
