@@ -954,21 +954,21 @@ body {
             <label for="filter-validade-tipo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo</label>
             <select id="filter-validade-tipo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
                 <option value="">Todos</option>
-                <option value="Certificados dos Bombeiros">Certificados dos Bombeiros</option>
                 <option value="Alvará de Funcionamento">Alvará de Funcionamento</option>
-                <option value="Manual de Boas Práticas e POP's">Manual de Boas Práticas e POP's</option>
-                <option value="Certificado de Capacitação">Certificado de Capacitação</option>
-                <option value="Licença Sanitária">Licença Sanitária</option>
-                <option value="Licença Ambiental">Licença Ambiental</option>
-                <option value="Licença de Publicidade">Licença de Publicidade</option>
-                <option value="Licença Sonora">Licença Sonora</option>
-                <option value="PGRS (Plano de Gerenciamento de Resíduos Sólidos)">PGRS</option>
                 <option value="Análise de Água">Análise de Água</option>
-                <option value="Controle de Pragas">Controle de Pragas</option>
                 <option value="Cadastro Técnico">Cadastro Técnico</option>
                 <option value="Certificado CRQ">Certificado CRQ</option>
+                <option value="Certificado de Capacitação">Certificado de Capacitação</option>
+                <option value="Certificados dos Bombeiros">Certificados dos Bombeiros</option>
                 <option value="Comunicação CRQ">Comunicação CRQ</option>
+                <option value="Controle de Pragas">Controle de Pragas</option>
                 <option value="Inspeção Predial">Inspeção Predial</option>
+                <option value="Licença Ambiental">Licença Ambiental</option>
+                <option value="Licença de Publicidade">Licença de Publicidade</option>
+                <option value="Licença Sanitária">Licença Sanitária</option>
+                <option value="Licença Sonora">Licença Sonora</option>
+                <option value="Manual de Boas Práticas e POP's">Manual de Boas Práticas e POP's</option>
+                <option value="PGRS (Plano de Gerenciamento de Resíduos Sólidos)">PGRS</option>
             </select>
         </div>
         
@@ -1045,21 +1045,21 @@ body {
                 <label for="validade-tipo-form" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo de Documento</label>
                 <select id="validade-tipo-form" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
                     <option value="">Selecione...</option>
-                    <option value="Certificados dos Bombeiros">Certificados dos Bombeiros</option>
                     <option value="Alvará de Funcionamento">Alvará de Funcionamento</option>
-                    <option value="Manual de Boas Práticas e POP's">Manual de Boas Práticas e POP's</option>
-                    <option value="Certificado de Capacitação">Certificado de Capacitação</option>
-                    <option value="Licença Sanitária">Licença Sanitária</option>
-                    <option value="Licença Ambiental">Licença Ambiental</option>
-                    <option value="Licença de Publicidade">Licença de Publicidade</option>
-                    <option value="Licença Sonora">Licença Sonora</option>
-                    <option value="PGRS (Plano de Gerenciamento de Resíduos Sólidos)">PGRS</option>
                     <option value="Análise de Água">Análise de Água</option>
-                    <option value="Controle de Pragas">Controle de Pragas</option>
                     <option value="Cadastro Técnico">Cadastro Técnico</option>
                     <option value="Certificado CRQ">Certificado CRQ</option>
+                    <option value="Certificado de Capacitação">Certificado de Capacitação</option>
+                    <option value="Certificados dos Bombeiros">Certificados dos Bombeiros</option>
                     <option value="Comunicação CRQ">Comunicação CRQ</option>
+                    <option value="Controle de Pragas">Controle de Pragas</option>
                     <option value="Inspeção Predial">Inspeção Predial</option>
+                    <option value="Licença Ambiental">Licença Ambiental</option>
+                    <option value="Licença de Publicidade">Licença de Publicidade</option>
+                    <option value="Licença Sanitária">Licença Sanitária</option>
+                    <option value="Licença Sonora">Licença Sonora</option>
+                    <option value="Manual de Boas Práticas e POP's">Manual de Boas Práticas e POP's</option>
+                    <option value="PGRS (Plano de Gerenciamento de Resíduos Sólidos)">PGRS</option>
                 </select>
             </div>
             <div>
@@ -1645,9 +1645,13 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // --- Funções Auxiliares para Chamadas à API ---
-    async function nocoFetch(endpoint, options = {}) {
+async function nocoFetch(endpoint, options = {}) {
         try {
-            const response = await fetch(`${API_URL}/${endpoint}`, {
+            // Adiciona um "?" se não houver, ou um "&" se já houver parâmetros na URL.
+            const separator = endpoint.includes('?') ? '&' : '?';
+            const urlWithLimit = `${API_URL}/${endpoint}${separator}limit=1000`;
+
+            const response = await fetch(urlWithLimit, {
                 ...options,
                 headers: {
                     'Content-Type': 'application/json',
@@ -2222,9 +2226,23 @@ async function fetchAllData() {
     
     hideLoadingOverlay();
 }
+async function fetchConsultores() {
+        const result = await nocoFetch('Consultores?nested[all]=true');
+        if (result && result.list) {
+            consultoresData = result.list;
+            // Ordena a array de consultores pelo nome em ordem alfabética
+            consultoresData.sort((a, b) => a.Nome.localeCompare(b.Nome));
+        }
+    }
 
-    async function fetchConsultores() { const result = await nocoFetch('Consultores?nested[all]=true'); if (result && result.list) consultoresData = result.list; }
-    async function fetchClientes() { const result = await nocoFetch('Clientes?nested[all]=true'); if (result && result.list) clientesData = result.list; }
+    async function fetchClientes() {
+        const result = await nocoFetch('Clientes?nested[all]=true');
+        if (result && result.list) {
+            clientesData = result.list;
+            // Ordena a array de clientes pelo nome em ordem alfabética
+            clientesData.sort((a, b) => a.Nome.localeCompare(b.Nome));
+        }
+    }
     async function fetchVisitas() { const result = await nocoFetch('Visitas?nested[all]=true'); if(result && result.list) { visitsData = result.list.map(v => ({...v, startTime: v.HoraInicio ? `${v.DataVisita}T${v.HoraInicio}`:null, endTime: v.HoraFim ? `${v.DataVisita}T${v.HoraFim}`:null })); } else { visitsData = []; }}
     async function fetchReceitas() { const result = await nocoFetch('Receitas?nested[all]=true'); if (result && result.list) receitasData = result.list; }
     async function fetchValidades() { 
