@@ -1082,6 +1082,11 @@ body {
                 <label for="validade-observacao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observações</label>
                 <textarea id="validade-observacao" rows="4" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600"></textarea>
             </div>
+            <div class="md:col-span-2">
+                <label for="validade-anexo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Anexar Documento</label>
+                <input type="file" id="validade-anexo" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-300">Deixe em branco se não quiser alterar o anexo existente.</p>
+            </div>
             <div class="md:col-span-2 flex justify-end space-x-4">
                 <button type="button" class="cancel-sub-form px-6 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" data-form="validade-form-container" data-history="validades-history-container">Cancelar</button>
                 <button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button>
@@ -1603,6 +1608,7 @@ document.addEventListener('DOMContentLoaded', function() {
         tipo: 'Tipo de Documento',
         createdat: 'Criado em',
         updatedat: 'Alterado em',
+        anexo: 'Anexo',
     };
 
     // --- Variáveis de Estado da UI ---
@@ -2468,9 +2474,13 @@ async function fetchReembolsos() {
 
     data.forEach(v => {
         const statusClass = getStatusClass(v.Status);
-        
-        
+        const anexoUrl = v.Anexo && v.Anexo[0]?.signedPath ? `${NocoDB_BaseURL}/${v.Anexo[0].signedPath}` : null;
+        const anexoIconHTML = anexoUrl
+            ? `<a href="${anexoUrl}" target="_blank" class="text-gray-500" title="Ver Anexo"><i class="fas fa-paperclip"></i></a>`
+            : '';
+
         let actionsHTML = `
+            ${anexoIconHTML}
             <button class="table-details-btn text-gray-500" data-type="validade" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
             <button class="table-edit-btn text-blue-500" data-type="validade" title="Editar"><i class="fas fa-edit"></i></button>
             <button class="table-delete-btn text-red-500" data-type="validade" title="Apagar"><i class="fas fa-trash"></i></button>
@@ -2935,41 +2945,54 @@ function applyAndRenderValidades() {
         
         switch (form.id) {
           case 'validade-form':
-    id = form.dataset.id;
-    const clienteIdValidade = parseInt(form.querySelector('#validade-cliente').value);
-    const tipoValidade = form.querySelector('#validade-tipo-form').value;
+            id = form.dataset.id;
+            const clienteIdValidade = parseInt(form.querySelector('#validade-cliente').value);
+            const tipoValidade = form.querySelector('#validade-tipo-form').value;
 
-    // --- INÍCIO DA ALTERAÇÃO: Validação de duplicatas ---
-    const isDuplicate = validadesData.some(
-        v => v.Clientes?.Id == clienteIdValidade &&
-             v.Tipo === tipoValidade &&
-             v.Id != id // Ignora o próprio registro durante a edição
-    );
+            const isDuplicate = validadesData.some(
+                v => v.Clientes?.Id == clienteIdValidade &&
+                     v.Tipo === tipoValidade &&
+                     v.Id != id 
+            );
 
-    if (isDuplicate) {
-        alert(`Erro: O cliente selecionado já possui um registro para o tipo de documento "${tipoValidade}".`);
-        return; // Interrompe o salvamento
-    }
-    // --- FIM DA ALTERAÇÃO ---
+            if (isDuplicate) {
+                alert(`Erro: O cliente selecionado já possui um registro para o tipo de documento "${tipoValidade}".`);
+                return; 
+            }
 
-    endpoint = id ? `Validades/${id}` : 'Validades';
-    body = {
-        Validade: form.querySelector('#validade-data').value || null, // Garante que valor vazio seja enviado como nulo
-        Tipo: tipoValidade,
-        Status: form.querySelector('#validade-status-form').value,
-        Observacao: form.querySelector('#validade-observacao').value
-    };
-    
-    const consultorIdValidade = parseInt(form.querySelector('#validade-consultor').value);
-    if (id) {
-        body.Consultores_id = consultorIdValidade;
-        body.Clientes_id = clienteIdValidade;
-    } else {
-        body.Consultores = { "Id": consultorIdValidade };
-        body.Clientes = { "Id": clienteIdValidade };
-    }
-    callback = async () => { await fetchValidades(); applyAndRenderValidades(); };
-    break;
+            endpoint = id ? `Validades/${id}` : 'Validades';
+            body = {
+                Validade: form.querySelector('#validade-data').value || null,
+                Tipo: tipoValidade,
+                Status: form.querySelector('#validade-status-form').value,
+                Observacao: form.querySelector('#validade-observacao').value
+            };
+            
+            const consultorIdValidade = parseInt(form.querySelector('#validade-consultor').value);
+            if (id) {
+                body.Consultores_id = consultorIdValidade;
+                body.Clientes_id = clienteIdValidade;
+            } else {
+                body.Consultores = { "Id": consultorIdValidade };
+                body.Clientes = { "Id": clienteIdValidade };
+            }
+
+            // --- INÍCIO DA ALTERAÇÃO ---
+            const anexoInput = form.querySelector('#validade-anexo');
+            if (anexoInput && anexoInput.files[0]) {
+                showLoadingOverlay('Enviando anexo...');
+                const anexoData = await uploadFile('Validades', 'Anexo', anexoInput.files[0]);
+                if (anexoData) {
+                    body.Anexo = [anexoData];
+                } else {
+                    hideLoadingOverlay();
+                    return; // Interrompe o salvamento se o upload falhar
+                }
+            }
+            // --- FIM DA ALTERAÇÃO ---
+
+            callback = async () => { await fetchValidades(); applyAndRenderValidades(); };
+            break;
             case 'reembolso-form':
     id = form.dataset.id;
     endpoint = id ? `Reembolsos/${id}` : 'Reembolsos';
@@ -2986,10 +3009,10 @@ function applyAndRenderValidades() {
         body.Consultores = { "Id": consultorIdReembolso };
     }
 
-    const anexoInput = form.querySelector('#reembolso-anexo');
-    if (anexoInput && anexoInput.files[0]) {
+    const anexoInputReembolso = form.querySelector('#reembolso-anexo');
+    if (anexoInputReembolso && anexoInputReembolso.files[0]) {
         showLoadingOverlay('Enviando anexo...');
-        const anexoData = await uploadFile('Reembolsos', 'Anexo', anexoInput.files[0]);
+        const anexoData = await uploadFile('Reembolsos', 'Anexo', anexoInputReembolso.files[0]);
         if (anexoData) {
             body.Anexo = [anexoData];
         } else {
@@ -3085,14 +3108,9 @@ function applyAndRenderValidades() {
 
                 const clienteId = parseInt(form.querySelector('#receita-cliente-form').value);
 
-                // Agora, adicionamos o campo de cliente no formato correto.
                 if (id) { 
-                    // Se 'id' existe, é uma EDIÇÃO (PATCH).
-                    // Enviamos o ID da chave estrangeira diretamente.
                     body.Clientes_id = clienteId; 
                 } else { 
-                    // Se 'id' não existe, é uma CRIAÇÃO (POST).
-                    // Enviamos o objeto de relacionamento.
                     body.Clientes = { "Id": clienteId }; 
                 }
                 callback = async () => { await fetchReceitas(); applyAndRenderReceitas(); };
@@ -3119,34 +3137,25 @@ function applyAndRenderValidades() {
                 const clienteIdVisita = parseInt(form.querySelector('#visita-cliente').value);
 
                 if (id) {
-                    // Se for uma EDIÇÃO (PATCH)
                     body.Consultores_id = consultorIdVisita;
                     body.Clientes_id = clienteIdVisita;
-
-                    // --- INÍCIO DA ALTERAÇÃO 1: LÓGICA DE REMARCAÇÃO AUTOMÁTICA ---
-                    // Pega a visita original para comparar as datas/horas
                     const originalVisit = visitsData.find(v => v.Id == id);
                     if (originalVisit) {
                         const newDate = form.querySelector('#visita-data').value;
                         const newStart = form.querySelector('#visita-inicio').value;
                         const newEnd = form.querySelector('#visita-fim').value;
 
-                        // Compara se houve alguma alteração na data ou nos horários
                         if (originalVisit.DataVisita !== newDate || originalVisit.HoraInicio !== newStart || originalVisit.HoraFim !== newEnd) {
-                            // Se mudou, marca como Remarcada e redefine o status para Agendada
                             body.Remarcada = true;
                             body.Status = 'Agendada';
                         }
                     }
-                    // --- FIM DA ALTERAÇÃO 1 ---
 
                 } else {
-                    // Se for uma CRIAÇÃO (POST)
                     body.Consultores = { "Id": consultorIdVisita };
                     body.Clientes = { "Id": clienteIdVisita };
                 }
 
-                // Esta lógica original do botão "Remarcar" ainda funciona como um backup
                 if(isRescheduling) { 
                     body.Status = 'Agendada'; 
                     body.Remarcada = true; 
@@ -3165,12 +3174,11 @@ function applyAndRenderValidades() {
                 };
                 const consultorIdFerias = parseInt(form.querySelector('#ferias-consultor').value);
 
-                if (id) { // Se for edição
+                if (id) {
                     body.Consultores_id = consultorIdFerias;
-                } else { // Se for criação
+                } else {
                     body.Consultores = { "Id": consultorIdFerias };
                 }
-                // --- FIM DA ALTERAÇÃO ---
 
                 callback = async () => { await fetchFerias(); applyAndRenderFerias(); };
                 break;
@@ -3183,12 +3191,11 @@ function applyAndRenderValidades() {
                 };
                 const consultorIdAtestados = parseInt(form.querySelector('#atestados-consultor').value);
 
-                if (id) { // Se for edição
+                if (id) {
                     body.Consultores_id = consultorIdAtestados;
-                } else { // Se for criação
+                } else {
                     body.Consultores = { "Id": consultorIdAtestados };
                 }
-                // --- FIM DA ALTERAÇÃO ---
                 
                 const atestadoAnexoInput = form.querySelector('#atestados-anexo');
                 if (atestadoAnexoInput && atestadoAnexoInput.files[0]) {
@@ -3210,12 +3217,11 @@ function applyAndRenderValidades() {
                 };
                 const consultorIdEpis = parseInt(form.querySelector('#epis-consultor').value);
 
-                if (id) { // Se for edição
+                if (id) {
                     body.Consultores_id = consultorIdEpis;
-                } else { // Se for criação
+                } else {
                     body.Consultores = { "Id": consultorIdEpis };
                 }
-                // --- FIM DA ALTERAÇÃO ---
                 
                 callback = async () => { await fetchEpis(); applyAndRenderEpis(); };
                 break;
@@ -3230,18 +3236,15 @@ function applyAndRenderValidades() {
                 };
                 const consultorIdAtivos = parseInt(form.querySelector('#ativos-consultor').value);
 
-                if (id) { // Se for edição
+                if (id) {
                     body.Consultores_id = consultorIdAtivos;
-                } else { // Se for criação
+                } else {
                     body.Consultores = { "Id": consultorIdAtivos };
                 }
-                // --- FIM DA ALTERAÇÃO ---
                 
                 callback = async () => { await fetchAtivos(); applyAndRenderAtivos(); };
                 break;
 case 'doc-form':
-                // --- INÍCIO DA CORREÇÃO ---
-                // Atribuímos o valor à variável 'id' do escopo da função, em vez de criar uma nova 'docId'
                 id = form.querySelector('#doc-id').value; 
                 const clientIdForDoc = form.querySelector('#doc-cliente-id').value;
                 const docNomeInput = form.querySelector('#doc-nome');
@@ -3260,14 +3263,12 @@ case 'doc-form':
                     return;
                 }
 
-                // A verificação do anexo só é obrigatória na criação (quando 'id' não existe)
                 if (!id && !docAnexoInput.files[0]) {
                     alert('O campo "Anexar Arquivo" é obrigatório ao criar um novo documento.');
                     docAnexoInput.focus();
                     return;
                 }
 
-                // Usamos a variável 'id' que agora está corretamente definida
                 endpoint = id ? `Clientes_Docs/${id}` : 'Clientes_Docs';
                 
                 body = { 
@@ -3296,10 +3297,9 @@ case 'doc-form':
 
                 callback = async () => { 
                     await fetchClienteDocs(); 
-                    openClienteDocsModal(clientIdForDoc); // Reabre e atualiza o modal principal
+                    openClienteDocsModal(clientIdForDoc);
                     hideModal(document.getElementById('doc-form-modal'));
                 };
-                // --- FIM DA CORREÇÃO ---
                 break;
             default: return;
         }
@@ -3329,7 +3329,6 @@ case 'doc-form':
             updateAllDashboards();
         }
     }
-    
     async function handleDelete() {
         if (!activeDeleteItem || !activeDeleteItem.type) return;
         const { id, type } = activeDeleteItem;
