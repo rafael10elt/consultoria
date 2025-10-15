@@ -2164,6 +2164,17 @@ async function fetchAllData() {
     renderConsultores();
     applyClienteFilters();
     populateConsultantSelects();
+    const consultorFilterVisitas = document.getElementById('filter-consultor');
+    if (consultorFilterVisitas) {
+        if (loggedInUser && loggedInUser.Role === 'Consultor') {
+            // Se for Consultor, define seu ID no filtro e o desabilita
+            consultorFilterVisitas.value = loggedInUser.Id;
+            consultorFilterVisitas.disabled = true;
+        } else {
+            // Se for Admin/Gestor, garante que o filtro esteja habilitado
+            consultorFilterVisitas.disabled = false;
+        }
+    }
     populateClientSelects();
     populateSelectWithOptions('#report-consultor', consultoresData, 'Id', 'Nome', true);
     populateSelectWithOptions('#report-cliente', clientesData, 'Id', 'Nome', true);
