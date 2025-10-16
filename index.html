@@ -4881,7 +4881,6 @@ function applyFilters() {
         cl = document.getElementById('filter-cliente').value,
         st = document.getElementById('filter-status').value;
 
-    // A lógica de filtragem inicial permanece a mesma
     let f = visitsData.filter(v =>
         (!s || v.DataVisita >= s) &&
         (!e || v.DataVisita <= e) &&
@@ -4890,32 +4889,28 @@ function applyFilters() {
         (!st || v.Status === st)
     );
 
-    // --- INÍCIO DA ALTERAÇÃO ---
-    // Aplica a regra de visualização por Role
     if (loggedInUser && (loggedInUser.Role === 'Gestor' || loggedInUser.Role === 'Consultor')) {
         const today = new Date();
         const currentYear = today.getFullYear();
         const currentMonth = today.getMonth();
 
         f = f.filter(v => {
-            // Se o status NÃO for 'Concluída', a visita sempre é exibida.
             if (v.Status !== 'Concluída') {
                 return true;
             }
-            // Se for 'Concluída', verifica se é do mês corrente.
             const visitDate = new Date(v.DataVisita + 'T00:00:00');
             return visitDate.getFullYear() === currentYear && visitDate.getMonth() === currentMonth;
         });
     }
-    // --- FIM DA ALTERAÇÃO ---
 
+    // --- INÍCIO DA ALTERAÇÃO ---
+    // Ordena pela data e hora de início, do mais antigo para o mais novo.
     f.sort((a, b) => {
-        const dateComparison = new Date(b.DataVisita) - new Date(a.DataVisita);
-        if (dateComparison !== 0) {
-            return dateComparison;
-        }
-        return a.HoraInicio.localeCompare(b.HoraInicio);
+        const dateTimeA = new Date(`${a.DataVisita}T${a.HoraInicio}`);
+        const dateTimeB = new Date(`${b.DataVisita}T${b.HoraInicio}`);
+        return dateTimeA - dateTimeB;
     });
+    // --- FIM DA ALTERAÇÃO ---
 
     renderAllVisits(f);
 }
