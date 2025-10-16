@@ -146,6 +146,7 @@ body {
                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="rh" title="RH"><i class="fas fa-briefcase"></i></a>
                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="reembolsos" title="Reembolsos"><i class="fas fa-receipt"></i></a>
                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="validades" title="Validades"><i class="fas fa-shield-alt"></i></a>
+                    <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="servicos" title="Serviços"><i class="fas fa-cogs"></i></a>
                 </nav>
         </aside>
             <!-- Overlay for mobile sidebar -->
@@ -930,6 +931,117 @@ body {
         </form>
     </div>
 </div>
+<div id="servicos" class="page hidden">
+    <div class="mb-4">
+        <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Serviços</h2>
+        <p class="text-gray-600 dark:text-gray-300">Gerenciamento de serviços e contratos.</p>
+    </div>
+
+    <div class="flex justify-end items-center mb-4">
+        <button id="show-servico-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Serviço</button>
+    </div>
+
+    <div id="servicos-history-container">
+        <!-- Filtros -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
+            <div>
+                <label for="filter-servico-start-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Contratação De</label>
+                <input type="date" id="filter-servico-start-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            <div>
+                <label for="filter-servico-end-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Contratação Até</label>
+                <input type="date" id="filter-servico-end-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            <div> 
+                <label for="filter-servico-cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
+                <input type="text" id="filter-servico-cliente" placeholder="Buscar por cliente..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
+            </div>
+            <div>
+                <label for="filter-servico-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
+                <select id="filter-servico-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                    <option value="">Todos</option>
+                    <option value="Pendente">Pendente</option>
+                    <option value="Em Andamento">Em Andamento</option>
+                    <option value="Concluido">Concluído</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Tabela para Desktop -->
+        <div class="relative overflow-x-auto shadow-md sm:rounded-lg hidden md:block">
+            <table class="w-full text-sm text-left text-gray-500 dark:text-gray-300">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">Cliente</th>
+                        <th scope="col" class="px-6 py-3">Contratação</th>
+                        <th scope="col" class="px-6 py-3">Valor</th>
+                        <th scope="col" class="px-6 py-3">Status</th>
+                        <th scope="col" class="px-6 py-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="servicos-table-body"></tbody>
+            </table>
+        </div>
+        <!-- Cards para Mobile -->
+        <div id="servicos-cards-container" class="grid grid-cols-1 gap-4 md:hidden"></div>
+    </div>
+
+    <!-- Formulário de Novo/Edição Serviço -->
+    <div id="servico-form-container" class="hidden mt-6 p-6 bg-white rounded-lg shadow-md dark:bg-gray-800">
+        <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Cadastrar Novo Serviço</h3>
+        <form id="servico-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="servico-cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
+                <input type="text" id="servico-cliente" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+            </div>
+            <div>
+                <label for="servico-cnpj" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">CNPJ</label>
+                <input type="text" id="servico-cnpj" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            <div>
+                <label for="servico-datacontratacao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Contratação</label>
+                <input type="date" id="servico-datacontratacao" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+            </div>
+             <div>
+                <label for="servico-dataentrega" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Entrega</label>
+                <input type="date" id="servico-dataentrega" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            <div>
+                <label for="servico-contato" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Contato (Telefone)</label>
+                <input type="tel" id="servico-contato" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            <div>
+                <label for="servico-valor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor (R$)</label>
+                <input type="number" id="servico-valor" step="0.01" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+            </div>
+            <div id="servico-status-wrapper" class="hidden">
+                <label for="servico-status-form" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
+                <select id="servico-status-form" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
+                    <option value="Pendente">Pendente</option>
+                    <option value="Em Andamento">Em Andamento</option>
+                    <option value="Concluido">Concluído</option>
+                </select>
+            </div>
+             <div class="md:col-span-2">
+                <label for="servico-descricao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descrição do Serviço</label>
+                <textarea id="servico-descricao" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600"></textarea>
+            </div>
+            <div class="md:col-span-2">
+                <label for="servico-observacao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label>
+                <textarea id="servico-observacao" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600"></textarea>
+            </div>
+            <div class="md:col-span-2">
+                <label for="servico-anexo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Anexar Contrato/Documento</label>
+                <input type="file" id="servico-anexo" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
+                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-300">Deixe em branco se não quiser alterar o anexo existente.</p>
+            </div>
+            <div class="md:col-span-2 flex justify-end space-x-4">
+                <button type="button" class="cancel-sub-form px-6 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" data-form="servico-form-container" data-history="servicos-history-container">Cancelar</button>
+                <button type="submit" class="px-6 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
 <div id="validades" class="page hidden">
     <div class="mb-4">
         <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Controle de Validades</h2>
@@ -1561,6 +1673,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let clienteDocsData = [];
     let reembolsosData = [];
     let validadesData = [];
+    let servicosData = [];
 
      const GLOBAL_LABEL_MAP = {
         // Campos de Consultor e Cliente
@@ -1609,6 +1722,10 @@ document.addEventListener('DOMContentLoaded', function() {
         createdat: 'Criado em',
         updatedat: 'Alterado em',
         anexo: 'Anexo',
+        datacontratacao: 'Data de Contratação',
+        dataentrega: 'Data de Entrega',
+        contato: 'Contato',
+        descricao: 'Descrição',
     };
 
     // --- Variáveis de Estado da UI ---
@@ -1645,7 +1762,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // --- Funções Auxiliares para Chamadas à API ---
-async function nocoFetch(endpoint, options = {}) {
+  async function nocoFetch(endpoint, options = {}) {
         try {
             // Adiciona um "?" se não houver, ou um "&" se já houver parâmetros na URL.
             const separator = endpoint.includes('?') ? '&' : '?';
@@ -2162,7 +2279,7 @@ function renderModalCatalogoGrid(category = 'Todos') {
     // --- Funções de Carregamento de Dados (Fetch) ---
 async function fetchAllData() {
     showLoadingOverlay('Carregando dados...');
-   await Promise.all([ fetchConsultores(), fetchClientes(), fetchCustos(), fetchItensCatalogo(), fetchClienteDocs(), fetchReembolsos(), fetchValidades() ]);
+   await Promise.all([ fetchConsultores(), fetchClientes(), fetchCustos(), fetchItensCatalogo(), fetchClienteDocs(), fetchReembolsos(), fetchValidades(), fetchServicos() ]);
     await Promise.all([ fetchVisitas(), fetchReceitas(), fetchRequisicoes(), fetchFerias(), fetchAtestados(), fetchEpis(), fetchAtivos(), fetchRequisicoesItens() ]);
     
     renderConsultores();
@@ -2216,6 +2333,7 @@ async function fetchAllData() {
     applyAndRenderAtestados();
     applyAndRenderEpis();
     applyAndRenderAtivos();
+    applyAndRenderServicos(); 
 
     updateAllDashboards();
     initializeCalendar();
@@ -2226,7 +2344,8 @@ async function fetchAllData() {
     
     hideLoadingOverlay();
 }
-async function fetchConsultores() {
+
+    async function fetchConsultores() {
         const result = await nocoFetch('Consultores?nested[all]=true');
         if (result && result.list) {
             consultoresData = result.list;
@@ -2234,7 +2353,10 @@ async function fetchConsultores() {
             consultoresData.sort((a, b) => a.Nome.localeCompare(b.Nome));
         }
     }
-
+async function fetchServicos() { 
+        const result = await nocoFetch('Servicos?nested[all]=true'); 
+        if(result && result.list) servicosData = result.list; else servicosData = []; 
+    }
     async function fetchClientes() {
         const result = await nocoFetch('Clientes?nested[all]=true');
         if (result && result.list) {
@@ -2242,8 +2364,7 @@ async function fetchConsultores() {
             // Ordena a array de clientes pelo nome em ordem alfabética
             clientesData.sort((a, b) => a.Nome.localeCompare(b.Nome));
         }
-    }
-    async function fetchVisitas() { const result = await nocoFetch('Visitas?nested[all]=true'); if(result && result.list) { visitsData = result.list.map(v => ({...v, startTime: v.HoraInicio ? `${v.DataVisita}T${v.HoraInicio}`:null, endTime: v.HoraFim ? `${v.DataVisita}T${v.HoraFim}`:null })); } else { visitsData = []; }}
+    }   async function fetchVisitas() { const result = await nocoFetch('Visitas?nested[all]=true'); if(result && result.list) { visitsData = result.list.map(v => ({...v, startTime: v.HoraInicio ? `${v.DataVisita}T${v.HoraInicio}`:null, endTime: v.HoraFim ? `${v.DataVisita}T${v.HoraFim}`:null })); } else { visitsData = []; }}
     async function fetchReceitas() { const result = await nocoFetch('Receitas?nested[all]=true'); if (result && result.list) receitasData = result.list; }
     async function fetchValidades() { 
     const result = await nocoFetch('Validades?nested[all]=true'); 
@@ -3051,6 +3172,34 @@ function applyAndRenderValidades() {
     }
     callback = async () => { await fetchReembolsos(); applyAndRenderReembolsos(); };
     break;
+    case 'servico-form':
+            id = form.dataset.id;
+            endpoint = id ? `Servicos/${id}` : 'Servicos';
+            body = {
+                Cliente: form.querySelector('#servico-cliente').value,
+                Cnpj: form.querySelector('#servico-cnpj').value,
+                Datacontratacao: form.querySelector('#servico-datacontratacao').value,
+                DataEntrega: form.querySelector('#servico-dataentrega').value || null,
+                Contato: form.querySelector('#servico-contato').value,
+                Valor: parseFloat(form.querySelector('#servico-valor').value) || 0,
+                Descricao: form.querySelector('#servico-descricao').value,
+                Observacao: form.querySelector('#servico-observacao').value,
+                Status: form.querySelector('#servico-status-form').value || 'Pendente',
+            };
+
+            const servicoAnexoInput = form.querySelector('#servico-anexo');
+            if (servicoAnexoInput && servicoAnexoInput.files[0]) {
+                showLoadingOverlay('Enviando anexo...');
+                const anexoData = await uploadFile('Servicos', 'Anexo', servicoAnexoInput.files[0]);
+                if (anexoData) {
+                    body.Anexo = [anexoData];
+                } else {
+                    hideLoadingOverlay();
+                    return;
+                }
+            }
+            callback = async () => { await fetchServicos(); applyAndRenderServicos(); };
+            break;
             case 'item-form':
                 id = form.dataset.id;
                 endpoint = id ? `Itens_Catalogo/${id}` : 'Itens_Catalogo';
@@ -3372,6 +3521,10 @@ case 'doc-form':
             case 'visita': endpoint = `Visitas/${id}`; callback = async () => { await fetchVisitas(); applyFilters(); }; break;
             case 'consultor': endpoint = `Consultores/${id}`; callback = async () => { await fetchConsultores(); renderConsultores(); }; break;
             case 'cliente': endpoint = `Clientes/${id}`; callback = async () => { await fetchClientes(); renderClientes(); }; break;
+            case 'servico': 
+                endpoint = `Servicos/${id}`; 
+                callback = async () => { await fetchServicos(); applyAndRenderServicos(); }; 
+                break;
             case 'reembolso': 
     endpoint = `Reembolsos/${id}`; 
     callback = async () => { await fetchReembolsos(); applyAndRenderReembolsos(); }; 
@@ -3962,7 +4115,28 @@ function handleTableEdit(btn) {
         case 'atestado': { const data = atestadosData.find(d => d.Id === id); if (data) { setupSubFormToggle('atestados-history-container', 'atestados-form-container'); const form = document.getElementById('atestados-form'); form.dataset.id = data.Id; form.querySelector('#atestados-consultor').value = data.Consultores?.Id; form.querySelector('#atestados-inicio').value = data.DataInicio; form.querySelector('#atestados-retorno').value = data.DataRetorno; } break; }
         case 'epi': { const data = episEntreguesData.find(d => d.Id === id); if (data) { setupSubFormToggle('epis-history-container', 'epis-form-container'); const form = document.getElementById('epis-form'); form.dataset.id = data.Id; form.querySelector('#epis-consultor').value = data.Consultores?.Id; form.querySelector('#epis-item').value = data.Item; form.querySelector('#epis-qtd').value = data.Quantidade; form.querySelector('#epis-data').value = data.DataEntrega; form.querySelector('#epis-obs').value = data.Observacao || ''; } break; }
         case 'ativo': { const data = ativosData.find(d => d.Id === id); if (data) { setupSubFormToggle('ativos-history-container', 'ativos-form-container'); const form = document.getElementById('ativos-form'); form.dataset.id = data.Id; form.querySelector('#ativos-consultor').value = data.Consultores?.Id; form.querySelector('#ativos-item').value = data.Item; form.querySelector('#ativos-entrega').value = data.DataEntrega; form.querySelector('#ativos-devolucao').value = data.DataDevolucao || ''; form.querySelector('#ativos-obs').value = data.Observacao || ''; } break; }
-    case 'reembolso': { 
+    case 'servico': { 
+            const s = servicosData.find(d => d.Id === id); 
+            if (s) { 
+                setupSubFormToggle('servicos-history-container', 'servico-form-container'); 
+                const f = document.getElementById('servico-form');
+                f.dataset.id = s.Id; 
+                f.querySelector('#servico-cliente').value = s.Cliente || '';
+                f.querySelector('#servico-cnpj').value = s.Cnpj || '';
+                f.querySelector('#servico-datacontratacao').value = s.Datacontratacao;
+                f.querySelector('#servico-dataentrega').value = s.DataEntrega || '';
+                f.querySelector('#servico-contato').value = s.Contato || '';
+                f.querySelector('#servico-valor').value = s.Valor || '';
+                f.querySelector('#servico-descricao').value = s.Descricao || '';
+                f.querySelector('#servico-observacao').value = s.Observacao || '';
+                // Mostra o campo de status e preenche
+                const statusWrapper = document.getElementById('servico-status-wrapper');
+                statusWrapper.classList.remove('hidden');
+                f.querySelector('#servico-status-form').value = s.Status;
+            } 
+            break; 
+        }
+        case 'reembolso': { 
     const r = reembolsosData.find(d => d.Id === id); 
     if (r) { 
         setupSubFormToggle('reembolsos-history-container', 'reembolso-form-container'); 
@@ -4075,7 +4249,7 @@ function openDetailsModalForRow(btn) {
     let dataArray, title;
 
     const actionsContainer = document.getElementById('details-modal-actions');
-    const typesWithoutActions = ['visita', 'ferias', 'atestado', 'epi', 'ativo', 'receita', 'custo', 'reembolso', 'validade'];
+    const typesWithoutActions = ['visita', 'ferias', 'atestado', 'epi', 'ativo', 'receita', 'custo', 'reembolso','servico', 'validade'];
 
     if (typesWithoutActions.includes(type)) {
         actionsContainer.style.display = 'none';
@@ -4094,6 +4268,7 @@ function openDetailsModalForRow(btn) {
         case 'ativo': dataArray = ativosData; title = 'Detalhes do Ativo'; break;
         case 'requisicao': dataArray = requisicoesData; title = 'Detalhes da Requisição'; break;
         case 'reembolso': dataArray = reembolsosData; title = 'Detalhes do Reembolso'; break;
+        case 'servico': dataArray = servicosData; title = 'Detalhes do Serviço'; break;
         default: return;
     }
     const data = dataArray.find(d => d.Id === id);
@@ -5207,7 +5382,60 @@ function renderItensDeRequisicao(filterCategory = 'Todos') {
             container.appendChild(categoryDiv);
         });
     }
+function renderServicos(data = servicosData) {
+    const tbody = document.getElementById('servicos-table-body');
+    const cardsContainer = document.getElementById('servicos-cards-container');
+    if (!tbody || !cardsContainer) return;
 
+    tbody.innerHTML = '';
+    cardsContainer.innerHTML = '';
+
+    const getStatusClass = (status) => {
+        switch (status) {
+            case 'Concluido': return 'bg-green-200 text-green-800';
+            case 'Em Andamento': return 'bg-blue-200 text-blue-800';
+            case 'Pendente': return 'bg-yellow-200 text-yellow-800';
+            default: return 'bg-gray-200 text-gray-800';
+        }
+    };
+
+    data.forEach(s => {
+        const statusClass = getStatusClass(s.Status);
+        const anexoUrl = s.Anexo && s.Anexo[0]?.signedPath ? `${NocoDB_BaseURL}/${s.Anexo[0].signedPath}` : null;
+        const anexoIconHTML = anexoUrl ? `<a href="${anexoUrl}" target="_blank" class="text-gray-500" title="Ver Anexo"><i class="fas fa-paperclip"></i></a>` : '';
+        
+        const actionsHTML = `
+            ${anexoIconHTML}
+            <button class="table-details-btn text-gray-500" data-type="servico" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
+            <button class="table-edit-btn text-blue-500" data-type="servico" title="Editar"><i class="fas fa-edit"></i></button>
+            <button class="table-delete-btn text-red-500" data-type="servico" title="Apagar"><i class="fas fa-trash"></i></button>
+        `;
+
+        // Tabela Desktop
+        tbody.innerHTML += `
+            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${s.Id}">
+                <td class="px-6 py-4">${s.Cliente || 'N/A'}</td>
+                <td class="px-6 py-4">${new Date(s.Datacontratacao + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td class="px-6 py-4">${(s.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${statusClass}">${s.Status}</span></td>
+                <td class="px-6 py-4 space-x-2">${actionsHTML}</td>
+            </tr>`;
+
+        // Card Mobile
+        cardsContainer.innerHTML += `
+            <div class="p-4 bg-white rounded-lg shadow dark:bg-gray-800 border dark:border-gray-700" data-id="${s.Id}">
+                <div class="flex justify-between items-start">
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white">${s.Cliente || 'N/A'}</p>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${statusClass}">${s.Status}</span>
+                </div>
+                <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    <p><strong>Contratação:</strong> ${new Date(s.Datacontratacao + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
+                    <p><strong>Valor:</strong> ${(s.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                </div>
+                <div class="flex justify-end pt-2 mt-2 border-t dark:border-gray-600 space-x-2">${actionsHTML}</div>
+            </div>`;
+    });
+}
     function renderCategoryFilters(){
         const container = document.getElementById('item-category-filters');
         if(!container) return;
@@ -5315,6 +5543,20 @@ function applyRequisicaoFilters(){
     function applyAndRenderAtivos(){ const nome = document.getElementById('ativos-filter-name').value.toLowerCase(); const inicio = document.getElementById('ativos-filter-start').value; const fim = document.getElementById('ativos-filter-end').value; const filtered = ativosData.filter(a => (!nome || (a.Consultores?.Nome || '').toLowerCase().includes(nome)) && (!inicio || a.DataEntrega >= inicio) && (!fim || a.DataEntrega <= fim) ); renderAtivos(filtered); }
     function applyAndRenderReceitas(){const s=document.getElementById('filter-receita-start-date').value,e=document.getElementById('filter-receita-end-date').value,c=document.getElementById('filter-receita-cliente').value,st=document.getElementById('filter-receita-status').value; const f=receitasData.filter(r=>(!s||r.Vencimento>=s)&&(!e||r.Vencimento<=e)&&(!c||r.Clientes?.Id==c)&&(!st||r.Status===st)); renderReceitas(f);}
     function applyAndRenderCustos(){const s=document.getElementById('filter-custo-start-date').value,e=document.getElementById('filter-custo-end-date').value,cr=document.getElementById('filter-custo-credor').value.toLowerCase(),st=document.getElementById('filter-custo-status').value; const f=custosData.filter(c=>(!s||c.Vencimento>=s)&&(!e||c.Vencimento<=e)&&(!cr||c.Credor.toLowerCase().includes(cr))&&(!st||c.Status===st)); renderCustos(f);}
+    function applyAndRenderServicos() {
+    const startDate = document.getElementById('filter-servico-start-date').value;
+    const endDate = document.getElementById('filter-servico-end-date').value;
+    const cliente = document.getElementById('filter-servico-cliente').value.toLowerCase();
+    const status = document.getElementById('filter-servico-status').value;
+
+    const filtered = servicosData.filter(s =>
+        (!startDate || s.Datacontratacao >= startDate) &&
+        (!endDate || s.Datacontratacao <= endDate) &&
+        (!cliente || (s.Cliente || '').toLowerCase().includes(cliente)) &&
+        (!status || s.Status === status)
+    );
+    renderServicos(filtered);
+}
     function applyAndRenderReembolsos() {
     const startDate = document.getElementById('filter-reembolso-start-date').value;
     const endDate = document.getElementById('filter-reembolso-end-date').value;
@@ -5422,6 +5664,16 @@ function generateInsights() {
 
     // --- Inicialização ---
     function initializeApp() {
+        ['filter-servico-start-date', 'filter-servico-end-date', 'filter-servico-status'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', applyAndRenderServicos);
+    });
+    document.getElementById('filter-servico-cliente')?.addEventListener('input', applyAndRenderServicos);
+    document.getElementById('show-servico-form')?.addEventListener('click', () => {
+        // Ao abrir o formulário para um novo serviço, esconde o campo de status
+        const statusWrapper = document.getElementById('servico-status-wrapper');
+        if (statusWrapper) statusWrapper.classList.add('hidden');
+        setupSubFormToggle('servicos-history-container', 'servico-form-container')
+    });
         ['filter-validade-start-date', 'filter-validade-end-date', 'filter-validade-consultor', 'filter-validade-cliente', 'filter-validade-status', 'filter-validade-tipo'].forEach(id => {
         document.getElementById(id)?.addEventListener('change', applyAndRenderValidades);
     });
