@@ -1584,7 +1584,7 @@ body {
                     <input type="text" id="doc-nome" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
                 </div>
                 <div>
-    <label for="doc-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data do Documento</label>
+    <label for="doc-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de validade do Documento</label>
     <input type="date" id="doc-data" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
 </div>
                 <div>
@@ -4482,7 +4482,7 @@ function openClienteDocsModal(clientId) {
     if (!tableHead.innerHTML.includes('Data')) {
         tableHead.innerHTML = `
             <th scope="col" class="px-6 py-3">Documento</th>
-            <th scope="col" class="px-6 py-3">Data</th>
+            <th scope="col" class="px-6 py-3">Data de Validade</th>
             <th scope="col" class="px-6 py-3">Anexo</th>
             <th scope="col" class="px-6 py-3">Ações</th>
         `;
