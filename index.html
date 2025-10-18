@@ -1621,6 +1621,10 @@ body {
                         <label for="requisicao-item-qtd" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Quantidade</label>
                         <input type="number" id="requisicao-item-qtd" value="1" min="1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
                     </div>
+                    <div class="mt-4">
+                        <label for="requisicao-item-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação (Opcional)</label>
+                        <textarea id="requisicao-item-obs" rows="2" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></textarea>
+                    </div>
                     <button type="button" id="incluir-item-btn" class="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition-colors">Incluir Item</button>
                 </div>
 
@@ -3612,7 +3616,49 @@ async function handleEditItemQuantity(itemJoinId, currentQty, itemName, requisic
         alert('Falha ao atualizar a quantidade.');
     }
 }
+async function handleEditItemObservation(itemJoinId, currentObs) {
+    const newObs = prompt("Qual a nova observação para este item?", currentObs);
 
+    // Retorna se o usuário cancelar o prompt ou não alterar o valor
+    if (newObs === null || newObs === currentObs) {
+        return; 
+    }
+
+    showLoadingOverlay('Atualizando observação...');
+    const result = await nocoFetch(`Requisicoes_Itens/${itemJoinId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ "Observacao": newObs })
+    });
+    hideLoadingOverlay();
+
+    if (result) {
+        // 1. Atualiza o array de dados local
+        const itemInLocalData = requisicoesItensData.find(item => item.Id === itemJoinId);
+        if (itemInLocalData) {
+            itemInLocalData.Observacao = newObs;
+        }
+
+        // 2. Atualiza a UI diretamente no modal aberto
+        // (Isso é mais eficiente do que recarregar tudo)
+        const requisicaoId = document.querySelector('#modal-content [data-id]')?.closest('.page')?.dataset.id || activeDeleteItem.id;
+
+        // Fecha e reabre o modal para reconstruir com os dados atualizados
+        hideModal(allElements.detailsModal);
+        const requisicaoParaAbrir = requisicoesData.find(r => r.Id == requisicaoId);
+        if (requisicaoParaAbrir) {
+             // Simula o clique no botão para reabrir o modal
+            const fakeButton = document.createElement('button');
+            fakeButton.dataset.type = 'requisicao';
+            const fakeRow = document.createElement('tr');
+            fakeRow.dataset.id = requisicaoId;
+            fakeRow.appendChild(fakeButton);
+            openDetailsModalForRow(fakeButton);
+        }
+
+    } else {
+        alert('Falha ao atualizar a observação.');
+    }
+}
    async function handleDeleteItemFromRequisition(itemJoinId, requisicaoId) {
         if (confirm('Tem certeza que deseja remover este item da requisição?')) {
             showLoadingOverlay('Removendo item...');
@@ -3671,7 +3717,7 @@ async function handleEditItemQuantity(itemJoinId, currentQty, itemName, requisic
     
 function handleGlobalClick(e) { 
     const t = e.target; 
- const consultorEditBtn = t.closest('.consultor-edit-btn');
+    const consultorEditBtn = t.closest('.consultor-edit-btn');
     if (consultorEditBtn) {
         e.preventDefault();
         e.stopPropagation();
@@ -3772,25 +3818,32 @@ function handleGlobalClick(e) {
         renderModalCatalogoGrid(category);
         return; // Impede que o resto da função execute
     }
-        if (t.closest('#incluir-item-btn')) {
-            const selectedItemCard = document.querySelector('.item-catalogo-card.border-brand-gold');
-            if (!selectedItemCard) {
-                alert('Por favor, selecione um item do catálogo.');
-                return;
-            }
-            const itemId = selectedItemCard.dataset.itemId;
-            const item = allItems.find(i => i.Id == itemId);
-            const quantidade = parseInt(document.getElementById('requisicao-item-qtd').value);
-
-            if (item && quantidade > 0) {
-                itemsParaAdicionar.push({ itemId: item.Id, itemName: item.Nome, quantidade: quantidade });
-                renderItemsParaAdicionarList();
-                // Limpa a seleção para o próximo item
-                selectedItemCard.classList.remove('border-brand-gold', 'border-2');
-                document.getElementById('requisicao-item-qtd').value = 1;
-            }
+    if (t.closest('#incluir-item-btn')) {
+        const selectedItemCard = document.querySelector('.item-catalogo-card.border-brand-gold');
+        if (!selectedItemCard) {
+            alert('Por favor, selecione um item do catálogo.');
             return;
         }
+        const itemId = selectedItemCard.dataset.itemId;
+        const item = allItems.find(i => i.Id == itemId);
+        const quantidade = parseInt(document.getElementById('requisicao-item-qtd').value);
+        
+        // --- CÓDIGO ATUALIZADO ---
+        const observacao = document.getElementById('requisicao-item-obs').value;
+
+        if (item && quantidade > 0) {
+            // Adiciona a observação ao objeto
+            itemsParaAdicionar.push({ itemId: item.Id, itemName: item.Nome, quantidade: quantidade, observacao: observacao });
+            renderItemsParaAdicionarList();
+            
+            // Limpa a seleção e os campos para o próximo item
+            selectedItemCard.classList.remove('border-brand-gold', 'border-2');
+            document.getElementById('requisicao-item-qtd').value = 1;
+            document.getElementById('requisicao-item-obs').value = ''; // Limpa o campo de observação
+        }
+        return;
+    }
+
 
         if (t.closest('.remover-item-temp-btn')) {
             const indexToRemove = parseInt(t.closest('.remover-item-temp-btn').dataset.index);
@@ -3860,44 +3913,6 @@ function handleGlobalClick(e) {
         if(btn.classList.contains('item-category-filter-btn')){ handleCategoryFilterClick(btn); return; }
         if (btn.classList.contains('add-item-btn')) { openItemModal(btn.dataset.category); return; }
         if(btn.classList.contains('change-status-btn')) { handleChangeRequisitionStatus(btn); return; }
-async function handleSaveRequisitionItems() {
-    const requisicaoId = document.getElementById('requisicao-item-form-modal').dataset.requisicaoId;
-    if (!requisicaoId || itemsParaAdicionar.length === 0) {
-        alert('Nenhum item para salvar.');
-        hideModal(document.getElementById('requisicao-item-form-modal'));
-        return;
-    }
-
-    showLoadingOverlay('Salvando itens...');
-
-    const savePromises = itemsParaAdicionar.map(item => {
-        const body = {
-            "Requisicoes": { "Id": parseInt(requisicaoId) },
-            "Itens_Catalogo": { "Id": parseInt(item.itemId) },
-            "Quantidade": item.quantidade
-        };
-        return nocoFetch('Requisicoes_Itens', { method: 'POST', body: JSON.stringify(body) });
-    });
-
-    try {
-        await Promise.all(savePromises);
-
-        // Força a atualização da lista local de itens de requisição
-        await fetchRequisicoesItens();
-
-        hideLoadingOverlay();
-        hideModal(document.getElementById('requisicao-item-form-modal'));
-
-        // As linhas abaixo já garantem que a tabela principal é atualizada
-        await fetchRequisicoes();
-        applyRequisicaoFilters();
-
-    } catch (error) {
-        hideLoadingOverlay();
-        alert('Ocorreu um erro ao salvar um ou mais itens. Por favor, tente novamente.');
-        console.error('Erro ao salvar itens da requisição:', error);
-    }
-}
         const aM={
             'logout-button':()=>showModal(allElements.logoutConfirmModal),'cancel-logout-btn':()=>hideModal(allElements.logoutConfirmModal),'confirm-logout-btn':()=>{sessionStorage.clear(); location.reload();},
             'sidebar-toggle':toggleMobileSidebar,'show-insights-btn':()=>{generateInsights(); showModal(allElements.insightsModal);},'close-insights-modal':()=>hideModal(allElements.insightsModal),
@@ -3929,7 +3944,45 @@ async function handleSaveRequisitionItems() {
         else if(btn.classList.contains('table-delete-btn'))handleTableDelete(btn); 
         else if(btn.classList.contains('rh-tab-btn')||btn.classList.contains('requisicao-tab-btn')||btn.classList.contains('financeiro-tab-btn')||btn.classList.contains('validades-tab-btn'))handleTabClick(btn);
 }
-    
+async function handleSaveRequisitionItems() {
+    const requisicaoId = document.getElementById('requisicao-item-form-modal').dataset.requisicaoId;
+    if (!requisicaoId || itemsParaAdicionar.length === 0) {
+        alert('Nenhum item para salvar.');
+        hideModal(document.getElementById('requisicao-item-form-modal'));
+        return;
+    }
+
+    showLoadingOverlay('Salvando itens...');
+
+    const savePromises = itemsParaAdicionar.map(item => {
+        const body = {
+            "Requisicoes": { "Id": parseInt(requisicaoId) },
+            "Itens_Catalogo": { "Id": parseInt(item.itemId) },
+            "Quantidade": item.quantidade,
+            "Observacao": item.observacao // <-- CAMPO ADICIONADO AQUI
+        };
+        return nocoFetch('Requisicoes_Itens', { method: 'POST', body: JSON.stringify(body) });
+    });
+
+    try {
+        await Promise.all(savePromises);
+
+        // Força a atualização da lista local de itens de requisição
+        await fetchRequisicoesItens();
+
+        hideLoadingOverlay();
+        hideModal(document.getElementById('requisicao-item-form-modal'));
+
+        // As linhas abaixo já garantem que a tabela principal é atualizada
+        await fetchRequisicoes();
+        applyRequisicaoFilters();
+
+    } catch (error) {
+        hideLoadingOverlay();
+        alert('Ocorreu um erro ao salvar um ou mais itens. Por favor, tente novamente.');
+        console.error('Erro ao salvar itens da requisição:', error);
+    }
+}
     function navigateTo(targetId, isInitial = false) { allElements.pages.forEach(page => page.classList.add('hidden')); const targetPage = document.getElementById(targetId); if (targetPage) { targetPage.classList.remove('hidden'); if (targetId === 'visitas' && calendar) setTimeout(() => calendar.render(), 1); if (targetId === 'dashboard') setTimeout(() => updateAllDashboards(), 1); } const navLink = document.querySelector(`.nav-link[data-target="${targetId}"]`); if (navLink) { document.querySelectorAll('.nav-link').forEach(l => { l.classList.remove('bg-brand-gold', 'text-white'); l.classList.add('text-gray-400', 'hover:bg-brand-gold', 'hover:text-white'); }); navLink.classList.add('bg-brand-gold', 'text-white'); navLink.classList.remove('text-gray-400'); if (document.getElementById('page-title')) document.getElementById('page-title').textContent = navLink.title; } }
     function handleNavClick(e) {
     const navLink = e.currentTarget;
@@ -4240,7 +4293,7 @@ const openDetailsModal = (card) => {
 
         renderClientes(filteredData);
     }
-function openDetailsModalForRow(btn) {
+    function openDetailsModalForRow(btn) {
     const dataContainer = btn.closest('[data-id]');
     if (!dataContainer) return;
 
@@ -4295,9 +4348,15 @@ function openDetailsModalForRow(btn) {
                 const itemFotoUrl = itemInfo?.Foto?.[0]?.signedPath ? `${NocoDB_BaseURL}/${itemInfo.Foto[0].signedPath}` : 'https://placehold.co/80x80/e2e8f0/cbd5e0?text=Item';
                 const safeItemName = itemName.replace(/'/g, "\\'").replace(/"/g, "&quot;");
                 
+                const safeObservacao = (itemJoin.Observacao || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                const observacaoRowHTML = itemJoin.Observacao 
+                    ? `<tr class="bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700"><td colspan="${showActions ? 4 : 3}" class="px-6 py-2 text-xs text-gray-500 dark:text-gray-400 italic"><strong>Obs:</strong> ${itemJoin.Observacao}</td></tr>` 
+                    : '';
+
                 const actionsCell = showActions ? `
                     <td class="px-6 py-4 text-center space-x-3">
                         <button onclick="handleEditItemQuantity(${itemJoin.Id}, ${itemJoin.Quantidade}, '${safeItemName}', ${id})" class="text-blue-500 hover:text-blue-700" title="Editar Quantidade"><i class="fas fa-edit"></i></button>
+                        <button onclick="handleEditItemObservation(${itemJoin.Id}, '${safeObservacao}')" class="text-purple-500 hover:text-purple-700" title="Editar Observação"><i class="fas fa-comment-alt"></i></button>
                         <button onclick="handleDeleteItemFromRequisition(${itemJoin.Id}, ${id})" class="text-red-500 hover:text-red-700" title="Apagar Item"><i class="fas fa-trash"></i></button>
                     </td>` : '';
 
@@ -4309,7 +4368,8 @@ function openDetailsModalForRow(btn) {
                         <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">${itemName}</td>
                         <td class="px-6 py-4 text-center" id="item-qty-table-${itemJoin.Id}">${itemJoin.Quantidade}</td>
                         ${actionsCell}
-                    </tr>`;
+                    </tr>
+                    ${observacaoRowHTML}`;
             });
         } else {
             const colspan = showActions ? 4 : 3;
@@ -4338,10 +4398,13 @@ function openDetailsModalForRow(btn) {
                 const itemName = itemInfo ? itemInfo.Nome : 'Item não encontrado';
                 const itemFotoUrl = itemInfo?.Foto?.[0]?.signedPath ? `${NocoDB_BaseURL}/${itemInfo.Foto[0].signedPath}` : 'https://placehold.co/80x80/e2e8f0/cbd5e0?text=Item';
                 const safeItemName = itemName.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                const safeObservacao = (itemJoin.Observacao || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                const observacaoCardHTML = itemJoin.Observacao ? `<p class="text-xs text-gray-500 dark:text-gray-400 mt-1" id="item-obs-card-${itemJoin.Id}"><strong>Obs:</strong> ${itemJoin.Observacao}</p>` : `<p class="text-xs text-gray-500 dark:text-gray-400 mt-1 hidden" id="item-obs-card-${itemJoin.Id}"></p>`;
 
                 const actionsButtons = showActions ? `
                     <div class="flex items-center space-x-4">
                         <button onclick="handleEditItemQuantity(${itemJoin.Id}, ${itemJoin.Quantidade}, '${safeItemName}', ${id})" class="text-blue-500 hover:text-blue-700 p-2" title="Editar Quantidade"><i class="fas fa-edit fa-lg"></i></button>
+                        <button onclick="handleEditItemObservation(${itemJoin.Id}, '${safeObservacao}')" class="text-purple-500 hover:text-purple-700 p-2" title="Editar Observação"><i class="fas fa-comment-alt fa-lg"></i></button>
                         <button onclick="handleDeleteItemFromRequisition(${itemJoin.Id}, ${id})" class="text-red-500 hover:text-red-700 p-2" title="Apagar Item"><i class="fas fa-trash fa-lg"></i></button>
                     </div>` : '';
 
@@ -4351,6 +4414,7 @@ function openDetailsModalForRow(btn) {
                         <div class="flex-grow">
                             <p class="font-semibold text-gray-900 dark:text-white">${itemName}</p>
                             <p class="text-sm text-gray-600 dark:text-gray-400" id="item-qty-card-${itemJoin.Id}">Quantidade: ${itemJoin.Quantidade}</p>
+                            ${observacaoCardHTML}
                         </div>
                         ${actionsButtons}
                     </div>`;
@@ -5199,24 +5263,32 @@ function createKanbanCard(v){
         populateSelectWithOptions('#requisicao-item-catalogo', itemsToPopulate, 'Id', 'Nome', false);
     }
 function renderItemsParaAdicionarList() {
-        const listContainer = document.getElementById('itens-para-adicionar-list');
-        if (!listContainer) return;
+    const listContainer = document.getElementById('itens-para-adicionar-list');
+    if (!listContainer) return;
 
-        if (itemsParaAdicionar.length === 0) {
-            listContainer.innerHTML = '<li class="text-sm text-gray-500 text-center">Nenhum item incluído.</li>';
-            return;
-        }
-
-        listContainer.innerHTML = itemsParaAdicionar.map((item, index) => `
-            <li class="flex justify-between items-center p-2 bg-white dark:bg-gray-800 rounded-md">
-                <span class="text-sm">${item.itemName}</span>
-                <span class="text-sm font-bold">Qtd: ${item.quantidade}</span>
-                <button type="button" class="remover-item-temp-btn text-red-500 hover:text-red-700" data-index="${index}" title="Remover">
-                    <i class="fas fa-times-circle"></i>
-                </button>
-            </li>
-        `).join('');
+    if (itemsParaAdicionar.length === 0) {
+        listContainer.innerHTML = '<li class="text-sm text-gray-500 text-center">Nenhum item incluído.</li>';
+        return;
     }
+
+    listContainer.innerHTML = itemsParaAdicionar.map((item, index) => {
+        const obsHTML = item.observacao ? `<p class="text-xs text-gray-500 dark:text-gray-400 truncate" title="${item.observacao}">Obs: ${item.observacao}</p>` : '';
+
+        return `
+        <li class="p-2 bg-white dark:bg-gray-800 rounded-md border dark:border-gray-600">
+            <div class="flex justify-between items-center">
+                <span class="text-sm font-medium">${item.itemName}</span>
+                <div class="flex items-center space-x-3">
+                    <span class="text-sm font-bold">Qtd: ${item.quantidade}</span>
+                    <button type="button" class="remover-item-temp-btn text-red-500 hover:text-red-700" data-index="${index}" title="Remover">
+                        <i class="fas fa-times-circle"></i>
+                    </button>
+                </div>
+            </div>
+            ${obsHTML}
+        </li>`;
+    }).join('');
+}
 function openRequisicaoItemModal(requisicaoId) {
     itemsParaAdicionar = []; // Limpa a lista temporária
     document.getElementById('requisicao-item-form-modal').dataset.requisicaoId = requisicaoId;
@@ -5768,6 +5840,7 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
     // Adiciona o listener para executar a função sempre que a janela for redimensionada
     window.addEventListener('resize', checkCalendarViewOnResize);
     window.handleEditItemQuantity = handleEditItemQuantity;
+    window.handleEditItemObservation = handleEditItemObservation;
     window.handleDeleteItemFromRequisition = handleDeleteItemFromRequisition;
     window.showImageModal = showImageModal;
 
