@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -457,12 +458,7 @@ body {
                                 <button class="cliente-status-filter-btn px-3 py-1 rounded-md" data-status="Ativo">Ativos</button>
                                 <button class="cliente-status-filter-btn px-3 py-1 rounded-md" data-status="Inativo">Inativos</button>
                             </div>
-                            <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-lg flex space-x-1" id="cliente-category-filters">
-                                <button class="cliente-category-filter-btn filter-btn-active px-3 py-1 rounded-md shadow-sm" data-category="Todos">Todos</button>
-                                <button class="cliente-category-filter-btn px-3 py-1 rounded-md" data-category="Contrato">Contratos</button>
-                                <button class="cliente-category-filter-btn px-3 py-1 rounded-md" data-category="Lead">Leads</button>                                
-                                <button class="cliente-category-filter-btn px-3 py-1 rounded-md" data-category="Serviço">Serviços</button>
-                            </div>
+                            <!-- FIM DA ALTERAÇÃO -->
                             <button id="show-cliente-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors w-full sm:w-auto">Novo Cliente</button>
                         </div>
                          <div id="cliente-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
@@ -492,14 +488,7 @@ body {
                                         <option value="Inativo">Inativo</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label for="cliente-categoria" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Categoria</label>
-                                    <select id="cliente-categoria" name="categoria" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white">
-                                        <option value="Contrato">Contrato</option>
-                                        <option value="Lead" selected>Lead</option> <!-- "selected" faz dele o padrão -->                                        
-                                        <option value="Serviço">Serviço</option>
-                                    </select>
-                                </div>
+
                                 <div><label for="cliente-responsavel" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Responsável</label><input type="text" id="cliente-responsavel" name="responsavel" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
                                 <div><label for="cliente-cpf" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">CPF do Responsável</label><input type="text" id="cliente-cpf" name="cpf" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
                                 <div><label for="cliente-iptu" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">IPTU</label><input type="text" id="cliente-iptu" name="iptu" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
@@ -759,10 +748,6 @@ body {
                                             <option value="Pago">Pago</option>
                                         </select>
                                     </div>
-                                     <div class="md:col-span-2 flex items-center pt-4">
-        <input id="receita-recorrente-form" type="checkbox" value="" class="w-4 h-4 text-brand-gold bg-gray-100 border-gray-300 rounded focus:ring-brand-gold dark:focus:ring-brand-gold dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-        <label for="receita-recorrente-form" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Esta é uma receita recorrente</label>
-    </div>
                                     <div class="md:col-span-2">
                                         <label for="receita-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label>
                                         <textarea id="receita-obs" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600"></textarea>
@@ -839,10 +824,6 @@ body {
                                             <option value="Pago">Pago</option>
                                         </select>
                                     </div>
-                                    <div class="md:col-span-2 flex items-center pt-4">
-        <input id="custo-recorrente-form" type="checkbox" value="" class="w-4 h-4 text-brand-gold bg-gray-100 border-gray-300 rounded focus:ring-brand-gold dark:focus:ring-brand-gold dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-        <label for="custo-recorrente-form" class="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Este é um custo recorrente</label>
-    </div>
                                     <div class="md:col-span-2">
                                         <label for="custo-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label>
                                         <textarea id="custo-obs" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600"></textarea>
@@ -1604,7 +1585,7 @@ body {
                     <input type="text" id="doc-nome" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
                 </div>
                 <div>
-    <label for="doc-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data de Validade</label>
+    <label for="doc-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data do Documento</label>
     <input type="date" id="doc-data" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
 </div>
                 <div>
@@ -1640,10 +1621,6 @@ body {
                     <div class="mt-4">
                         <label for="requisicao-item-qtd" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Quantidade</label>
                         <input type="number" id="requisicao-item-qtd" value="1" min="1" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white" required>
-                    </div>
-                    <div class="mt-4">
-                        <label for="requisicao-item-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação (Opcional)</label>
-                        <textarea id="requisicao-item-obs" rows="2" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></textarea>
                     </div>
                     <button type="button" id="incluir-item-btn" class="mt-4 w-full bg-blue-500 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-600 transition-colors">Incluir Item</button>
                 </div>
@@ -2303,50 +2280,20 @@ function renderModalCatalogoGrid(category = 'Todos') {
     // --- Funções de Carregamento de Dados (Fetch) ---
 async function fetchAllData() {
     showLoadingOverlay('Carregando dados...');
-   
-    await Promise.all([ 
-        fetchConsultores(), fetchClientes(), fetchCustos(), fetchReceitas(), // Traz Receitas junto com Custos
-        fetchItensCatalogo(), fetchClienteDocs(), fetchReembolsos(), 
-        fetchValidades(), fetchServicos() 
-    ]);
-
-    // Verifica e gera custos recorrentes
-    const custosForamGerados = await verificarEGerarCustosRecorrentes();
-    if (custosForamGerados) {
-        await fetchCustos(); // Recarrega se algo foi criado
-    }
-
-    // --- CÓDIGO NOVO ---
-    // Verifica e gera receitas recorrentes
-    const receitasForamGeradas = await verificarEGerarReceitasRecorrentes();
-    if (receitasForamGeradas) {
-        await fetchReceitas(); // Recarrega se algo foi criado
-    }
-    // --- FIM DO CÓDIGO NOVO ---
+   await Promise.all([ fetchConsultores(), fetchClientes(), fetchCustos(), fetchItensCatalogo(), fetchClienteDocs(), fetchReembolsos(), fetchValidades(), fetchServicos() ]);
+    await Promise.all([ fetchVisitas(), fetchReceitas(), fetchRequisicoes(), fetchFerias(), fetchAtestados(), fetchEpis(), fetchAtivos(), fetchRequisicoesItens() ]);
     
-    // Continua carregando o restante dos dados
-    await Promise.all([ 
-        fetchVisitas(), 
-        // fetchReceitas(), // Removido daqui pois já foi carregado
-        fetchRequisicoes(), 
-        fetchFerias(), 
-        fetchAtestados(), 
-        fetchEpis(), 
-        fetchAtivos(), 
-        fetchRequisicoesItens() 
-    ]);
-    
-    // O resto da função continua como antes...
     renderConsultores();
     applyClienteFilters();
     populateConsultantSelects();
-    // ... e assim por diante
     const consultorFilterVisitas = document.getElementById('filter-consultor');
     if (consultorFilterVisitas) {
         if (loggedInUser && loggedInUser.Role === 'Consultor') {
+            // Se for Consultor, define seu ID no filtro e o desabilita
             consultorFilterVisitas.value = loggedInUser.Id;
             consultorFilterVisitas.disabled = true;
         } else {
+            // Se for Admin/Gestor, garante que o filtro esteja habilitado
             consultorFilterVisitas.disabled = false;
         }
     }
@@ -2354,15 +2301,20 @@ async function fetchAllData() {
     populateSelectWithOptions('#report-consultor', consultoresData, 'Id', 'Nome', true);
     populateSelectWithOptions('#report-cliente', clientesData, 'Id', 'Nome', true);
 
+    // --- INÍCIO DA ALTERAÇÃO ---
+    // Lógica movida para cá. É executada DEPOIS que populateConsultantSelects() já criou as opções.
     if (loggedInUser && loggedInUser.Role === 'Consultor') { 
+        // Se NÃO for admin, pré-seleciona e desabilita os filtros.
         const consultorFilterVisitas = document.getElementById('filter-consultor');
         const consultorFilterReqs = document.getElementById('filter-req-consultor');              
     } else {
+        // Se FOR admin, garante que os filtros estejam habilitados e sem valor selecionado.
         const consultorFilterVisitas = document.getElementById('filter-consultor');
         const consultorFilterReqs = document.getElementById('filter-req-consultor');
 
         if (consultorFilterVisitas) {
             consultorFilterVisitas.disabled = false;
+            // A linha abaixo garante que, se um admin logar após um não-admin, o filtro seja limpo.
             consultorFilterVisitas.value = '';
         }
         if (consultorFilterReqs) {
@@ -2370,7 +2322,8 @@ async function fetchAllData() {
             consultorFilterReqs.value = '';
         }
     }
-    
+    // --- FIM DA ALTERAÇÃO ---
+
     updateAllCounters();
     
     applyAndRenderReceitas();
@@ -2392,6 +2345,7 @@ async function fetchAllData() {
     
     hideLoadingOverlay();
 }
+
     async function fetchConsultores() {
         const result = await nocoFetch('Consultores?nested[all]=true');
         if (result && result.list) {
@@ -2577,15 +2531,6 @@ async function fetchReembolsos() {
             financeiroContent.classList.remove('hidden');
         }
     }
-    // Controla a visibilidade dos filtros de categoria de cliente
-    const categoryFilters = document.getElementById('cliente-category-filters');
-    if (categoryFilters) {
-        if (loggedInUser.Role === 'Admin') {
-            categoryFilters.style.display = 'flex'; // Mostra os filtros para o Admin
-        } else {
-            categoryFilters.style.display = 'none'; // Esconde para os outros
-        }
-    }
     await fetchAllData(); // Chamamos a função que agora contém a lógica correta
 
     let savedPage = sessionStorage.getItem('currentPage');
@@ -2749,39 +2694,25 @@ function createConsultorCard(c) {
     // --- FIM DA ALTERAÇÃO ---
     
     // O antigo div com o ícone do WhatsApp será substituído pelo novo.
-    return `<div class="cliente-card relative bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset} data-nome="${c.Nome}" data-status="${c.Status || 'Ativo'}" data-categoria="${c.Categoria || 'Lead'}"> 
-    // --- FIM DA ALTERAÇÃO ---
+    return `<div class="rh-card relative bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset} data-nome="${c.Nome}" data-status="${c.Status || 'Ativo'}">
                 <span class="absolute top-2 right-2 h-3 w-3 rounded-full ${statusClass}" title="Status: ${c.Status || 'Ativo'}"></span>
-                <img src="${fotoUrl}" class="w-24 h-24 rounded-lg object-cover mb-4"> 
-                <h4 class="font-bold text-lg text-gray-800 dark:text-white">${c.Nome}</h4> 
-                <p class="text-sm text-gray-500 dark:text-gray-400">Responsável: ${c.Responsavel || ''}</p> 
-                <div class="flex space-x-4 mt-4"> 
+                <img src="${fotoUrl}" class="w-24 h-24 rounded-full object-cover mb-4">
+                <h4 class="font-bold text-lg text-gray-800 dark:text-white">${c.Nome}</h4>
+                <p class="text-sm text-gray-500 dark:text-gray-400">${c.Email || ''}</p>
+                <div class="flex space-x-4 mt-4">
                     ${actionIconsHTML}
-                </div> 
-            </div>`; 
+                </div>
+            </div>`;
 }
     function renderClientes(data = clientesData) { document.getElementById('cliente-cards-container').innerHTML = data.map(c => createClienteCard(c)).join(''); }
-   function createClienteCard(c) { 
+function createClienteCard(c) { 
     const fotoUrl = (c.Foto && c.Foto[0]?.signedPath) ? `${NocoDB_BaseURL}/${c.Foto[0].signedPath}` : `https://picsum.photos/seed/${c.Nome.replace(/\s/g, '')}/100/100`; 
     const dataset = Object.keys(c).map(k => `data-${k.toLowerCase()}="${c[k] && typeof c[k] === 'object' ? JSON.stringify(c[k]) : (c[k] || '')}"`).join(' '); 
     const statusClass = c.Status === 'Ativo' ? 'bg-green-500' : 'bg-red-500';
-    let categoryIconHTML = ''; // Começa com uma string vazia
-    // Apenas gera o ícone se o usuário for Admin
-    if (loggedInUser && loggedInUser.Role === 'Admin') {
-        const getCategoryIcon = (category) => {
-            switch (category) {
-                case 'Lead':
-                    return '<span class="absolute top-2 left-2 text-yellow-500" title="Categoria: Lead"><i class="fas fa-lightbulb fa-lg"></i></span>';
-                case 'Contrato':
-                    return '<span class="absolute top-2 left-2 text-blue-500" title="Categoria: Contrato"><i class="fas fa-handshake fa-lg"></i></span>';
-                case 'Serviço':
-                    return '<span class="absolute top-2 left-2 text-purple-500" title="Categoria: Serviço"><i class="fas fa-cogs fa-lg"></i></span>';
-                default:
-                    return '';
-            }
-        };
-        categoryIconHTML = getCategoryIcon(c.Categoria);
-    }
+
+    // --- INÍCIO DA ALTERAÇÃO ---
+
+    // 1. Ícones padrão, visíveis para todos
     let actionIconsHTML = `
         <a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600" title="WhatsApp">
             <i class="fab fa-whatsapp fa-lg"></i>
@@ -2794,6 +2725,7 @@ function createConsultorCard(c) {
         </a>
     `;
 
+    // 2. Ícones de Admin (Editar/Apagar), adicionados condicionalmente
     if (loggedInUser && loggedInUser.Role === 'Admin') {
         actionIconsHTML += `
             <a href="#" class="client-edit-btn text-blue-500 hover:text-blue-700" title="Editar Cliente">
@@ -2804,9 +2736,10 @@ function createConsultorCard(c) {
             </a>
         `;
     }
+    // --- FIM DA ALTERAÇÃO ---
 
-    return `<div class="cliente-card relative bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset} data-nome="${c.Nome}" data-status="${c.Status || 'Ativo'}" data-categoria="${c.Categoria || 'Lead'}"> 
-                ${categoryIconHTML}
+    // O div 'card-actions' foi removido e a variável 'actionIconsHTML' é usada na parte inferior.
+    return `<div class="cliente-card relative bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset} data-nome="${c.Nome}" data-status="${c.Status || 'Ativo'}"> 
                 <span class="absolute top-2 right-2 h-3 w-3 rounded-full ${statusClass}" title="Status: ${c.Status || 'Ativo'}"></span>
                 <img src="${fotoUrl}" class="w-24 h-24 rounded-lg object-cover mb-4"> 
                 <h4 class="font-bold text-lg text-gray-800 dark:text-white">${c.Nome}</h4> 
@@ -2815,7 +2748,7 @@ function createConsultorCard(c) {
                     ${actionIconsHTML}
                 </div> 
             </div>`; 
-}
+}   
  function renderReembolsos(data = reembolsosData) {
     const tbody = document.getElementById('reembolsos-table-body');
     const cardsContainer = document.getElementById('reembolsos-cards-container');
@@ -2878,16 +2811,10 @@ function createConsultorCard(c) {
 
     data.forEach(r => {
         const statusClass = r.Status === 'Pago' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800';
-
-        // --- CÓDIGO ATUALIZADO ---
-        const recorrenteClass = r.Recorrente ? 'text-blue-500' : 'text-gray-400';
-        const recorrenteTitle = r.Recorrente ? 'Desativar recorrência' : 'Ativar recorrência';
-        
         const actionsHTML = `
-            <button class="table-details-btn text-gray-500" data-type="receita" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
-            <button class="table-edit-btn text-blue-500" data-type="receita" title="Editar"><i class="fas fa-edit"></i></button>
-            <button class="toggle-receita-recorrente-btn ${recorrenteClass}" data-id="${r.Id}" data-recorrente="${!!r.Recorrente}" title="${recorrenteTitle}"><i class="fas fa-sync-alt"></i></button>
-            <button class="table-delete-btn text-red-500" data-type="receita" title="Apagar"><i class="fas fa-trash"></i></button>`;
+            <button class="table-details-btn text-gray-500" data-type="receita"><i class="fas fa-eye"></i></button>
+            <button class="table-edit-btn text-blue-500" data-type="receita"><i class="fas fa-edit"></i></button>
+            <button class="table-delete-btn text-red-500" data-type="receita"><i class="fas fa-trash"></i></button>`;
 
         // Tabela Desktop
         tbody.innerHTML += `
@@ -2924,15 +2851,10 @@ function renderCustos(data = custosData) {
 
     data.forEach(c => {
         const statusClass = c.Status === 'Pago' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800';
-        
-        const recorrenteClass = c.Recorrente ? 'text-blue-500' : 'text-gray-400';
-        const recorrenteTitle = c.Recorrente ? 'Custo Recorrente (Clique para desativar)' : 'Custo Não Recorrente (Clique para ativar)';
-
         const actionsHTML = `
-            <button class="table-details-btn text-gray-500" data-type="custo" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
-            <button class="table-edit-btn text-blue-500" data-type="custo" title="Editar"><i class="fas fa-edit"></i></button>
-            <button class="toggle-recorrente-btn ${recorrenteClass}" data-id="${c.Id}" data-recorrente="${!!c.Recorrente}" title="${recorrenteTitle}"><i class="fas fa-sync-alt"></i></button>
-            <button class="table-delete-btn text-red-500" data-type="custo" title="Apagar"><i class="fas fa-trash"></i></button>`;
+            <button class="table-details-btn text-gray-500" data-type="custo"><i class="fas fa-eye"></i></button>
+            <button class="table-edit-btn text-blue-500" data-type="custo"><i class="fas fa-edit"></i></button>
+            <button class="table-delete-btn text-red-500" data-type="custo"><i class="fas fa-trash"></i></button>`;
 
         // Tabela Desktop
         tbody.innerHTML += `
@@ -3164,253 +3086,235 @@ function applyAndRenderValidades() {
 
         renderConsultores(filteredData);
     }
-    async function handleToggleReceitaRecorrente(btn) {
-    const id = btn.dataset.id;
-    const isRecorrente = btn.dataset.recorrente === 'true';
-    const newRecorrenteState = !isRecorrente;
-    
-    const confirmMessage = newRecorrenteState 
-        ? 'Deseja marcar esta receita como recorrente e gerar a fatura para o próximo mês?'
-        : 'Deseja desativar a recorrência desta receita? Faturas futuras não serão mais geradas automaticamente a partir desta.';
-
-    if (confirm(confirmMessage)) {
-        showLoadingOverlay('Atualizando...');
-        const result = await nocoFetch(`Receitas/${id}`, {
-            method: 'PATCH',
-            body: JSON.stringify({ Recorrente: newRecorrenteState })
-        });
-        
-        if (result) {
-            if (newRecorrenteState) {
-                const currentReceita = receitasData.find(r => r.Id == id);
-                if (currentReceita) {
-                    await gerarProximaReceitaRecorrente(currentReceita);
-                }
-            }
-            await fetchReceitas();
-            applyAndRenderReceitas();
-        } else {
-            alert('Falha ao atualizar o status de recorrência.');
-        }
-        hideLoadingOverlay();
-    }
-}
-
-    async function handleToggleRecorrente(btn) {
-    const id = btn.dataset.id;
-    const isRecorrente = btn.dataset.recorrente === 'true';
-    const newRecorrenteState = !isRecorrente;
-    
-    const confirmMessage = newRecorrenteState 
-        ? 'Deseja marcar este custo como recorrente e gerar a fatura para o próximo mês?'
-        : 'Deseja desativar a recorrência deste custo? Faturas futuras não serão mais geradas automaticamente a partir deste.';
-
-    if (confirm(confirmMessage)) {
-        showLoadingOverlay('Atualizando...');
-        const result = await nocoFetch(`Custos/${id}`, {
-            method: 'PATCH',
-            body: JSON.stringify({ Recorrente: newRecorrenteState })
-        });
-        
-        if (result) {
-            // Se ativou a recorrência, chama a função para gerar o próximo.
-            if (newRecorrenteState) {
-                const currentCost = custosData.find(c => c.Id == id);
-                if(currentCost) {
-                    await gerarProximoCustoRecorrente(currentCost);
-                }
-            }
-            // Atualiza os dados e a tela
-            await fetchCustos();
-            applyAndRenderCustos();
-        } else {
-            alert('Falha ao atualizar o status de recorrência.');
-        }
-        hideLoadingOverlay();
-    }
-}
     // --- Lógica de Submissão de Formulários (CRUD) ---
     async function handleFormSubmit(e) {
-    e.preventDefault();
-    const form = e.target;
-    const id = form.dataset.id || (form.querySelector('input[type="hidden"]') ? form.querySelector('input[type="hidden"]').value : null);
-    const method = id ? 'PATCH' : 'POST';
-    let endpoint = '';
-    let body = {};
-    let callback = null;
+        e.preventDefault();
+        const form = e.target;
+        let endpoint = '', body = {}, id = null, callback = null;
 
-    showLoadingOverlay('Salvando...');
-
-    try {
-        // --- PREPARAÇÃO DOS DADOS (dentro do switch) ---
+        const rhSubFormIds = ['ferias-form', 'atestados-form', 'epis-form', 'ativos-form'];
+        
         switch (form.id) {
-            case 'validade-form': {
-                endpoint = id ? `Validades/${id}` : 'Validades';
-                const clienteIdValidade = parseInt(form.querySelector('#validade-cliente').value);
-                const tipoValidade = form.querySelector('#validade-tipo-form').value;
+          case 'validade-form':
+            id = form.dataset.id;
+            const clienteIdValidade = parseInt(form.querySelector('#validade-cliente').value);
+            const tipoValidade = form.querySelector('#validade-tipo-form').value;
 
-                if (!id && validadesData.some(v => v.Clientes?.Id == clienteIdValidade && v.Tipo === tipoValidade)) {
-                    throw new Error(`O cliente selecionado já possui um registro para o tipo "${tipoValidade}".`);
-                }
-                body = {
-                    Validade: form.querySelector('#validade-data').value || null,
-                    Tipo: tipoValidade,
-                    Status: form.querySelector('#validade-status-form').value,
-                    Observacao: form.querySelector('#validade-observacao').value
-                };
-                const consultorIdValidade = parseInt(form.querySelector('#validade-consultor').value);
-                if (id) {
-                    body.Consultores_id = consultorIdValidade;
-                    body.Clientes_id = clienteIdValidade;
+            const isDuplicate = validadesData.some(
+                v => v.Clientes?.Id == clienteIdValidade &&
+                     v.Tipo === tipoValidade &&
+                     v.Id != id 
+            );
+
+            if (isDuplicate) {
+                alert(`Erro: O cliente selecionado já possui um registro para o tipo de documento "${tipoValidade}".`);
+                return; 
+            }
+
+            endpoint = id ? `Validades/${id}` : 'Validades';
+            body = {
+                Validade: form.querySelector('#validade-data').value || null,
+                Tipo: tipoValidade,
+                Status: form.querySelector('#validade-status-form').value,
+                Observacao: form.querySelector('#validade-observacao').value
+            };
+            
+            const consultorIdValidade = parseInt(form.querySelector('#validade-consultor').value);
+            if (id) {
+                body.Consultores_id = consultorIdValidade;
+                body.Clientes_id = clienteIdValidade;
+            } else {
+                body.Consultores = { "Id": consultorIdValidade };
+                body.Clientes = { "Id": clienteIdValidade };
+            }
+
+            // --- INÍCIO DA ALTERAÇÃO ---
+            const anexoInput = form.querySelector('#validade-anexo');
+            if (anexoInput && anexoInput.files[0]) {
+                showLoadingOverlay('Enviando anexo...');
+                const anexoData = await uploadFile('Validades', 'Anexo', anexoInput.files[0]);
+                if (anexoData) {
+                    body.Anexo = [anexoData];
                 } else {
-                    body.Consultores = { "Id": consultorIdValidade };
-                    body.Clientes = { "Id": clienteIdValidade };
+                    hideLoadingOverlay();
+                    return; // Interrompe o salvamento se o upload falhar
                 }
-                const anexoInput = form.querySelector('#validade-anexo');
-                if (anexoInput && anexoInput.files[0]) {
-                    const anexoData = await uploadFile('Validades', 'Anexo', anexoInput.files[0]);
-                    if (anexoData) body.Anexo = [anexoData];
-                }
-                callback = async () => { await fetchValidades(); applyAndRenderValidades(); hideSubFormToggle('validades-history-container', 'validade-form-container'); };
-                break;
             }
-            case 'reembolso-form': {
-                endpoint = id ? `Reembolsos/${id}` : 'Reembolsos';
-                body = {
-                    Data: form.querySelector('#reembolso-data').value,
-                    Valor: parseFloat(form.querySelector('#reembolso-valor').value),
-                    Motivo: form.querySelector('#reembolso-motivo').value,
-                    Status: form.querySelector('#reembolso-status-form').value,
-                };
-                const consultorIdReembolso = parseInt(form.querySelector('#reembolso-consultor').value);
-                if (id) { body.Consultores_id = consultorIdReembolso; } else { body.Consultores = { "Id": consultorIdReembolso }; }
+            // --- FIM DA ALTERAÇÃO ---
 
-                const anexoInputReembolso = form.querySelector('#reembolso-anexo');
-                if (anexoInputReembolso && anexoInputReembolso.files[0]) {
-                    const anexoData = await uploadFile('Reembolsos', 'Anexo', anexoInputReembolso.files[0]);
-                    if (anexoData) body.Anexo = [anexoData];
+            callback = async () => { await fetchValidades(); applyAndRenderValidades(); };
+            break;
+            case 'reembolso-form':
+    id = form.dataset.id;
+    endpoint = id ? `Reembolsos/${id}` : 'Reembolsos';
+    body = {
+        Data: form.querySelector('#reembolso-data').value,
+        Valor: parseFloat(form.querySelector('#reembolso-valor').value),
+        Motivo: form.querySelector('#reembolso-motivo').value,
+        Status: form.querySelector('#reembolso-status-form').value,
+    };
+    const consultorIdReembolso = parseInt(form.querySelector('#reembolso-consultor').value);
+    if (id) {
+        body.Consultores_id = consultorIdReembolso;
+    } else {
+        body.Consultores = { "Id": consultorIdReembolso };
+    }
+
+    const anexoInputReembolso = form.querySelector('#reembolso-anexo');
+    if (anexoInputReembolso && anexoInputReembolso.files[0]) {
+        showLoadingOverlay('Enviando anexo...');
+        const anexoData = await uploadFile('Reembolsos', 'Anexo', anexoInputReembolso.files[0]);
+        if (anexoData) {
+            body.Anexo = [anexoData];
+        } else {
+            hideLoadingOverlay();
+            return;
+        }
+    }
+    callback = async () => { await fetchReembolsos(); applyAndRenderReembolsos(); };
+    break;
+    case 'servico-form':
+            id = form.dataset.id;
+            endpoint = id ? `Servicos/${id}` : 'Servicos';
+            body = {
+                Cliente: form.querySelector('#servico-cliente').value,
+                Cnpj: form.querySelector('#servico-cnpj').value,
+                Datacontratacao: form.querySelector('#servico-datacontratacao').value,
+                DataEntrega: form.querySelector('#servico-dataentrega').value || null,
+                Contato: form.querySelector('#servico-contato').value,
+                Valor: parseFloat(form.querySelector('#servico-valor').value) || 0,
+                Descricao: form.querySelector('#servico-descricao').value,
+                Observacao: form.querySelector('#servico-observacao').value,
+                Status: form.querySelector('#servico-status-form').value || 'Pendente',
+            };
+
+            const servicoAnexoInput = form.querySelector('#servico-anexo');
+            if (servicoAnexoInput && servicoAnexoInput.files[0]) {
+                showLoadingOverlay('Enviando anexo...');
+                const anexoData = await uploadFile('Servicos', 'Anexo', servicoAnexoInput.files[0]);
+                if (anexoData) {
+                    body.Anexo = [anexoData];
+                } else {
+                    hideLoadingOverlay();
+                    return;
                 }
-                callback = async () => { await fetchReembolsos(); applyAndRenderReembolsos(); hideSubFormToggle('reembolsos-history-container', 'reembolso-form-container'); };
-                break;
             }
-            case 'servico-form': {
-                endpoint = id ? `Servicos/${id}` : 'Servicos';
-                body = {
-                    Cliente: form.querySelector('#servico-cliente').value,
-                    Cnpj: form.querySelector('#servico-cnpj').value,
-                    Datacontratacao: form.querySelector('#servico-datacontratacao').value,
-                    DataEntrega: form.querySelector('#servico-dataentrega').value || null,
-                    Contato: form.querySelector('#servico-contato').value,
-                    Valor: parseFloat(form.querySelector('#servico-valor').value) || 0,
-                    Descricao: form.querySelector('#servico-descricao').value,
-                    Observacao: form.querySelector('#servico-observacao').value,
-                    Status: form.querySelector('#servico-status-form').value || 'Pendente',
-                };
-                const servicoAnexoInput = form.querySelector('#servico-anexo');
-                if (servicoAnexoInput && servicoAnexoInput.files[0]) {
-                    const anexoData = await uploadFile('Servicos', 'Anexo', servicoAnexoInput.files[0]);
-                    if (anexoData) body.Anexo = [anexoData];
-                }
-                callback = async () => { await fetchServicos(); applyAndRenderServicos(); hideSubFormToggle('servicos-history-container', 'servico-form-container'); };
-                break;
-            }
-            case 'item-form': {
+            callback = async () => { await fetchServicos(); applyAndRenderServicos(); };
+            break;
+            case 'item-form':
+                id = form.dataset.id;
                 endpoint = id ? `Itens_Catalogo/${id}` : 'Itens_Catalogo';
                 const itemName = document.getElementById('item-name').value;
                 const itemCategory = form.querySelector('#item-category-input').value;
                 body = { Nome: itemName, Categoria: itemCategory, Tipo: 'Consumo' };
                 const itemFotoInput = document.getElementById('item-foto');
                 if (itemFotoInput && itemFotoInput.files[0]) {
+                    showLoadingOverlay('Enviando imagem do item...');
                     const fotoData = await uploadFile('Itens_Catalogo', 'Foto', itemFotoInput.files[0]);
                     if(fotoData) body.Foto = [fotoData];
                 }
                 callback = async () => { await fetchItensCatalogo(); renderItensDeRequisicao(); renderCategoryFilters(); hideModal(allElements.itemFormModal); };
                 break;
-            }
-            case 'rh-form': {
-                const table = 'Consultores';
-                endpoint = id ? `${table}/${id}` : table;
-                body = { Nome: form.querySelector('#rh-nome').value, DataNascimento: form.querySelector('#rh-nasc').value || null, Telefone: form.querySelector('#rh-tel').value, Email: form.querySelector('#rh-email').value, Login: form.querySelector('#rh-login').value, InicioVinculo: form.querySelector('#rh-inicio').value || null, FimVinculo: form.querySelector('#rh-fim').value || null, CNPJ: form.querySelector('#rh-cnpj').value, RazaoSocial: form.querySelector('#rh-razao').value, ValorHora: parseFloat(form.querySelector('#rh-valor').value) || 0, Status: form.querySelector('#rh-status').value, Role: form.querySelector('#rh-role').value, Endereco: form.querySelector('#rh-endereco').value, Observacao: form.querySelector('#rh-obs').value };
-                const senha = form.querySelector('#rh-senha').value; if (senha) body.Senha = senha;
-                const fileInput = form.querySelector('input[type="file"]');
-                if (fileInput && fileInput.files[0]) {
-                    const fileData = await uploadFile(table, 'Foto', fileInput.files[0]);
-                    if (fileData) body.Foto = [fileData];
-                }
-                callback = async () => { await fetchConsultores(); applyConsultorFilters(); hideFormToggle('rh-cards-container', 'rh-form-container'); };
-                break;
-            }
+            
+            case 'rh-form':
             case 'cliente-form': {
-                const table = 'Clientes';
-                endpoint = id ? `${table}/${id}` : table;
-                body = { Nome: form.querySelector('#cliente-nome').value, RazaoSocial: form.querySelector('#cliente-razao').value, CNPJ: form.querySelector('#cliente-cnpj').value, Telefone: form.querySelector('#cliente-tel').value, Email: form.querySelector('#cliente-email').value, HorasContratadas: parseInt(form.querySelector('#cliente-horas').value) || 0, Valor: parseFloat(form.querySelector('#cliente-valor').value) || 0, Status: form.querySelector('#cliente-status').value, Categoria: form.querySelector('#cliente-categoria').value, Responsavel: form.querySelector('#cliente-responsavel').value, CPFResponsavel: form.querySelector('#cliente-cpf').value, IPTU: form.querySelector('#cliente-iptu').value, SenhaPortal: form.querySelector('#cliente-senha-portal').value, Endereco: form.querySelector('#cliente-endereco').value, Observacao: form.querySelector('#cliente-obs').value };
+                const isConsultor = form.id === 'rh-form';
+                const table = isConsultor ? 'Consultores' : 'Clientes';
                 const fileInput = form.querySelector('input[type="file"]');
+                let fileData = null;
+
                 if (fileInput && fileInput.files[0]) {
-                    const fileData = await uploadFile(table, 'Foto', fileInput.files[0]);
-                    if (fileData) body.Foto = [fileData];
+                    showLoadingOverlay('Enviando imagem...');
+                    fileData = await uploadFile(table, 'Foto', fileInput.files[0]);
+                    if (!fileData) { hideLoadingOverlay(); return; }
                 }
-                callback = async () => { await fetchClientes(); applyClienteFilters(); hideFormToggle('cliente-cards-container', 'cliente-form-container'); };
+
+                id = form.querySelector(isConsultor ? '#rh-id' : '#cliente-id')?.value;
+                endpoint = id ? `${table}/${id}` : table;
+                
+                if(isConsultor) {
+                    body = { 
+                        Nome: form.querySelector('#rh-nome').value, 
+                        DataNascimento: form.querySelector('#rh-nasc').value || null, 
+                        Telefone: form.querySelector('#rh-tel').value, 
+                        Email: form.querySelector('#rh-email').value, 
+                        Login: form.querySelector('#rh-login').value, 
+                        InicioVinculo: form.querySelector('#rh-inicio').value || null, 
+                        FimVinculo: form.querySelector('#rh-fim').value || null, 
+                        CNPJ: form.querySelector('#rh-cnpj').value, 
+                        RazaoSocial: form.querySelector('#rh-razao').value, 
+                        ValorHora: parseFloat(form.querySelector('#rh-valor').value) || 0,
+                        Status: form.querySelector('#rh-status').value, 
+                        Role: form.querySelector('#rh-role').value, 
+                        Endereco: form.querySelector('#rh-endereco').value, 
+                        Observacao: form.querySelector('#rh-obs').value 
+                    };
+                    const senha = form.querySelector('#rh-senha').value; if (senha) body.Senha = senha;
+                    callback = async () => { await fetchConsultores(); applyConsultorFilters(); };
+                } else {
+                    body = { 
+                        Nome: form.querySelector('#cliente-nome').value, 
+                        RazaoSocial: form.querySelector('#cliente-razao').value, 
+                        CNPJ: form.querySelector('#cliente-cnpj').value, 
+                        Telefone: form.querySelector('#cliente-tel').value, 
+                        Email: form.querySelector('#cliente-email').value, 
+                        HorasContratadas: parseInt(form.querySelector('#cliente-horas').value) || 0,
+                        Valor: parseFloat(form.querySelector('#cliente-valor').value) || 0, 
+                        Status: form.querySelector('#cliente-status').value, 
+                        Responsavel: form.querySelector('#cliente-responsavel').value, 
+                        CPFResponsavel: form.querySelector('#cliente-cpf').value, 
+                        IPTU: form.querySelector('#cliente-iptu').value, 
+                        SenhaPortal: form.querySelector('#cliente-senha-portal').value, 
+                        Endereco: form.querySelector('#cliente-endereco').value, 
+                        Observacao: form.querySelector('#cliente-obs').value 
+                    };
+                    callback = async () => { await fetchClientes(); applyClienteFilters(); };
+                }
+
+                if (fileData) body.Foto = [fileData];
                 break;
             }
-            case 'receita-form': {
+            
+            case 'receita-form':
+                id = form.dataset.id;
                 endpoint = id ? `Receitas/${id}` : 'Receitas';
-                const clienteId = parseInt(form.querySelector('#receita-cliente-form').value);
-                body = {
-                    Vencimento: form.querySelector('#receita-vencimento').value,
-                    Valor: parseFloat(form.querySelector('#receita-valor').value),
-                    Status: form.querySelector('#receita-status-form').value,
-                    Observacao: form.querySelector('#receita-obs').value,
-                    Recorrente: form.querySelector('#receita-recorrente-form').checked
+                body = { 
+                    Vencimento: form.querySelector('#receita-vencimento').value, 
+                    Valor: parseFloat(form.querySelector('#receita-valor').value), 
+                    Status: form.querySelector('#receita-status-form').value, 
+                    Observacao: form.querySelector('#receita-obs').value 
                 };
-                if (id) { body.Clientes_id = clienteId; } else { body.Clientes = { "Id": clienteId }; }
-                
-                const result = await nocoFetch(endpoint, { method, body: JSON.stringify(body) });
-                if (result) {
-                    if (body.Recorrente) {
-                        const clienteObj = clientesData.find(c => c.Id == clienteId);
-                        const receitaBase = id ? { ...body, Id: id, Clientes: clienteObj } : result;
-                        if (receitaBase) {
-                            await gerarProximaReceitaRecorrente(receitaBase);
-                        }
-                    }
-                    await fetchReceitas();
-                    applyAndRenderReceitas();
-                    hideSubFormToggle('receitas-history-container', 'receita-form-container');
-                    form.reset();
-                    delete form.dataset.id;
-                    updateAllDashboards();
+
+                const clienteId = parseInt(form.querySelector('#receita-cliente-form').value);
+
+                if (id) { 
+                    body.Clientes_id = clienteId; 
+                } else { 
+                    body.Clientes = { "Id": clienteId }; 
                 }
-                hideLoadingOverlay();
-                return; // Finaliza a execução aqui
-            }
-            case 'custo-form': {
+                callback = async () => { await fetchReceitas(); applyAndRenderReceitas(); };
+                break;
+            case 'custo-form':
+                id = form.dataset.id;
                 endpoint = id ? `Custos/${id}` : 'Custos';
-                body = { Credor: form.querySelector('#custo-credor').value, Vencimento: form.querySelector('#custo-vencimento').value, Valor: parseFloat(form.querySelector('#custo-valor').value), Status: form.querySelector('#custo-status-form').value, Observacao: form.querySelector('#custo-obs').value, Recorrente: form.querySelector('#custo-recorrente-form').checked };
-                
-                const result = await nocoFetch(endpoint, { method, body: JSON.stringify(body) });
-                if (result) {
-                    if (body.Recorrente) {
-                        const custoBase = id ? { ...body, Id: id } : result;
-                        if (custoBase) {
-                            await gerarProximoCustoRecorrente(custoBase);
-                        }
-                    }
-                    await fetchCustos();
-                    applyAndRenderCustos();
-                    hideSubFormToggle('custos-history-container', 'custo-form-container');
-                    form.reset();
-                    delete form.dataset.id;
-                    updateAllDashboards();
-                }
-                hideLoadingOverlay();
-                return; // Finaliza a execução aqui
-            }
-            case 'visita-form': {
+                body = { Credor: form.querySelector('#custo-credor').value, Vencimento: form.querySelector('#custo-vencimento').value, Valor: parseFloat(form.querySelector('#custo-valor').value), Status: form.querySelector('#custo-status-form').value, Observacao: form.querySelector('#custo-obs').value };
+                callback = async () => { await fetchCustos(); applyAndRenderCustos(); };
+                break;
+             case 'visita-form':
+                id = form.querySelector('#visita-id').value;
                 endpoint = id ? `Visitas/${id}` : 'Visitas';
                 const isRescheduling = form.querySelector('#is-rescheduling').value === 'true';
-                body = { DataVisita: form.querySelector('#visita-data').value, HoraInicio: form.querySelector('#visita-inicio').value, HoraFim: form.querySelector('#visita-fim').value, Atividades: form.querySelector('#visita-atividades').value };
+
+                body = { 
+                    DataVisita: form.querySelector('#visita-data').value, 
+                    HoraInicio: form.querySelector('#visita-inicio').value, 
+                    HoraFim: form.querySelector('#visita-fim').value, 
+                    Atividades: form.querySelector('#visita-atividades').value 
+                };
+
                 const consultorIdVisita = parseInt(form.querySelector('#visita-consultor').value);
                 const clienteIdVisita = parseInt(form.querySelector('#visita-cliente').value);
+
                 if (id) {
                     body.Consultores_id = consultorIdVisita;
                     body.Clientes_id = clienteIdVisita;
@@ -3419,99 +3323,191 @@ function applyAndRenderValidades() {
                         const newDate = form.querySelector('#visita-data').value;
                         const newStart = form.querySelector('#visita-inicio').value;
                         const newEnd = form.querySelector('#visita-fim').value;
+
                         if (originalVisit.DataVisita !== newDate || originalVisit.HoraInicio !== newStart || originalVisit.HoraFim !== newEnd) {
                             body.Remarcada = true;
                             body.Status = 'Agendada';
                         }
                     }
+
                 } else {
                     body.Consultores = { "Id": consultorIdVisita };
                     body.Clientes = { "Id": clienteIdVisita };
                 }
-                if(isRescheduling) { body.Status = 'Agendada'; body.Remarcada = true; } else if (!id) { body.Status = 'Agendada'; }
+
+                if(isRescheduling) { 
+                    body.Status = 'Agendada'; 
+                    body.Remarcada = true; 
+                } else if (!id) { 
+                    body.Status = 'Agendada'; 
+                }
+                
                 callback = async () => { await fetchVisitas(); applyFilters(); hideModal(allElements.visitaFormModal); };
                 break;
-            }
-            case 'ferias-form': case 'atestados-form': case 'epis-form': case 'ativos-form': {
-                const type = form.id.split('-')[0]; // 'ferias', 'atestados', 'epis', 'ativos'
-                const tableMap = { ferias: 'Ferias', atestados: 'Atestados', epis: 'Epis_Entregues', ativos: 'Ativos_Entregues' };
-                const fetchMap = { ferias: fetchFerias, atestados: fetchAtestados, epis: fetchEpis, ativos: fetchAtivos };
-                const renderMap = { ferias: applyAndRenderFerias, atestados: applyAndRenderAtestados, epis: applyAndRenderEpis, ativos: applyAndRenderAtivos };
-                
-                endpoint = id ? `${tableMap[type]}/${id}` : tableMap[type];
+            case 'ferias-form':
+                id = form.dataset.id;
+                endpoint = id ? `Ferias/${id}` : 'Ferias';
+                body = { 
+                    DataInicio: form.querySelector('#ferias-inicio').value, 
+                    DataRetorno: form.querySelector('#ferias-retorno').value 
+                };
+                const consultorIdFerias = parseInt(form.querySelector('#ferias-consultor').value);
 
-                if (type === 'ferias' || type === 'atestados') {
-                    body = { DataInicio: form.querySelector(`#${type}-inicio`).value, DataRetorno: form.querySelector(`#${type}-retorno`).value };
-                    const consultorIdSub = parseInt(form.querySelector(`#${type}-consultor`).value);
-                    if(id) { body.Consultores_id = consultorIdSub; } else { body.Consultores = { "Id": consultorIdSub }; }
-                } else if (type === 'epis') {
-                    body = { Item: form.querySelector('#epis-item').value, Quantidade: parseInt(form.querySelector('#epis-qtd').value), DataEntrega: form.querySelector('#epis-data').value, Observacao: form.querySelector('#epis-obs').value };
-                    const consultorIdSub = parseInt(form.querySelector('#epis-consultor').value);
-                    if(id) { body.Consultores_id = consultorIdSub; } else { body.Consultores = { "Id": consultorIdSub }; }
-                } else if (type === 'ativos') {
-                    body = { Item: form.querySelector('#ativos-item').value, DataEntrega: form.querySelector('#ativos-entrega').value, DataDevolucao: form.querySelector('#ativos-devolucao').value || null, Observacao: form.querySelector('#ativos-obs').value };
-                    const consultorIdSub = parseInt(form.querySelector('#ativos-consultor').value);
-                    if(id) { body.Consultores_id = consultorIdSub; } else { body.Consultores = { "Id": consultorIdSub }; }
+                if (id) {
+                    body.Consultores_id = consultorIdFerias;
+                } else {
+                    body.Consultores = { "Id": consultorIdFerias };
                 }
 
-                if (type === 'atestados') {
-                    const anexoInput = form.querySelector('#atestados-anexo');
-                    if (anexoInput && anexoInput.files[0]) {
-                        const anexoData = await uploadFile('Atestados', 'Anexo', anexoInput.files[0]);
-                        if (anexoData) body.Anexo = [anexoData];
-                    }
-                }
-
-                callback = async () => { await fetchMap[type](); renderMap[type](); hideSubFormToggle(`${type}-history-container`, `${type}-form-container`); };
+                callback = async () => { await fetchFerias(); applyAndRenderFerias(); };
                 break;
-            }
-            case 'doc-form': {
+            case 'atestados-form':
+                id = form.dataset.id;
+                endpoint = id ? `Atestados/${id}` : 'Atestados';
+                body = { 
+                    DataInicio: form.querySelector('#atestados-inicio').value, 
+                    DataRetorno: form.querySelector('#atestados-retorno').value 
+                };
+                const consultorIdAtestados = parseInt(form.querySelector('#atestados-consultor').value);
+
+                if (id) {
+                    body.Consultores_id = consultorIdAtestados;
+                } else {
+                    body.Consultores = { "Id": consultorIdAtestados };
+                }
+                
+                const atestadoAnexoInput = form.querySelector('#atestados-anexo');
+                if (atestadoAnexoInput && atestadoAnexoInput.files[0]) {
+                    showLoadingOverlay('Enviando anexo...');
+                    const anexoData = await uploadFile('Atestados', 'Anexo', atestadoAnexoInput.files[0]);
+                    if (anexoData) { body.Anexo = [anexoData]; } 
+                    else { hideLoadingOverlay(); return; }
+                }
+                callback = async () => { await fetchAtestados(); applyAndRenderAtestados(); };
+                break;
+            case 'epis-form':
+                id = form.dataset.id;
+                endpoint = id ? `Epis_Entregues/${id}` : 'Epis_Entregues';
+                 body = { 
+                    Item: form.querySelector('#epis-item').value, 
+                    Quantidade: parseInt(form.querySelector('#epis-qtd').value), 
+                    DataEntrega: form.querySelector('#epis-data').value, 
+                    Observacao: form.querySelector('#epis-obs').value 
+                };
+                const consultorIdEpis = parseInt(form.querySelector('#epis-consultor').value);
+
+                if (id) {
+                    body.Consultores_id = consultorIdEpis;
+                } else {
+                    body.Consultores = { "Id": consultorIdEpis };
+                }
+                
+                callback = async () => { await fetchEpis(); applyAndRenderEpis(); };
+                break;
+            case 'ativos-form':
+                id = form.dataset.id;
+                endpoint = id ? `Ativos_Entregues/${id}` : 'Ativos_Entregues';
+                 body = { 
+                    Item: form.querySelector('#ativos-item').value, 
+                    DataEntrega: form.querySelector('#ativos-entrega').value, 
+                    DataDevolucao: form.querySelector('#ativos-devolucao').value || null, 
+                    Observacao: form.querySelector('#ativos-obs').value 
+                };
+                const consultorIdAtivos = parseInt(form.querySelector('#ativos-consultor').value);
+
+                if (id) {
+                    body.Consultores_id = consultorIdAtivos;
+                } else {
+                    body.Consultores = { "Id": consultorIdAtivos };
+                }
+                
+                callback = async () => { await fetchAtivos(); applyAndRenderAtivos(); };
+                break;
+case 'doc-form':
+                id = form.querySelector('#doc-id').value; 
                 const clientIdForDoc = form.querySelector('#doc-cliente-id').value;
-                if (!form.querySelector('#doc-nome').value.trim()) throw new Error('O campo "Nome do Documento" é obrigatório.');
-                if (!form.querySelector('#doc-data').value) throw new Error('O campo "Data do Documento" é obrigatório.');
-                if (!id && !form.querySelector('#doc-anexo').files[0]) throw new Error('O campo "Anexar Arquivo" é obrigatório ao criar um novo documento.');
+                const docNomeInput = form.querySelector('#doc-nome');
+                const docDataInput = form.querySelector('#doc-data');  
+                const docAnexoInput = form.querySelector('#doc-anexo');  
+                
+                if (!docNomeInput.value.trim()) {
+                    alert('O campo "Nome do Documento" é obrigatório.');
+                    docNomeInput.focus();
+                    return;
+                }
+                
+                if (!docDataInput.value) {
+                    alert('O campo "Data do Documento" é obrigatório.');
+                    docDataInput.focus();
+                    return;
+                }
+
+                if (!id && !docAnexoInput.files[0]) {
+                    alert('O campo "Anexar Arquivo" é obrigatório ao criar um novo documento.');
+                    docAnexoInput.focus();
+                    return;
+                }
 
                 endpoint = id ? `Clientes_Docs/${id}` : 'Clientes_Docs';
-                body = { Documento: form.querySelector('#doc-nome').value, Data: form.querySelector('#doc-data').value };
-                if (id) { body.Clientes_id = parseInt(clientIdForDoc); } else { body.Clientes = { "Id": parseInt(clientIdForDoc) }; }
                 
-                const anexoInput = form.querySelector('#doc-anexo');
-                if (anexoInput && anexoInput.files[0]) {
-                    const anexoData = await uploadFile('Clientes_Docs', 'Anexo', anexoInput.files[0]);
-                    if (anexoData) body.Anexo = [anexoData];
+                body = { 
+                    Documento: docNomeInput.value,
+                    Data: docDataInput.value 
+                };             
+                
+                if (id) { 
+                    body.Clientes_id = parseInt(clientIdForDoc);
+                } else { 
+                    body.Clientes = { "Id": parseInt(clientIdForDoc) };
                 }
-                callback = async () => {
-                    await fetchClienteDocs();
+
+                if (docAnexoInput && docAnexoInput.files[0]) {
+                   if (docAnexoInput && docAnexoInput.files[0]) {
+                    showLoadingOverlay('Enviando anexo...');
+                    const anexoData = await uploadFile('Clientes_Docs', 'Anexo', docAnexoInput.files[0]);
+                    if (anexoData) { 
+                        body.Anexo = [anexoData]; 
+                    } else { 
+                        hideLoadingOverlay(); 
+                        return;
+                    }
+                } 
+                }
+
+                callback = async () => { 
+                    await fetchClienteDocs(); 
                     openClienteDocsModal(clientIdForDoc);
                     hideModal(document.getElementById('doc-form-modal'));
                 };
                 break;
-            }
-            default:
-                throw new Error("Formulário não reconhecido.");
+            default: return;
         }
-        
-        // --- EXECUÇÃO GENÉRICA (PARA TODOS OS CASES QUE NÃO TÊM 'return') ---
+
+        const method = id ? 'PATCH' : 'POST';
+        showLoadingOverlay('Salvando...');
         const result = await nocoFetch(endpoint, { method, body: JSON.stringify(body) });
         
+        hideLoadingOverlay();
+
         if (result) {
             if (callback) await callback();
             
+            if(rhSubFormIds.includes(form.id)) {
+                const historyContainerId = form.id.replace('-form', '-history-container');
+                const formContainerId = form.id.replace('-form', '-form-container');
+                hideSubFormToggle(historyContainerId, formContainerId);
+            } else if (form.id === 'rh-form' || form.id === 'cliente-form'){
+                const cardsContainerId = form.id.replace('-form', '-cards-container');
+                const formContainerId = form.id.replace('-form', '-form-container');
+                hideFormToggle(cardsContainerId, formContainerId);
+            }
+
             form.reset();
             delete form.dataset.id;
-             if (form.querySelector('input[type="hidden"]')) {
-                form.querySelector('input[type="hidden"]').value = '';
-            }
             updateAllCounters();
             updateAllDashboards();
         }
-
-    } catch (error) {
-        alert(`Erro ao salvar: ${error.message}`);
-    } finally {
-        hideLoadingOverlay();
     }
-}
     async function handleDelete() {
         if (!activeDeleteItem || !activeDeleteItem.type) return;
         const { id, type } = activeDeleteItem;
@@ -3617,49 +3613,7 @@ async function handleEditItemQuantity(itemJoinId, currentQty, itemName, requisic
         alert('Falha ao atualizar a quantidade.');
     }
 }
-async function handleEditItemObservation(itemJoinId, currentObs) {
-    const newObs = prompt("Qual a nova observação para este item?", currentObs);
 
-    // Retorna se o usuário cancelar o prompt ou não alterar o valor
-    if (newObs === null || newObs === currentObs) {
-        return; 
-    }
-
-    showLoadingOverlay('Atualizando observação...');
-    const result = await nocoFetch(`Requisicoes_Itens/${itemJoinId}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ "Observacao": newObs })
-    });
-    hideLoadingOverlay();
-
-    if (result) {
-        // 1. Atualiza o array de dados local
-        const itemInLocalData = requisicoesItensData.find(item => item.Id === itemJoinId);
-        if (itemInLocalData) {
-            itemInLocalData.Observacao = newObs;
-        }
-
-        // 2. Atualiza a UI diretamente no modal aberto
-        // (Isso é mais eficiente do que recarregar tudo)
-        const requisicaoId = document.querySelector('#modal-content [data-id]')?.closest('.page')?.dataset.id || activeDeleteItem.id;
-
-        // Fecha e reabre o modal para reconstruir com os dados atualizados
-        hideModal(allElements.detailsModal);
-        const requisicaoParaAbrir = requisicoesData.find(r => r.Id == requisicaoId);
-        if (requisicaoParaAbrir) {
-             // Simula o clique no botão para reabrir o modal
-            const fakeButton = document.createElement('button');
-            fakeButton.dataset.type = 'requisicao';
-            const fakeRow = document.createElement('tr');
-            fakeRow.dataset.id = requisicaoId;
-            fakeRow.appendChild(fakeButton);
-            openDetailsModalForRow(fakeButton);
-        }
-
-    } else {
-        alert('Falha ao atualizar a observação.');
-    }
-}
    async function handleDeleteItemFromRequisition(itemJoinId, requisicaoId) {
         if (confirm('Tem certeza que deseja remover este item da requisição?')) {
             showLoadingOverlay('Removendo item...');
@@ -3715,15 +3669,16 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
     function populateSelectWithOptions(sel, data, valF, textF, addAll=true) { const selects=document.querySelectorAll(sel); let opts=addAll?'<option value="">Todos</option>':'<option value="">Selecione...</option>'; data.forEach(i=>{opts+=`<option value="${i[valF]}">${i[textF]}</option>`;}); selects.forEach(s=>{const curVal=s.value; s.innerHTML=opts; s.value=curVal;});}
     function populateConsultantSelects() { populateSelectWithOptions('.consultor-select', consultoresData, 'Id', 'Nome', false); }
     function populateClientSelects() { populateSelectWithOptions('.cliente-select', clientesData, 'Id', 'Nome', false); }
-    function handleGlobalClick(e) { 
+    
+function handleGlobalClick(e) { 
     const t = e.target; 
-    const consultorEditBtn = t.closest('.consultor-edit-btn');
+ const consultorEditBtn = t.closest('.consultor-edit-btn');
     if (consultorEditBtn) {
         e.preventDefault();
         e.stopPropagation();
         const card = consultorEditBtn.closest('.rh-card');
         activeCard = card;
-        handleCardEdit();
+        handleCardEdit(); // A função de edição já sabe lidar com cards de consultor
         return;
     }
 
@@ -3736,33 +3691,40 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
         showModal(allElements.deleteConfirmModal);
         return;
     }
-    
+    // --- INÍCIO DA CORREÇÃO ---
+    // Adiciona a lógica para os botões dentro dos modais de documento
+
+    // Botão para fechar o modal principal de documentos
     if (t.closest('#close-cliente-docs-modal')) {
         hideModal(document.getElementById('cliente-docs-modal'));
         return;
     }
 
+    // Botão "Adicionar Documento" que abre o segundo modal (formulário)
     if (t.closest('#show-doc-form-btn')) {
         const clientId = t.closest('#show-doc-form-btn').dataset.clientId;
-        openDocFormModal(clientId, null);
+        openDocFormModal(clientId, null); // Abre o formulário em modo de criação
         return;
     }
 
+    // Botão para cancelar e fechar o modal de formulário
     if (t.closest('#cancel-doc-form')) {
         hideModal(document.getElementById('doc-form-modal'));
         return;
     }
     
+    // Botão para editar um documento existente na lista
     const docEditBtn = t.closest('.doc-edit-btn');
     if (docEditBtn) {
         const docId = docEditBtn.dataset.docId;
         const doc = clienteDocsData.find(d => d.Id == docId);
         if (doc) {
-            openDocFormModal(doc.Clientes_id, doc);
+            openDocFormModal(doc.Clientes_id, doc); // Abre o formulário em modo de edição
         }
         return;
     }
     
+    // Botão para apagar um documento da lista
     const docDeleteBtn = t.closest('.doc-delete-btn');
     if (docDeleteBtn) {
         const docId = docDeleteBtn.dataset.docId;
@@ -3771,6 +3733,8 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
         showModal(allElements.deleteConfirmModal);
         return;
     }
+    // --- FIM DA CORREÇÃO ---
+
 
     const docsBtn = t.closest('.client-docs-btn');
     if (docsBtn) {
@@ -3799,233 +3763,104 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
         showModal(allElements.deleteConfirmModal);
         return;
     }
-
-    const modalFilterBtn = t.closest('.item-modal-category-filter-btn');
+         const modalFilterBtn = t.closest('.item-modal-category-filter-btn');
     if (modalFilterBtn) {
         const category = modalFilterBtn.dataset.category;
+        // Atualiza a classe 'ativa'
         document.querySelectorAll('.item-modal-category-filter-btn').forEach(b => b.classList.remove('filter-btn-active'));
         modalFilterBtn.classList.add('filter-btn-active');
+        // Re-renderiza a grade de itens com a categoria selecionada
         renderModalCatalogoGrid(category);
-        return;
+        return; // Impede que o resto da função execute
     }
+        if (t.closest('#incluir-item-btn')) {
+            const selectedItemCard = document.querySelector('.item-catalogo-card.border-brand-gold');
+            if (!selectedItemCard) {
+                alert('Por favor, selecione um item do catálogo.');
+                return;
+            }
+            const itemId = selectedItemCard.dataset.itemId;
+            const item = allItems.find(i => i.Id == itemId);
+            const quantidade = parseInt(document.getElementById('requisicao-item-qtd').value);
 
-    if (t.closest('#incluir-item-btn')) {
-        const selectedItemCard = document.querySelector('.item-catalogo-card.border-brand-gold');
-        if (!selectedItemCard) {
-            alert('Por favor, selecione um item do catálogo.');
+            if (item && quantidade > 0) {
+                itemsParaAdicionar.push({ itemId: item.Id, itemName: item.Nome, quantidade: quantidade });
+                renderItemsParaAdicionarList();
+                // Limpa a seleção para o próximo item
+                selectedItemCard.classList.remove('border-brand-gold', 'border-2');
+                document.getElementById('requisicao-item-qtd').value = 1;
+            }
             return;
         }
-        const itemId = selectedItemCard.dataset.itemId;
-        const item = allItems.find(i => i.Id == itemId);
-        const quantidade = parseInt(document.getElementById('requisicao-item-qtd').value);
-        const observacao = document.getElementById('requisicao-item-obs').value;
 
-        if (item && quantidade > 0) {
-            itemsParaAdicionar.push({ itemId: item.Id, itemName: item.Nome, quantidade: quantidade, observacao: observacao });
+        if (t.closest('.remover-item-temp-btn')) {
+            const indexToRemove = parseInt(t.closest('.remover-item-temp-btn').dataset.index);
+            itemsParaAdicionar.splice(indexToRemove, 1);
             renderItemsParaAdicionarList();
-            selectedItemCard.classList.remove('border-brand-gold', 'border-2');
-            document.getElementById('requisicao-item-qtd').value = 1;
-            document.getElementById('requisicao-item-obs').value = '';
+            return;
         }
-        return;
-    }
 
-    if (t.closest('.remover-item-temp-btn')) {
-        const indexToRemove = parseInt(t.closest('.remover-item-temp-btn').dataset.index);
-        itemsParaAdicionar.splice(indexToRemove, 1);
-        renderItemsParaAdicionarList();
-        return;
-    }
-
-    if (t.closest('#salvar-conteudo-requisicao-btn')) {
-        handleSaveRequisitionItems();
-        return;
-    }
-
-    const clienteStatusBtn = t.closest('.cliente-status-filter-btn');
-    if (clienteStatusBtn) {
-        document.querySelectorAll('.cliente-status-filter-btn').forEach(b => b.classList.remove('filter-btn-active'));
-        clienteStatusBtn.classList.add('filter-btn-active');
-        applyClienteFilters();
-        return;
-    }
-
-    if (t.closest('.add-content-btn')) {
-        const reqId = t.closest('.add-content-btn').dataset.id;
-        openRequisicaoItemModal(reqId);
-        return;
-    }
-
-    const itemImage = t.closest('.item-card img, .req-form-img');
-    const isActionButton = t.closest('.item-action-btn');
-
-    if (itemImage && !isActionButton) {
-        e.preventDefault();
-        showImageModal(itemImage.src);
-        return;
-    }
-
-    const kanbanButton = t.closest('.kanban-card .visit-actions button');
-    if(kanbanButton) {
-        const visitId = parseInt(kanbanButton.closest('.kanban-card').dataset.id);
-        if(kanbanButton.classList.contains('iniciar-visita-btn')) { handleStartVisit(visitId); return; }
-        if(kanbanButton.classList.contains('encerrar-visita-btn')) { handleEndVisit(visitId); return; }
-        if(kanbanButton.classList.contains('remarcar-visita-btn')) { handleRescheduleVisit(visitId); return; }
-    }
-
-    const itemActionButton = t.closest('.item-action-btn');
-    if (itemActionButton) {
-        const card = itemActionButton.closest('.item-card');
-        const itemId = parseInt(card.dataset.id);
-        const itemCategory = card.dataset.category;
-        const item = allItems.find(i => i.Id === itemId);
-
-        if (itemActionButton.classList.contains('edit-item-btn')) {
-            openItemModal(itemCategory, item);
-        } else if (itemActionButton.classList.contains('delete-item-btn')) {
-            activeDeleteItem = { id: itemId, type: 'item_catalogo', element: card };
-            showModal(allElements.deleteConfirmModal);
+        if (t.closest('#salvar-conteudo-requisicao-btn')) {
+            handleSaveRequisitionItems();
+            return;
         }
-        return;
-    }
-
-    const nL=t.closest('.nav-link'); if(nL){e.preventDefault(); handleNavClick({currentTarget:nL}); return;} 
-    const rhC=t.closest('.rh-card'); if(rhC&&!t.closest('a')){openDetailsModal(rhC); return;} 
-    const clC=t.closest('.cliente-card'); if(clC&&!t.closest('a')){openDetailsModal(clC); return;} 
-    const btn=t.closest('button'); if(!btn)return; 
-    
-    if(btn.classList.contains('toggle-recorrente-btn')) { 
-        handleToggleRecorrente(btn);
-        return;
-    }
-    if(btn.classList.contains('toggle-receita-recorrente-btn')) {
-        handleToggleReceitaRecorrente(btn);
-        return;
-    }
-
-    if(btn.classList.contains('view-toggle-btn')){handleViewToggle({currentTarget:btn});return;} 
-    if(btn.classList.contains('dashboard-nav-btn')){handleDashboardNav(btn);return;}
-    if(btn.classList.contains('cancel-sub-form')){ hideSubFormToggle(btn.dataset.history, btn.dataset.form); return; }
-    if(btn.classList.contains('item-category-filter-btn')){ handleCategoryFilterClick(btn); return; }
-    if (btn.classList.contains('add-item-btn')) { openItemModal(btn.dataset.category); return; }
-    if(btn.classList.contains('change-status-btn')) { handleChangeRequisitionStatus(btn); return; }
-
-    const aM={
-        'logout-button':()=>showModal(allElements.logoutConfirmModal),'cancel-logout-btn':()=>hideModal(allElements.logoutConfirmModal),'confirm-logout-btn':()=>{sessionStorage.clear(); location.reload();},
-        'sidebar-toggle':toggleMobileSidebar,'show-insights-btn':()=>{generateInsights(); showModal(allElements.insightsModal);},'close-insights-modal':()=>hideModal(allElements.insightsModal),
-        'show-report-modal-btn': openReportModal,'close-report-modal':()=>hideModal(allElements.reportModal),
-        'show-rh-form':()=>setupFormToggle('rh-cards-container','rh-form-container'),'cancel-rh-form':()=>hideFormToggle('rh-cards-container','rh-form-container'),
-        'show-cliente-form':()=>setupFormToggle('cliente-cards-container','cliente-form-container'),'cancel-cliente-form':()=>hideFormToggle('cliente-cards-container','cliente-form-container'),
-        'show-visita-form':()=>openVisitaModal(),
-        'generate-agenda-btn': generateAgendaPdf,
-        'cancel-visita-form':()=>hideModal(allElements.visitaFormModal),
-        'show-requisicao-form': handleCreateNewRequisition,
-        'cancel-requisicao-item-form': () => hideModal(allElements.requisicaoItemFormModal),
-        'show-new-item-btn': () => openItemModal(),
-        'show-receita-form':()=>setupSubFormToggle('receitas-history-container','receita-form-container'),'cancel-receita-form':()=>hideSubFormToggle('receitas-history-container','receita-form-container'),
-        'show-custo-form':()=>setupSubFormToggle('custos-history-container','custo-form-container'),'cancel-custo-form':()=>hideSubFormToggle('custos-history-container','custo-form-container'),
-        'show-ferias-form': () => setupSubFormToggle('ferias-history-container', 'ferias-form-container'),
-        'show-atestados-form': () => setupSubFormToggle('atestados-history-container', 'atestados-form-container'),
-        'show-epis-form': () => setupSubFormToggle('epis-history-container', 'epis-form-container'),
-        'show-ativos-form': () => setupSubFormToggle('ativos-history-container', 'ativos-form-container'),
-        'cancel-item-form':()=>hideModal(allElements.itemFormModal),'apply-filters-btn':applyFilters,'clear-filters-btn':clearFilters,
-        'apply-req-filters-btn':applyRequisicaoFilters,'clear-req-filters-btn':clearRequisicaoFilters,
-        'delete-btn':()=>{hideModal(allElements.detailsModal); showModal(allElements.deleteConfirmModal);},
-        'cancel-delete-btn':()=>{hideModal(allElements.deleteConfirmModal); if(activeCard||activeTableRow)showModal(allElements.detailsModal); activeDeleteItem={id:null,type:null,element:null};},
-        'edit-btn':handleCardEdit,'close-modal':()=>hideModal(allElements.detailsModal),
-    }; 
-    if(aM[btn.id]){aM[btn.id]();} 
-    
-    if (btn.classList.contains('table-details-btn')) { openDetailsModalForRow(btn); return; }
-    if(btn.classList.contains('table-edit-btn')) { handleTableEdit(btn); return; } 
-    if(btn.classList.contains('table-delete-btn')) { handleTableDelete(btn); return; } 
-    if(btn.classList.contains('rh-tab-btn')||btn.classList.contains('requisicao-tab-btn')||btn.classList.contains('financeiro-tab-btn')||btn.classList.contains('validades-tab-btn')) { handleTabClick(btn); return; }
-}
-    /**
- * Verifica todos os custos recorrentes e gera as próximas faturas se necessário.
- * Esta função "alcança" os meses que podem ter sido perdidos e respeita a desativação da recorrência.
- * Retorna true se algum custo novo foi gerado, senão false.
- */
-async function verificarEGerarCustosRecorrentes() {
-    console.log("Verificando custos recorrentes...");
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0); // Zera a hora para comparações de dias
-
-    // 1. Agrupa TODOS os custos (recorrentes ou não) por uma chave única.
-    // Isso é crucial para encontrar a "ponta da corrente" de cada série.
-    const gruposDeCustos = custosData.reduce((acc, custo) => {
-        const chave = `${custo.Credor}-${custo.Valor}-${custo.Observacao || ''}`;
-        if (!acc[chave]) {
-            acc[chave] = [];
+        const clienteStatusBtn = t.closest('.cliente-status-filter-btn');
+        if (clienteStatusBtn) {
+            document.querySelectorAll('.cliente-status-filter-btn').forEach(b => b.classList.remove('filter-btn-active'));
+            clienteStatusBtn.classList.add('filter-btn-active');
+            applyClienteFilters();
+            return;
         }
-        acc[chave].push(custo);
-        return acc;
-    }, {});
 
-    const promessasDeCriacao = [];
-    let algumCustoCriado = false;
+        if (t.closest('.add-content-btn')) {
+            const reqId = t.closest('.add-content-btn').dataset.id;
+            openRequisicaoItemModal(reqId);
+            return;
+        }
 
-    // 2. Itera sobre cada grupo de custos
-    for (const chave in gruposDeCustos) {
-        const grupo = gruposDeCustos[chave];
-        
-        // Encontra o custo mais recente dentro do grupo (a "ponta da corrente")
-        let ultimoCustoNaSerie = grupo.sort((a, b) => new Date(b.Vencimento) - new Date(a.Vencimento))[0];
-        
-        // 3. VERIFICAÇÃO PRINCIPAL: Só continua se o ÚLTIMO custo da série estiver marcado como recorrente.
-        if (ultimoCustoNaSerie && ultimoCustoNaSerie.Recorrente) {
-            
-            // 4. Loop "Catch-up": Gera custos faltantes até que o último gerado seja futuro.
-            // A lógica aqui dentro permanece a mesma de antes.
-            while (new Date(ultimoCustoNaSerie.Vencimento + 'T00:00:00') < hoje) {
-                algumCustoCriado = true;
-                
-                const vencimentoAnterior = new Date(ultimoCustoNaSerie.Vencimento + 'T00:00:00');
-                const proximoVencimento = new Date(vencimentoAnterior.setMonth(vencimentoAnterior.getMonth() + 1));
-                const proximoVencimentoString = proximoVencimento.toISOString().slice(0, 10);
+        const itemImage = t.closest('.item-card img, .req-form-img');
+        const isActionButton = t.closest('.item-action-btn');
 
-                const novoCustoBody = {
-                    Credor: ultimoCustoNaSerie.Credor,
-                    Vencimento: proximoVencimentoString,
-                    Valor: ultimoCustoNaSerie.Valor,
-                    Status: "Pendente",
-                    Observacao: ultimoCustoNaSerie.Observacao,
-                    Recorrente: true
-                };
+        if (itemImage && !isActionButton) {
+            e.preventDefault();
+            showImageModal(itemImage.src);
+            return;
+        }
 
-                console.log(`Gerando custo faltante para ${novoCustoBody.Credor} em ${novoCustoBody.Vencimento}`);
-                
-                promessasDeCriacao.push(
-                    nocoFetch('Custos', {
-                        method: 'POST',
-                        body: JSON.stringify(novoCustoBody)
-                    })
-                );
-                
-                // Atualiza 'ultimoCustoNaSerie' para a próxima iteração do loop
-                ultimoCustoNaSerie = novoCustoBody;
+        const kanbanButton = t.closest('.kanban-card .visit-actions button');
+        if(kanbanButton) {
+            const visitId = parseInt(kanbanButton.closest('.kanban-card').dataset.id);
+            if(kanbanButton.classList.contains('iniciar-visita-btn')) { handleStartVisit(visitId); return; }
+            if(kanbanButton.classList.contains('encerrar-visita-btn')) { handleEndVisit(visitId); return; }
+            if(kanbanButton.classList.contains('remarcar-visita-btn')) { handleRescheduleVisit(visitId); return; }
+        }
+
+        const itemActionButton = t.closest('.item-action-btn');
+        if (itemActionButton) {
+            const card = itemActionButton.closest('.item-card');
+            const itemId = parseInt(card.dataset.id);
+            const itemCategory = card.dataset.category;
+            const item = allItems.find(i => i.Id === itemId);
+
+            if (itemActionButton.classList.contains('edit-item-btn')) {
+                openItemModal(itemCategory, item);
+            } else if (itemActionButton.classList.contains('delete-item-btn')) {
+                activeDeleteItem = { id: itemId, type: 'item_catalogo', element: card };
+                showModal(allElements.deleteConfirmModal);
             }
+            return;
         }
-    }
 
-    // 5. Executa todas as criações de uma vez, se houver alguma.
-    if (promessasDeCriacao.length > 0) {
-        showLoadingOverlay(`Gerando ${promessasDeCriacao.length} custo(s) recorrente(s)...`);
-        await Promise.all(promessasDeCriacao);
-        hideLoadingOverlay();
-    }
-    
-    return algumCustoCriado;
-}
-
- /**
- * Gera APENAS o próximo custo recorrente, se ele ainda não existir.
- * Usado para feedback imediato ao criar ou ativar a recorrência.
- */
-/**
- * Gera o custo recorrente para o próximo mês, se ele ainda não existir.
- * @param {object} custoOriginal - O objeto do custo que foi marcado como recorrente.
- */
+        const nL=t.closest('.nav-link'); if(nL){e.preventDefault(); handleNavClick({currentTarget:nL}); return;} 
+        const rhC=t.closest('.rh-card'); if(rhC&&!t.closest('a')){openDetailsModal(rhC); return;} 
+        const clC=t.closest('.cliente-card'); if(clC&&!t.closest('a')){openDetailsModal(clC); return;} 
+        const btn=t.closest('button'); if(!btn)return; 
+        if(btn.classList.contains('view-toggle-btn')){handleViewToggle({currentTarget:btn});return;} 
+        if(btn.classList.contains('dashboard-nav-btn')){handleDashboardNav(btn);return;}
+        if(btn.classList.contains('cancel-sub-form')){ hideSubFormToggle(btn.dataset.history, btn.dataset.form); return; }
+        if(btn.classList.contains('item-category-filter-btn')){ handleCategoryFilterClick(btn); return; }
+        if (btn.classList.contains('add-item-btn')) { openItemModal(btn.dataset.category); return; }
+        if(btn.classList.contains('change-status-btn')) { handleChangeRequisitionStatus(btn); return; }
 async function handleSaveRequisitionItems() {
     const requisicaoId = document.getElementById('requisicao-item-form-modal').dataset.requisicaoId;
     if (!requisicaoId || itemsParaAdicionar.length === 0) {
@@ -4040,8 +3875,7 @@ async function handleSaveRequisitionItems() {
         const body = {
             "Requisicoes": { "Id": parseInt(requisicaoId) },
             "Itens_Catalogo": { "Id": parseInt(item.itemId) },
-            "Quantidade": item.quantidade,
-            "Observacao": item.observacao // <-- CAMPO ADICIONADO AQUI
+            "Quantidade": item.quantidade
         };
         return nocoFetch('Requisicoes_Itens', { method: 'POST', body: JSON.stringify(body) });
     });
@@ -4065,153 +3899,38 @@ async function handleSaveRequisitionItems() {
         console.error('Erro ao salvar itens da requisição:', error);
     }
 }
-/**
- * Gera APENAS o próximo custo recorrente, se ele ainda não existir.
- * Usado para feedback imediato ao criar ou ativar a recorrência.
- */
-/**
- * Gera APENAS a próxima receita recorrente, se ela ainda não existir.
- */
-async function gerarProximaReceitaRecorrente(receitaOriginal) {
-    if (!receitaOriginal.Recorrente || !receitaOriginal.Clientes?.Id) return;
-
-    const vencimentoOriginal = new Date(receitaOriginal.Vencimento + 'T00:00:00');
-    const proximoVencimento = new Date(vencimentoOriginal);
-    proximoVencimento.setMonth(proximoVencimento.getMonth() + 1);
-    const proximoVencimentoString = proximoVencimento.toISOString().slice(0, 10);
-
-    const receitaExistente = receitasData.find(r => 
-        r.Clientes?.Id == receitaOriginal.Clientes.Id &&
-        r.Valor == receitaOriginal.Valor &&
-        r.Vencimento === proximoVencimentoString
-    );
-
-    if (receitaExistente) {
-        console.log('Receita recorrente para o próximo mês já existe.');
-        return;
-    }
-
-    const novaReceitaBody = {
-        Clientes_id: receitaOriginal.Clientes.Id, // Chave estrangeira
-        Vencimento: proximoVencimentoString,
-        Valor: receitaOriginal.Valor,
-        Status: "Pendente",
-        Observacao: receitaOriginal.Observacao,
-        Recorrente: true
-    };
-    
-    await nocoFetch('Receitas', {
-        method: 'POST',
-        body: JSON.stringify(novaReceitaBody)
-    });
-}
-
-
-/**
- * Verifica todas as receitas recorrentes e gera as próximas faturas se necessário.
- */
-async function verificarEGerarReceitasRecorrentes() {
-    console.log("Verificando receitas recorrentes...");
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-
-    const gruposDeReceitas = receitasData.reduce((acc, receita) => {
-        // A chave de agrupamento usa o ID do cliente para garantir a precisão
-        const chave = `${receita.Clientes?.Id}-${receita.Valor}-${receita.Observacao || ''}`;
-        if (!acc[chave]) {
-            acc[chave] = [];
-        }
-        acc[chave].push(receita);
-        return acc;
-    }, {});
-
-    const promessasDeCriacao = [];
-    let algumaReceitaCriada = false;
-
-    for (const chave in gruposDeReceitas) {
-        const grupo = gruposDeReceitas[chave];
-        let ultimaReceitaNaSerie = grupo.sort((a, b) => new Date(b.Vencimento) - new Date(a.Vencimento))[0];
+        const aM={
+            'logout-button':()=>showModal(allElements.logoutConfirmModal),'cancel-logout-btn':()=>hideModal(allElements.logoutConfirmModal),'confirm-logout-btn':()=>{sessionStorage.clear(); location.reload();},
+            'sidebar-toggle':toggleMobileSidebar,'show-insights-btn':()=>{generateInsights(); showModal(allElements.insightsModal);},'close-insights-modal':()=>hideModal(allElements.insightsModal),
+            'show-report-modal-btn': openReportModal,'close-report-modal':()=>hideModal(allElements.reportModal),
+            'show-rh-form':()=>setupFormToggle('rh-cards-container','rh-form-container'),'cancel-rh-form':()=>hideFormToggle('rh-cards-container','rh-form-container'),
+            'show-cliente-form':()=>setupFormToggle('cliente-cards-container','cliente-form-container'),'cancel-cliente-form':()=>hideFormToggle('cliente-cards-container','cliente-form-container'),
+            'show-visita-form':()=>openVisitaModal(),
+            'generate-agenda-btn': generateAgendaPdf,
+            'cancel-visita-form':()=>hideModal(allElements.visitaFormModal),
+            'show-requisicao-form': handleCreateNewRequisition,
+            'cancel-requisicao-item-form': () => hideModal(allElements.requisicaoItemFormModal),
+            'show-new-item-btn': () => openItemModal(),
+            'show-receita-form':()=>setupSubFormToggle('receitas-history-container','receita-form-container'),'cancel-receita-form':()=>hideSubFormToggle('receitas-history-container','receita-form-container'),
+            'show-custo-form':()=>setupSubFormToggle('custos-history-container','custo-form-container'),'cancel-custo-form':()=>hideSubFormToggle('custos-history-container','custo-form-container'),
+            'show-ferias-form': () => setupSubFormToggle('ferias-history-container', 'ferias-form-container'),
+            'show-atestados-form': () => setupSubFormToggle('atestados-history-container', 'atestados-form-container'),
+            'show-epis-form': () => setupSubFormToggle('epis-history-container', 'epis-form-container'),
+            'show-ativos-form': () => setupSubFormToggle('ativos-history-container', 'ativos-form-container'),
+            'cancel-item-form':()=>hideModal(allElements.itemFormModal),'apply-filters-btn':applyFilters,'clear-filters-btn':clearFilters,
+            'apply-req-filters-btn':applyRequisicaoFilters,'clear-req-filters-btn':clearRequisicaoFilters,
+            'delete-btn':()=>{hideModal(allElements.detailsModal); showModal(allElements.deleteConfirmModal);},
+            'cancel-delete-btn':()=>{hideModal(allElements.deleteConfirmModal); if(activeCard||activeTableRow)showModal(allElements.detailsModal); activeDeleteItem={id:null,type:null,element:null};},
+            'edit-btn':handleCardEdit,'close-modal':()=>hideModal(allElements.detailsModal),
+        }; 
+        if(aM[btn.id]){aM[btn.id](); return;} 
         
-        // Só continua se a última receita da série for recorrente e tiver um cliente associado
-        if (ultimaReceitaNaSerie && ultimaReceitaNaSerie.Recorrente && ultimaReceitaNaSerie.Clientes?.Id) {
-            
-            while (new Date(ultimaReceitaNaSerie.Vencimento + 'T00:00:00') < hoje) {
-                algumaReceitaCriada = true;
-                
-                const vencimentoAnterior = new Date(ultimaReceitaNaSerie.Vencimento + 'T00:00:00');
-                const proximoVencimento = new Date(vencimentoAnterior.setMonth(vencimentoAnterior.getMonth() + 1));
-                const proximoVencimentoString = proximoVencimento.toISOString().slice(0, 10);
-
-                const novaReceitaBody = {
-                    Clientes_id: ultimaReceitaNaSerie.Clientes.Id,
-                    Vencimento: proximoVencimentoString,
-                    Valor: ultimaReceitaNaSerie.Valor,
-                    Status: "Pendente",
-                    Observacao: ultimaReceitaNaSerie.Observacao,
-                    Recorrente: true
-                };
-
-                console.log(`Gerando receita faltante para ${ultimaReceitaNaSerie.Clientes.Nome} em ${novaReceitaBody.Vencimento}`);
-                
-                promessasDeCriacao.push(
-                    nocoFetch('Receitas', {
-                        method: 'POST',
-                        body: JSON.stringify(novaReceitaBody)
-                    })
-                );
-                
-                // Atualiza a 'ultimaReceitaNaSerie' para a próxima iteração do loop
-                ultimaReceitaNaSerie = { ...novaReceitaBody, Clientes: ultimaReceitaNaSerie.Clientes }; // Mantém o objeto do cliente
-            }
-        }
-    }
-
-    if (promessasDeCriacao.length > 0) {
-        showLoadingOverlay(`Gerando ${promessasDeCriacao.length} receita(s) recorrente(s)...`);
-        await Promise.all(promessasDeCriacao);
-        hideLoadingOverlay();
-    }
-    
-    return algumaReceitaCriada;
+        if (btn.classList.contains('table-details-btn')) openDetailsModalForRow(btn);
+        else if(btn.classList.contains('table-edit-btn'))handleTableEdit(btn); 
+        else if(btn.classList.contains('table-delete-btn'))handleTableDelete(btn); 
+        else if(btn.classList.contains('rh-tab-btn')||btn.classList.contains('requisicao-tab-btn')||btn.classList.contains('financeiro-tab-btn')||btn.classList.contains('validades-tab-btn'))handleTabClick(btn);
 }
-
-async function gerarProximoCustoRecorrente(custoOriginal) {
-    if (!custoOriginal.Recorrente) return;
-
-    // Calcula a data do próximo mês
-    const vencimentoOriginal = new Date(custoOriginal.Vencimento + 'T00:00:00');
-    const proximoVencimento = new Date(vencimentoOriginal);
-    proximoVencimento.setMonth(proximoVencimento.getMonth() + 1);
-    const proximoVencimentoString = proximoVencimento.toISOString().slice(0, 10);
-
-    // Verifica se um custo com as mesmas características já existe para o próximo mês
-    const custoExistente = custosData.find(c => 
-        c.Credor === custoOriginal.Credor &&
-        c.Valor == custoOriginal.Valor && // Usar '==' para comparar número com string se necessário
-        c.Vencimento === proximoVencimentoString
-    );
-
-    if (custoExistente) {
-        console.log('Custo recorrente para o próximo mês já existe. Nenhuma ação necessária.');
-        return; // Não faz nada se já existir
-    }
-
-    // Monta o corpo da requisição para o novo custo
-    const novoCustoBody = {
-        Credor: custoOriginal.Credor,
-        Vencimento: proximoVencimentoString,
-        Valor: custoOriginal.Valor,
-        Status: "Pendente",
-        Observacao: custoOriginal.Observacao,
-        Recorrente: true
-    };
     
-    // Envia a requisição para criar o novo custo
-    await nocoFetch('Custos', {
-        method: 'POST',
-        body: JSON.stringify(novoCustoBody)
-    });
-}
     function navigateTo(targetId, isInitial = false) { allElements.pages.forEach(page => page.classList.add('hidden')); const targetPage = document.getElementById(targetId); if (targetPage) { targetPage.classList.remove('hidden'); if (targetId === 'visitas' && calendar) setTimeout(() => calendar.render(), 1); if (targetId === 'dashboard') setTimeout(() => updateAllDashboards(), 1); } const navLink = document.querySelector(`.nav-link[data-target="${targetId}"]`); if (navLink) { document.querySelectorAll('.nav-link').forEach(l => { l.classList.remove('bg-brand-gold', 'text-white'); l.classList.add('text-gray-400', 'hover:bg-brand-gold', 'hover:text-white'); }); navLink.classList.add('bg-brand-gold', 'text-white'); navLink.classList.remove('text-gray-400'); if (document.getElementById('page-title')) document.getElementById('page-title').textContent = navLink.title; } }
     function handleNavClick(e) {
     const navLink = e.currentTarget;
@@ -4376,23 +4095,8 @@ function handleTableEdit(btn) {
     const type = btn.dataset.type;
     switch (type) {
         case 'visita': { const v = visitsData.find(d => d.Id === id); if (v) openVisitaModal(v); break; }
-        case 'receita': { const r = receitasData.find(d => d.Id === id); if (r) { setupSubFormToggle('receitas-history-container', 'receita-form-container'); const f = document.getElementById('receita-form'); f.dataset.id = r.Id; f.querySelector('#receita-cliente-form').value = r.Clientes?.Id; f.querySelector('#receita-vencimento').value = r.Vencimento; f.querySelector('#receita-valor').value = r.Valor; f.querySelector('#receita-status-form').value = r.Status; f.querySelector('#receita-obs').value = r.Observacao || ''; f.querySelector('#receita-recorrente-form').checked = r.Recorrente; } break; }
-       case 'custo': { 
-    const c = custosData.find(d => d.Id === id); 
-    if (c) { 
-        setupSubFormToggle('custos-history-container', 'custo-form-container'); 
-        const f = document.getElementById('custo-form'); 
-        f.dataset.id = c.Id; 
-        f.querySelector('#custo-credor').value = c.Credor; 
-        f.querySelector('#custo-vencimento').value = c.Vencimento; 
-        f.querySelector('#custo-valor').value = c.Valor; 
-        f.querySelector('#custo-status-form').value = c.Status; 
-        f.querySelector('#custo-obs').value = c.Observacao || ''; 
-        // --- CÓDIGO NOVO ---
-        f.querySelector('#custo-recorrente-form').checked = c.Recorrente;
-    } 
-    break; 
-}
+        case 'receita': { const r = receitasData.find(d => d.Id === id); if (r) { setupSubFormToggle('receitas-history-container', 'receita-form-container'); const f = document.getElementById('receita-form'); f.dataset.id = r.Id; f.querySelector('#receita-cliente-form').value = r.Clientes?.Id; f.querySelector('#receita-vencimento').value = r.Vencimento; f.querySelector('#receita-valor').value = r.Valor; f.querySelector('#receita-status-form').value = r.Status; f.querySelector('#receita-obs').value = r.Observacao || ''; } break; }
+        case 'custo': { const c = custosData.find(d => d.Id === id); if (c) { setupSubFormToggle('custos-history-container', 'custo-form-container'); const f = document.getElementById('custo-form'); f.dataset.id = c.Id; f.querySelector('#custo-credor').value = c.Credor; f.querySelector('#custo-vencimento').value = c.Vencimento; f.querySelector('#custo-valor').value = c.Valor; f.querySelector('#custo-status-form').value = c.Status; f.querySelector('#custo-obs').value = c.Observacao || ''; } break; }
         case 'validade': { 
     const v = validadesData.find(d => d.Id === id); 
     if (v) { 
@@ -4509,7 +4213,7 @@ const openDetailsModal = (card) => {
             return '';
         }
 
-        const adminOnlyFields = ['horascontratadas', 'cpfresponsavel', 'receitasdocliente', 'visitasdocliente', 'valor', 'categoria'];
+        const adminOnlyFields = ['horascontratadas', 'cpfresponsavel', 'receitasdocliente', 'visitasdocliente', 'valor'];
         if (adminOnlyFields.includes(keyLower) && (!loggedInUser || loggedInUser.Role !== 'Admin')) {
             return '';
         }
@@ -4529,19 +4233,15 @@ const openDetailsModal = (card) => {
         const statusFilterBtn = document.querySelector('#cliente-status-filters .filter-btn-active');
         const statusFilter = statusFilterBtn ? statusFilterBtn.dataset.status : 'Todos';
 
-        const categoryFilterBtn = document.querySelector('#cliente-category-filters .filter-btn-active');
-        const categoryFilter = categoryFilterBtn ? categoryFilterBtn.dataset.category : 'Todos'; 
-        
         const filteredData = clientesData.filter(cliente => {
             const nameMatch = cliente.Nome.toLowerCase().includes(searchTerm);
-            const statusMatch = (statusFilter === 'Todos') || (cliente.Status === statusFilter);            
-            const categoryMatch = (categoryFilter === 'Todos') || (cliente.Categoria === categoryFilter);
-            return nameMatch && statusMatch && categoryMatch;            
+            const statusMatch = (statusFilter === 'Todos') || (cliente.Status === statusFilter);
+            return nameMatch && statusMatch;
         });
 
         renderClientes(filteredData);
     }
-    function openDetailsModalForRow(btn) {
+function openDetailsModalForRow(btn) {
     const dataContainer = btn.closest('[data-id]');
     if (!dataContainer) return;
 
@@ -4596,15 +4296,9 @@ const openDetailsModal = (card) => {
                 const itemFotoUrl = itemInfo?.Foto?.[0]?.signedPath ? `${NocoDB_BaseURL}/${itemInfo.Foto[0].signedPath}` : 'https://placehold.co/80x80/e2e8f0/cbd5e0?text=Item';
                 const safeItemName = itemName.replace(/'/g, "\\'").replace(/"/g, "&quot;");
                 
-                const safeObservacao = (itemJoin.Observacao || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
-                const observacaoRowHTML = itemJoin.Observacao 
-                    ? `<tr class="bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-700"><td colspan="${showActions ? 4 : 3}" class="px-6 py-2 text-xs text-gray-500 dark:text-gray-400 italic"><strong>Obs:</strong> ${itemJoin.Observacao}</td></tr>` 
-                    : '';
-
                 const actionsCell = showActions ? `
                     <td class="px-6 py-4 text-center space-x-3">
                         <button onclick="handleEditItemQuantity(${itemJoin.Id}, ${itemJoin.Quantidade}, '${safeItemName}', ${id})" class="text-blue-500 hover:text-blue-700" title="Editar Quantidade"><i class="fas fa-edit"></i></button>
-                        <button onclick="handleEditItemObservation(${itemJoin.Id}, '${safeObservacao}')" class="text-purple-500 hover:text-purple-700" title="Editar Observação"><i class="fas fa-comment-alt"></i></button>
                         <button onclick="handleDeleteItemFromRequisition(${itemJoin.Id}, ${id})" class="text-red-500 hover:text-red-700" title="Apagar Item"><i class="fas fa-trash"></i></button>
                     </td>` : '';
 
@@ -4616,8 +4310,7 @@ const openDetailsModal = (card) => {
                         <td class="px-6 py-4 font-medium text-gray-900 dark:text-white whitespace-nowrap">${itemName}</td>
                         <td class="px-6 py-4 text-center" id="item-qty-table-${itemJoin.Id}">${itemJoin.Quantidade}</td>
                         ${actionsCell}
-                    </tr>
-                    ${observacaoRowHTML}`;
+                    </tr>`;
             });
         } else {
             const colspan = showActions ? 4 : 3;
@@ -4646,13 +4339,10 @@ const openDetailsModal = (card) => {
                 const itemName = itemInfo ? itemInfo.Nome : 'Item não encontrado';
                 const itemFotoUrl = itemInfo?.Foto?.[0]?.signedPath ? `${NocoDB_BaseURL}/${itemInfo.Foto[0].signedPath}` : 'https://placehold.co/80x80/e2e8f0/cbd5e0?text=Item';
                 const safeItemName = itemName.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-                const safeObservacao = (itemJoin.Observacao || '').replace(/'/g, "\\'").replace(/"/g, "&quot;");
-                const observacaoCardHTML = itemJoin.Observacao ? `<p class="text-xs text-gray-500 dark:text-gray-400 mt-1" id="item-obs-card-${itemJoin.Id}"><strong>Obs:</strong> ${itemJoin.Observacao}</p>` : `<p class="text-xs text-gray-500 dark:text-gray-400 mt-1 hidden" id="item-obs-card-${itemJoin.Id}"></p>`;
 
                 const actionsButtons = showActions ? `
                     <div class="flex items-center space-x-4">
                         <button onclick="handleEditItemQuantity(${itemJoin.Id}, ${itemJoin.Quantidade}, '${safeItemName}', ${id})" class="text-blue-500 hover:text-blue-700 p-2" title="Editar Quantidade"><i class="fas fa-edit fa-lg"></i></button>
-                        <button onclick="handleEditItemObservation(${itemJoin.Id}, '${safeObservacao}')" class="text-purple-500 hover:text-purple-700 p-2" title="Editar Observação"><i class="fas fa-comment-alt fa-lg"></i></button>
                         <button onclick="handleDeleteItemFromRequisition(${itemJoin.Id}, ${id})" class="text-red-500 hover:text-red-700 p-2" title="Apagar Item"><i class="fas fa-trash fa-lg"></i></button>
                     </div>` : '';
 
@@ -4662,7 +4352,6 @@ const openDetailsModal = (card) => {
                         <div class="flex-grow">
                             <p class="font-semibold text-gray-900 dark:text-white">${itemName}</p>
                             <p class="text-sm text-gray-600 dark:text-gray-400" id="item-qty-card-${itemJoin.Id}">Quantidade: ${itemJoin.Quantidade}</p>
-                            ${observacaoCardHTML}
                         </div>
                         ${actionsButtons}
                     </div>`;
@@ -4794,7 +4483,7 @@ function openClienteDocsModal(clientId) {
     if (!tableHead.innerHTML.includes('Data')) {
         tableHead.innerHTML = `
             <th scope="col" class="px-6 py-3">Documento</th>
-            <th scope="col" class="px-6 py-3">Data de Validade</th>
+            <th scope="col" class="px-6 py-3">Data</th>
             <th scope="col" class="px-6 py-3">Anexo</th>
             <th scope="col" class="px-6 py-3">Ações</th>
         `;
@@ -5193,6 +4882,7 @@ function applyFilters() {
         cl = document.getElementById('filter-cliente').value,
         st = document.getElementById('filter-status').value;
 
+    // A lógica de filtragem inicial permanece a mesma
     let f = visitsData.filter(v =>
         (!s || v.DataVisita >= s) &&
         (!e || v.DataVisita <= e) &&
@@ -5201,28 +4891,32 @@ function applyFilters() {
         (!st || v.Status === st)
     );
 
+    // --- INÍCIO DA ALTERAÇÃO ---
+    // Aplica a regra de visualização por Role
     if (loggedInUser && (loggedInUser.Role === 'Gestor' || loggedInUser.Role === 'Consultor')) {
         const today = new Date();
         const currentYear = today.getFullYear();
         const currentMonth = today.getMonth();
 
         f = f.filter(v => {
+            // Se o status NÃO for 'Concluída', a visita sempre é exibida.
             if (v.Status !== 'Concluída') {
                 return true;
             }
+            // Se for 'Concluída', verifica se é do mês corrente.
             const visitDate = new Date(v.DataVisita + 'T00:00:00');
             return visitDate.getFullYear() === currentYear && visitDate.getMonth() === currentMonth;
         });
     }
-
-    // --- INÍCIO DA ALTERAÇÃO ---
-    // Ordena pela data e hora de início, do mais antigo para o mais novo.
-    f.sort((a, b) => {
-        const dateTimeA = new Date(`${a.DataVisita}T${a.HoraInicio}`);
-        const dateTimeB = new Date(`${b.DataVisita}T${b.HoraInicio}`);
-        return dateTimeA - dateTimeB;
-    });
     // --- FIM DA ALTERAÇÃO ---
+
+    f.sort((a, b) => {
+        const dateComparison = new Date(b.DataVisita) - new Date(a.DataVisita);
+        if (dateComparison !== 0) {
+            return dateComparison;
+        }
+        return a.HoraInicio.localeCompare(b.HoraInicio);
+    });
 
     renderAllVisits(f);
 }
@@ -5511,32 +5205,24 @@ function createKanbanCard(v){
         populateSelectWithOptions('#requisicao-item-catalogo', itemsToPopulate, 'Id', 'Nome', false);
     }
 function renderItemsParaAdicionarList() {
-    const listContainer = document.getElementById('itens-para-adicionar-list');
-    if (!listContainer) return;
+        const listContainer = document.getElementById('itens-para-adicionar-list');
+        if (!listContainer) return;
 
-    if (itemsParaAdicionar.length === 0) {
-        listContainer.innerHTML = '<li class="text-sm text-gray-500 text-center">Nenhum item incluído.</li>';
-        return;
+        if (itemsParaAdicionar.length === 0) {
+            listContainer.innerHTML = '<li class="text-sm text-gray-500 text-center">Nenhum item incluído.</li>';
+            return;
+        }
+
+        listContainer.innerHTML = itemsParaAdicionar.map((item, index) => `
+            <li class="flex justify-between items-center p-2 bg-white dark:bg-gray-800 rounded-md">
+                <span class="text-sm">${item.itemName}</span>
+                <span class="text-sm font-bold">Qtd: ${item.quantidade}</span>
+                <button type="button" class="remover-item-temp-btn text-red-500 hover:text-red-700" data-index="${index}" title="Remover">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+            </li>
+        `).join('');
     }
-
-    listContainer.innerHTML = itemsParaAdicionar.map((item, index) => {
-        const obsHTML = item.observacao ? `<p class="text-xs text-gray-500 dark:text-gray-400 truncate" title="${item.observacao}">Obs: ${item.observacao}</p>` : '';
-
-        return `
-        <li class="p-2 bg-white dark:bg-gray-800 rounded-md border dark:border-gray-600">
-            <div class="flex justify-between items-center">
-                <span class="text-sm font-medium">${item.itemName}</span>
-                <div class="flex items-center space-x-3">
-                    <span class="text-sm font-bold">Qtd: ${item.quantidade}</span>
-                    <button type="button" class="remover-item-temp-btn text-red-500 hover:text-red-700" data-index="${index}" title="Remover">
-                        <i class="fas fa-times-circle"></i>
-                    </button>
-                </div>
-            </div>
-            ${obsHTML}
-        </li>`;
-    }).join('');
-}
 function openRequisicaoItemModal(requisicaoId) {
     itemsParaAdicionar = []; // Limpa a lista temporária
     document.getElementById('requisicao-item-form-modal').dataset.requisicaoId = requisicaoId;
@@ -5856,44 +5542,8 @@ function applyRequisicaoFilters(){
     function applyAndRenderAtestados(){ const nome = document.getElementById('atestados-filter-name').value.toLowerCase(); const inicio = document.getElementById('atestados-filter-start').value; const fim = document.getElementById('atestados-filter-end').value; const filtered = atestadosData.filter(a => (!nome || (a.Consultores?.Nome || '').toLowerCase().includes(nome)) && (!inicio || a.DataInicio >= inicio) && (!fim || a.DataRetorno <= fim) ); renderAtestados(filtered); }
     function applyAndRenderEpis(){ const nome = document.getElementById('epis-filter-name').value.toLowerCase(); const inicio = document.getElementById('epis-filter-start').value; const fim = document.getElementById('epis-filter-end').value; const filtered = episEntreguesData.filter(e => (!nome || (e.Consultores?.Nome || '').toLowerCase().includes(nome)) && (!inicio || e.DataEntrega >= inicio) && (!fim || e.DataEntrega <= fim) ); renderEpis(filtered); }
     function applyAndRenderAtivos(){ const nome = document.getElementById('ativos-filter-name').value.toLowerCase(); const inicio = document.getElementById('ativos-filter-start').value; const fim = document.getElementById('ativos-filter-end').value; const filtered = ativosData.filter(a => (!nome || (a.Consultores?.Nome || '').toLowerCase().includes(nome)) && (!inicio || a.DataEntrega >= inicio) && (!fim || a.DataEntrega <= fim) ); renderAtivos(filtered); }
-    function applyAndRenderReceitas() {
-    const s = document.getElementById('filter-receita-start-date').value;
-    const e = document.getElementById('filter-receita-end-date').value;
-    const c = document.getElementById('filter-receita-cliente').value;
-    const st = document.getElementById('filter-receita-status').value;
-    
-    const f = receitasData.filter(r => 
-        (!s || r.Vencimento >= s) && 
-        (!e || r.Vencimento <= e) && 
-        (!c || r.Clientes?.Id == c) && 
-        (!st || r.Status === st)
-    );
-
-    // --- LINHA ADICIONADA ---
-    // Ordena os resultados pela data de vencimento, do mais antigo para o mais novo.
-    f.sort((a, b) => new Date(a.Vencimento) - new Date(b.Vencimento));
-
-    renderReceitas(f);
-}
-    function applyAndRenderCustos() {
-    const s = document.getElementById('filter-custo-start-date').value;
-    const e = document.getElementById('filter-custo-end-date').value;
-    const cr = document.getElementById('filter-custo-credor').value.toLowerCase();
-    const st = document.getElementById('filter-custo-status').value;
-    
-    const f = custosData.filter(c => 
-        (!s || c.Vencimento >= s) && 
-        (!e || c.Vencimento <= e) && 
-        (!cr || c.Credor.toLowerCase().includes(cr)) && 
-        (!st || c.Status === st)
-    );
-
-    // --- LINHA ADICIONADA ---
-    // Ordena os resultados pela data de vencimento, do mais antigo para o mais novo.
-    f.sort((a, b) => new Date(a.Vencimento) - new Date(b.Vencimento));
-
-    renderCustos(f);
-}
+    function applyAndRenderReceitas(){const s=document.getElementById('filter-receita-start-date').value,e=document.getElementById('filter-receita-end-date').value,c=document.getElementById('filter-receita-cliente').value,st=document.getElementById('filter-receita-status').value; const f=receitasData.filter(r=>(!s||r.Vencimento>=s)&&(!e||r.Vencimento<=e)&&(!c||r.Clientes?.Id==c)&&(!st||r.Status===st)); renderReceitas(f);}
+    function applyAndRenderCustos(){const s=document.getElementById('filter-custo-start-date').value,e=document.getElementById('filter-custo-end-date').value,cr=document.getElementById('filter-custo-credor').value.toLowerCase(),st=document.getElementById('filter-custo-status').value; const f=custosData.filter(c=>(!s||c.Vencimento>=s)&&(!e||c.Vencimento<=e)&&(!cr||c.Credor.toLowerCase().includes(cr))&&(!st||c.Status===st)); renderCustos(f);}
     function applyAndRenderServicos() {
     const startDate = document.getElementById('filter-servico-start-date').value;
     const endDate = document.getElementById('filter-servico-end-date').value;
@@ -6100,13 +5750,6 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
                 applyClienteFilters();
             }
         });
-        document.getElementById('cliente-category-filters')?.addEventListener('click', e => {
-        if(e.target.classList.contains('cliente-category-filter-btn')) {
-            document.querySelectorAll('.cliente-category-filter-btn').forEach(btn => btn.classList.remove('filter-btn-active'));
-            e.target.classList.add('filter-btn-active');
-            applyClienteFilters();
-        }
-    });
         // Cole esta função e o event listener dentro da sua função initializeApp()
 
     function checkCalendarViewOnResize() {
@@ -6131,7 +5774,6 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
     // Adiciona o listener para executar a função sempre que a janela for redimensionada
     window.addEventListener('resize', checkCalendarViewOnResize);
     window.handleEditItemQuantity = handleEditItemQuantity;
-    window.handleEditItemObservation = handleEditItemObservation;
     window.handleDeleteItemFromRequisition = handleDeleteItemFromRequisition;
     window.showImageModal = showImageModal;
 
