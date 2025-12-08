@@ -2474,15 +2474,60 @@ function renderModalCatalogoGrid(category = 'Todos') {
         catalogoContainer.appendChild(card);
     });
 }
+// Função para verificar datas passadas e atualizar o banco de dados para 'Vencido'
+async function verificarEAtualizarVencimentos() {
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0); // Zera hora para comparar apenas datas
+    
+    const updates = [];
+    let contadorUpdates = 0;
+
+    // Percorre todos os dados carregados
+    validadesData.forEach(v => {
+        // Só nos importamos com itens que têm data e estão marcados como 'Vigente'
+        if (v.Validade && v.Status === 'Vigente') {
+            const dataValidade = new Date(v.Validade + 'T00:00:00');
+            
+            // Se a data de validade é menor que hoje (passado)
+            if (dataValidade < hoje) {
+                console.log(`Atualizando ID ${v.Id}: Venceu em ${v.Validade}`);
+                
+                // Prepara a requisição de atualização
+                const updatePromise = nocoFetch(`Validades/${v.Id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ Status: 'Vencido' })
+                }).then(result => {
+                    if(result) {
+                        // Atualiza a memória local para não precisar recarregar a página
+                        v.Status = 'Vencido'; 
+                        contadorUpdates++;
+                    }
+                });
+                
+                updates.push(updatePromise);
+            }
+        }
+    });
+
+    // Se houver atualizações, espera todas terminarem
+    if (updates.length > 0) {
+        showLoadingOverlay(`Atualizando ${updates.length} registros vencidos...`);
+        await Promise.all(updates);
+        hideLoadingOverlay();
+        console.log(`${contadorUpdates} registros foram atualizados para Vencido.`);
+    }
+}
     // --- Funções de Carregamento de Dados (Fetch) ---
 async function fetchAllData() {
     showLoadingOverlay('Carregando dados...');
    
     await Promise.all([ 
         fetchConsultores(), fetchClientes(), fetchCustos(), fetchReceitas(), // Traz Receitas junto com Custos
-        fetchItensCatalogo(), fetchClienteDocs(), fetchReembolsos(), 
+        fetchItensCatalogo(), fetchClienteDocs(), fetchReembolsos(), fetchValidades(),
         fetchValidades(), fetchServicos(), fetchChamados() 
     ]);
+    // Verifica se alguma validade 'Vigente' já expirou e atualiza no banco
+    await verificarEAtualizarVencimentos();
 
     // Verifica e gera custos recorrentes
     const custosForamGerados = await verificarEGerarCustosRecorrentes();
@@ -2490,13 +2535,12 @@ async function fetchAllData() {
         await fetchCustos(); // Recarrega se algo foi criado
     }
 
-    // --- CÓDIGO NOVO ---
     // Verifica e gera receitas recorrentes
     const receitasForamGeradas = await verificarEGerarReceitasRecorrentes();
     if (receitasForamGeradas) {
         await fetchReceitas(); // Recarrega se algo foi criado
     }
-    // --- FIM DO CÓDIGO NOVO ---
+
     
     // Continua carregando o restante dos dados
     await Promise.all([ 
@@ -2563,7 +2607,7 @@ async function fetchAllData() {
     renderCategoryFilters();
     renderItensDeRequisicao();
     applyRequisicaoFilters();
-    
+    applyAndRenderValidades();
     hideLoadingOverlay();
 }
 async function fetchChamados() { 
