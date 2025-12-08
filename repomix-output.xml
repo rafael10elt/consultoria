@@ -1,4 +1,201 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
 
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+images/pontes1.jpeg
+images/pontes2.jpeg
+images/pontes3.jpeg
+images/pontes4.jpeg
+images/pontes5.jpeg
+images/pontes6.jpeg
+images/ponteslogosfundo.png
+images/ponteslogosfundo2.png
+images/ponteslogosfundo3.png
+images/ponteslogosfundo4.png
+index.html
+netlify/functions/api.js
+netlify/functions/upload.js
+package.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="package.json">
+{
+  "name": "consultoria-netlify-functions",
+  "version": "1.0.0",
+  "description": "Dependencies for Netlify Functions",
+  "dependencies": {
+    "axios": "^1.6.2",
+    "form-data": "^4.0.0",
+    "node-fetch": "^2.6.7"
+  }
+}
+</file>
+
+<file path="netlify/functions/upload.js">
+const axios = require('axios');
+const FormData = require('form-data');
+
+exports.handler = async function(event, context) {
+    // 1. Verifica se a requisição é do tipo POST
+    if (event.httpMethod !== 'POST') {
+        return { statusCode: 405, body: 'Method Not Allowed' };
+    }
+
+    try {
+        // 2. Pega os dados enviados pelo frontend (nome do arquivo, tipo, e o arquivo em base64)
+        const { file, fileName, fileType, path } = JSON.parse(event.body);
+
+        // 3. Pega o Token Secreto das variáveis de ambiente da Netlify
+        const NOCODB_API_TOKEN = process.env.NOCODB_API_TOKEN;
+        const NOCODB_BASE_URL = 'https://lumitechia-nocodb.aeenwc.easypanel.host'; // Sua URL base
+
+        // 4. Converte o arquivo de base64 de volta para formato binário (Buffer)
+        const fileBuffer = Buffer.from(file, 'base64');
+
+        // 5. Cria um novo formulário de dados no servidor
+        const form = new FormData();
+        form.append('file', fileBuffer, { filename: fileName, contentType: fileType });
+
+        // 6. Monta a URL de upload do NocoDB
+        const uploadUrl = `${NOCODB_BASE_URL}/api/v1/db/storage/upload?path=${path}`;
+
+        // 7. Envia o arquivo para o NocoDB a partir da função serverless, usando o token secreto
+        const response = await axios.post(uploadUrl, form, {
+            headers: {
+                ...form.getHeaders(),
+                'xc-token': NOCODB_API_TOKEN,
+            },
+        });
+
+        // 8. Retorna a resposta do NocoDB para o frontend
+        return {
+            statusCode: 200,
+            body: JSON.stringify(response.data),
+        };
+
+    } catch (error) {
+        console.error('Erro na função de upload:', error.response ? error.response.data : error.message);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Falha ao processar o upload do arquivo.' }),
+        };
+    }
+};
+</file>
+
+<file path="netlify/functions/api.js">
+// netlify/functions/api.js
+
+const fetch = require('node-fetch');
+
+exports.handler = async function(event, context) {
+    // Pega as variáveis de ambiente seguras
+    const API_URL_BASE = process.env.NOCODB_API_URL;
+    const API_TOKEN = process.env.NOCODB_API_TOKEN;
+
+    // Pega o caminho do endpoint a partir da URL
+    const apiPath = event.path.replace('/.netlify/functions/api/', '');
+
+    // Constrói a string de parâmetros de consulta (query string)
+    const queryString = event.rawQuery ? `?${event.rawQuery}` : '';
+    
+    // Monta a URL final completa, incluindo a base, o caminho e os parâmetros
+    const fullNocoDBUrl = `${API_URL_BASE}/${apiPath}${queryString}`;
+
+    try {
+        const response = await fetch(fullNocoDBUrl, {
+            method: event.httpMethod,
+            headers: {
+                'Content-Type': 'application/json',
+                'xc-token': API_TOKEN,
+            },
+            // Repassa o corpo da requisição apenas se ele existir (para POST, PATCH)
+            body: event.body ? event.body : undefined 
+        });
+
+        // Tenta ler a resposta como JSON. Se falhar (ex: resposta vazia), retorna sucesso.
+        let data;
+        try {
+            data = await response.json();
+        } catch (e) {
+            // Se o corpo da resposta for vazio (comum em DELETE), consideramos sucesso
+            if (response.ok) {
+                return { statusCode: 200, body: JSON.stringify({ success: true }) };
+            }
+            // Se não for OK e não for JSON, é um erro de servidor
+            throw new Error(`Resposta inválida do servidor: ${response.statusText}`);
+        }
+
+        // Se a resposta do NocoDB não for OK, repassa o erro
+        if (!response.ok) {
+            return {
+                statusCode: response.status,
+                body: JSON.stringify(data)
+            };
+        }
+
+        // Se tudo deu certo, retorna os dados
+        return {
+            statusCode: 200,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        };
+
+    } catch (error) {
+        console.error("Erro na função Netlify:", error);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ 
+                error: 'Falha ao processar a requisição na função do servidor.',
+                details: error.message
+            })
+        };
+    }
+};
+</file>
+
+<file path="index.html">
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2846,7 +3043,7 @@ async function fetchReembolsos() {
         newItemButton.style.display = shouldShow ? 'block' : 'none';
     }
 }
-function renderValidades(data = validadesData) {
+    function renderValidades(data = validadesData) {
     const tbody = document.getElementById('validades-table-body');
     const cardsContainer = document.getElementById('validades-cards-container');
     if (!tbody || !cardsContainer) return;
@@ -2864,28 +3061,8 @@ function renderValidades(data = validadesData) {
         }
     };
 
-    // Data de hoje zerada (sem horas) para comparação correta
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-
     data.forEach(v => {
-        // --- INÍCIO DA LÓGICA DE CORREÇÃO ---
-        let displayStatus = v.Status; // Começa com o status do banco
-
-        if (v.Validade) {
-            // Cria a data da validade (adiciona T00:00:00 para evitar problemas de fuso horário)
-            const dataValidade = new Date(v.Validade + 'T00:00:00');
-            
-            // Se a data de validade for menor que hoje E o status não for "ignorado" (Isenção/Não se aplica)
-            // Forçamos o status visual para "Vencido"
-            if (dataValidade < hoje && v.Status !== 'Isenção' && v.Status !== 'Não se aplica') {
-                displayStatus = 'Vencido';
-            }
-        }
-        // --- FIM DA LÓGICA DE CORREÇÃO ---
-
-        const statusClass = getStatusClass(displayStatus); // Usa o status calculado
-        
+        const statusClass = getStatusClass(v.Status);
         const anexoUrl = v.Anexo && v.Anexo[0]?.signedPath ? `${NocoDB_BaseURL}/${v.Anexo[0].signedPath}` : null;
         const anexoIconHTML = anexoUrl
             ? `<a href="${anexoUrl}" target="_blank" class="text-gray-500" title="Ver Anexo"><i class="fas fa-paperclip"></i></a>`
@@ -2904,7 +3081,7 @@ function renderValidades(data = validadesData) {
                 <td class="px-6 py-4">${v.Clientes?.Nome || 'N/A'}</td>
                 <td class="px-6 py-4">${v.Tipo || 'N/A'}</td>
                 <td class="px-6 py-4">${v.Validade ? new Date(v.Validade + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A'}</td>
-                <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${statusClass}">${displayStatus}</span></td>
+                <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${statusClass}">${v.Status}</span></td>
                 <td class="px-6 py-4 space-x-2">${actionsHTML}</td>
             </tr>`;
 
@@ -2913,7 +3090,7 @@ function renderValidades(data = validadesData) {
             <div class="p-4 bg-white rounded-lg shadow dark:bg-gray-800 border dark:border-gray-700" data-id="${v.Id}">
                 <div class="flex justify-between items-start">
                     <p class="text-lg font-semibold text-gray-900 dark:text-white">${v.Clientes?.Nome || 'N/A'}</p>
-                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${statusClass}">${displayStatus}</span>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${statusClass}">${v.Status}</span>
                 </div>
                 <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
                     <p><strong>Tipo:</strong> ${v.Tipo || 'N/A'}</p>
@@ -2923,8 +3100,8 @@ function renderValidades(data = validadesData) {
                 <div class="flex justify-end pt-2 mt-2 border-t dark:border-gray-600 space-x-2">${actionsHTML}</div>
             </div>`;
     });
-}  
-function renderConsultores(data = consultoresData) { 
+}
+    function renderConsultores(data = consultoresData) { 
         document.getElementById('rh-cards-container').innerHTML = data.map(c => createConsultorCard(c)).join(''); 
     }
 function createConsultorCard(c) {
@@ -6644,3 +6821,6 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
 </script>
 </body>
 </html>
+</file>
+
+</files>
