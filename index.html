@@ -3987,6 +3987,46 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
     function populateSelectWithOptions(sel, data, valF, textF, addAll=true) { const selects=document.querySelectorAll(sel); let opts=addAll?'<option value="">Todos</option>':'<option value="">Selecione...</option>'; data.forEach(i=>{opts+=`<option value="${i[valF]}">${i[textF]}</option>`;}); selects.forEach(s=>{const curVal=s.value; s.innerHTML=opts; s.value=curVal;});}
     function populateConsultantSelects() { populateSelectWithOptions('.consultor-select', consultoresData, 'Id', 'Nome', false); }
     function populateClientSelects() { populateSelectWithOptions('.cliente-select', clientesData, 'Id', 'Nome', false); }
+    async function handleStatusToggle(btn) {
+        const id = btn.dataset.id;
+        const type = btn.dataset.type; // 'receita' ou 'custo'
+        const currentStatus = btn.dataset.status;
+        const newStatus = currentStatus === 'Pendente' ? 'Pago' : 'Pendente';
+        const table = type === 'receita' ? 'Receitas' : 'Custos';
+
+        // Atualização Otimista da Interface
+        showLoadingOverlay('Atualizando status...');
+        
+        try {
+            const result = await nocoFetch(`${table}/${id}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ Status: newStatus })
+            });
+
+            if (result) {
+                // Atualiza os dados locais
+                if (type === 'receita') {
+                    const item = receitasData.find(r => r.Id == id);
+                    if (item) item.Status = newStatus;
+                    updateReceitasDashboard();
+                    applyAndRenderReceitas();
+                } else {
+                    const item = custosData.find(c => c.Id == id);
+                    if (item) item.Status = newStatus;
+                    updateCustosDashboard();
+                    applyAndRenderCustos();
+                }
+            } else {
+                alert('Falha ao atualizar o status.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Erro ao conectar com o servidor.');
+        } finally {
+            hideLoadingOverlay();
+        }
+    }
+    
     function handleGlobalClick(e) { 
     const t = e.target; 
     
@@ -6700,45 +6740,7 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
     ['filter-chamado-start-date', 'filter-chamado-end-date', 'filter-chamado-status', 'filter-chamado-nome', 'filter-chamado-codigo', 'filter-chamado-segmento', 'filter-chamado-demanda'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', applyAndRenderChamados);
     });
-    async function handleStatusToggle(btn) {
-        const id = btn.dataset.id;
-        const type = btn.dataset.type; // 'receita' ou 'custo'
-        const currentStatus = btn.dataset.status;
-        const newStatus = currentStatus === 'Pendente' ? 'Pago' : 'Pendente';
-        const table = type === 'receita' ? 'Receitas' : 'Custos';
-
-        // Atualização Otimista da Interface
-        showLoadingOverlay('Atualizando status...');
-        
-        try {
-            const result = await nocoFetch(`${table}/${id}`, {
-                method: 'PATCH',
-                body: JSON.stringify({ Status: newStatus })
-            });
-
-            if (result) {
-                // Atualiza os dados locais
-                if (type === 'receita') {
-                    const item = receitasData.find(r => r.Id == id);
-                    if (item) item.Status = newStatus;
-                    updateReceitasDashboard();
-                    applyAndRenderReceitas();
-                } else {
-                    const item = custosData.find(c => c.Id == id);
-                    if (item) item.Status = newStatus;
-                    updateCustosDashboard();
-                    applyAndRenderCustos();
-                }
-            } else {
-                alert('Falha ao atualizar o status.');
-            }
-        } catch (error) {
-            console.error(error);
-            alert('Erro ao conectar com o servidor.');
-        } finally {
-            hideLoadingOverlay();
-        }
-    }
+    
     function checkCalendarViewOnResize() {
         const isMobile = window.innerWidth < 1024;
         const calendarView = document.getElementById('calendar-view');
