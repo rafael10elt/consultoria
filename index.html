@@ -6522,32 +6522,73 @@ function applyRequisicaoFilters(){
     );
     renderServicos(filtered);
 }
-    function applyAndRenderReembolsos() {
-    const startDate = document.getElementById('filter-reembolso-start-date').value;
-    const endDate = document.getElementById('filter-reembolso-end-date').value;
-    const consultorId = document.getElementById('filter-reembolso-consultor').value;
-    const status = document.getElementById('filter-reembolso-status').value;
-    
-    let baseData = reembolsosData;
+    function renderReembolsos(data = reembolsosData) {
+    const tbody = document.getElementById('reembolsos-table-body');
+    const cardsContainer = document.getElementById('reembolsos-cards-container');
+    if (!tbody || !cardsContainer) return;
 
-    // Regra de permissão: Filtra os dados ANTES de aplicar os filtros da tela
-    if (loggedInUser.Role !== 'Admin') {
-        baseData = reembolsosData.filter(r => r.Consultores?.Id == loggedInUser.Id);
-        // Esconde o filtro de consultor para não-admins
-        document.getElementById('filter-reembolso-consultor-wrapper').style.display = 'none';
-    } else {
-        document.getElementById('filter-reembolso-consultor-wrapper').style.display = 'block';
-    }
+    // Ordenação: Pendentes primeiro, depois data mais recente
+    data.sort((a, b) => {
+        if (a.Status === 'Pendente' && b.Status !== 'Pendente') return -1;
+        if (a.Status !== 'Pendente' && b.Status === 'Pendente') return 1;
+        return new Date(b.Data) - new Date(a.Data);
+    });
 
-    const filtered = baseData.filter(r =>
-        (!startDate || r.Data >= startDate) &&
-        (!endDate || r.Data <= endDate) &&
-        (!consultorId || r.Consultores?.Id == consultorId) &&
-        (!status || r.Status === status)
-    );
-    renderReembolsos(filtered);
+    tbody.innerHTML = '';
+    cardsContainer.innerHTML = '';
+
+    const getStatusClass = (status) => {
+        switch (status) {
+            case 'Pago': return 'bg-green-200 text-green-800';
+            case 'Pendente': return 'bg-yellow-200 text-yellow-800';
+            case 'Recusado': return 'bg-red-200 text-red-800';
+            default: return 'bg-gray-200 text-gray-800';
+        }
+    };
+
+    data.forEach(r => {
+        const statusClass = getStatusClass(r.Status);
+        const canEditOrDelete = loggedInUser.Role === 'Admin' || (r.Status === 'Pendente' && r.Consultores?.Id == loggedInUser.Id);
+        
+        // Botão Toggle (Apenas Admin ou Gestor geralmente aprovam, mas vou deixar aberto conforme solicitado. Ajuste se necessário)
+        const toggleBtn = (loggedInUser.Role === 'Admin' || loggedInUser.Role === 'Gestor') 
+            ? `<button class="toggle-status-btn ${r.Status === 'Pago' ? 'text-green-500' : 'text-gray-400'}" data-id="${r.Id}" data-type="reembolso" data-status="${r.Status}" title="Alterar Status"><i class="fas fa-check-circle"></i></button>`
+            : '';
+
+        let actionsHTML = `${toggleBtn} <button class="table-details-btn text-gray-500" data-type="reembolso" title="Ver Detalhes"><i class="fas fa-eye"></i></button>`;
+        
+        if (canEditOrDelete) {
+            actionsHTML += `<button class="table-edit-btn text-blue-500" data-type="reembolso" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button class="table-delete-btn text-red-500" data-type="reembolso" title="Apagar"><i class="fas fa-trash"></i></button>`;
+        }
+
+        // Tabela Desktop
+        tbody.innerHTML += `
+            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}">
+                <td class="px-6 py-4">${r.Consultores?.Nome || 'N/A'}</td>
+                <td class="px-6 py-4">${new Date(r.Data + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
+                <td class="px-6 py-4">${(r.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${statusClass}">${r.Status}</span></td>
+                <td class="px-6 py-4 space-x-2 flex items-center">${actionsHTML}</td>
+            </tr>`;
+
+        // Card Mobile
+        cardsContainer.innerHTML += `
+            <div class="p-4 bg-white rounded-lg shadow dark:bg-gray-800 border dark:border-gray-700" data-id="${r.Id}">
+                <div class="flex justify-between items-start">
+                    <p class="text-lg font-semibold text-gray-900 dark:text-white">${r.Consultores?.Nome || 'N/A'}</p>
+                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${statusClass}">${r.Status}</span>
+                </div>
+                <div class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    <p><strong>Data:</strong> ${new Date(r.Data + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
+                    <p><strong>Valor:</strong> ${(r.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                </div>
+                <div class="flex justify-end pt-2 mt-2 border-t dark:border-gray-600 space-x-2 items-center">${actionsHTML}</div>
+            </div>`;
+    });
 }
-function generateInsights() {
+
+    function generateInsights() {
         const f = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
         const insightsContent = document.getElementById('insights-content');
         let insightsHTML = '';
