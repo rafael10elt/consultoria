@@ -5639,17 +5639,18 @@ function applyFilters() {
         });
     }
 
-    // Ordena pela data e hora de início, do mais antigo para o mais novo.
+    // ALTERAÇÃO: Ordena pela data e hora de início, do MAIS RECENTE para o MAIS ANTIGO.
     f.sort((a, b) => {
         const dateTimeA = new Date(`${a.DataVisita}T${a.HoraInicio}`);
         const dateTimeB = new Date(`${b.DataVisita}T${b.HoraInicio}`);
-        return dateTimeA - dateTimeB;
+        return dateTimeB - dateTimeA; // Invertido para decrescente
     });
     
 
     renderAllVisits(f);
-}
-    function clearFilters(){
+}   
+
+function clearFilters(){
     document.getElementById('filter-start-date').value = '';
     document.getElementById('filter-end-date').value = '';
     document.getElementById('filter-consultor').value = '';
