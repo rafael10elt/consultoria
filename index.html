@@ -3113,7 +3113,7 @@ function createConsultorCard(c) {
             </div>`;
     });
 }
-    function renderReceitas(data = receitasData) {
+   function renderReceitas(data = receitasData) {
     const tbody = document.getElementById('receitas-table-body');
     const cardsContainer = document.getElementById('receitas-cards-container');
     if (!tbody || !cardsContainer) return;
@@ -3123,12 +3123,14 @@ function createConsultorCard(c) {
 
     data.forEach(r => {
         const statusClass = r.Status === 'Pago' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800';
-
-        // --- CÓDIGO ATUALIZADO ---
         const recorrenteClass = r.Recorrente ? 'text-blue-500' : 'text-gray-400';
         const recorrenteTitle = r.Recorrente ? 'Desativar recorrência' : 'Ativar recorrência';
         
+        // ALTERAÇÃO: Botão de toggle status adicionado
+        const toggleStatusBtn = `<button class="toggle-status-btn ${r.Status === 'Pago' ? 'text-green-500' : 'text-gray-400'}" data-id="${r.Id}" data-type="receita" data-status="${r.Status}" title="${r.Status === 'Pago' ? 'Marcar como Pendente' : 'Marcar como Pago'}"><i class="fas fa-check-circle"></i></button>`;
+
         const actionsHTML = `
+            ${toggleStatusBtn}
             <button class="table-details-btn text-gray-500" data-type="receita" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
             <button class="table-edit-btn text-blue-500" data-type="receita" title="Editar"><i class="fas fa-edit"></i></button>
             <button class="toggle-receita-recorrente-btn ${recorrenteClass}" data-id="${r.Id}" data-recorrente="${!!r.Recorrente}" title="${recorrenteTitle}"><i class="fas fa-sync-alt"></i></button>
@@ -3141,7 +3143,7 @@ function createConsultorCard(c) {
                 <td class="px-6 py-4">${new Date(r.Vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                 <td class="px-6 py-4">${(r.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                 <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${statusClass}">${r.Status}</span></td>
-                <td class="px-6 py-4 space-x-2">${actionsHTML}</td>
+                <td class="px-6 py-4 space-x-2 flex items-center">${actionsHTML}</td>
             </tr>`;
 
         // Card Mobile
@@ -3155,7 +3157,7 @@ function createConsultorCard(c) {
                     <p><strong>Vencimento:</strong> ${new Date(r.Vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
                     <p><strong>Valor:</strong> ${(r.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                 </div>
-                <div class="flex justify-end pt-2 mt-2 border-t dark:border-gray-600 space-x-2">${actionsHTML}</div>
+                <div class="flex justify-end pt-2 mt-2 border-t dark:border-gray-600 space-x-2 items-center">${actionsHTML}</div>
             </div>`;
     });
 }
@@ -3169,11 +3171,14 @@ function renderCustos(data = custosData) {
 
     data.forEach(c => {
         const statusClass = c.Status === 'Pago' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800';
-        
         const recorrenteClass = c.Recorrente ? 'text-blue-500' : 'text-gray-400';
         const recorrenteTitle = c.Recorrente ? 'Custo Recorrente (Clique para desativar)' : 'Custo Não Recorrente (Clique para ativar)';
 
+        // ALTERAÇÃO: Botão de toggle status adicionado
+        const toggleStatusBtn = `<button class="toggle-status-btn ${c.Status === 'Pago' ? 'text-green-500' : 'text-gray-400'}" data-id="${c.Id}" data-type="custo" data-status="${c.Status}" title="${c.Status === 'Pago' ? 'Marcar como Pendente' : 'Marcar como Pago'}"><i class="fas fa-check-circle"></i></button>`;
+
         const actionsHTML = `
+            ${toggleStatusBtn}
             <button class="table-details-btn text-gray-500" data-type="custo" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
             <button class="table-edit-btn text-blue-500" data-type="custo" title="Editar"><i class="fas fa-edit"></i></button>
             <button class="toggle-recorrente-btn ${recorrenteClass}" data-id="${c.Id}" data-recorrente="${!!c.Recorrente}" title="${recorrenteTitle}"><i class="fas fa-sync-alt"></i></button>
@@ -3186,7 +3191,7 @@ function renderCustos(data = custosData) {
                 <td class="px-6 py-4">${new Date(c.Vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                 <td class="px-6 py-4">${(c.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                 <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${statusClass}">${c.Status}</span></td>
-                <td class="px-6 py-4 space-x-2">${actionsHTML}</td>
+                <td class="px-6 py-4 space-x-2 flex items-center">${actionsHTML}</td>
             </tr>`;
 
         // Card Mobile
@@ -3200,11 +3205,12 @@ function renderCustos(data = custosData) {
                     <p><strong>Vencimento:</strong> ${new Date(c.Vencimento + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
                     <p><strong>Valor:</strong> ${(c.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                 </div>
-                <div class="flex justify-end pt-2 mt-2 border-t dark:border-gray-600 space-x-2">${actionsHTML}</div>
+                <div class="flex justify-end pt-2 mt-2 border-t dark:border-gray-600 space-x-2 items-center">${actionsHTML}</div>
             </div>`;
     });
-}
-    function renderFerias(data = feriasData) {
+}  
+
+function renderFerias(data = feriasData) {
     const tbody = document.getElementById('ferias-table-body');
     const cardsContainer = document.getElementById('ferias-cards-container');
     if (!tbody || !cardsContainer) return;
@@ -3983,6 +3989,8 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
     function populateClientSelects() { populateSelectWithOptions('.cliente-select', clientesData, 'Id', 'Nome', false); }
     function handleGlobalClick(e) { 
     const t = e.target; 
+    
+    // --- Lógica para Consultores ---
     const consultorEditBtn = t.closest('.consultor-edit-btn');
     if (consultorEditBtn) {
         e.preventDefault();
@@ -4003,6 +4011,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
         return;
     }
     
+    // --- Lógica para Documentos de Clientes (Modal) ---
     if (t.closest('#close-cliente-docs-modal')) {
         hideModal(document.getElementById('cliente-docs-modal'));
         return;
@@ -4038,6 +4047,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
         return;
     }
 
+    // --- Lógica para Clientes ---
     const docsBtn = t.closest('.client-docs-btn');
     if (docsBtn) {
         e.preventDefault(); 
@@ -4066,6 +4076,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
         return;
     }
 
+    // --- Lógica para Itens de Requisição ---
     const modalFilterBtn = t.closest('.item-modal-category-filter-btn');
     if (modalFilterBtn) {
         const category = modalFilterBtn.dataset.category;
@@ -4122,6 +4133,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
         return;
     }
 
+    // --- Modal de Imagem ---
     const itemImage = t.closest('.item-card img, .req-form-img');
     const isActionButton = t.closest('.item-action-btn');
 
@@ -4131,6 +4143,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
         return;
     }
 
+    // --- Ações do Kanban ---
     const kanbanButton = t.closest('.kanban-card .visit-actions button');
     if(kanbanButton) {
         const visitId = parseInt(kanbanButton.closest('.kanban-card').dataset.id);
@@ -4139,6 +4152,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
         if(kanbanButton.classList.contains('remarcar-visita-btn')) { handleRescheduleVisit(visitId); return; }
     }
 
+    // --- Ações de Itens do Catálogo ---
     const itemActionButton = t.closest('.item-action-btn');
     if (itemActionButton) {
         const card = itemActionButton.closest('.item-card');
@@ -4155,11 +4169,20 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
         return;
     }
 
+    // --- Navegação e Abertura de Detalhes ---
     const nL=t.closest('.nav-link'); if(nL){e.preventDefault(); handleNavClick({currentTarget:nL}); return;} 
     const rhC=t.closest('.rh-card'); if(rhC&&!t.closest('a')){openDetailsModal(rhC); return;} 
     const clC=t.closest('.cliente-card'); if(clC&&!t.closest('a')){openDetailsModal(clC); return;} 
+    
+    // --- BOTÕES GENÉRICOS ---
     const btn=t.closest('button'); if(!btn)return; 
     
+    // NOVO: Botão de alternar status (Pago/Pendente)
+    if(btn.classList.contains('toggle-status-btn')) {
+        handleStatusToggle(btn);
+        return;
+    }
+
     if(btn.classList.contains('toggle-recorrente-btn')) { 
         handleToggleRecorrente(btn);
         return;
@@ -4199,6 +4222,23 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
         'delete-btn':()=>{hideModal(allElements.detailsModal); showModal(allElements.deleteConfirmModal);},
         'cancel-delete-btn':()=>{hideModal(allElements.deleteConfirmModal); if(activeCard||activeTableRow)showModal(allElements.detailsModal); activeDeleteItem={id:null,type:null,element:null};},
         'edit-btn':handleCardEdit,'close-modal':()=>hideModal(allElements.detailsModal),
+        'show-servico-form': () => {
+            const statusWrapper = document.getElementById('servico-status-wrapper');
+            if (statusWrapper) statusWrapper.classList.add('hidden');
+            setupSubFormToggle('servicos-history-container', 'servico-form-container');
+        },
+        'show-reembolso-form': () => openReembolsoModal(null),
+        'show-validade-form': () => setupSubFormToggle('validades-history-container', 'validade-form-container'),
+        'show-chamado-form': () => {
+            const form = document.getElementById('chamado-form');
+            form.reset();
+            delete form.dataset.id;
+            document.getElementById('chamado-modal-title').textContent = "Novo Chamado";
+            document.getElementById('chamado-status-wrapper').classList.add('hidden');
+            document.getElementById('chamado-codigo').value = generateRandomCode();
+            showModal(document.getElementById('chamado-form-modal'));
+        },
+        'cancel-chamado-form': () => hideModal(document.getElementById('chamado-form-modal'))
     }; 
     if(aM[btn.id]){aM[btn.id]();} 
     
@@ -4207,7 +4247,8 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
     if(btn.classList.contains('table-delete-btn')) { handleTableDelete(btn); return; } 
     if(btn.classList.contains('rh-tab-btn')||btn.classList.contains('requisicao-tab-btn')||btn.classList.contains('financeiro-tab-btn')||btn.classList.contains('validades-tab-btn')) { handleTabClick(btn); return; }
 }
-    /**
+
+/**
  * Verifica todos os custos recorrentes e gera as próximas faturas se necessário.
  * Esta função "alcança" os meses que podem ter sido perdidos e respeita a desativação da recorrência.
  * Retorna true se algum custo novo foi gerado, senão false.
@@ -6396,9 +6437,12 @@ function applyRequisicaoFilters(){
         (!st || r.Status === st)
     );
 
-    // --- LINHA ADICIONADA ---
-    // Ordena os resultados pela data de vencimento, do mais antigo para o mais novo.
-    f.sort((a, b) => new Date(a.Vencimento) - new Date(b.Vencimento));
+    // ALTERAÇÃO: Ordena Pendente primeiro, depois por data decrescente (mais recente primeiro)
+    f.sort((a, b) => {
+        if (a.Status === 'Pendente' && b.Status !== 'Pendente') return -1;
+        if (a.Status !== 'Pendente' && b.Status === 'Pendente') return 1;
+        return new Date(b.Vencimento) - new Date(a.Vencimento);
+    });
 
     renderReceitas(f);
 }
@@ -6415,9 +6459,12 @@ function applyRequisicaoFilters(){
         (!st || c.Status === st)
     );
 
-    // --- LINHA ADICIONADA ---
-    // Ordena os resultados pela data de vencimento, do mais antigo para o mais novo.
-    f.sort((a, b) => new Date(a.Vencimento) - new Date(b.Vencimento));
+    // ALTERAÇÃO: Ordena Pendente primeiro, depois por data decrescente (mais recente primeiro)
+    f.sort((a, b) => {
+        if (a.Status === 'Pendente' && b.Status !== 'Pendente') return -1;
+        if (a.Status !== 'Pendente' && b.Status === 'Pendente') return 1;
+        return new Date(b.Vencimento) - new Date(a.Vencimento);
+    });
 
     renderCustos(f);
 }
@@ -6653,6 +6700,45 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
     ['filter-chamado-start-date', 'filter-chamado-end-date', 'filter-chamado-status', 'filter-chamado-nome', 'filter-chamado-codigo', 'filter-chamado-segmento', 'filter-chamado-demanda'].forEach(id => {
         document.getElementById(id)?.addEventListener('input', applyAndRenderChamados);
     });
+    async function handleStatusToggle(btn) {
+        const id = btn.dataset.id;
+        const type = btn.dataset.type; // 'receita' ou 'custo'
+        const currentStatus = btn.dataset.status;
+        const newStatus = currentStatus === 'Pendente' ? 'Pago' : 'Pendente';
+        const table = type === 'receita' ? 'Receitas' : 'Custos';
+
+        // Atualização Otimista da Interface
+        showLoadingOverlay('Atualizando status...');
+        
+        try {
+            const result = await nocoFetch(`${table}/${id}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ Status: newStatus })
+            });
+
+            if (result) {
+                // Atualiza os dados locais
+                if (type === 'receita') {
+                    const item = receitasData.find(r => r.Id == id);
+                    if (item) item.Status = newStatus;
+                    updateReceitasDashboard();
+                    applyAndRenderReceitas();
+                } else {
+                    const item = custosData.find(c => c.Id == id);
+                    if (item) item.Status = newStatus;
+                    updateCustosDashboard();
+                    applyAndRenderCustos();
+                }
+            } else {
+                alert('Falha ao atualizar o status.');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Erro ao conectar com o servidor.');
+        } finally {
+            hideLoadingOverlay();
+        }
+    }
     function checkCalendarViewOnResize() {
         const isMobile = window.innerWidth < 1024;
         const calendarView = document.getElementById('calendar-view');
