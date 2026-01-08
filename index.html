@@ -3989,10 +3989,36 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
     function populateClientSelects() { populateSelectWithOptions('.cliente-select', clientesData, 'Id', 'Nome', false); }
     async function handleStatusToggle(btn) {
         const id = btn.dataset.id;
-        const type = btn.dataset.type; // 'receita' ou 'custo'
+        const type = btn.dataset.type; // 'receita', 'custo' ou 'reembolso'
         const currentStatus = btn.dataset.status;
-        const newStatus = currentStatus === 'Pendente' ? 'Pago' : 'Pendente';
-        const table = type === 'receita' ? 'Receitas' : 'Custos';
+        
+        // Lógica de alternância de status
+        let newStatus;
+        if (type === 'reembolso') {
+             // Para reembolsos, a lógica pode ser mais complexa se houver 'Recusado',
+             // mas para um toggle simples Pago/Pendente:
+             newStatus = currentStatus === 'Pendente' ? 'Pago' : 'Pendente';
+        } else {
+             newStatus = currentStatus === 'Pendente' ? 'Pago' : 'Pendente';
+        }
+
+        let table;
+        if (type === 'receita') {
+            table = 'Receitas';
+        } else if (type === 'custo') {
+            table = 'Custos';
+        } else if (type === 'reembolso') {
+            table = 'Reembolsos';
+        } else if (type === 'servico') {
+             table = 'Servicos';
+             // Lógica específica para serviços se necessário (ex: Pendente -> Em Andamento -> Concluido)
+             // Como o botão atual é apenas um toggle simples, vamos manter a lógica binária ou adaptar se for ciclo
+             if(currentStatus === 'Pendente') newStatus = 'Em Andamento';
+             else if(currentStatus === 'Em Andamento') newStatus = 'Concluido';
+             else newStatus = 'Pendente'; 
+        }
+
+        if (!table) return;
 
         // Atualização Otimista da Interface
         showLoadingOverlay('Atualizando status...');
@@ -4004,17 +4030,25 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
             });
 
             if (result) {
-                // Atualiza os dados locais
+                // Atualiza os dados locais e a interface
                 if (type === 'receita') {
                     const item = receitasData.find(r => r.Id == id);
                     if (item) item.Status = newStatus;
                     updateReceitasDashboard();
                     applyAndRenderReceitas();
-                } else {
+                } else if (type === 'custo') {
                     const item = custosData.find(c => c.Id == id);
                     if (item) item.Status = newStatus;
                     updateCustosDashboard();
                     applyAndRenderCustos();
+                } else if (type === 'reembolso') {
+                    const item = reembolsosData.find(r => r.Id == id);
+                    if (item) item.Status = newStatus;
+                    applyAndRenderReembolsos(); // Re-renderiza a tabela de reembolsos
+                } else if (type === 'servico') {
+                     const item = servicosData.find(s => s.Id == id);
+                     if(item) item.Status = newStatus;
+                     applyAndRenderServicos();
                 }
             } else {
                 alert('Falha ao atualizar o status.');
@@ -4026,7 +4060,6 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
             hideLoadingOverlay();
         }
     }
-    
     function handleGlobalClick(e) { 
     const t = e.target; 
     
