@@ -6310,6 +6310,13 @@ function renderServicos(data = servicosData) {
     const cardsContainer = document.getElementById('servicos-cards-container');
     if (!tbody || !cardsContainer) return;
 
+    // Ordenação: Pendentes primeiro, depois data mais recente
+    data.sort((a, b) => {
+        if (a.Status === 'Pendente' && b.Status !== 'Pendente') return -1;
+        if (a.Status !== 'Pendente' && b.Status === 'Pendente') return 1;
+        return new Date(b.Datacontratacao) - new Date(a.Datacontratacao);
+    });
+
     tbody.innerHTML = '';
     cardsContainer.innerHTML = '';
 
@@ -6327,8 +6334,16 @@ function renderServicos(data = servicosData) {
         const anexoUrl = s.Anexo && s.Anexo[0]?.signedPath ? `${NocoDB_BaseURL}/${s.Anexo[0].signedPath}` : null;
         const anexoIconHTML = anexoUrl ? `<a href="${anexoUrl}" target="_blank" class="text-gray-500" title="Ver Anexo"><i class="fas fa-paperclip"></i></a>` : '';
         
+        // Botão Toggle (Cores diferentes para status diferentes)
+        let toggleColor = 'text-gray-400';
+        if (s.Status === 'Em Andamento') toggleColor = 'text-blue-500';
+        if (s.Status === 'Concluido') toggleColor = 'text-green-500';
+
+        const toggleBtn = `<button class="toggle-status-btn ${toggleColor}" data-id="${s.Id}" data-type="servico" data-status="${s.Status}" title="Avançar Status"><i class="fas fa-check-circle"></i></button>`;
+
         const actionsHTML = `
             ${anexoIconHTML}
+            ${toggleBtn}
             <button class="table-details-btn text-gray-500" data-type="servico" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
             <button class="table-edit-btn text-blue-500" data-type="servico" title="Editar"><i class="fas fa-edit"></i></button>
             <button class="table-delete-btn text-red-500" data-type="servico" title="Apagar"><i class="fas fa-trash"></i></button>
@@ -6341,7 +6356,7 @@ function renderServicos(data = servicosData) {
                 <td class="px-6 py-4">${new Date(s.Datacontratacao + 'T00:00:00').toLocaleDateString('pt-BR')}</td>
                 <td class="px-6 py-4">${(s.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
                 <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${statusClass}">${s.Status}</span></td>
-                <td class="px-6 py-4 space-x-2">${actionsHTML}</td>
+                <td class="px-6 py-4 space-x-2 flex items-center">${actionsHTML}</td>
             </tr>`;
 
         // Card Mobile
@@ -6355,11 +6370,12 @@ function renderServicos(data = servicosData) {
                     <p><strong>Contratação:</strong> ${new Date(s.Datacontratacao + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
                     <p><strong>Valor:</strong> ${(s.Valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                 </div>
-                <div class="flex justify-end pt-2 mt-2 border-t dark:border-gray-600 space-x-2">${actionsHTML}</div>
+                <div class="flex justify-end pt-2 mt-2 border-t dark:border-gray-600 space-x-2 items-center">${actionsHTML}</div>
             </div>`;
     });
 }
-    function renderCategoryFilters(){
+
+function renderCategoryFilters(){
         const container = document.getElementById('item-category-filters');
         if(!container) return;
         const categories = Object.keys(itemData.consumo).sort();
@@ -6522,7 +6538,33 @@ function applyRequisicaoFilters(){
     );
     renderServicos(filtered);
 }
-    function renderReembolsos(data = reembolsosData) {
+    function applyAndRenderReembolsos() {
+        const startDate = document.getElementById('filter-reembolso-start-date').value;
+        const endDate = document.getElementById('filter-reembolso-end-date').value;
+        const consultorId = document.getElementById('filter-reembolso-consultor').value;
+        const status = document.getElementById('filter-reembolso-status').value;
+        
+        let baseData = reembolsosData;
+
+        // Regra de permissão
+        if (loggedInUser && loggedInUser.Role !== 'Admin') {
+            baseData = reembolsosData.filter(r => r.Consultores?.Id == loggedInUser.Id);
+            const filterWrapper = document.getElementById('filter-reembolso-consultor-wrapper');
+            if(filterWrapper) filterWrapper.style.display = 'none';
+        } else {
+            const filterWrapper = document.getElementById('filter-reembolso-consultor-wrapper');
+            if(filterWrapper) filterWrapper.style.display = 'block';
+        }
+
+        const filtered = baseData.filter(r =>
+            (!startDate || r.Data >= startDate) &&
+            (!endDate || r.Data <= endDate) &&
+            (!consultorId || r.Consultores?.Id == consultorId) &&
+            (!status || r.Status === status)
+        );
+        renderReembolsos(filtered);
+    }
+function renderReembolsos(data = reembolsosData) {
     const tbody = document.getElementById('reembolsos-table-body');
     const cardsContainer = document.getElementById('reembolsos-cards-container');
     if (!tbody || !cardsContainer) return;
