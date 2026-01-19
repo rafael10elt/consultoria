@@ -2578,11 +2578,15 @@ async function loadInitialData() {
     populateSelectWithOptions('#report-cliente', clientesData, 'Id', 'Nome', true);
     
     // Renderiza o Dashboard
-    updateAllCounters(); // Você precisará ajustar essa função se ela depender de dados não carregados ainda (veja passo 4)
+    updateAllCounters(); 
     updateAllDashboards();
     initializeCalendar();
     applyFilters(); // Para visitas
     
+     // --- ADICIONADO: Renderiza as tabelas financeiras iniciais ---
+    applyAndRenderReceitas();
+    applyAndRenderCustos();
+
     // Marca como carregado
     dataLoaded.dashboard = true;
     dataLoaded.visitas = true; // Visitas já carregamos para o dashboard
@@ -2605,6 +2609,7 @@ async function loadPageData(pageId) {
             applyAndRenderAtestados();
             applyAndRenderEpis();
             applyAndRenderAtivos();
+            updateAllCounters(); 
             break;
         case 'clientes':
             // Clientes já baixamos no início, mas buscamos documentos agora
@@ -2633,6 +2638,11 @@ async function loadPageData(pageId) {
         case 'chamados':
             await fetchChamados();
             applyAndRenderChamados();
+            break;
+        case 'financeiro':
+            // Garante que, se esta página for acessada via menu, as tabelas estejam renderizadas
+            applyAndRenderReceitas();
+            applyAndRenderCustos();
             break;
     }
 
@@ -2901,8 +2911,17 @@ async function fetchRequisicoesItens() {
         }
         
         // Se a aba clicada for a de "Dados" da tela de Validades, renderiza o dashboard
+        // Se a aba clicada for a de "Dados" da tela de Validades, renderiza o dashboard
         if (btn.dataset.target === 'dados-content' && pageContainer.id === 'validades') {
             renderValidadesDadosDashboard();
+        }
+
+        // --- ADICIONADO: Renderiza as tabelas financeiras ao trocar de aba ---
+        if (btn.dataset.target === 'receitas-content') {
+            applyAndRenderReceitas();
+        }
+        if (btn.dataset.target === 'custos-content') {
+            applyAndRenderCustos();
         }
     }
 
