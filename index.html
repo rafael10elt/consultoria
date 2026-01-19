@@ -2622,12 +2622,21 @@ async function loadPageData(pageId) {
             await fetchClienteDocs();
             applyClienteFilters();
             break;
-        case 'requisicao':
-            await Promise.all([fetchRequisicoes(), fetchItensCatalogo(), fetchRequisicoesItens()]);
-            renderCategoryFilters();
-            renderItensDeRequisicao();
-            applyRequisicaoFilters();
-            break;
+
+case 'requisicao':
+    await Promise.all([fetchRequisicoes(), fetchItensCatalogo(), fetchRequisicoesItens()]);
+    renderCategoryFilters();
+    renderItensDeRequisicao();
+    
+    // VERIFICAÇÃO: Se as datas estiverem vazias (primeiro acesso), define o padrão de 45 dias
+    const startDateInput = document.getElementById('filter-req-start-date');
+    if (!startDateInput.value) {
+        setDefaultRequisicaoDates();
+    }
+
+    applyRequisicaoFilters();
+    break;
+
         case 'validades':
             await fetchValidades();
             await verificarEAtualizarVencimentos(); // Verifica vencimentos só ao abrir a tela
@@ -6600,12 +6609,18 @@ function applyRequisicaoFilters(){
     renderRequisicoes(filtered); 
 }
 
-    function clearRequisicaoFilters(){ 
-        document.getElementById('requisicoes-filters').querySelectorAll('input, select').forEach(el => {
-             el.value = '';
-        }); 
-        applyRequisicaoFilters(); 
-    }
+    function clearRequisicaoFilters() { 
+    // Limpa selects e inputs de texto
+    document.getElementById('filter-req-consultor').value = '';
+    document.getElementById('filter-req-status').value = '';
+    document.getElementById('filter-req-item').value = '';
+    
+    // Define o intervalo de datas padrão (45 dias)
+    setDefaultRequisicaoDates();
+
+    // Aplica o filtro
+    applyRequisicaoFilters(); 
+}
     
     function applyAndRenderFerias(){ const nome = document.getElementById('ferias-filter-name').value.toLowerCase(); const inicio = document.getElementById('ferias-filter-start').value; const fim = document.getElementById('ferias-filter-end').value; const filtered = feriasData.filter(f => (!nome || (f.Consultores?.Nome || '').toLowerCase().includes(nome)) && (!inicio || f.DataInicio >= inicio) && (!fim || f.DataRetorno <= fim) ); renderFerias(filtered); }
     function applyAndRenderAtestados(){ const nome = document.getElementById('atestados-filter-name').value.toLowerCase(); const inicio = document.getElementById('atestados-filter-start').value; const fim = document.getElementById('atestados-filter-end').value; const filtered = atestadosData.filter(a => (!nome || (a.Consultores?.Nome || '').toLowerCase().includes(nome)) && (!inicio || a.DataInicio >= inicio) && (!fim || a.DataRetorno <= fim) ); renderAtestados(filtered); }
@@ -6987,6 +7002,22 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
 
     }
 // NOVA FUNÇÃO: Gera PDF consolidado das requisições selecionadas
+function setDefaultRequisicaoDates() {
+    const today = new Date();
+    const pastDate = new Date();
+    pastDate.setDate(today.getDate() - 45);
+
+    // Formata para YYYY-MM-DD (formato exigido pelo input type="date")
+    const formatDate = (date) => date.toISOString().split('T')[0];
+
+    const startInput = document.getElementById('filter-req-start-date');
+    const endInput = document.getElementById('filter-req-end-date');
+
+    if (startInput && endInput) {
+        startInput.value = formatDate(pastDate);
+        endInput.value = formatDate(today);
+    }
+}
 async function generateRequisicaoReport() {
     const selectedCheckboxes = document.querySelectorAll('.req-checkbox:checked');
     
