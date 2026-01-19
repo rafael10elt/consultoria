@@ -6125,7 +6125,7 @@ async function handleChamadoStatusDrop(chamadoId, newStatus) {
             "Status": "Pendente",
             "DataRequisicao": new Date().toISOString()
         };
-        const result = await nocoFetch('Requisicoes', { method: 'POST', body: JSON.stringify(body) });
+        const result = await nocoFetch('moo48pf65si2d0y', { method: 'POST', body: JSON.stringify(body) });
         
         // A overlay é escondida aqui, pois a próxima tela (modal) já é a de interação
         hideLoadingOverlay();
@@ -6207,7 +6207,7 @@ function openRequisicaoItemModal(requisicaoId) {
         
         if (confirm(`Deseja realmente alterar o status desta requisição para "${newStatus}"?`)) {
             showLoadingOverlay('Alterando status...');
-            const result = await nocoFetch(`Requisicoes/${id}`, {
+            const result = await nocoFetch(`moo48pf65si2d0y/${id}`, {
                 method: 'PATCH',
                 body: JSON.stringify({ Status: newStatus })
             });
