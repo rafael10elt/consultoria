@@ -615,6 +615,7 @@ body {
                         </div>
 
                         <div id="requisicoes-content" class="requisicao-tab-content">
+
                            <div id="requisicoes-filters" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow">
                                 <div>
                                     <label for="filter-req-start-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label>
@@ -646,9 +647,14 @@ body {
 </div>
                             </div>
 
-                             <div class="flex justify-end items-center mb-4">
-                                <button id="show-requisicao-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Nova Requisição</button>
-                            </div>
+                             <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
+    <!-- Botão Novo adicionado -->
+    <button id="download-req-pdf-btn" class="bg-gray-600 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-700 transition-colors">
+        <i class="fas fa-file-pdf mr-2"></i>Baixar Selecionados
+    </button>
+    
+    <button id="show-requisicao-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Nova Requisição</button>
+</div>
                             <!-- Tabela para Desktop (Visível a partir de telas 'md') -->
 <div class="relative overflow-x-auto shadow-md sm:rounded-lg hidden md:block">
     <table class="w-full text-sm text-left text-gray-500 dark:text-gray-300">
@@ -6264,52 +6270,73 @@ function openRequisicaoItemModal(requisicaoId) {
     showModal(document.getElementById('requisicao-item-form-modal'));
 }
 
-    async function handleChangeRequisitionStatus(btn) {
-        const id = btn.dataset.id;
-        const currentStatus = btn.dataset.status;
-        const newStatus = currentStatus === 'Pendente' ? 'Entregue' : 'Pendente';
-        
-        if (confirm(`Deseja realmente alterar o status desta requisição para "${newStatus}"?`)) {
-            showLoadingOverlay('Alterando status...');
-            const result = await nocoFetch(`${TABLE_IDS.Requisicoes}/${id}`, {
-                method: 'PATCH',
-                body: JSON.stringify({ Status: newStatus })
-            });
-            hideLoadingOverlay();
-            if (result) {
-                await fetchRequisicoes();
-                applyRequisicaoFilters();
-            } else {
-                alert('Não foi possível alterar o status.');
-            }
-        }
-    }
+   // ATUALIZAÇÃO: Remoção do modal de confirmação
+async function handleChangeRequisitionStatus(btn) {
+    const id = btn.dataset.id;
+    const currentStatus = btn.dataset.status;
+    const newStatus = currentStatus === 'Pendente' ? 'Entregue' : 'Pendente';
+    
+    showLoadingOverlay('Alterando status...');
+    
+    try {
+        const result = await nocoFetch(`${TABLE_IDS.Requisicoes}/${id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ Status: newStatus })
+        });
 
+        if (result) {
+            // Atualiza localmente para agilidade
+            const req = requisicoesData.find(r => r.Id == id);
+            if(req) req.Status = newStatus;
+            
+            await fetchRequisicoes();
+            applyRequisicaoFilters();
+        } else {
+            alert('Não foi possível alterar o status.');
+        }
+    } catch (error) {
+        console.error(error);
+        alert('Erro ao alterar status.');
+    } finally {
+        hideLoadingOverlay();
+    }
+}
+// ATUALIZAÇÃO: Adição de checkboxes na tabela e cards
 function renderRequisicoes(data = requisicoesData) {
     const tbody = document.getElementById('requisicoes-table-body');
     const cardsContainer = document.getElementById('requisicoes-cards-container');
+    const tableHeadRow = document.querySelector('#requisicoes-content table thead tr');
 
     if (!tbody || !cardsContainer) return;
+
+    // Adiciona o checkbox no cabeçalho da tabela se não existir
+    if (tableHeadRow && !tableHeadRow.querySelector('.header-checkbox')) {
+        const th = document.createElement('th');
+        th.scope = "col";
+        th.className = "px-6 py-3";
+        th.innerHTML = '<input type="checkbox" id="select-all-req" class="w-4 h-4 text-brand-gold bg-gray-100 border-gray-300 rounded focus:ring-brand-gold">';
+        tableHeadRow.insertBefore(th, tableHeadRow.firstChild);
+        
+        // Listener para o "Selecionar Todos"
+        document.getElementById('select-all-req').addEventListener('change', function(e) {
+            const checkboxes = document.querySelectorAll('.req-checkbox');
+            checkboxes.forEach(cb => cb.checked = e.target.checked);
+        });
+    }
 
     tbody.innerHTML = '';
     cardsContainer.innerHTML = '';
 
     data.forEach(r => {
-        // Regra para "Adicionar Itens" e "Alterar":
-        // Todos podem fazer isso, desde que o status seja 'Pendente'.
         const canAlter = r.Status === 'Pendente';
         const addContentBtnHTML = canAlter ? `<button class="add-content-btn text-green-500 hover:text-green-700" data-id="${r.Id}" title="Adicionar Itens"><i class="fas fa-plus-circle"></i></button>` : '';
 
-        // Regra para "Mudar Status": Apenas Admin pode ver.
         const showChangeStatusBtn = loggedInUser && loggedInUser.Role === 'Admin';
         const changeStatusBtnHTML = showChangeStatusBtn ? `<button class="change-status-btn text-orange-500 hover:text-orange-700" data-id="${r.Id}" data-status="${r.Status}" title="Mudar Status"><i class="fas fa-toggle-on"></i></button>` : '';
         
-        // Regra para "Apagar":
-        // Admin pode apagar sempre. Outros, só se o status for 'Pendente'.
         const canDelete = (loggedInUser && loggedInUser.Role === 'Admin') || r.Status === 'Pendente';
         const deleteRequisitionBtnHTML = canDelete ? `<button class="table-delete-btn text-red-500" data-type="requisicao" title="Apagar Requisição"><i class="fas fa-trash"></i></button>` : '';
         
-        // O restante do código continua igual...
         const actionsHTML = `
             ${addContentBtnHTML}
             <button class="table-details-btn text-gray-500" data-type="requisicao" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
@@ -6317,27 +6344,33 @@ function renderRequisicoes(data = requisicoesData) {
             ${deleteRequisitionBtnHTML}
         `;
 
-        // ...renderização da tabela e dos cards...
+        // Checkbox HTML
+        const checkboxHTML = `<input type="checkbox" class="req-checkbox w-4 h-4 text-brand-gold bg-gray-100 border-gray-300 rounded focus:ring-brand-gold" value="${r.Id}">`;
+
         // Tabela Desktop
         const tableRowHTML = `
             <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700" data-id="${r.Id}">
+                <td class="px-6 py-4">${checkboxHTML}</td>
                 <td class="px-6 py-4">${r.Consultores?.Nome || 'N/A'}</td>
                 <td class="px-6 py-4">${new Date(r.DataRequisicao).toLocaleString('pt-BR')}</td>
                 <td class="px-6 py-4"><span class="text-xs font-semibold px-2 py-0.5 rounded-full ${r.Status === 'Entregue' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'}">${r.Status}</span></td>
-                <td class="px-6 py-4 space-x-2">${actionsHTML}</td>
+                <td class="px-6 py-4 space-x-2 flex items-center">${actionsHTML}</td>
             </tr>`;
         tbody.insertAdjacentHTML('beforeend', tableRowHTML);
 
         // Card Mobile
         const cardHTML = `
             <div class="p-4 bg-white rounded-lg shadow dark:bg-gray-800 border dark:border-gray-700" data-id="${r.Id}">
-                <div class="flex justify-between items-center mb-2">
-                    <p class="text-lg font-semibold text-gray-900 dark:text-white">${r.Consultores?.Nome || 'N/A'}</p>
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex items-center gap-2">
+                        ${checkboxHTML}
+                        <p class="text-lg font-semibold text-gray-900 dark:text-white">${r.Consultores?.Nome || 'N/A'}</p>
+                    </div>
                     <span class="px-2 py-1 text-xs font-medium rounded-full ${r.Status === 'Entregue' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'}">
                         ${r.Status}
                     </span>
                 </div>
-                <div class="mb-3 text-sm text-gray-600 dark:text-gray-400">
+                <div class="mb-3 text-sm text-gray-600 dark:text-gray-400 pl-6">
                     <strong>Data:</strong> ${new Date(r.DataRequisicao).toLocaleString('pt-BR')}
                 </div>
                 <div class="flex justify-end pt-2 border-t dark:border-gray-600 space-x-2">
@@ -6812,6 +6845,8 @@ function renderReembolsos(data = reembolsosData) {
         ['filter-servico-start-date', 'filter-servico-end-date', 'filter-servico-status'].forEach(id => {
         document.getElementById(id)?.addEventListener('change', applyAndRenderServicos);
     });
+
+    document.getElementById('download-req-pdf-btn')?.addEventListener('click', generateRequisicaoReport);
     document.getElementById('filter-servico-cliente')?.addEventListener('input', applyAndRenderServicos);
     document.getElementById('show-servico-form')?.addEventListener('click', () => {
         // Ao abrir o formulário para um novo serviço, esconde o campo de status
@@ -6951,6 +6986,164 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
         checkSession();
 
     }
+// NOVA FUNÇÃO: Gera PDF consolidado das requisições selecionadas
+async function generateRequisicaoReport() {
+    const selectedCheckboxes = document.querySelectorAll('.req-checkbox:checked');
+    
+    if (selectedCheckboxes.length === 0) {
+        alert('Por favor, selecione pelo menos uma requisição para gerar o relatório.');
+        return;
+    }
+
+    showLoadingOverlay('Gerando Relatório de Requisições...');
+
+    const idsToPrint = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+    // Filtra as requisições completas baseadas nos IDs selecionados
+    const selectedRequisitions = requisicoesData.filter(r => idsToPrint.includes(r.Id));
+
+    // Ordena por data (mais recente primeiro)
+    selectedRequisitions.sort((a, b) => new Date(b.DataRequisicao) - new Date(a.DataRequisicao));
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    
+    // Configurações de layout
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let currentY = 20;
+    const marginX = 14;
+
+    // --- CABEÇALHO DO RELATÓRIO ---
+    // Adiciona Logo
+    if (logoBase64) {
+        doc.addImage(logoBase64, 'PNG', marginX, 10, 30, 20); // Ajuste posição/tamanho conforme seu logo
+    }
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, pageWidth - marginX, 15, { align: 'right' });
+    doc.text(`Usuário: ${loggedInUser ? loggedInUser.Nome : 'N/A'}`, pageWidth - marginX, 20, { align: 'right' });
+
+    doc.setFontSize(18);
+    doc.setTextColor(55, 55, 55); // Cinza escuro (Brand Dark)
+    doc.setFont('helvetica', 'bold');
+    doc.text('Relatório de Requisições de Material', pageWidth / 2, 35, { align: 'center' });
+    
+    currentY = 45;
+
+    // --- LOOP PELAS REQUISIÇÕES ---
+    for (let i = 0; i < selectedRequisitions.length; i++) {
+        const req = selectedRequisitions[i];
+        
+        // Verifica se precisa de nova página
+        if (currentY > 230) {
+            doc.addPage();
+            currentY = 20;
+        }
+
+        // --- CABEÇALHO DA REQUISIÇÃO ---
+        const reqDate = new Date(req.DataRequisicao).toLocaleString('pt-BR');
+        const consultorName = req.Consultores?.Nome || 'Não Identificado';
+        const statusColor = req.Status === 'Entregue' ? [34, 197, 94] : [234, 179, 8]; // Verde ou Amarelo
+
+        // Desenha uma caixa de fundo para o cabeçalho da requisição
+        doc.setFillColor(245, 245, 245);
+        doc.roundedRect(marginX, currentY, pageWidth - (marginX * 2), 22, 2, 2, 'F');
+
+        // Texto do Cabeçalho
+        doc.setFontSize(11);
+        doc.setTextColor(0);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Requisição #${req.Id}`, marginX + 5, currentY + 7);
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Consultor:`, marginX + 5, currentY + 16);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${consultorName}`, marginX + 25, currentY + 16);
+
+        // Data à direita
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Data: ${reqDate}`, pageWidth - marginX - 5, currentY + 7, { align: 'right' });
+
+        // Badge de Status desenhado manualmente
+        const statusText = req.Status.toUpperCase();
+        const statusWidth = doc.getTextWidth(statusText) + 6;
+        doc.setFillColor(...statusColor);
+        doc.roundedRect(pageWidth - marginX - statusWidth - 5, currentY + 11, statusWidth, 7, 1, 1, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.text(statusText, pageWidth - marginX - 5 - (statusWidth/2), currentY + 15.5, { align: 'center' });
+
+        currentY += 25;
+
+        // --- TABELA DE ITENS ---
+        // Prepara os dados da tabela
+        // Filtra os itens desta requisição específica a partir da lista global requisicoesItensData
+        // (Isso assume que requisicoesItensData está carregado. Se for sob demanda, pode precisar de fetch aqui)
+        const itensDaRequisicao = requisicoesItensData.filter(item => item.Requisicoes_id === req.Id);
+        
+        const tableBody = [];
+        if (itensDaRequisicao.length > 0) {
+            itensDaRequisicao.forEach(itemJoin => {
+                const itemInfo = allItems.find(i => i.Id === itemJoin.Itens_Catalogo?.Id);
+                const nomeItem = itemInfo ? itemInfo.Nome : 'Item Desconhecido';
+                const obs = itemJoin.Observacao ? `\n(Obs: ${itemJoin.Observacao})` : '';
+                
+                tableBody.push([
+                    nomeItem + obs,
+                    itemInfo ? itemInfo.Categoria : '-',
+                    itemJoin.Quantidade
+                ]);
+            });
+        } else {
+            tableBody.push(['Nenhum item registrado nesta requisição.', '-', '-']);
+        }
+
+        doc.autoTable({
+            startY: currentY,
+            head: [['Item / Observação', 'Categoria', 'Qtd.']],
+            body: tableBody,
+            theme: 'grid',
+            headStyles: {
+                fillColor: [55, 55, 55], // Cor escura da marca
+                textColor: [255, 255, 255],
+                fontSize: 9,
+                fontStyle: 'bold'
+            },
+            styles: {
+                fontSize: 9,
+                cellPadding: 3,
+                overflow: 'linebreak'
+            },
+            columnStyles: {
+                0: { cellWidth: 'auto' },
+                1: { cellWidth: 40 },
+                2: { cellWidth: 20, halign: 'center' }
+            },
+            margin: { left: marginX, right: marginX },
+            didDrawPage: function(data) {
+                // Se a tabela quebrar a página, atualiza o currentY para a nova página
+                currentY = data.cursor.y;
+            }
+        });
+
+        // Atualiza Y para o próximo bloco após a tabela
+        currentY = doc.lastAutoTable.finalY + 15;
+    }
+
+    // Rodapé com número de páginas
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150);
+        doc.text(`Página ${i} de ${totalPages}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+    }
+
+    doc.save(`Relatorio_Requisicoes_${new Date().toISOString().slice(0,10)}.pdf`);
+    hideLoadingOverlay();
+}
 
     initializeApp();
 });
