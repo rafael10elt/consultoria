@@ -3898,7 +3898,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
     }
 
     showLoadingOverlay('Atualizando observação...');
-    const result = await nocoFetch(`Requisicoes_Itens/${itemJoinId}`, {
+    const result = await nocoFetch(`mbx9bvfljeh24su/${itemJoinId}`, {
         method: 'PATCH',
         body: JSON.stringify({ "Observacao": newObs })
     });
@@ -3935,7 +3935,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
    async function handleDeleteItemFromRequisition(itemJoinId, requisicaoId) {
         if (confirm('Tem certeza que deseja remover este item da requisição?')) {
             showLoadingOverlay('Removendo item...');
-            const result = await nocoFetch(`Requisicoes_Itens/${itemJoinId}`, { method: 'DELETE' });
+            const result = await nocoFetch(`mbx9bvfljeh24su/${itemJoinId}`, { method: 'DELETE' });
             hideLoadingOverlay();
 
             if (result && result.success) {
@@ -4423,7 +4423,7 @@ async function handleSaveRequisitionItems() {
             "Quantidade": item.quantidade,
             "Observacao": item.observacao // <-- CAMPO ADICIONADO AQUI
         };
-        return nocoFetch('Requisicoes_Itens', { method: 'POST', body: JSON.stringify(body) });
+        return nocoFetch('mbx9bvfljeh24su', { method: 'POST', body: JSON.stringify(body) });
     });
 
     try {
