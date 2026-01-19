@@ -2641,7 +2641,7 @@ async function fetchServicos() {
             // Ordena a array de clientes pelo nome em ordem alfabética
             clientesData.sort((a, b) => a.Nome.localeCompare(b.Nome));
         }
-    }   async function fetchVisitas() { const result = await nocoFetch('Visitas?nested[all]=true'); if(result && result.list) { visitsData = result.list.map(v => ({...v, startTime: v.HoraInicio ? `${v.DataVisita}T${v.HoraInicio}`:null, endTime: v.HoraFim ? `${v.DataVisita}T${v.HoraFim}`:null })); } else { visitsData = []; }}
+    }   async function fetchVisitas() { const result = await nocoFetch('my171lb23foevmb?nested[all]=true'); if(result && result.list) { visitsData = result.list.map(v => ({...v, startTime: v.HoraInicio ? `${v.DataVisita}T${v.HoraInicio}`:null, endTime: v.HoraFim ? `${v.DataVisita}T${v.HoraFim}`:null })); } else { visitsData = []; }}
     async function fetchReceitas() { const result = await nocoFetch('mj1agw70d2x85gj?nested[all]=true'); if (result && result.list) receitasData = result.list; }
     async function fetchValidades() { 
     const result = await nocoFetch('mrjwfbtszbjgdkh?nested[all]=true'); 
@@ -2649,7 +2649,7 @@ async function fetchServicos() {
 }
     async function fetchCustos() { const result = await nocoFetch('mi8ylg1xhddp82y?nested[all]=true'); if (result && result.list) custosData = result.list; }
    async function fetchRequisicoes() { 
-        const result = await nocoFetch('Requisicoes?nested[all]=true'); // Busca com os relacionamentos aninhados
+        const result = await nocoFetch('moo48pf65si2d0y?nested[all]=true'); // Busca com os relacionamentos aninhados
         if(result && result.list) requisicoesData = result.list; else requisicoesData = []; 
     }
 async function fetchRequisicoesItens() { 
@@ -2673,10 +2673,10 @@ async function fetchRequisicoesItens() {
             }, {});
          }
     }
-    async function fetchFerias() { const result = await nocoFetch('Ferias?nested[all]=true'); if(result && result.list) feriasData = result.list; else feriasData = []; }
-    async function fetchAtestados() { const result = await nocoFetch('Atestados?nested[all]=true'); if(result && result.list) atestadosData = result.list; else atestadosData = []; }
-    async function fetchEpis() { const result = await nocoFetch('Epis_Entregues?nested[all]=true'); if(result && result.list) episEntreguesData = result.list; else episEntreguesData = []; }
-    async function fetchAtivos() { const result = await nocoFetch('Ativos_Entregues?nested[all]=true'); if(result && result.list) ativosData = result.list; else ativosData = []; }
+    async function fetchFerias() { const result = await nocoFetch('mc8m7tuzpqmo6j7?nested[all]=true'); if(result && result.list) feriasData = result.list; else feriasData = []; }
+    async function fetchAtestados() { const result = await nocoFetch('mvg73byj4kzemxh?nested[all]=true'); if(result && result.list) atestadosData = result.list; else atestadosData = []; }
+    async function fetchEpis() { const result = await nocoFetch('mfdmr52xydicr99?nested[all]=true'); if(result && result.list) episEntreguesData = result.list; else episEntreguesData = []; }
+    async function fetchAtivos() { const result = await nocoFetch('mjcmq29lrnam988?nested[all]=true'); if(result && result.list) ativosData = result.list; else ativosData = []; }
     async function fetchClienteDocs() { 
         const result = await nocoFetch('mj5q2oq1evhs2sf?nested[all]=true'); 
         if(result && result.list) clienteDocsData = result.list; else clienteDocsData = []; 
