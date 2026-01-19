@@ -5810,7 +5810,7 @@ function createKanbanCard(v){
                 CheckIn: new Date().toISOString(),
                 CheckInLocal: `${location.lat},${location.lng}`
             };
-            const result = await nocoFetch(`Visitas/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
+            const result = await nocoFetch(`my171lb23foevmb/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
             
             if (result) {
                 await fetchVisitas();
@@ -5831,7 +5831,7 @@ function createKanbanCard(v){
                 CheckOut: new Date().toISOString(),
                 CheckOutLocal: `${location.lat},${location.lng}`
             };
-            const result = await nocoFetch(`Visitas/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
+            const result = await nocoFetch(`my171lb23foevmb/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
 
             if (result) {
                 await fetchVisitas();
