@@ -2826,7 +2826,7 @@ async function fetchReembolsos() {
     hideLoadingOverlay();
 }
     async function checkSession() { const userString = sessionStorage.getItem('loggedInUser'); if (userString) { allElements.loginScreen.classList.add('hidden'); allElements.mainApp.classList.remove('hidden'); showLoadingOverlay('Restaurando sessão...'); await initializeUserSession(JSON.parse(userString)); } else { allElements.loginScreen.classList.remove('hidden'); } }
-    async function authenticateUser(login, senha) { const endpoint = `Consultores?where=(Login,eq,${login})~and(Senha,eq,${senha})`; const result = await nocoFetch(endpoint); return (result && result.list && result.list.length > 0) ? result.list[0] : null; }
+    async function authenticateUser(login, senha) { const endpoint = `msqfzw64xaa0kgi?where=(Login,eq,${login})~and(Senha,eq,${senha})`; const result = await nocoFetch(endpoint); return (result && result.list && result.list.length > 0) ? result.list[0] : null; }
  function restoreSubTabState() {
         const currentPageId = sessionStorage.getItem('currentPage');
         if (!currentPageId) return;

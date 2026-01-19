@@ -51,6 +51,7 @@ images/ponteslogosfundo2.png
 images/ponteslogosfundo3.png
 images/ponteslogosfundo4.png
 index.html
+netlify.toml
 netlify/functions/api.js
 netlify/functions/upload.js
 package.json
@@ -58,6 +59,18 @@ package.json
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path="netlify.toml">
+[build]
+  command = "npm install"
+  functions = "netlify/functions"
+  publish = "."
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+</file>
 
 <file path="package.json">
 {
@@ -2812,7 +2825,7 @@ async function fetchChamados() {
         if(result && result.list) chamadosData = result.list; else chamadosData = []; 
     }
     async function fetchConsultores() {
-        const result = await nocoFetch('Consultores?nested[all]=true');
+        const result = await nocoFetch('msqfzw64xaa0kgi?nested[all]=true');
         if (result && result.list) {
             consultoresData = result.list;
             // Ordena a array de consultores pelo nome em ordem alfabética
