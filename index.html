@@ -1870,6 +1870,19 @@ document.addEventListener('DOMContentLoaded', function() {
     let servicosData = [];
     let chamadosData = [];
 
+    // --- NOVO: Controle de Carregamento ---
+const dataLoaded = {
+    dashboard: false,
+    visitas: false,
+    requisicao: false,
+    financeiro: false,
+    clientes: false,
+    rh: false,
+    reembolsos: false,
+    validades: false,
+    servicos: false,
+    chamados: false
+};
     // MAPA DE IDs DAS TABELAS
      const TABLE_IDS = {
         Consultores: 'msqfzw64xaa0kgi',
@@ -2539,96 +2552,91 @@ async function verificarEAtualizarVencimentos() {
     }
 }
     // --- Funções de Carregamento de Dados (Fetch) ---
-async function fetchAllData() {
-    showLoadingOverlay('Carregando dados...');
-   
-    await Promise.all([ 
-        fetchConsultores(), fetchClientes(), fetchCustos(), fetchReceitas(), // Traz Receitas junto com Custos
-        fetchItensCatalogo(), fetchClienteDocs(), fetchReembolsos(), fetchValidades(),
-        fetchValidades(), fetchServicos(), fetchChamados() 
-    ]);
-    // Verifica se alguma validade 'Vigente' já expirou e atualiza no banco
-    await verificarEAtualizarVencimentos();
+// --- CARREGAMENTO OTIMIZADO ---
 
-    // Verifica e gera custos recorrentes
-    const custosForamGerados = await verificarEGerarCustosRecorrentes();
-    if (custosForamGerados) {
-        await fetchCustos(); // Recarrega se algo foi criado
-    }
-
-    // Verifica e gera receitas recorrentes
-    const receitasForamGeradas = await verificarEGerarReceitasRecorrentes();
-    if (receitasForamGeradas) {
-        await fetchReceitas(); // Recarrega se algo foi criado
-    }
-
+// Carrega apenas dados essenciais para o Dashboard inicial e listas suspensas globais
+async function loadInitialData() {
+    showLoadingOverlay('Iniciando sistema...');
     
-    // Continua carregando o restante dos dados
-    await Promise.all([ 
-        fetchVisitas(), 
-        // fetchReceitas(), // Removido daqui pois já foi carregado
-        fetchRequisicoes(), 
-        fetchFerias(), 
-        fetchAtestados(), 
-        fetchEpis(), 
-        fetchAtivos(), 
-        fetchRequisicoesItens() 
+    // Precisamos de Consultores e Clientes para preencher os <select> de filtros globais
+    await Promise.all([
+        fetchConsultores(),
+        fetchClientes()
     ]);
-    
-    // O resto da função continua como antes...
-    renderConsultores();
-    applyClienteFilters();
+
+    // Carrega dados do Dashboard (Visitas, Receitas, Custos) para preencher os gráficos
+    await Promise.all([
+        fetchVisitas(),
+        fetchReceitas(),
+        fetchCustos()
+    ]);
+
+    // Configurações iniciais de UI
     populateConsultantSelects();
-    // ... e assim por diante
-    const consultorFilterVisitas = document.getElementById('filter-consultor');
-    if (consultorFilterVisitas) {
-        if (loggedInUser && loggedInUser.Role === 'Consultor') {
-            consultorFilterVisitas.value = loggedInUser.Id;
-            consultorFilterVisitas.disabled = true;
-        } else {
-            consultorFilterVisitas.disabled = false;
-        }
-    }
     populateClientSelects();
     populateSelectWithOptions('#report-consultor', consultoresData, 'Id', 'Nome', true);
     populateSelectWithOptions('#report-cliente', clientesData, 'Id', 'Nome', true);
-
-    if (loggedInUser && loggedInUser.Role === 'Consultor') { 
-        const consultorFilterVisitas = document.getElementById('filter-consultor');
-        const consultorFilterReqs = document.getElementById('filter-req-consultor');              
-    } else {
-        const consultorFilterVisitas = document.getElementById('filter-consultor');
-        const consultorFilterReqs = document.getElementById('filter-req-consultor');
-
-        if (consultorFilterVisitas) {
-            consultorFilterVisitas.disabled = false;
-            consultorFilterVisitas.value = '';
-        }
-        if (consultorFilterReqs) {
-            consultorFilterReqs.disabled = false;
-            consultorFilterReqs.value = '';
-        }
-    }
     
-    updateAllCounters();
-    
-    applyAndRenderReceitas();
-    applyAndRenderCustos();
-    applyAndRenderReembolsos();
-    applyAndRenderValidades();
-    applyAndRenderFerias();
-    applyAndRenderAtestados();
-    applyAndRenderEpis();
-    applyAndRenderAtivos();
-    applyAndRenderServicos(); 
-    applyAndRenderChamados();
+    // Renderiza o Dashboard
+    updateAllCounters(); // Você precisará ajustar essa função se ela depender de dados não carregados ainda (veja passo 4)
     updateAllDashboards();
     initializeCalendar();
-    applyFilters();
-    renderCategoryFilters();
-    renderItensDeRequisicao();
-    applyRequisicaoFilters();
-    applyAndRenderValidades();
+    applyFilters(); // Para visitas
+    
+    // Marca como carregado
+    dataLoaded.dashboard = true;
+    dataLoaded.visitas = true; // Visitas já carregamos para o dashboard
+    dataLoaded.financeiro = true; // Financeiro já carregamos para o dashboard
+
+    hideLoadingOverlay();
+}
+
+// Função inteligente que carrega dados apenas quando a página é acessada
+async function loadPageData(pageId) {
+    if (dataLoaded[pageId]) return; // Se já carregou, não faz nada
+
+    showLoadingOverlay('Carregando...');
+
+    switch (pageId) {
+        case 'rh':
+            await Promise.all([fetchFerias(), fetchAtestados(), fetchEpis(), fetchAtivos()]);
+            renderConsultores(); // Re-renderiza card de consultores (já baixados no inicio, mas garante update)
+            applyAndRenderFerias();
+            applyAndRenderAtestados();
+            applyAndRenderEpis();
+            applyAndRenderAtivos();
+            break;
+        case 'clientes':
+            // Clientes já baixamos no início, mas buscamos documentos agora
+            await fetchClienteDocs();
+            applyClienteFilters();
+            break;
+        case 'requisicao':
+            await Promise.all([fetchRequisicoes(), fetchItensCatalogo(), fetchRequisicoesItens()]);
+            renderCategoryFilters();
+            renderItensDeRequisicao();
+            applyRequisicaoFilters();
+            break;
+        case 'validades':
+            await fetchValidades();
+            await verificarEAtualizarVencimentos(); // Verifica vencimentos só ao abrir a tela
+            applyAndRenderValidades();
+            break;
+        case 'reembolsos':
+            await fetchReembolsos();
+            applyAndRenderReembolsos();
+            break;
+        case 'servicos':
+            await fetchServicos();
+            applyAndRenderServicos();
+            break;
+        case 'chamados':
+            await fetchChamados();
+            applyAndRenderChamados();
+            break;
+    }
+
+    dataLoaded[pageId] = true; // Marca como carregado
     hideLoadingOverlay();
 }
 async function fetchChamados() { 
@@ -2840,7 +2848,7 @@ async function fetchRequisicoesItens() {
             categoryFilters.style.display = 'none'; // Esconde para os outros
         }
     }
-    await fetchAllData(); // Chamamos a função que agora contém a lógica correta
+    await loadInitialData(); // Carrega só o básico
 
     let savedPage = sessionStorage.getItem('currentPage');
     
@@ -4625,14 +4633,19 @@ async function gerarProximoCustoRecorrente(custoOriginal) {
     });
 }
     function navigateTo(targetId, isInitial = false) { allElements.pages.forEach(page => page.classList.add('hidden')); const targetPage = document.getElementById(targetId); if (targetPage) { targetPage.classList.remove('hidden'); if (targetId === 'visitas' && calendar) setTimeout(() => calendar.render(), 1); if (targetId === 'dashboard') setTimeout(() => updateAllDashboards(), 1); } const navLink = document.querySelector(`.nav-link[data-target="${targetId}"]`); if (navLink) { document.querySelectorAll('.nav-link').forEach(l => { l.classList.remove('bg-brand-gold', 'text-white'); l.classList.add('text-gray-400', 'hover:bg-brand-gold', 'hover:text-white'); }); navLink.classList.add('bg-brand-gold', 'text-white'); navLink.classList.remove('text-gray-400'); if (document.getElementById('page-title')) document.getElementById('page-title').textContent = navLink.title; } }
-    function handleNavClick(e) {
+async function handleNavClick(e) {
     const navLink = e.currentTarget;
     const targetId = navLink.dataset.target;
-    sessionStorage.setItem('currentPage', targetId); // <-- ADICIONE ESTA LINHA
+    
+    // --- NOVO: Carrega dados da página se necessário ---
+    await loadPageData(targetId); 
+    // --------------------------------------------------
+
+    sessionStorage.setItem('currentPage', targetId);
     navigateTo(targetId);
     if (window.innerWidth < 1024) toggleMobileSidebar();
-}
-    function toggleMobileSidebar() { allElements.sidebar.classList.toggle('-translate-x-full'); allElements.sidebarOverlay.classList.toggle('hidden'); }
+}    
+function toggleMobileSidebar() { allElements.sidebar.classList.toggle('-translate-x-full'); allElements.sidebarOverlay.classList.toggle('hidden'); }
     function handleDashboardNav(btn) { document.querySelectorAll('.dashboard-nav-btn').forEach(b=>{b.classList.remove('border-brand-gold','text-brand-gold'); b.classList.add('border-transparent');}); btn.classList.add('border-brand-gold','text-brand-gold'); document.querySelectorAll('.dashboard-content').forEach(c=>c.classList.add('hidden')); document.getElementById(btn.dataset.target).classList.remove('hidden');}
 function handleViewToggle(e) {
         const btn = e.currentTarget;
