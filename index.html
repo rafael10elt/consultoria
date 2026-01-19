@@ -6310,7 +6310,7 @@ async function handleChangeRequisitionStatus(btn) {
         hideLoadingOverlay();
     }
 }
-// ATUALIZAÇÃO: Adição de checkboxes na tabela e cards
+// ATUALIZAÇÃO: Correção na inserção de checkboxes na tabela
 function renderRequisicoes(data = requisicoesData) {
     const tbody = document.getElementById('requisicoes-table-body');
     const cardsContainer = document.getElementById('requisicoes-cards-container');
@@ -6319,10 +6319,11 @@ function renderRequisicoes(data = requisicoesData) {
     if (!tbody || !cardsContainer) return;
 
     // Adiciona o checkbox no cabeçalho da tabela se não existir
-    if (tableHeadRow && !tableHeadRow.querySelector('.header-checkbox')) {
+    // E garante que seja apenas UM
+    if (tableHeadRow && !tableHeadRow.querySelector('.header-checkbox-cell')) {
         const th = document.createElement('th');
         th.scope = "col";
-        th.className = "px-6 py-3";
+        th.className = "px-6 py-3 header-checkbox-cell"; // Adicionei uma classe para controle
         th.innerHTML = '<input type="checkbox" id="select-all-req" class="w-4 h-4 text-brand-gold bg-gray-100 border-gray-300 rounded focus:ring-brand-gold">';
         tableHeadRow.insertBefore(th, tableHeadRow.firstChild);
         
