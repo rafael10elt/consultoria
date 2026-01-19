@@ -2653,7 +2653,7 @@ async function fetchServicos() {
         if(result && result.list) requisicoesData = result.list; else requisicoesData = []; 
     }
 async function fetchRequisicoesItens() { 
-        const result = await nocoFetch('Requisicoes_Itens?nested[all]=true'); 
+        const result = await nocoFetch('mbx9bvfljeh24su?nested[all]=true'); 
         if(result && result.list) requisicoesItensData = result.list; else requisicoesItensData = []; 
     }
      async function fetchItensCatalogo() {
@@ -3854,7 +3854,7 @@ async function handleEditItemQuantity(itemJoinId, currentQty, itemName, requisic
     }
 
     showLoadingOverlay('Atualizando quantidade...');
-    const result = await nocoFetch(`Requisicoes_Itens/${itemJoinId}`, {
+    const result = await nocoFetch(`mbx9bvfljeh24su/${itemJoinId}`, {
         method: 'PATCH',
         body: JSON.stringify({ "Quantidade": newQty })
     });
