@@ -1870,6 +1870,27 @@ document.addEventListener('DOMContentLoaded', function() {
     let servicosData = [];
     let chamadosData = [];
 
+    // MAPA DE IDs DAS TABELAS
+     const TABLE_IDS = {
+        Consultores: 'msqfzw64xaa0kgi',
+        Clientes: 'ms3zgw1f0nu9w1p',
+        Visitas: 'my171lb23foevmb',
+        Receitas: 'mj1agw70d2x85gj',
+        Custos: 'mi8ylg1xhddp82y',
+        Requisicoes: 'moo48pf65si2d0y',
+        ItensRequisicao: 'mbx9bvfljeh24su',
+        ItensCatalogo: 'm6uqdmgtgagmio7',
+        Ferias: 'mc8m7tuzpqmo6j7',
+        Atestados: 'mvg73byj4kzemxh',
+        EpisEntregues: 'mfdmr52xydicr99',
+        AtivosEntregues: 'mjcmq29lrnam988',
+        ClientesDocs: 'mj5q2oq1evhs2sf',
+        Reembolsos: 'mwnon5uro3mzswe',
+        Validades: 'mrjwfbtszbjgdkh',
+        Servicos: 'mijp6lt9ved9lfj',
+        Chamados: 'mfflpuoeh293dxp'
+    };
+
      const GLOBAL_LABEL_MAP = {
         // Campos de Consultor e Cliente
         nome: 'Nome',
@@ -2493,7 +2514,7 @@ async function verificarEAtualizarVencimentos() {
                 console.log(`Atualizando ID ${v.Id}: Venceu em ${v.Validade}`);
                 
                 // Prepara a requisição de atualização
-                const updatePromise = nocoFetch(`Validades/${v.Id}`, {
+                const updatePromise = nocoFetch(`${TABLE_IDS.Validades}/${v.Id}`, {
                     method: 'PATCH',
                     body: JSON.stringify({ Status: 'Vencido' })
                 }).then(result => {
@@ -2611,17 +2632,18 @@ async function fetchAllData() {
     hideLoadingOverlay();
 }
 async function fetchChamados() { 
-        const result = await nocoFetch('mfflpuoeh293dxp?nested[all]=true'); 
+        const result = await nocoFetch(`${TABLE_IDS.Chamados}?nested[all]=true`); 
         if(result && result.list) chamadosData = result.list; else chamadosData = []; 
     }
     async function fetchConsultores() {
-        const result = await nocoFetch('msqfzw64xaa0kgi?nested[all]=true');
+        const result = await nocoFetch(`${TABLE_IDS.Consultores}?nested[all]=true`);
         if (result && result.list) {
             consultoresData = result.list;
             // Ordena a array de consultores pelo nome em ordem alfabética
             consultoresData.sort((a, b) => a.Nome.localeCompare(b.Nome));
         }
     }
+    
     function generateRandomCode() {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let result = 'PONTES-';
@@ -2631,33 +2653,34 @@ async function fetchChamados() {
         return result;
     }
 async function fetchServicos() { 
-        const result = await nocoFetch('mijp6lt9ved9lfj?nested[all]=true'); 
+        const result = await nocoFetch(`${TABLE_IDS.Servicos}?nested[all]=true`); 
         if(result && result.list) servicosData = result.list; else servicosData = []; 
     }
     async function fetchClientes() {
-        const result = await nocoFetch('ms3zgw1f0nu9w1p?nested[all]=true');
+        const result = await nocoFetch(`${TABLE_IDS.Clientes}?nested[all]=true`);
         if (result && result.list) {
             clientesData = result.list;
             // Ordena a array de clientes pelo nome em ordem alfabética
             clientesData.sort((a, b) => a.Nome.localeCompare(b.Nome));
         }
-    }   async function fetchVisitas() { const result = await nocoFetch('my171lb23foevmb?nested[all]=true'); if(result && result.list) { visitsData = result.list.map(v => ({...v, startTime: v.HoraInicio ? `${v.DataVisita}T${v.HoraInicio}`:null, endTime: v.HoraFim ? `${v.DataVisita}T${v.HoraFim}`:null })); } else { visitsData = []; }}
-    async function fetchReceitas() { const result = await nocoFetch('mj1agw70d2x85gj?nested[all]=true'); if (result && result.list) receitasData = result.list; }
+    }
+    async function fetchVisitas() { const result = await nocoFetch(`${TABLE_IDS.Visitas}?nested[all]=true`); if(result && result.list) { visitsData = result.list.map(v => ({...v, startTime: v.HoraInicio ? `${v.DataVisita}T${v.HoraInicio}`:null, endTime: v.HoraFim ? `${v.DataVisita}T${v.HoraFim}`:null })); } else { visitsData = []; }}
+    async function fetchReceitas() { const result = await nocoFetch(`${TABLE_IDS.Receitas}?nested[all]=true`); if (result && result.list) receitasData = result.list; }
     async function fetchValidades() { 
-    const result = await nocoFetch('mrjwfbtszbjgdkh?nested[all]=true'); 
-    if(result && result.list) validadesData = result.list; else validadesData = []; 
-}
-    async function fetchCustos() { const result = await nocoFetch('mi8ylg1xhddp82y?nested[all]=true'); if (result && result.list) custosData = result.list; }
+        const result = await nocoFetch(`${TABLE_IDS.Validades}?nested[all]=true`); 
+        if(result && result.list) validadesData = result.list; else validadesData = []; 
+    }
+    async function fetchCustos() { const result = await nocoFetch(`${TABLE_IDS.Custos}?nested[all]=true`); if (result && result.list) custosData = result.list; }
    async function fetchRequisicoes() { 
-        const result = await nocoFetch('moo48pf65si2d0y?nested[all]=true'); // Busca com os relacionamentos aninhados
+        const result = await nocoFetch(`${TABLE_IDS.Requisicoes}?nested[all]=true`); // Busca com os relacionamentos aninhados
         if(result && result.list) requisicoesData = result.list; else requisicoesData = []; 
     }
 async function fetchRequisicoesItens() { 
-        const result = await nocoFetch('mbx9bvfljeh24su?nested[all]=true'); 
+        const result = await nocoFetch(`${TABLE_IDS.ItensRequisicao}?nested[all]=true`); 
         if(result && result.list) requisicoesItensData = result.list; else requisicoesItensData = []; 
     }
      async function fetchItensCatalogo() {
-         const result = await nocoFetch('m6uqdmgtgagmio7?nested[all]=true');
+         const result = await nocoFetch(`${TABLE_IDS.ItensCatalogo}?nested[all]=true`);
          if(result && result.list) {
             allItems = result.list;
             itemData.consumo = allItems.reduce((acc, item) => {
@@ -2673,18 +2696,19 @@ async function fetchRequisicoesItens() {
             }, {});
          }
     }
-    async function fetchFerias() { const result = await nocoFetch('mc8m7tuzpqmo6j7?nested[all]=true'); if(result && result.list) feriasData = result.list; else feriasData = []; }
-    async function fetchAtestados() { const result = await nocoFetch('mvg73byj4kzemxh?nested[all]=true'); if(result && result.list) atestadosData = result.list; else atestadosData = []; }
-    async function fetchEpis() { const result = await nocoFetch('mfdmr52xydicr99?nested[all]=true'); if(result && result.list) episEntreguesData = result.list; else episEntreguesData = []; }
-    async function fetchAtivos() { const result = await nocoFetch('mjcmq29lrnam988?nested[all]=true'); if(result && result.list) ativosData = result.list; else ativosData = []; }
+     async function fetchFerias() { const result = await nocoFetch(`${TABLE_IDS.Ferias}?nested[all]=true`); if(result && result.list) feriasData = result.list; else feriasData = []; }
+    async function fetchAtestados() { const result = await nocoFetch(`${TABLE_IDS.Atestados}?nested[all]=true`); if(result && result.list) atestadosData = result.list; else atestadosData = []; }
+    async function fetchEpis() { const result = await nocoFetch(`${TABLE_IDS.EpisEntregues}?nested[all]=true`); if(result && result.list) episEntreguesData = result.list; else episEntreguesData = []; }
+    async function fetchAtivos() { const result = await nocoFetch(`${TABLE_IDS.AtivosEntregues}?nested[all]=true`); if(result && result.list) ativosData = result.list; else ativosData = []; }
+    
     async function fetchClienteDocs() { 
-        const result = await nocoFetch('mj5q2oq1evhs2sf?nested[all]=true'); 
+        const result = await nocoFetch(`${TABLE_IDS.ClientesDocs}?nested[all]=true`); 
         if(result && result.list) clienteDocsData = result.list; else clienteDocsData = []; 
     }
-async function fetchReembolsos() { 
-    const result = await nocoFetch('mwnon5uro3mzswe?nested[all]=true'); 
-    if(result && result.list) reembolsosData = result.list; else reembolsosData = []; 
-}
+    async function fetchReembolsos() { 
+        const result = await nocoFetch(`${TABLE_IDS.Reembolsos}?nested[all]=true`); 
+        if(result && result.list) reembolsosData = result.list; else reembolsosData = []; 
+    }
     // --- Lógica de Autenticação e Sessão ---
     async function handleLogin(e) { e.preventDefault(); const username = document.getElementById('username').value, password = document.getElementById('password').value; if (!username || !password) { alert('Por favor, preencha usuário e senha.'); return; } showLoadingOverlay('Autenticando...'); const user = await authenticateUser(username, password); if (user) { sessionStorage.setItem('loggedInUser', JSON.stringify(user)); await initializeUserSession(user); } else { hideLoadingOverlay(); alert('Usuário ou senha inválidos.'); } }
  async function initializeUserSession(user) {
@@ -2826,8 +2850,9 @@ async function fetchReembolsos() {
     hideLoadingOverlay();
 }
     async function checkSession() { const userString = sessionStorage.getItem('loggedInUser'); if (userString) { allElements.loginScreen.classList.add('hidden'); allElements.mainApp.classList.remove('hidden'); showLoadingOverlay('Restaurando sessão...'); await initializeUserSession(JSON.parse(userString)); } else { allElements.loginScreen.classList.remove('hidden'); } }
-    async function authenticateUser(login, senha) { const endpoint = `msqfzw64xaa0kgi?where=(Login,eq,${login})~and(Senha,eq,${senha})`; const result = await nocoFetch(endpoint); return (result && result.list && result.list.length > 0) ? result.list[0] : null; }
- function restoreSubTabState() {
+    async function authenticateUser(login, senha) { const endpoint = `${TABLE_IDS.Consultores}?where=(Login,eq,${login})~and(Senha,eq,${senha})`; const result = await nocoFetch(endpoint); return (result && result.list && result.list.length > 0) ? result.list[0] : null; }
+
+    function restoreSubTabState() {
         const currentPageId = sessionStorage.getItem('currentPage');
         if (!currentPageId) return;
 
@@ -3425,7 +3450,7 @@ function applyAndRenderValidades() {
 
     if (confirm(confirmMessage)) {
         showLoadingOverlay('Atualizando...');
-        const result = await nocoFetch(`Receitas/${id}`, {
+        const result = await nocoFetch(`${TABLE_IDS.Receitas}/${id}`, {
             method: 'PATCH',
             body: JSON.stringify({ Recorrente: newRecorrenteState })
         });
@@ -3457,7 +3482,7 @@ function applyAndRenderValidades() {
 
     if (confirm(confirmMessage)) {
         showLoadingOverlay('Atualizando...');
-        const result = await nocoFetch(`Custos/${id}`, {
+         const result = await nocoFetch(`${TABLE_IDS.Custos}/${id}`, {
             method: 'PATCH',
             body: JSON.stringify({ Recorrente: newRecorrenteState })
         });
@@ -3495,7 +3520,7 @@ function applyAndRenderValidades() {
         // --- PREPARAÇÃO DOS DADOS (dentro do switch) ---
         switch (form.id) {
             case 'validade-form': {
-                endpoint = id ? `Validades/${id}` : 'Validades';
+                endpoint = id ? `${TABLE_IDS.Validades}/${id}` : TABLE_IDS.Validades;
                 const clienteIdValidade = parseInt(form.querySelector('#validade-cliente').value);
                 const tipoValidade = form.querySelector('#validade-tipo-form').value;
 
@@ -3518,14 +3543,14 @@ function applyAndRenderValidades() {
                 }
                 const anexoInput = form.querySelector('#validade-anexo');
                 if (anexoInput && anexoInput.files[0]) {
-                    const anexoData = await uploadFile('Validades', 'Anexo', anexoInput.files[0]);
+                    const anexoData = await uploadFile(TABLE_IDS.Validades, 'Anexo', anexoInput.files[0]);
                     if (anexoData) body.Anexo = [anexoData];
                 }
                 callback = async () => { await fetchValidades(); applyAndRenderValidades(); hideSubFormToggle('validades-history-container', 'validade-form-container'); };
                 break;
             }
             case 'reembolso-form': {
-                endpoint = id ? `Reembolsos/${id}` : 'Reembolsos';
+                endpoint = id ? `${TABLE_IDS.Reembolsos}/${id}` : TABLE_IDS.Reembolsos;
                 body = {
                     Data: form.querySelector('#reembolso-data').value,
                     Valor: parseFloat(form.querySelector('#reembolso-valor').value),
@@ -3537,14 +3562,14 @@ function applyAndRenderValidades() {
 
                 const anexoInputReembolso = form.querySelector('#reembolso-anexo');
                 if (anexoInputReembolso && anexoInputReembolso.files[0]) {
-                    const anexoData = await uploadFile('Reembolsos', 'Anexo', anexoInputReembolso.files[0]);
+                    const anexoData = await uploadFile(TABLE_IDS.Reembolsos, 'Anexo', anexoInputReembolso.files[0]);
                     if (anexoData) body.Anexo = [anexoData];
                 }
                 callback = async () => { await fetchReembolsos(); applyAndRenderReembolsos(); hideSubFormToggle('reembolsos-history-container', 'reembolso-form-container'); };
                 break;
             }
             case 'servico-form': {
-                endpoint = id ? `Servicos/${id}` : 'Servicos';
+                endpoint = id ? `${TABLE_IDS.Servicos}/${id}` : TABLE_IDS.Servicos;
                 body = {
                     Cliente: form.querySelector('#servico-cliente').value,
                     Cnpj: form.querySelector('#servico-cnpj').value,
@@ -3558,7 +3583,7 @@ function applyAndRenderValidades() {
                 };
                 const servicoAnexoInput = form.querySelector('#servico-anexo');
                 if (servicoAnexoInput && servicoAnexoInput.files[0]) {
-                    const anexoData = await uploadFile('Servicos', 'Anexo', servicoAnexoInput.files[0]);
+                    const anexoData = await uploadFile(TABLE_IDS.Servicos, 'Anexo', servicoAnexoInput.files[0]);
                     if (anexoData) body.Anexo = [anexoData];
                 }
                 callback = async () => { await fetchServicos(); applyAndRenderServicos(); hideSubFormToggle('servicos-history-container', 'servico-form-container'); };
@@ -3566,7 +3591,7 @@ function applyAndRenderValidades() {
             }
             case 'chamado-form':
     id = form.dataset.id;
-    endpoint = id ? `Chamados/${id}` : 'Chamados';
+    endpoint = id ? `${TABLE_IDS.Chamados}/${id}` : TABLE_IDS.Chamados;
     body = {
         Codigo: form.querySelector('#chamado-codigo').value,
         Nome: form.querySelector('#chamado-nome').value,
@@ -3583,20 +3608,20 @@ function applyAndRenderValidades() {
     callback = async () => { await fetchChamados(); applyAndRenderChamados(); hideModal(document.getElementById('chamado-form-modal')); };
     break;
             case 'item-form': {
-                endpoint = id ? `Itens_Catalogo/${id}` : 'Itens_Catalogo';
+                endpoint = id ? `${TABLE_IDS.ItensCatalogo}/${id}` : TABLE_IDS.ItensCatalogo;
                 const itemName = document.getElementById('item-name').value;
                 const itemCategory = form.querySelector('#item-category-input').value;
                 body = { Nome: itemName, Categoria: itemCategory, Tipo: 'Consumo' };
                 const itemFotoInput = document.getElementById('item-foto');
                 if (itemFotoInput && itemFotoInput.files[0]) {
-                    const fotoData = await uploadFile('Itens_Catalogo', 'Foto', itemFotoInput.files[0]);
+                    const fotoData = await uploadFile(TABLE_IDS.ItensCatalogo, 'Foto', itemFotoInput.files[0]);
                     if(fotoData) body.Foto = [fotoData];
                 }
                 callback = async () => { await fetchItensCatalogo(); renderItensDeRequisicao(); renderCategoryFilters(); hideModal(allElements.itemFormModal); };
                 break;
             }
             case 'rh-form': {
-                const table = 'Consultores';
+                const table = TABLE_IDS.Consultores;
                 endpoint = id ? `${table}/${id}` : table;
                 body = { Nome: form.querySelector('#rh-nome').value, DataNascimento: form.querySelector('#rh-nasc').value || null, Telefone: form.querySelector('#rh-tel').value, Email: form.querySelector('#rh-email').value, Login: form.querySelector('#rh-login').value, InicioVinculo: form.querySelector('#rh-inicio').value || null, FimVinculo: form.querySelector('#rh-fim').value || null, CNPJ: form.querySelector('#rh-cnpj').value, RazaoSocial: form.querySelector('#rh-razao').value, ValorHora: parseFloat(form.querySelector('#rh-valor').value) || 0, Status: form.querySelector('#rh-status').value, Role: form.querySelector('#rh-role').value, Endereco: form.querySelector('#rh-endereco').value, Observacao: form.querySelector('#rh-obs').value };
                 const senha = form.querySelector('#rh-senha').value; if (senha) body.Senha = senha;
@@ -3609,7 +3634,7 @@ function applyAndRenderValidades() {
                 break;
             }
             case 'cliente-form': {
-                const table = 'Clientes';
+                const table = TABLE_IDS.Clientes;
                 endpoint = id ? `${table}/${id}` : table;
                 body = { Nome: form.querySelector('#cliente-nome').value, RazaoSocial: form.querySelector('#cliente-razao').value, CNPJ: form.querySelector('#cliente-cnpj').value, Telefone: form.querySelector('#cliente-tel').value, Email: form.querySelector('#cliente-email').value, HorasContratadas: parseInt(form.querySelector('#cliente-horas').value) || 0, Valor: parseFloat(form.querySelector('#cliente-valor').value) || 0, Status: form.querySelector('#cliente-status').value, Categoria: form.querySelector('#cliente-categoria').value, Responsavel: form.querySelector('#cliente-responsavel').value, CPFResponsavel: form.querySelector('#cliente-cpf').value, IPTU: form.querySelector('#cliente-iptu').value, SenhaPortal: form.querySelector('#cliente-senha-portal').value, Endereco: form.querySelector('#cliente-endereco').value, Observacao: form.querySelector('#cliente-obs').value };
                 const fileInput = form.querySelector('input[type="file"]');
@@ -3621,7 +3646,7 @@ function applyAndRenderValidades() {
                 break;
             }
             case 'receita-form': {
-                endpoint = id ? `Receitas/${id}` : 'Receitas';
+                endpoint = id ? `${TABLE_IDS.Receitas}/${id}` : TABLE_IDS.Receitas;
                 const clienteId = parseInt(form.querySelector('#receita-cliente-form').value);
                 body = {
                     Vencimento: form.querySelector('#receita-vencimento').value,
@@ -3652,7 +3677,7 @@ function applyAndRenderValidades() {
                 return; // Finaliza a execução aqui
             }
             case 'custo-form': {
-                endpoint = id ? `Custos/${id}` : 'Custos';
+                endpoint = id ? `${TABLE_IDS.Custos}/${id}` : TABLE_IDS.Custos;
                 body = { Credor: form.querySelector('#custo-credor').value, Vencimento: form.querySelector('#custo-vencimento').value, Valor: parseFloat(form.querySelector('#custo-valor').value), Status: form.querySelector('#custo-status-form').value, Observacao: form.querySelector('#custo-obs').value, Recorrente: form.querySelector('#custo-recorrente-form').checked };
                 
                 const result = await nocoFetch(endpoint, { method, body: JSON.stringify(body) });
@@ -3674,7 +3699,7 @@ function applyAndRenderValidades() {
                 return; // Finaliza a execução aqui
             }
             case 'visita-form': {
-                endpoint = id ? `Visitas/${id}` : 'Visitas';
+                endpoint = id ? `${TABLE_IDS.Visitas}/${id}` : TABLE_IDS.Visitas;
                 const isRescheduling = form.querySelector('#is-rescheduling').value === 'true';
                 body = { DataVisita: form.querySelector('#visita-data').value, HoraInicio: form.querySelector('#visita-inicio').value, HoraFim: form.querySelector('#visita-fim').value, Atividades: form.querySelector('#visita-atividades').value };
                 const consultorIdVisita = parseInt(form.querySelector('#visita-consultor').value);
@@ -3702,7 +3727,7 @@ function applyAndRenderValidades() {
             }
             case 'ferias-form': case 'atestados-form': case 'epis-form': case 'ativos-form': {
                 const type = form.id.split('-')[0]; // 'ferias', 'atestados', 'epis', 'ativos'
-                const tableMap = { ferias: 'Ferias', atestados: 'Atestados', epis: 'Epis_Entregues', ativos: 'Ativos_Entregues' };
+                const tableMap = { ferias: TABLE_IDS.Ferias, atestados: TABLE_IDS.Atestados, epis: TABLE_IDS.EpisEntregues, ativos: TABLE_IDS.AtivosEntregues };
                 const fetchMap = { ferias: fetchFerias, atestados: fetchAtestados, epis: fetchEpis, ativos: fetchAtivos };
                 const renderMap = { ferias: applyAndRenderFerias, atestados: applyAndRenderAtestados, epis: applyAndRenderEpis, ativos: applyAndRenderAtivos };
                 
@@ -3725,7 +3750,7 @@ function applyAndRenderValidades() {
                 if (type === 'atestados') {
                     const anexoInput = form.querySelector('#atestados-anexo');
                     if (anexoInput && anexoInput.files[0]) {
-                        const anexoData = await uploadFile('Atestados', 'Anexo', anexoInput.files[0]);
+                        const anexoData = await uploadFile(TABLE_IDS.Atestados, 'Anexo', anexoInput.files[0]);
                         if (anexoData) body.Anexo = [anexoData];
                     }
                 }
@@ -3739,13 +3764,13 @@ function applyAndRenderValidades() {
                 if (!form.querySelector('#doc-data').value) throw new Error('O campo "Data do Documento" é obrigatório.');
                 if (!id && !form.querySelector('#doc-anexo').files[0]) throw new Error('O campo "Anexar Arquivo" é obrigatório ao criar um novo documento.');
 
-                endpoint = id ? `Clientes_Docs/${id}` : 'Clientes_Docs';
+                endpoint = id ? `${TABLE_IDS.ClientesDocs}/${id}` : TABLE_IDS.ClientesDocs;
                 body = { Documento: form.querySelector('#doc-nome').value, Data: form.querySelector('#doc-data').value };
                 if (id) { body.Clientes_id = parseInt(clientIdForDoc); } else { body.Clientes = { "Id": parseInt(clientIdForDoc) }; }
                 
                 const anexoInput = form.querySelector('#doc-anexo');
                 if (anexoInput && anexoInput.files[0]) {
-                    const anexoData = await uploadFile('Clientes_Docs', 'Anexo', anexoInput.files[0]);
+                    const anexoData = await uploadFile(TABLE_IDS.ClientesDocs, 'Anexo', anexoInput.files[0]);
                     if (anexoData) body.Anexo = [anexoData];
                 }
                 callback = async () => {
@@ -3785,29 +3810,29 @@ function applyAndRenderValidades() {
         const { id, type } = activeDeleteItem;
         let endpoint = '', callback = null;
         switch(type) {
-            case 'receita': endpoint = `Receitas/${id}`; callback = async () => { await fetchReceitas(); applyAndRenderReceitas(); }; break;
+            case 'receita': endpoint = `${TABLE_IDS.Receitas}/${id}`; callback = async () => { await fetchReceitas(); applyAndRenderReceitas(); }; break;
             case 'validade': 
-    endpoint = `Validades/${id}`; 
+    endpoint = `${TABLE_IDS.Validades}/${id}`; 
     callback = async () => { await fetchValidades(); applyAndRenderValidades(); }; 
     break;
     case 'chamado': 
-            endpoint = `Chamados/${id}`; 
+            endpoint = `${TABLE_IDS.Chamados}/${id}`;
             callback = async () => { await fetchChamados(); applyAndRenderChamados(); }; 
             break;
-            case 'custo': endpoint = `Custos/${id}`; callback = async () => { await fetchCustos(); applyAndRenderCustos(); }; break;
-            case 'visita': endpoint = `Visitas/${id}`; callback = async () => { await fetchVisitas(); applyFilters(); }; break;
-            case 'consultor': endpoint = `Consultores/${id}`; callback = async () => { await fetchConsultores(); renderConsultores(); }; break;
-            case 'cliente': endpoint = `Clientes/${id}`; callback = async () => { await fetchClientes(); renderClientes(); }; break;
+            case 'custo': endpoint = `${TABLE_IDS.Custos}/${id}`; callback = async () => { await fetchCustos(); applyAndRenderCustos(); }; break;
+            case 'visita': endpoint = `${TABLE_IDS.Visitas}/${id}`; callback = async () => { await fetchVisitas(); applyFilters(); }; break;
+            case 'consultor': endpoint = `${TABLE_IDS.Consultores}/${id}`; callback = async () => { await fetchConsultores(); renderConsultores(); }; break;
+            case 'cliente': endpoint = `${TABLE_IDS.Clientes}/${id}`; callback = async () => { await fetchClientes(); renderClientes(); }; break;
             case 'servico': 
-                endpoint = `Servicos/${id}`; 
+                endpoint = `${TABLE_IDS.Servicos}/${id}`; 
                 callback = async () => { await fetchServicos(); applyAndRenderServicos(); }; 
                 break;
             case 'reembolso': 
-    endpoint = `Reembolsos/${id}`; 
+     endpoint = `${TABLE_IDS.Reembolsos}/${id}`; 
     callback = async () => { await fetchReembolsos(); applyAndRenderReembolsos(); }; 
     break;
             case 'cliente_doc': 
-                endpoint = `Clientes_Docs/${id}`; 
+                endpoint = `${TABLE_IDS.ClientesDocs}/${id}`; 
                 callback = async () => { 
                     await fetchClienteDocs(); 
                     // Reabre o modal do cliente correto para atualizar a lista
@@ -3817,12 +3842,12 @@ function applyAndRenderValidades() {
                     }
                 }; 
                 break;
-            case 'ferias': endpoint = `Ferias/${id}`; callback = async () => { await fetchFerias(); applyAndRenderFerias(); }; break;
-            case 'atestado': endpoint = `Atestados/${id}`; callback = async () => { await fetchAtestados(); applyAndRenderAtestados(); }; break;
-            case 'epi': endpoint = `Epis_Entregues/${id}`; callback = async () => { await fetchEpis(); applyAndRenderEpis(); }; break;
-            case 'ativo': endpoint = `Ativos_Entregues/${id}`; callback = async () => { await fetchAtivos(); applyAndRenderAtivos(); }; break;
-            case 'item_catalogo': endpoint = `Itens_Catalogo/${id}`; callback = async () => { await fetchItensCatalogo(); renderItensDeRequisicao(); renderCategoryFilters(); }; break;
-            case 'requisicao': endpoint = `Requisicoes/${id}`; callback = async () => { await fetchRequisicoes(); applyRequisicaoFilters(); }; break;
+            case 'ferias': endpoint = `${TABLE_IDS.Ferias}/${id}`; callback = async () => { await fetchFerias(); applyAndRenderFerias(); }; break;
+            case 'atestado': endpoint = `${TABLE_IDS.Atestados}/${id}`; callback = async () => { await fetchAtestados(); applyAndRenderAtestados(); }; break;
+            case 'epi': endpoint = `${TABLE_IDS.EpisEntregues}/${id}`; callback = async () => { await fetchEpis(); applyAndRenderEpis(); }; break;
+            case 'ativo': endpoint = `${TABLE_IDS.AtivosEntregues}/${id}`; callback = async () => { await fetchAtivos(); applyAndRenderAtivos(); }; break;
+            case 'item_catalogo': endpoint = `${TABLE_IDS.ItensCatalogo}/${id}`; callback = async () => { await fetchItensCatalogo(); renderItensDeRequisicao(); renderCategoryFilters(); }; break;
+            case 'requisicao': endpoint = `${TABLE_IDS.Requisicoes}/${id}`; callback = async () => { await fetchRequisicoes(); applyRequisicaoFilters(); }; break;
             default: hideModal(allElements.deleteConfirmModal); return;
         }
         showLoadingOverlay('Apagando...');
@@ -3854,7 +3879,7 @@ async function handleEditItemQuantity(itemJoinId, currentQty, itemName, requisic
     }
 
     showLoadingOverlay('Atualizando quantidade...');
-    const result = await nocoFetch(`mbx9bvfljeh24su/${itemJoinId}`, {
+     const result = await nocoFetch(`${TABLE_IDS.ItensRequisicao}/${itemJoinId}`, {
         method: 'PATCH',
         body: JSON.stringify({ "Quantidade": newQty })
     });
@@ -3898,7 +3923,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
     }
 
     showLoadingOverlay('Atualizando observação...');
-    const result = await nocoFetch(`mbx9bvfljeh24su/${itemJoinId}`, {
+    const result = await nocoFetch(`${TABLE_IDS.ItensRequisicao}/${itemJoinId}`, {
         method: 'PATCH',
         body: JSON.stringify({ "Observacao": newObs })
     });
@@ -3935,7 +3960,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
    async function handleDeleteItemFromRequisition(itemJoinId, requisicaoId) {
         if (confirm('Tem certeza que deseja remover este item da requisição?')) {
             showLoadingOverlay('Removendo item...');
-            const result = await nocoFetch(`mbx9bvfljeh24su/${itemJoinId}`, { method: 'DELETE' });
+            const result = await nocoFetch(`${TABLE_IDS.ItensRequisicao}/${itemJoinId}`, { method: 'DELETE' });
             hideLoadingOverlay();
 
             if (result && result.success) {
@@ -4004,13 +4029,13 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
 
         let table;
         if (type === 'receita') {
-            table = 'Receitas';
+             table = TABLE_IDS.Receitas;
         } else if (type === 'custo') {
-            table = 'Custos';
+            table = TABLE_IDS.Custos;
         } else if (type === 'reembolso') {
-            table = 'Reembolsos';
+            table = TABLE_IDS.Reembolsos;
         } else if (type === 'servico') {
-             table = 'Servicos';
+             table = TABLE_IDS.Servicos;
              // Lógica específica para serviços se necessário (ex: Pendente -> Em Andamento -> Concluido)
              // Como o botão atual é apenas um toggle simples, vamos manter a lógica binária ou adaptar se for ciclo
              if(currentStatus === 'Pendente') newStatus = 'Em Andamento';
@@ -4376,7 +4401,14 @@ async function verificarEGerarCustosRecorrentes() {
                 console.log(`Gerando custo faltante para ${novoCustoBody.Credor} em ${novoCustoBody.Vencimento}`);
                 
                 promessasDeCriacao.push(
-                    nocoFetch('Custos', {
+                    nocoFetch(TABLE_IDS.Custos, {
+                        method: 'POST',
+                        body: JSON.stringify(novaReceitaBody) // Nota: o nome da variável no código original era 'novoCustoBody', mas na receita era 'novaReceitaBody'. Se você copiou a lógica, verifique se a variável está correta no contexto da função de custos. No seu código original de custos estava 'novoCustoBody'. Vou manter 'novoCustoBody' abaixo para garantir.
+                    })
+                );
+                // Correção no code block para refletir a variável correta da função de custos
+                promessasDeCriacao.push(
+                    nocoFetch(TABLE_IDS.Custos, {
                         method: 'POST',
                         body: JSON.stringify(novoCustoBody)
                     })
@@ -4421,9 +4453,9 @@ async function handleSaveRequisitionItems() {
             "Requisicoes": { "Id": parseInt(requisicaoId) },
             "Itens_Catalogo": { "Id": parseInt(item.itemId) },
             "Quantidade": item.quantidade,
-            "Observacao": item.observacao // <-- CAMPO ADICIONADO AQUI
+            "Observacao": item.observacao 
         };
-        return nocoFetch('mbx9bvfljeh24su', { method: 'POST', body: JSON.stringify(body) });
+         return nocoFetch(TABLE_IDS.ItensRequisicao, { method: 'POST', body: JSON.stringify(body) });
     });
 
     try {
@@ -4480,7 +4512,7 @@ async function gerarProximaReceitaRecorrente(receitaOriginal) {
         Recorrente: true
     };
     
-    await nocoFetch('Receitas', {
+    await nocoFetch(TABLE_IDS.Receitas, {
         method: 'POST',
         body: JSON.stringify(novaReceitaBody)
     });
@@ -4534,7 +4566,7 @@ async function verificarEGerarReceitasRecorrentes() {
                 console.log(`Gerando receita faltante para ${ultimaReceitaNaSerie.Clientes.Nome} em ${novaReceitaBody.Vencimento}`);
                 
                 promessasDeCriacao.push(
-                    nocoFetch('Receitas', {
+                    nocoFetch(TABLE_IDS.Receitas, {
                         method: 'POST',
                         body: JSON.stringify(novaReceitaBody)
                     })
@@ -4587,7 +4619,7 @@ async function gerarProximoCustoRecorrente(custoOriginal) {
     };
     
     // Envia a requisição para criar o novo custo
-    await nocoFetch('Custos', {
+    await nocoFetch(TABLE_IDS.Custos, {
         method: 'POST',
         body: JSON.stringify(novoCustoBody)
     });
@@ -5810,7 +5842,7 @@ function createKanbanCard(v){
                 CheckIn: new Date().toISOString(),
                 CheckInLocal: `${location.lat},${location.lng}`
             };
-            const result = await nocoFetch(`my171lb23foevmb/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
+            const result = await nocoFetch(`${TABLE_IDS.Visitas}/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
             
             if (result) {
                 await fetchVisitas();
@@ -5831,7 +5863,7 @@ function createKanbanCard(v){
                 CheckOut: new Date().toISOString(),
                 CheckOutLocal: `${location.lat},${location.lng}`
             };
-            const result = await nocoFetch(`my171lb23foevmb/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
+            const result = await nocoFetch(`${TABLE_IDS.Visitas}/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
 
             if (result) {
                 await fetchVisitas();
@@ -6056,7 +6088,7 @@ async function handleChamadoStatusDrop(chamadoId, newStatus) {
     const chamado = chamadosData.find(c => c.Id == chamadoId);
     if (chamado && chamado.Status !== newStatus) {
         showLoadingOverlay('Atualizando status...');
-        const result = await nocoFetch(`Chamados/${chamadoId}`, {
+        const result = await nocoFetch(`${TABLE_IDS.Chamados}/${chamadoId}`, {
             method: 'PATCH',
             body: JSON.stringify({ Status: newStatus })
         });
@@ -6125,7 +6157,7 @@ async function handleChamadoStatusDrop(chamadoId, newStatus) {
             "Status": "Pendente",
             "DataRequisicao": new Date().toISOString()
         };
-        const result = await nocoFetch('moo48pf65si2d0y', { method: 'POST', body: JSON.stringify(body) });
+        const result = await nocoFetch(TABLE_IDS.Requisicoes, { method: 'POST', body: JSON.stringify(body) });
         
         // A overlay é escondida aqui, pois a próxima tela (modal) já é a de interação
         hideLoadingOverlay();
@@ -6207,7 +6239,7 @@ function openRequisicaoItemModal(requisicaoId) {
         
         if (confirm(`Deseja realmente alterar o status desta requisição para "${newStatus}"?`)) {
             showLoadingOverlay('Alterando status...');
-            const result = await nocoFetch(`moo48pf65si2d0y/${id}`, {
+            const result = await nocoFetch(`${TABLE_IDS.Requisicoes}/${id}`, {
                 method: 'PATCH',
                 body: JSON.stringify({ Status: newStatus })
             });
