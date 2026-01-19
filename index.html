@@ -2615,7 +2615,7 @@ async function fetchChamados() {
         if(result && result.list) chamadosData = result.list; else chamadosData = []; 
     }
     async function fetchConsultores() {
-        const result = await nocoFetch('Consultores?nested[all]=true');
+        const result = await nocoFetch('msqfzw64xaa0kgi?nested[all]=true');
         if (result && result.list) {
             consultoresData = result.list;
             // Ordena a array de consultores pelo nome em ordem alfabética
