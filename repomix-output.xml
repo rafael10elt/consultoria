@@ -2821,7 +2821,7 @@ async function fetchAllData() {
     hideLoadingOverlay();
 }
 async function fetchChamados() { 
-        const result = await nocoFetch('Chamados?nested[all]=true'); 
+        const result = await nocoFetch('mfflpuoeh293dxp?nested[all]=true'); 
         if(result && result.list) chamadosData = result.list; else chamadosData = []; 
     }
     async function fetchConsultores() {
@@ -2841,33 +2841,33 @@ async function fetchChamados() {
         return result;
     }
 async function fetchServicos() { 
-        const result = await nocoFetch('Servicos?nested[all]=true'); 
+        const result = await nocoFetch('mijp6lt9ved9lfj?nested[all]=true'); 
         if(result && result.list) servicosData = result.list; else servicosData = []; 
     }
     async function fetchClientes() {
-        const result = await nocoFetch('Clientes?nested[all]=true');
+        const result = await nocoFetch('ms3zgw1f0nu9w1p?nested[all]=true');
         if (result && result.list) {
             clientesData = result.list;
             // Ordena a array de clientes pelo nome em ordem alfabética
             clientesData.sort((a, b) => a.Nome.localeCompare(b.Nome));
         }
-    }   async function fetchVisitas() { const result = await nocoFetch('Visitas?nested[all]=true'); if(result && result.list) { visitsData = result.list.map(v => ({...v, startTime: v.HoraInicio ? `${v.DataVisita}T${v.HoraInicio}`:null, endTime: v.HoraFim ? `${v.DataVisita}T${v.HoraFim}`:null })); } else { visitsData = []; }}
-    async function fetchReceitas() { const result = await nocoFetch('Receitas?nested[all]=true'); if (result && result.list) receitasData = result.list; }
+    }   async function fetchVisitas() { const result = await nocoFetch('my171lb23foevmb?nested[all]=true'); if(result && result.list) { visitsData = result.list.map(v => ({...v, startTime: v.HoraInicio ? `${v.DataVisita}T${v.HoraInicio}`:null, endTime: v.HoraFim ? `${v.DataVisita}T${v.HoraFim}`:null })); } else { visitsData = []; }}
+    async function fetchReceitas() { const result = await nocoFetch('mj1agw70d2x85gj?nested[all]=true'); if (result && result.list) receitasData = result.list; }
     async function fetchValidades() { 
-    const result = await nocoFetch('Validades?nested[all]=true'); 
+    const result = await nocoFetch('mrjwfbtszbjgdkh?nested[all]=true'); 
     if(result && result.list) validadesData = result.list; else validadesData = []; 
 }
-    async function fetchCustos() { const result = await nocoFetch('Custos?nested[all]=true'); if (result && result.list) custosData = result.list; }
+    async function fetchCustos() { const result = await nocoFetch('mi8ylg1xhddp82y?nested[all]=true'); if (result && result.list) custosData = result.list; }
    async function fetchRequisicoes() { 
-        const result = await nocoFetch('Requisicoes?nested[all]=true'); // Busca com os relacionamentos aninhados
+        const result = await nocoFetch('moo48pf65si2d0y?nested[all]=true'); // Busca com os relacionamentos aninhados
         if(result && result.list) requisicoesData = result.list; else requisicoesData = []; 
     }
 async function fetchRequisicoesItens() { 
-        const result = await nocoFetch('Requisicoes_Itens?nested[all]=true'); 
+        const result = await nocoFetch('mbx9bvfljeh24su?nested[all]=true'); 
         if(result && result.list) requisicoesItensData = result.list; else requisicoesItensData = []; 
     }
      async function fetchItensCatalogo() {
-         const result = await nocoFetch('Itens_Catalogo?nested[all]=true');
+         const result = await nocoFetch('m6uqdmgtgagmio7?nested[all]=true');
          if(result && result.list) {
             allItems = result.list;
             itemData.consumo = allItems.reduce((acc, item) => {
@@ -2883,16 +2883,16 @@ async function fetchRequisicoesItens() {
             }, {});
          }
     }
-    async function fetchFerias() { const result = await nocoFetch('Ferias?nested[all]=true'); if(result && result.list) feriasData = result.list; else feriasData = []; }
-    async function fetchAtestados() { const result = await nocoFetch('Atestados?nested[all]=true'); if(result && result.list) atestadosData = result.list; else atestadosData = []; }
-    async function fetchEpis() { const result = await nocoFetch('Epis_Entregues?nested[all]=true'); if(result && result.list) episEntreguesData = result.list; else episEntreguesData = []; }
-    async function fetchAtivos() { const result = await nocoFetch('Ativos_Entregues?nested[all]=true'); if(result && result.list) ativosData = result.list; else ativosData = []; }
+    async function fetchFerias() { const result = await nocoFetch('mc8m7tuzpqmo6j7?nested[all]=true'); if(result && result.list) feriasData = result.list; else feriasData = []; }
+    async function fetchAtestados() { const result = await nocoFetch('mvg73byj4kzemxh?nested[all]=true'); if(result && result.list) atestadosData = result.list; else atestadosData = []; }
+    async function fetchEpis() { const result = await nocoFetch('mfdmr52xydicr99?nested[all]=true'); if(result && result.list) episEntreguesData = result.list; else episEntreguesData = []; }
+    async function fetchAtivos() { const result = await nocoFetch('mjcmq29lrnam988?nested[all]=true'); if(result && result.list) ativosData = result.list; else ativosData = []; }
     async function fetchClienteDocs() { 
-        const result = await nocoFetch('Clientes_Docs?nested[all]=true'); 
+        const result = await nocoFetch('mj5q2oq1evhs2sf?nested[all]=true'); 
         if(result && result.list) clienteDocsData = result.list; else clienteDocsData = []; 
     }
 async function fetchReembolsos() { 
-    const result = await nocoFetch('Reembolsos?nested[all]=true'); 
+    const result = await nocoFetch('mwnon5uro3mzswe?nested[all]=true'); 
     if(result && result.list) reembolsosData = result.list; else reembolsosData = []; 
 }
     // --- Lógica de Autenticação e Sessão ---
@@ -3036,7 +3036,7 @@ async function fetchReembolsos() {
     hideLoadingOverlay();
 }
     async function checkSession() { const userString = sessionStorage.getItem('loggedInUser'); if (userString) { allElements.loginScreen.classList.add('hidden'); allElements.mainApp.classList.remove('hidden'); showLoadingOverlay('Restaurando sessão...'); await initializeUserSession(JSON.parse(userString)); } else { allElements.loginScreen.classList.remove('hidden'); } }
-    async function authenticateUser(login, senha) { const endpoint = `Consultores?where=(Login,eq,${login})~and(Senha,eq,${senha})`; const result = await nocoFetch(endpoint); return (result && result.list && result.list.length > 0) ? result.list[0] : null; }
+    async function authenticateUser(login, senha) { const endpoint = `msqfzw64xaa0kgi?where=(Login,eq,${login})~and(Senha,eq,${senha})`; const result = await nocoFetch(endpoint); return (result && result.list && result.list.length > 0) ? result.list[0] : null; }
  function restoreSubTabState() {
         const currentPageId = sessionStorage.getItem('currentPage');
         if (!currentPageId) return;
@@ -4064,7 +4064,7 @@ async function handleEditItemQuantity(itemJoinId, currentQty, itemName, requisic
     }
 
     showLoadingOverlay('Atualizando quantidade...');
-    const result = await nocoFetch(`Requisicoes_Itens/${itemJoinId}`, {
+    const result = await nocoFetch(`mbx9bvfljeh24su/${itemJoinId}`, {
         method: 'PATCH',
         body: JSON.stringify({ "Quantidade": newQty })
     });
@@ -4108,7 +4108,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
     }
 
     showLoadingOverlay('Atualizando observação...');
-    const result = await nocoFetch(`Requisicoes_Itens/${itemJoinId}`, {
+    const result = await nocoFetch(`mbx9bvfljeh24su/${itemJoinId}`, {
         method: 'PATCH',
         body: JSON.stringify({ "Observacao": newObs })
     });
@@ -4145,7 +4145,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
    async function handleDeleteItemFromRequisition(itemJoinId, requisicaoId) {
         if (confirm('Tem certeza que deseja remover este item da requisição?')) {
             showLoadingOverlay('Removendo item...');
-            const result = await nocoFetch(`Requisicoes_Itens/${itemJoinId}`, { method: 'DELETE' });
+            const result = await nocoFetch(`mbx9bvfljeh24su/${itemJoinId}`, { method: 'DELETE' });
             hideLoadingOverlay();
 
             if (result && result.success) {
@@ -4633,7 +4633,7 @@ async function handleSaveRequisitionItems() {
             "Quantidade": item.quantidade,
             "Observacao": item.observacao // <-- CAMPO ADICIONADO AQUI
         };
-        return nocoFetch('Requisicoes_Itens', { method: 'POST', body: JSON.stringify(body) });
+        return nocoFetch('mbx9bvfljeh24su', { method: 'POST', body: JSON.stringify(body) });
     });
 
     try {
@@ -6020,7 +6020,7 @@ function createKanbanCard(v){
                 CheckIn: new Date().toISOString(),
                 CheckInLocal: `${location.lat},${location.lng}`
             };
-            const result = await nocoFetch(`Visitas/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
+            const result = await nocoFetch(`my171lb23foevmb/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
             
             if (result) {
                 await fetchVisitas();
@@ -6041,7 +6041,7 @@ function createKanbanCard(v){
                 CheckOut: new Date().toISOString(),
                 CheckOutLocal: `${location.lat},${location.lng}`
             };
-            const result = await nocoFetch(`Visitas/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
+            const result = await nocoFetch(`my171lb23foevmb/${vId}`, { method: 'PATCH', body: JSON.stringify(body) });
 
             if (result) {
                 await fetchVisitas();
@@ -6335,7 +6335,7 @@ async function handleChamadoStatusDrop(chamadoId, newStatus) {
             "Status": "Pendente",
             "DataRequisicao": new Date().toISOString()
         };
-        const result = await nocoFetch('Requisicoes', { method: 'POST', body: JSON.stringify(body) });
+        const result = await nocoFetch('moo48pf65si2d0y', { method: 'POST', body: JSON.stringify(body) });
         
         // A overlay é escondida aqui, pois a próxima tela (modal) já é a de interação
         hideLoadingOverlay();
@@ -6417,7 +6417,7 @@ function openRequisicaoItemModal(requisicaoId) {
         
         if (confirm(`Deseja realmente alterar o status desta requisição para "${newStatus}"?`)) {
             showLoadingOverlay('Alterando status...');
-            const result = await nocoFetch(`Requisicoes/${id}`, {
+            const result = await nocoFetch(`moo48pf65si2d0y/${id}`, {
                 method: 'PATCH',
                 body: JSON.stringify({ Status: newStatus })
             });
