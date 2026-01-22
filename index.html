@@ -2798,62 +2798,25 @@ async function fetchRequisicoesItens() {
         alert('Usuário ou senha inválidos.'); 
     } 
 }
-    async function initializeUserSession(user) {
+   async function initializeUserSession(user) {
+    // 1. PRIMEIRO: Define quem é o usuário logado globalmente
     loggedInUser = user;
+
+    // Atualiza nome e função na interface
     document.getElementById('logged-user-name').textContent = loggedInUser.Login;
     document.querySelector('#logged-user-name + p').textContent = loggedInUser.Role || 'Consultor';
+
+    // Atualiza Avatar
     const userAvatar = document.querySelector('#logged-user-name').closest('div').nextElementSibling;
+    if (userAvatar && loggedInUser.Foto && loggedInUser.Foto[0]?.signedPath) {
+        userAvatar.src = `${NocoDB_BaseURL}/${loggedInUser.Foto[0].signedPath}`;
+    } else if (userAvatar) {
+        userAvatar.src = `https://i.pravatar.cc/150?u=${loggedInUser.Login || loggedInUser.Nome}`;
+    }
+
+    // Configuração de Filtros Globais (Visitas)
     const consultorFilterWrapper = document.getElementById('dash-visit-consultor-wrapper');
     const clienteFilterWrapper = document.getElementById('dash-visit-cliente-wrapper');
-    const novoClienteBtn = document.getElementById('show-cliente-form');
-    if (novoClienteBtn) {
-        if (loggedInUser.Role === 'Admin') {
-            novoClienteBtn.style.display = 'block'; // ou 'inline-block', dependendo do seu CSS
-        } else {
-            novoClienteBtn.style.display = 'none';
-        }
-    }
-    // --- INÍCIO DA ALTERAÇÃO: Restringir abas do Dashboard para Gestor ---
-    const balancoTab = document.querySelector('.dashboard-nav-btn[data-target="dashboard-balanco"]');
-    const receitasTab = document.querySelector('.dashboard-nav-btn[data-target="dashboard-receitas"]');
-    const custosTab = document.querySelector('.dashboard-nav-btn[data-target="dashboard-custos"]');
-    // A aba de visitas já foi selecionada anteriormente, mas vamos pegá-la de novo para clareza
-    const visitasTabGestor = document.querySelector('.dashboard-nav-btn[data-target="dashboard-visitas"]'); 
-
-    // Conteúdos das abas
-    const balancoContent = document.getElementById('dashboard-balanco');
-    const receitasContent = document.getElementById('dashboard-receitas');
-    const custosContent = document.getElementById('dashboard-custos');
-    const visitasContentGestor = document.getElementById('dashboard-visitas');
-
-    if (loggedInUser.Role === 'Gestor') {
-        // Esconde as abas indesejadas
-        if (balancoTab) balancoTab.parentElement.style.display = 'none';
-        if (receitasTab) receitasTab.parentElement.style.display = 'none';
-        if (custosTab) custosTab.parentElement.style.display = 'none';
-
-        // Garante que a aba Visitas seja a única ativa
-        if (visitasTabGestor) {
-             // Remove a classe de ativa de todas as outras abas, caso alguma tenha
-            document.querySelectorAll('.dashboard-nav-btn').forEach(btn => {
-                btn.classList.remove('border-brand-gold', 'text-brand-gold');
-            });
-            visitasTabGestor.classList.add('border-brand-gold', 'text-brand-gold');
-        }
-        
-        // Garante que apenas o conteúdo de Visitas seja exibido
-        if (balancoContent) balancoContent.classList.add('hidden');
-        if (receitasContent) receitasContent.classList.add('hidden');
-        if (custosContent) custosContent.classList.add('hidden');
-        if (visitasContentGestor) visitasContentGestor.classList.remove('hidden');
-
-    } else if (loggedInUser.Role === 'Admin') {
-        // Bloco ELSE para garantir que o Admin sempre veja tudo
-        // Reverte as alterações caso um Admin faça login após um Gestor
-        if (balancoTab) balancoTab.parentElement.style.display = '';
-        if (receitasTab) receitasTab.parentElement.style.display = '';
-        if (custosTab) custosTab.parentElement.style.display = '';
-    }
     
     if (consultorFilterWrapper && clienteFilterWrapper) {
         if (loggedInUser && (loggedInUser.Role === 'Admin' || loggedInUser.Role === 'Gestor')) {
@@ -2864,79 +2827,92 @@ async function fetchRequisicoesItens() {
             clienteFilterWrapper.classList.add('hidden');
         }
     }
-    if (userAvatar && loggedInUser.Foto && loggedInUser.Foto[0]?.signedPath) {
-        userAvatar.src = `${NocoDB_BaseURL}/${loggedInUser.Foto[0].signedPath}`;
-    } else if(userAvatar) {
-        userAvatar.src = `https://i.pravatar.cc/150?u=${loggedInUser.Login || loggedInUser.Nome}`;
+
+    // Botão Novo Cliente e Filtros de Categoria (Apenas Admin)
+    const novoClienteBtn = document.getElementById('show-cliente-form');
+    const categoryFilters = document.getElementById('cliente-category-filters');
+    
+    if (novoClienteBtn) {
+        novoClienteBtn.style.display = (loggedInUser.Role === 'Admin') ? 'block' : 'none';
     }
+    if (categoryFilters) {
+        categoryFilters.style.display = (loggedInUser.Role === 'Admin') ? 'flex' : 'none';
+    }
+
+    // --- Lógica de Abas do Dashboard (Gestor vs Admin) ---
+    const balancoTab = document.querySelector('.dashboard-nav-btn[data-target="dashboard-balanco"]');
+    const receitasTab = document.querySelector('.dashboard-nav-btn[data-target="dashboard-receitas"]');
+    const custosTab = document.querySelector('.dashboard-nav-btn[data-target="dashboard-custos"]');
+    const visitasTabGestor = document.querySelector('.dashboard-nav-btn[data-target="dashboard-visitas"]');
+
+    const balancoContent = document.getElementById('dashboard-balanco');
+    const receitasContent = document.getElementById('dashboard-receitas');
+    const custosContent = document.getElementById('dashboard-custos');
+    const visitasContentGestor = document.getElementById('dashboard-visitas');
+
+    if (loggedInUser.Role === 'Gestor') {
+        // Esconde as abas financeiras
+        if (balancoTab) balancoTab.parentElement.style.display = 'none';
+        if (receitasTab) receitasTab.parentElement.style.display = 'none';
+        if (custosTab) custosTab.parentElement.style.display = 'none';
+
+        // Ativa a aba Visitas
+        document.querySelectorAll('.dashboard-nav-btn').forEach(btn => {
+            btn.classList.remove('border-brand-gold', 'text-brand-gold');
+        });
+        if (visitasTabGestor) visitasTabGestor.classList.add('border-brand-gold', 'text-brand-gold');
+
+        // Gerencia conteúdo
+        if (balancoContent) balancoContent.classList.add('hidden');
+        if (receitasContent) receitasContent.classList.add('hidden');
+        if (custosContent) custosContent.classList.add('hidden');
+        if (visitasContentGestor) visitasContentGestor.classList.remove('hidden');
+
+    } else if (loggedInUser.Role === 'Admin') {
+        // Restaura abas para Admin
+        if (balancoTab) balancoTab.parentElement.style.display = '';
+        if (receitasTab) receitasTab.parentElement.style.display = '';
+        if (custosTab) custosTab.parentElement.style.display = '';
+    }
+
+    // Troca de telas (Login -> App)
     allElements.loginScreen.classList.add('hidden');
     allElements.mainApp.classList.remove('hidden');
 
-    // --- LÓGICA DE FILTROS REMOVIDA DAQUI ---
-    // Apenas a lógica de visibilidade do menu permanece
+    // --- Controle de Menu Lateral ---
     if (loggedInUser.Role === 'Admin') {
-        // Admin vê todas as páginas, não precisa de filtro.
         document.querySelectorAll('.nav-link').forEach(link => {
             link.style.display = 'flex';
         });
     } else {
-        if (loggedInUser.Role === 'Gestor') {
-            allowedPages = ['visitas', 'requisicao','clientes','reembolsos','validades'];
-        } else if (loggedInUser.Role === 'Consultor') {
-            allowedPages = ['visitas', 'requisicao','clientes','reembolsos','validades'];
-        }
-
-        // Aplica o filtro de páginas para Gestor e Consultor
+        const allowedPages = ['visitas', 'requisicao', 'clientes', 'reembolsos', 'validades'];
         document.querySelectorAll('.nav-link').forEach(link => {
             const target = link.dataset.target;
             link.style.display = allowedPages.includes(target) ? 'flex' : 'none';
         });
     }
-    const financeiroTab = document.querySelector('.dashboard-nav-btn[data-target="dashboard-financeiro"]');
-    const visitasTab = document.querySelector('.dashboard-nav-btn[data-target="dashboard-visitas"]');
-    const financeiroContent = document.getElementById('dashboard-financeiro');
-    const visitasContent = document.getElementById('dashboard-visitas');
 
-    if (financeiroTab && visitasTab && financeiroContent && visitasContent) {
-        if (loggedInUser.Role === 'Gestor') {
-            // 1. Esconde a aba "Financeiro"
-            financeiroTab.parentElement.style.display = 'none';
+    // 2. Carrega dados essenciais (Dropdowns, Dashboard, Consultores para validação)
+    await loadInitialData();
 
-            // 2. Garante que a aba "Visitas" seja a ativa por padrão
-            financeiroTab.classList.remove('border-brand-gold', 'text-brand-gold');
-            visitasTab.classList.add('border-brand-gold', 'text-brand-gold');
-
-            // 3. Mostra o conteúdo de "Visitas" e esconde o de "Financeiro"
-            financeiroContent.classList.add('hidden');
-            visitasContent.classList.remove('hidden');
-        } else {
-            // Garante que para outros roles (Admin), a aba esteja visível e o dashboard volte ao padrão
-            financeiroTab.parentElement.style.display = ''; // Reverte o 'display: none'
-            visitasTab.classList.remove('border-brand-gold', 'text-brand-gold');
-            financeiroTab.classList.add('border-brand-gold', 'text-brand-gold');
-            visitasContent.classList.add('hidden');
-            financeiroContent.classList.remove('hidden');
-        }
-    }
-    // Controla a visibilidade dos filtros de categoria de cliente
-    const categoryFilters = document.getElementById('cliente-category-filters');
-    if (categoryFilters) {
-        if (loggedInUser.Role === 'Admin') {
-            categoryFilters.style.display = 'flex'; // Mostra os filtros para o Admin
-        } else {
-            categoryFilters.style.display = 'none'; // Esconde para os outros
-        }
-    }
-    await loadInitialData(); // Carrega só o básico
-
+    // --- CORREÇÃO DO F5 E CARREGAMENTO DE PÁGINA ---
     let savedPage = sessionStorage.getItem('currentPage');
     
+    // Define página padrão se não houver salva
     savedPage = savedPage || (loggedInUser.Role === 'Admin' ? 'dashboard' : 'visitas');
+
+    // Importante: Chama o loadPageData para a página que vai abrir.
+    // Isso garante que se for 'requisicao', ele baixe os dados e aplique a data padrão de 45 dias
+    if (savedPage) {
+        await loadPageData(savedPage);
+    }
+
     navigateTo(savedPage, true);
     restoreSubTabState();
+    
     hideLoadingOverlay();
 }
-    async function checkSession() { const userString = sessionStorage.getItem('loggedInUser'); if (userString) { allElements.loginScreen.classList.add('hidden'); allElements.mainApp.classList.remove('hidden'); showLoadingOverlay('Restaurando sessão...'); await initializeUserSession(JSON.parse(userString)); } else { allElements.loginScreen.classList.remove('hidden'); } }
+async function checkSession() { const userString = sessionStorage.getItem('loggedInUser'); if (userString) { allElements.loginScreen.classList.add('hidden'); allElements.mainApp.classList.remove('hidden'); showLoadingOverlay('Restaurando sessão...'); await initializeUserSession(JSON.parse(userString)); } else { allElements.loginScreen.classList.remove('hidden'); } }
     async function authenticateUser(login, senha) { const endpoint = `${TABLE_IDS.Consultores}?where=(Login,eq,${login})~and(Senha,eq,${senha})`; const result = await nocoFetch(endpoint); return (result && result.list && result.list.length > 0) ? result.list[0] : null; }
 
     function restoreSubTabState() {
@@ -6649,22 +6625,28 @@ function renderCategoryFilters(){
         showModal(allElements.itemFormModal);
     }
 
-function applyRequisicaoFilters(){ 
-    const sD=document.getElementById('filter-req-start-date').value;
-    const eD=document.getElementById('filter-req-end-date').value;
-    const cId=document.getElementById('filter-req-consultor').value;
-    const status=document.getElementById('filter-req-status').value;
-    const item=document.getElementById('filter-req-item').value.toLowerCase(); 
+function applyRequisicaoFilters() { 
+    const sD = document.getElementById('filter-req-start-date').value;
+    const eD = document.getElementById('filter-req-end-date').value;
+    const cId = document.getElementById('filter-req-consultor').value;
+    const status = document.getElementById('filter-req-status').value;
+    const item = document.getElementById('filter-req-item').value.toLowerCase(); 
     
     let baseData = requisicoesData;
 
-    // O restante da filtragem agora opera sobre o conjunto de dados já permitido ('baseData')
-    let filtered = baseData.filter(r => 
-        (!sD || r.DataRequisicao >= sD) && 
-        (!eD || r.DataRequisicao <= eD) && 
-        (!cId || r.Consultores?.Id == cId) && 
-        (!status || r.Status === status)
-    ); 
+    let filtered = baseData.filter(r => {
+        // --- CORREÇÃO DE DATA ---
+        // O NocoDB retorna algo como "2026-01-22 14:30:00"
+        // Pegamos apenas os 10 primeiros caracteres: "2026-01-22"
+        const recordDate = r.DataRequisicao ? r.DataRequisicao.substring(0, 10) : '';
+
+        // Agora a comparação funciona corretamente para o dia atual
+        const dateMatch = (!sD || recordDate >= sD) && (!eD || recordDate <= eD);
+        const consultorMatch = (!cId || r.Consultores?.Id == cId);
+        const statusMatch = (!status || r.Status === status);
+
+        return dateMatch && consultorMatch && statusMatch;
+    }); 
     
     if(item){
         filtered = filtered.filter(r => {
@@ -6674,10 +6656,12 @@ function applyRequisicaoFilters(){
             });
         });
     } 
+    
+    // Ordenação: Mais recentes primeiro
     filtered.sort((a, b) => new Date(b.DataRequisicao) - new Date(a.DataRequisicao));
+    
     renderRequisicoes(filtered); 
 }
-
     function clearRequisicaoFilters() { 
     // Limpa selects e inputs de texto
     document.getElementById('filter-req-consultor').value = '';
