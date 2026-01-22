@@ -2668,16 +2668,42 @@ async function fetchChamados() {
         const result = await nocoFetch(`${TABLE_IDS.Chamados}?nested[all]=true`); 
         if(result && result.list) chamadosData = result.list; else chamadosData = []; 
     }
-    async function fetchConsultores() {
-        const result = await nocoFetch(`${TABLE_IDS.Consultores}?nested[all]=true`);
-        if (result && result.list) {
-            consultoresData = result.list;
-            // Ordena a array de consultores pelo nome em ordem alfabética
-            consultoresData.sort((a, b) => a.Nome.localeCompare(b.Nome));
-        }
-    }
+async function fetchConsultores() {
+    // Busca a lista atualizada do NocoDB
+    const result = await nocoFetch(`${TABLE_IDS.Consultores}?nested[all]=true`);
     
-    function generateRandomCode() {
+    if (result && result.list) {
+        consultoresData = result.list;
+        // Ordena a array de consultores pelo nome
+        consultoresData.sort((a, b) => a.Nome.localeCompare(b.Nome));
+
+        // --- INÍCIO DA VERIFICAÇÃO DE SEGURANÇA ---
+        
+        // Verifica se já sabemos quem é o usuário logado (definido no passo anterior)
+        if (loggedInUser) {
+            // Procura o usuário logado dentro da lista ATUALIZADA que acabou de chegar do banco
+            const usuarioNoBanco = consultoresData.find(c => c.Id === loggedInUser.Id);
+            
+            // Se encontrou o usuário E o status dele no banco for 'Inativo'
+            if (usuarioNoBanco && usuarioNoBanco.Status === 'Inativo') {
+                // Esconde o loading se estiver visível
+                hideLoadingOverlay();
+                
+                // Alerta o usuário
+                alert('Sua conta foi desativada pelo administrador. Você será desconectado.');
+                
+                // Limpa a sessão do navegador
+                sessionStorage.clear();
+                
+                // Recarrega a página (o que vai jogar ele para a tela de login)
+                location.reload();
+                return; // Para a execução aqui
+            }
+        }
+        // --- FIM DA VERIFICAÇÃO DE SEGURANÇA ---
+    }
+}
+function generateRandomCode() {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let result = 'PONTES-';
         for (let i = 0; i < 6; i++) {
@@ -2743,8 +2769,36 @@ async function fetchRequisicoesItens() {
         if(result && result.list) reembolsosData = result.list; else reembolsosData = []; 
     }
     // --- Lógica de Autenticação e Sessão ---
-    async function handleLogin(e) { e.preventDefault(); const username = document.getElementById('username').value, password = document.getElementById('password').value; if (!username || !password) { alert('Por favor, preencha usuário e senha.'); return; } showLoadingOverlay('Autenticando...'); const user = await authenticateUser(username, password); if (user) { sessionStorage.setItem('loggedInUser', JSON.stringify(user)); await initializeUserSession(user); } else { hideLoadingOverlay(); alert('Usuário ou senha inválidos.'); } }
- async function initializeUserSession(user) {
+    async function handleLogin(e) { 
+    e.preventDefault(); 
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value; 
+    
+    if (!username || !password) { 
+        alert('Por favor, preencha usuário e senha.'); 
+        return; 
+    } 
+    
+    showLoadingOverlay('Autenticando...'); 
+    
+    const user = await authenticateUser(username, password); 
+    
+    if (user) { 
+        // *** VERIFICAÇÃO DE STATUS ***
+        if (user.Status === 'Inativo') {
+            hideLoadingOverlay();
+            alert('Seu usuário está Inativo. Entre em contato com o administrador.');
+            return;
+        }
+
+        sessionStorage.setItem('loggedInUser', JSON.stringify(user)); 
+        await initializeUserSession(user); 
+    } else { 
+        hideLoadingOverlay(); 
+        alert('Usuário ou senha inválidos.'); 
+    } 
+}
+    async function initializeUserSession(user) {
     loggedInUser = user;
     document.getElementById('logged-user-name').textContent = loggedInUser.Login;
     document.querySelector('#logged-user-name + p').textContent = loggedInUser.Role || 'Consultor';
@@ -4482,41 +4536,48 @@ async function verificarEGerarCustosRecorrentes() {
  */
 async function handleSaveRequisitionItems() {
     const requisicaoId = document.getElementById('requisicao-item-form-modal').dataset.requisicaoId;
+    
     if (!requisicaoId || itemsParaAdicionar.length === 0) {
-        alert('Nenhum item para salvar.');
-        hideModal(document.getElementById('requisicao-item-form-modal'));
+        alert('Nenhum item para salvar ou requisição não identificada.');
         return;
     }
 
-    showLoadingOverlay('Salvando itens...');
-
-    const savePromises = itemsParaAdicionar.map(item => {
-        const body = {
-            "Requisicoes": { "Id": parseInt(requisicaoId) },
-            "Itens_Catalogo": { "Id": parseInt(item.itemId) },
-            "Quantidade": item.quantidade,
-            "Observacao": item.observacao 
-        };
-         return nocoFetch(TABLE_IDS.ItensRequisicao, { method: 'POST', body: JSON.stringify(body) });
-    });
+    showLoadingOverlay('Salvando itens da requisição...');
 
     try {
+        // Cria um array de promessas para salvar todos os itens
+        const savePromises = itemsParaAdicionar.map(item => {
+            const body = {
+                "Requisicoes": { "Id": parseInt(requisicaoId) },
+                "Itens_Catalogo": { "Id": parseInt(item.itemId) },
+                "Quantidade": parseInt(item.quantidade),
+                "Observacao": item.observacao || ""
+            };
+            return nocoFetch(TABLE_IDS.ItensRequisicao, { method: 'POST', body: JSON.stringify(body) });
+        });
+
+        // Espera todos os itens serem salvos
         await Promise.all(savePromises);
 
-        // Força a atualização da lista local de itens de requisição
-        await fetchRequisicoesItens();
+        // Limpa a lista temporária
+        itemsParaAdicionar = [];
+        renderItemsParaAdicionarList();
 
-        hideLoadingOverlay();
-        hideModal(document.getElementById('requisicao-item-form-modal'));
+        // Fecha o modal
+        hideModal(allElements.requisicaoItemFormModal);
 
-        // As linhas abaixo já garantem que a tabela principal é atualizada
-        await fetchRequisicoes();
-        applyRequisicaoFilters();
+        // Atualiza os dados globais e a interface
+        await fetchRequisicoes();      // Atualiza a lista principal
+        await fetchRequisicoesItens(); // Atualiza a lista de itens vinculados
+        applyRequisicaoFilters();      // Re-renderiza a tela
+
+        alert('Requisição salva com sucesso!');
 
     } catch (error) {
+        console.error('Erro ao salvar itens:', error);
+        alert('Ocorreu um erro ao salvar os itens. Tente novamente.');
+    } finally {
         hideLoadingOverlay();
-        alert('Ocorreu um erro ao salvar um ou mais itens. Por favor, tente novamente.');
-        console.error('Erro ao salvar itens da requisição:', error);
     }
 }
 /**
@@ -5690,11 +5751,19 @@ function renderAcoesCriticasTable(data) {
     function updateVisitsStatusChart(v) { const ctx=document.getElementById('visits-status-chart').getContext('2d'), iD=document.documentElement.classList.contains('dark'), lC=iD?'#e5e7eb':'#373737', sC=v.reduce((a,v)=>{a[v.Status]=(a[v.Status]||0)+1; return a;},{}); const cD={labels:Object.keys(sC), datasets:[{data:Object.values(sC), backgroundColor:Object.keys(sC).map(s=>({'Agendada':'#3B82F6','Concluída':'#10B981','Em Andamento':'#F59E0B'}[s]||'#6B7280'))}]}; if(visitsStatusChart){Object.assign(visitsStatusChart.data,cD); Object.assign(visitsStatusChart.options.plugins.legend.labels,{color:lC}); visitsStatusChart.update();}else{visitsStatusChart=new Chart(ctx,{type:'doughnut',data:cD,options:{responsive:true,plugins:{legend:{position:'top',labels:{color:lC}}}}});}}
     const sConf={'Agendada':{color:'blue',label:'Agendada'},'Em Andamento':{color:'yellow',label:'Em Andamento'},'Concluída':{color:'green',label:'Concluída'}};
 function applyFilters() {
-    const s = document.getElementById('filter-start-date').value,
-        e = document.getElementById('filter-end-date').value,
-        c = document.getElementById('filter-consultor').value,
-        cl = document.getElementById('filter-cliente').value,
-        st = document.getElementById('filter-status').value;
+    const s = document.getElementById('filter-start-date').value;
+    const e = document.getElementById('filter-end-date').value;
+    // Pega o valor do filtro visual, mas pode ser sobrescrito abaixo
+    let c = document.getElementById('filter-consultor').value; 
+    const cl = document.getElementById('filter-cliente').value;
+    const st = document.getElementById('filter-status').value;
+
+    // *** LÓGICA DE SEGURANÇA PARA CONSULTOR ***
+    // Se o usuário logado for Consultor, força o filtro 'c' ser o ID dele,
+    // ignorando o que estiver selecionado no dropdown (caso esteja visível por erro)
+    if (loggedInUser && loggedInUser.Role === 'Consultor') {
+        c = loggedInUser.Id;
+    }
 
     let f = visitsData.filter(v =>
         (!s || v.DataVisita >= s) &&
@@ -5704,13 +5773,14 @@ function applyFilters() {
         (!st || v.Status === st)
     );
 
+    // Lógica existente para Gestor/Consultor ver apenas mês atual se não for Concluída
     if (loggedInUser && (loggedInUser.Role === 'Gestor' || loggedInUser.Role === 'Consultor')) {
         const today = new Date();
         const currentYear = today.getFullYear();
         const currentMonth = today.getMonth();
 
         f = f.filter(v => {
-            if (v.Status !== 'Concluída') {
+            if (v.Status === 'Concluída') {
                 return true;
             }
             const visitDate = new Date(v.DataVisita + 'T00:00:00');
@@ -5718,17 +5788,15 @@ function applyFilters() {
         });
     }
 
-    // ALTERAÇÃO: Ordena pela data e hora de início, do MAIS RECENTE para o MAIS ANTIGO.
+    // Ordenação
     f.sort((a, b) => {
         const dateTimeA = new Date(`${a.DataVisita}T${a.HoraInicio}`);
         const dateTimeB = new Date(`${b.DataVisita}T${b.HoraInicio}`);
-        return dateTimeB - dateTimeA; // Invertido para decrescente
+        return dateTimeB - dateTimeA;
     });
-    
 
     renderAllVisits(f);
-}   
-
+}
 function clearFilters(){
     document.getElementById('filter-start-date').value = '';
     document.getElementById('filter-end-date').value = '';
@@ -7006,9 +7074,9 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
 function setDefaultRequisicaoDates() {
     const today = new Date();
     const pastDate = new Date();
-    pastDate.setDate(today.getDate() - 45);
+    pastDate.setDate(today.getDate() - 45); // Subtrai 45 dias
 
-    // Formata para YYYY-MM-DD (formato exigido pelo input type="date")
+    // Formata para YYYY-MM-DD
     const formatDate = (date) => date.toISOString().split('T')[0];
 
     const startInput = document.getElementById('filter-req-start-date');
@@ -7019,6 +7087,7 @@ function setDefaultRequisicaoDates() {
         endInput.value = formatDate(today);
     }
 }
+
 async function generateRequisicaoReport() {
     const selectedCheckboxes = document.querySelectorAll('.req-checkbox:checked');
     
