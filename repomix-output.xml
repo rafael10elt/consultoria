@@ -5959,21 +5959,36 @@ function applyFilters() {
         (!st || v.Status === st)
     );
 
-    // Lógica existente para Gestor/Consultor ver apenas mês atual se não for Concluída
+    // Lógica para Gestor/Consultor ver mês atual e o próximo (independente do status)
     if (loggedInUser && (loggedInUser.Role === 'Gestor' || loggedInUser.Role === 'Consultor')) {
         const today = new Date();
         const currentYear = today.getFullYear();
         const currentMonth = today.getMonth();
 
+        // Calcula o próximo mês e ajusta o ano se necessário
+        let nextMonth = currentMonth + 1;
+        let nextMonthYear = currentYear;
+        if (nextMonth > 11) {
+            nextMonth = 0;
+            nextMonthYear = currentYear + 1;
+        }
+
         f = f.filter(v => {
-            if (v.Status === 'Concluída') {
-                return true;
-            }
+            // Convertemos a data da visita
             const visitDate = new Date(v.DataVisita + 'T00:00:00');
-            return visitDate.getFullYear() === currentYear && visitDate.getMonth() === currentMonth;
+            const vYear = visitDate.getFullYear();
+            const vMonth = visitDate.getMonth();
+
+            // Verifica se é mês atual
+            const isCurrentMonth = (vYear === currentYear && vMonth === currentMonth);
+            // Verifica se é próximo mês
+            const isNextMonth = (vYear === nextMonthYear && vMonth === nextMonth);
+
+            // Retorna verdadeiro apenas se estiver nessas datas, ignorando o status
+            return isCurrentMonth || isNextMonth;
         });
     }
-
+    
     // Ordenação
     f.sort((a, b) => {
         const dateTimeA = new Date(`${a.DataVisita}T${a.HoraInicio}`);
