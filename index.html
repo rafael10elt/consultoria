@@ -3511,7 +3511,7 @@ function applyAndRenderValidades() {
         function applyConsultorFilters() {
         const searchTerm = document.getElementById('rh-search').value.toLowerCase();
         const statusFilterBtn = document.querySelector('#consultor-status-filters .filter-btn-active');
-        const statusFilter = statusFilterBtn ? statusFilterBtn.dataset.status : 'Todos';
+        const statusFilter = statusFilterBtn ? statusFilterBtn.dataset.status : 'Ativos';
 
         const filteredData = consultoresData.filter(consultor => {
             const nameMatch = consultor.Nome.toLowerCase().includes(searchTerm);
