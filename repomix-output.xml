@@ -85,58 +85,6 @@ This section contains the contents of the repository's files.
 }
 </file>
 
-<file path="netlify/functions/upload.js">
-const axios = require('axios');
-const FormData = require('form-data');
-
-exports.handler = async function(event, context) {
-    // 1. Verifica se a requisição é do tipo POST
-    if (event.httpMethod !== 'POST') {
-        return { statusCode: 405, body: 'Method Not Allowed' };
-    }
-
-    try {
-        // 2. Pega os dados enviados pelo frontend (nome do arquivo, tipo, e o arquivo em base64)
-        const { file, fileName, fileType, path } = JSON.parse(event.body);
-
-        // 3. Pega o Token Secreto das variáveis de ambiente da Netlify
-        const NOCODB_API_TOKEN = process.env.NOCODB_API_TOKEN;
-        const NOCODB_BASE_URL = 'https://lumitechia-nocodb.aeenwc.easypanel.host'; // Sua URL base
-
-        // 4. Converte o arquivo de base64 de volta para formato binário (Buffer)
-        const fileBuffer = Buffer.from(file, 'base64');
-
-        // 5. Cria um novo formulário de dados no servidor
-        const form = new FormData();
-        form.append('file', fileBuffer, { filename: fileName, contentType: fileType });
-
-        // 6. Monta a URL de upload do NocoDB
-        const uploadUrl = `${NOCODB_BASE_URL}/api/v1/db/storage/upload?path=${path}`;
-
-        // 7. Envia o arquivo para o NocoDB a partir da função serverless, usando o token secreto
-        const response = await axios.post(uploadUrl, form, {
-            headers: {
-                ...form.getHeaders(),
-                'xc-token': NOCODB_API_TOKEN,
-            },
-        });
-
-        // 8. Retorna a resposta do NocoDB para o frontend
-        return {
-            statusCode: 200,
-            body: JSON.stringify(response.data),
-        };
-
-    } catch (error) {
-        console.error('Erro na função de upload:', error.response ? error.response.data : error.message);
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: 'Falha ao processar o upload do arquivo.' }),
-        };
-    }
-};
-</file>
-
 <file path="netlify/functions/api.js">
 // netlify/functions/api.js
 
@@ -203,6 +151,58 @@ exports.handler = async function(event, context) {
                 error: 'Falha ao processar a requisição na função do servidor.',
                 details: error.message
             })
+        };
+    }
+};
+</file>
+
+<file path="netlify/functions/upload.js">
+const axios = require('axios');
+const FormData = require('form-data');
+
+exports.handler = async function(event, context) {
+    // 1. Verifica se a requisição é do tipo POST
+    if (event.httpMethod !== 'POST') {
+        return { statusCode: 405, body: 'Method Not Allowed' };
+    }
+
+    try {
+        // 2. Pega os dados enviados pelo frontend (nome do arquivo, tipo, e o arquivo em base64)
+        const { file, fileName, fileType, path } = JSON.parse(event.body);
+
+        // 3. Pega o Token Secreto das variáveis de ambiente da Netlify
+        const NOCODB_API_TOKEN = process.env.NOCODB_API_TOKEN;
+        const NOCODB_BASE_URL = 'https://lumitechia-nocodb.aeenwc.easypanel.host'; // Sua URL base
+
+        // 4. Converte o arquivo de base64 de volta para formato binário (Buffer)
+        const fileBuffer = Buffer.from(file, 'base64');
+
+        // 5. Cria um novo formulário de dados no servidor
+        const form = new FormData();
+        form.append('file', fileBuffer, { filename: fileName, contentType: fileType });
+
+        // 6. Monta a URL de upload do NocoDB
+        const uploadUrl = `${NOCODB_BASE_URL}/api/v1/db/storage/upload?path=${path}`;
+
+        // 7. Envia o arquivo para o NocoDB a partir da função serverless, usando o token secreto
+        const response = await axios.post(uploadUrl, form, {
+            headers: {
+                ...form.getHeaders(),
+                'xc-token': NOCODB_API_TOKEN,
+            },
+        });
+
+        // 8. Retorna a resposta do NocoDB para o frontend
+        return {
+            statusCode: 200,
+            body: JSON.stringify(response.data),
+        };
+
+    } catch (error) {
+        console.error('Erro na função de upload:', error.response ? error.response.data : error.message);
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Falha ao processar o upload do arquivo.' }),
         };
     }
 };
@@ -601,10 +601,10 @@ body {
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><i class="fas fa-search text-gray-400"></i></div>
                                 </div>                       
                                 <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-lg flex space-x-1" id="consultor-status-filters">
-                                    <button class="consultor-status-filter-btn filter-btn-active px-3 py-1 rounded-md shadow-sm" data-status="Todos">Todos</button>
-                                    <button class="consultor-status-filter-btn px-3 py-1 rounded-md" data-status="Ativo">Ativos</button>
-                                    <button class="consultor-status-filter-btn px-3 py-1 rounded-md" data-status="Inativo">Inativos</button>
-                                </div>
+    <button class="consultor-status-filter-btn px-3 py-1 rounded-md" data-status="Todos">Todos</button>
+    <button class="consultor-status-filter-btn filter-btn-active px-3 py-1 rounded-md shadow-sm" data-status="Ativo">Ativos</button>
+    <button class="consultor-status-filter-btn px-3 py-1 rounded-md" data-status="Inativo">Inativos</button>
+</div>
                                 <button id="show-rh-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors w-full sm:w-auto">Novo Consultor</button>
                             </div>
                             <div id="rh-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
@@ -1987,6 +1987,68 @@ body {
     </div>
 </div>
 
+<!-- Modal de Lista de Documentos do Consultor -->
+<div id="consultor-docs-modal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
+    <div class="w-full max-w-2xl p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate max-h-[90vh] flex flex-col">
+        <div class="flex justify-between items-center border-b pb-3 dark:border-gray-700">
+            <h2 id="consultor-docs-modal-title" class="text-2xl font-bold text-gray-900 dark:text-white">Documentos do Consultor</h2>
+            <button id="close-consultor-docs-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-3xl leading-none">&times;</button>
+        </div>
+        
+        <div class="flex-grow overflow-y-auto mt-4">
+            <div id="consultor-docs-table-container" class="relative overflow-x-auto shadow-md sm:rounded-lg">
+                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">Documento</th>
+                            <th scope="col" class="px-6 py-3">Data</th>
+                            <th scope="col" class="px-6 py-3">Anexo</th>
+                            <th scope="col" class="px-6 py-3">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="consultor-docs-table-body">
+                        <!-- Linhas da tabela serão inseridas aqui via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="flex justify-end mt-6 pt-4 border-t dark:border-gray-700">
+            <button id="show-consultor-doc-form-btn" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Adicionar Documento</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Formulário de Documento do Consultor -->
+<div id="consultor-doc-form-modal" class="fixed inset-0 z-[60] items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
+    <div class="w-full max-w-lg p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
+        <h2 id="consultor-doc-form-modal-title" class="text-xl font-bold text-gray-900 dark:text-white mb-4">Novo Documento</h2>
+        <form id="consultor-doc-form">
+            <input type="hidden" id="consultor-doc-id">
+            <input type="hidden" id="consultor-doc-consultor-id">
+            <div class="space-y-4">
+                <div>
+                    <label for="consultor-doc-nome" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nome do Documento</label>
+                    <input type="text" id="consultor-doc-nome" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                </div>
+                <div>
+                    <label for="consultor-doc-data" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data</label>
+                    <input type="date" id="consultor-doc-data" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600" required>
+                </div>
+                <div>
+                    <label for="consultor-doc-anexo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Anexar Arquivo</label>
+                    <input type="file" id="consultor-doc-anexo" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-300">Deixe em branco se não quiser alterar o anexo existente.</p>
+                </div>
+            </div>
+             <div class="flex justify-end mt-6 space-x-4">
+                <button type="button" id="cancel-consultor-doc-form" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Modal Secundário para Adicionar/Editar Documento -->
 <div id="doc-form-modal" class="fixed inset-0 z-[60] items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
     <div class="w-full max-w-lg p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
@@ -2091,6 +2153,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let requisicoesItensData = []; 
     let itemsParaAdicionar = [];
     let clienteDocsData = [];
+    let consultoresDocsData =[];
     let reembolsosData = [];
     let validadesData = [];
     let servicosData = [];
@@ -2124,6 +2187,7 @@ const dataLoaded = {
         EpisEntregues: 'mfdmr52xydicr99',
         AtivosEntregues: 'mjcmq29lrnam988',
         ClientesDocs: 'mj5q2oq1evhs2sf',
+        ConsultoresDocs: 'm5i01376smwqizk',
         Reembolsos: 'mwnon5uro3mzswe',
         Validades: 'mrjwfbtszbjgdkh',
         Servicos: 'mijp6lt9ved9lfj',
@@ -2829,7 +2893,7 @@ async function loadPageData(pageId) {
 
     switch (pageId) {
         case 'rh':
-            await Promise.all([fetchFerias(), fetchAtestados(), fetchEpis(), fetchAtivos()]);
+            await Promise.all([fetchFerias(), fetchAtestados(), fetchEpis(), fetchConsultoresDocs(),fetchAtivos()]);
             renderConsultores(); // Re-renderiza card de consultores (já baixados no inicio, mas garante update)
             applyAndRenderFerias();
             applyAndRenderAtestados();
@@ -2884,6 +2948,7 @@ case 'requisicao':
     dataLoaded[pageId] = true; // Marca como carregado
     hideLoadingOverlay();
 }
+
 async function fetchChamados() { 
         const result = await nocoFetch(`${TABLE_IDS.Chamados}?nested[all]=true`); 
         if(result && result.list) chamadosData = result.list; else chamadosData = []; 
@@ -2984,6 +3049,11 @@ async function fetchRequisicoesItens() {
         const result = await nocoFetch(`${TABLE_IDS.ClientesDocs}?nested[all]=true`); 
         if(result && result.list) clienteDocsData = result.list; else clienteDocsData = []; 
     }
+    async function fetchConsultoresDocs() { 
+        const result = await nocoFetch(`${TABLE_IDS.ConsultoresDocs}?nested[all]=true`); 
+        if(result && result.list) consultoresDocsData = result.list; else consultoresDocsData =[]; 
+    }
+
     async function fetchReembolsos() { 
         const result = await nocoFetch(`${TABLE_IDS.Reembolsos}?nested[all]=true`); 
         if(result && result.list) reembolsosData = result.list; else reembolsosData = []; 
@@ -3299,18 +3369,24 @@ function createConsultorCard(c) {
         </a>
     `;
 
+    if (loggedInUser && (loggedInUser.Role === 'Admin' || loggedInUser.Id === c.Id)) {
+        actionIconsHTML += `
+            <a href="#" class="consultor-docs-btn text-gray-500 hover:text-gray-600 ml-2" title="Ver Documentos" data-consultor-id="${c.Id}">
+                <i class="fas fa-folder-open fa-lg"></i>
+            </a>
+        `;
+    }
+
     if (loggedInUser && loggedInUser.Role === 'Admin') {
         actionIconsHTML += `
-            <a href="#" class="consultor-edit-btn text-blue-500 hover:text-blue-700" title="Editar Consultor">
+            <a href="#" class="consultor-edit-btn text-blue-500 hover:text-blue-700 ml-2" title="Editar Consultor">
                 <i class="fas fa-edit fa-lg"></i>
             </a>
-            <a href="#" class="consultor-delete-btn text-red-500 hover:text-red-700" title="Apagar Consultor">
+            <a href="#" class="consultor-delete-btn text-red-500 hover:text-red-700 ml-2" title="Apagar Consultor">
                 <i class="fas fa-trash fa-lg"></i>
             </a>
         `;
     }
-   
-    // --- ALTERAÇÃO PRINCIPAL AQUI ---
     // A classe do div principal foi corrigida de "cliente-card" para "rh-card"
     return `<div class="rh-card relative bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-shadow" ${dataset} data-nome="${c.Nome}" data-status="${c.Status || 'Ativo'}"> 
                 <span class="absolute top-2 right-2 h-3 w-3 rounded-full ${statusClass}" title="Status: ${c.Status || 'Ativo'}"></span>
@@ -4072,6 +4148,30 @@ function applyAndRenderValidades() {
                 };
                 break;
             }
+            
+            case 'consultor-doc-form': {
+                const consultorIdForDoc = form.querySelector('#consultor-doc-consultor-id').value;
+                if (!form.querySelector('#consultor-doc-nome').value.trim()) throw new Error('O campo "Nome do Documento" é obrigatório.');
+                if (!form.querySelector('#consultor-doc-data').value) throw new Error('O campo "Data do Documento" é obrigatório.');
+                if (!id && !form.querySelector('#consultor-doc-anexo').files[0]) throw new Error('O campo "Anexar Arquivo" é obrigatório ao criar um novo documento.');
+
+                endpoint = id ? `${TABLE_IDS.ConsultoresDocs}/${id}` : TABLE_IDS.ConsultoresDocs;
+                body = { Documento: form.querySelector('#consultor-doc-nome').value, Data: form.querySelector('#consultor-doc-data').value };
+                if (id) { body.Consultores_id = parseInt(consultorIdForDoc); } else { body.Consultores = { "Id": parseInt(consultorIdForDoc) }; }
+                
+                const anexoInput = form.querySelector('#consultor-doc-anexo');
+                if (anexoInput && anexoInput.files[0]) {
+                    const anexoData = await uploadFile(TABLE_IDS.ConsultoresDocs, 'Anexo', anexoInput.files[0]);
+                    if (anexoData) body.Anexo = [anexoData];
+                }
+                callback = async () => {
+                    await fetchConsultoresDocs();
+                    openConsultorDocsModal(consultorIdForDoc);
+                    hideModal(document.getElementById('consultor-doc-form-modal'));
+                };
+                break;
+            }
+
             default:
                 throw new Error("Formulário não reconhecido.");
         }
@@ -4134,7 +4234,18 @@ function applyAndRenderValidades() {
                     }
                 }; 
                 break;
-            case 'ferias': endpoint = `${TABLE_IDS.Ferias}/${id}`; callback = async () => { await fetchFerias(); applyAndRenderFerias(); }; break;
+            
+                case 'consultor_doc': 
+                endpoint = `${TABLE_IDS.ConsultoresDocs}/${id}`; 
+                callback = async () => { 
+                    await fetchConsultoresDocs(); 
+                    const deletedDoc = consultoresDocsData.find(d => d.Id == id) || { Consultores_id: null };
+                    if (deletedDoc.Consultores_id) {
+                       openConsultorDocsModal(deletedDoc.Consultores_id);
+                    }
+                }; 
+                break;
+                case 'ferias': endpoint = `${TABLE_IDS.Ferias}/${id}`; callback = async () => { await fetchFerias(); applyAndRenderFerias(); }; break;
             case 'atestado': endpoint = `${TABLE_IDS.Atestados}/${id}`; callback = async () => { await fetchAtestados(); applyAndRenderAtestados(); }; break;
             case 'epi': endpoint = `${TABLE_IDS.EpisEntregues}/${id}`; callback = async () => { await fetchEpis(); applyAndRenderEpis(); }; break;
             case 'ativo': endpoint = `${TABLE_IDS.AtivosEntregues}/${id}`; callback = async () => { await fetchAtivos(); applyAndRenderAtivos(); }; break;
@@ -4400,7 +4511,48 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
         showModal(allElements.deleteConfirmModal);
         return;
     }
+    // --- Lógica para Documentos de Consultores (Modal) ---
+    const consultorDocsBtn = t.closest('.consultor-docs-btn');
+    if (consultorDocsBtn) {
+        e.preventDefault(); e.stopPropagation();
+        openConsultorDocsModal(consultorDocsBtn.dataset.consultorId);
+        return;
+    }
+
+    if (t.closest('#close-consultor-docs-modal')) {
+        hideModal(document.getElementById('consultor-docs-modal'));
+        return;
+    }
+
+    if (t.closest('#show-consultor-doc-form-btn')) {
+        const consultorId = t.closest('#show-consultor-doc-form-btn').dataset.consultorId;
+        openConsultorDocFormModal(consultorId, null);
+        return;
+    }
+
+    if (t.closest('#cancel-consultor-doc-form')) {
+        hideModal(document.getElementById('consultor-doc-form-modal'));
+        return;
+    }
     
+    const consultorDocEditBtn = t.closest('.consultor-doc-edit-btn');
+    if (consultorDocEditBtn) {
+        const docId = consultorDocEditBtn.dataset.docId;
+        const doc = consultoresDocsData.find(d => d.Id == docId);
+        if (doc) {
+            openConsultorDocFormModal(doc.Consultores_id, doc);
+        }
+        return;
+    }
+    
+    const consultorDocDeleteBtn = t.closest('.consultor-doc-delete-btn');
+    if (consultorDocDeleteBtn) {
+        const docId = consultorDocDeleteBtn.dataset.docId;
+        const row = consultorDocDeleteBtn.closest('tr');
+        activeDeleteItem = { id: docId, type: 'consultor_doc', element: row };
+        showModal(allElements.deleteConfirmModal);
+        return;
+    }
     // --- Lógica para Documentos de Clientes (Modal) ---
     if (t.closest('#close-cliente-docs-modal')) {
         hideModal(document.getElementById('cliente-docs-modal'));
@@ -5619,6 +5771,68 @@ function openDocFormModal(clientId, doc = null) {
     }
 
     showModal(document.getElementById('doc-form-modal'));
+}
+function openConsultorDocsModal(consultorId) {
+    const consultor = consultoresData.find(c => c.Id == consultorId);
+    if (!consultor) return;
+
+    document.getElementById('consultor-docs-modal-title').textContent = `Documentos de: ${consultor.Nome}`;
+    
+    const tableBody = document.getElementById('consultor-docs-table-body');
+    tableBody.innerHTML = ''; 
+
+    const docsDoConsultor = consultoresDocsData.filter(d => d.Consultores_id == consultorId);
+
+    if (docsDoConsultor.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center">Nenhum documento anexado.</td></tr>';
+    } else {
+        docsDoConsultor.forEach(doc => {
+            const anexoHTML = doc.Anexo && doc.Anexo[0]?.signedPath 
+                ? `<a href="${NocoDB_BaseURL}/${doc.Anexo[0].signedPath}" target="_blank" class="text-brand-gold hover:underline"><i class="fas fa-paperclip"></i> Ver Anexo</a>` 
+                : 'Nenhum';
+            
+            const editBtnHTML = `<button class="consultor-doc-edit-btn text-blue-500 hover:text-blue-700" data-doc-id="${doc.Id}" title="Editar"><i class="fas fa-edit"></i></button>`;
+            const deleteBtnHTML = (loggedInUser && loggedInUser.Role === 'Admin') 
+                ? `<button class="consultor-doc-delete-btn text-red-500 hover:text-red-700" data-doc-id="${doc.Id}" title="Apagar"><i class="fas fa-trash"></i></button>`
+                : '';
+            const actionsHTML = `${editBtnHTML} ${deleteBtnHTML}`;
+
+            const dataFormatada = doc.Data ? new Date(doc.Data + 'T00:00:00').toLocaleDateString('pt-BR') : 'N/A';
+
+            tableBody.innerHTML += `
+                <tr data-doc-id="${doc.Id}">
+                    <td class="px-6 py-4">${doc.Documento}</td>
+                    <td class="px-6 py-4">${dataFormatada}</td>
+                    <td class="px-6 py-4">${anexoHTML}</td>
+                    <td class="px-6 py-4 space-x-2">${actionsHTML}</td>
+                </tr>
+            `;
+        });
+    }
+    
+    document.getElementById('show-consultor-doc-form-btn').dataset.consultorId = consultorId;
+    showModal(document.getElementById('consultor-docs-modal'));
+}
+
+function openConsultorDocFormModal(consultorId, doc = null) {
+    const form = document.getElementById('consultor-doc-form');
+    const title = document.getElementById('consultor-doc-form-modal-title');
+    form.reset();
+
+    document.getElementById('consultor-doc-consultor-id').value = consultorId;
+
+    if (doc) { 
+        title.textContent = 'Editar Documento';
+        document.getElementById('consultor-doc-id').value = doc.Id;
+        document.getElementById('consultor-doc-nome').value = doc.Documento;
+        document.getElementById('consultor-doc-data').value = doc.Data; 
+    } else { 
+        title.textContent = 'Novo Documento';
+        document.getElementById('consultor-doc-id').value = '';
+        document.getElementById('consultor-doc-data').value = new Date().toISOString().slice(0,10);
+    }
+
+    showModal(document.getElementById('consultor-doc-form-modal'));
 }
     function updateAllDashboards(){
         updateFinanceDashboard(); // Mantém a chamada para a aba "Balanço"
