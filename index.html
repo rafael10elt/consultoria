@@ -391,10 +391,10 @@ body {
                                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none"><i class="fas fa-search text-gray-400"></i></div>
                                 </div>                       
                                 <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-lg flex space-x-1" id="consultor-status-filters">
-                                    <button class="consultor-status-filter-btn filter-btn-active px-3 py-1 rounded-md shadow-sm" data-status="Todos">Todos</button>
-                                    <button class="consultor-status-filter-btn px-3 py-1 rounded-md" data-status="Ativo">Ativos</button>
-                                    <button class="consultor-status-filter-btn px-3 py-1 rounded-md" data-status="Inativo">Inativos</button>
-                                </div>
+    <button class="consultor-status-filter-btn px-3 py-1 rounded-md" data-status="Todos">Todos</button>
+    <button class="consultor-status-filter-btn filter-btn-active px-3 py-1 rounded-md shadow-sm" data-status="Ativo">Ativos</button>
+    <button class="consultor-status-filter-btn px-3 py-1 rounded-md" data-status="Inativo">Inativos</button>
+</div>
                                 <button id="show-rh-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors w-full sm:w-auto">Novo Consultor</button>
                             </div>
                             <div id="rh-cards-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div>
@@ -3511,7 +3511,7 @@ function applyAndRenderValidades() {
         function applyConsultorFilters() {
         const searchTerm = document.getElementById('rh-search').value.toLowerCase();
         const statusFilterBtn = document.querySelector('#consultor-status-filters .filter-btn-active');
-        const statusFilter = statusFilterBtn ? statusFilterBtn.dataset.status : 'Ativos';
+        const statusFilter = statusFilterBtn ? statusFilterBtn.dataset.status : 'Todos';
 
         const filteredData = consultoresData.filter(consultor => {
             const nameMatch = consultor.Nome.toLowerCase().includes(searchTerm);
