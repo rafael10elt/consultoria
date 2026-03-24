@@ -430,66 +430,76 @@ body {
                                 <canvas id="finance-chart"></canvas>
                             </div>
                         </div>
-<div id="dashboard-receitas" class="dashboard-content hidden">
-                            <!-- Filtros da Aba Receitas -->
-                            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-                                    <div><label for="dash-rec-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label><select id="dash-rec-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"><option value="">Todos</option><option value="Pago">Pago</option><option value="Pendente">Pendente</option></select></div>
-                                    <div><label for="dash-rec-cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label><select id="dash-rec-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></select></div>
-                                    <div><label for="dash-rec-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label><input type="date" id="dash-rec-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
-                                    <div><label for="dash-rec-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Até</label><input type="date" id="dash-rec-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
-                                </div>
-                            </div>
-                            <!-- Cards de Métricas de Receitas -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow"><div class="flex items-center"><div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900 mr-4"><i class="fas fa-arrow-up fa-2x text-blue-500"></i></div><div><p class="text-sm font-medium text-gray-600 dark:text-gray-300">Total de Receitas (período)</p><p id="dash-rec-total" class="text-3xl font-bold text-gray-900 dark:text-white">R$ 0,00</p></div></div></div>
-                                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow"><div class="flex items-center"><div class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900 mr-4"><i class="fas fa-hourglass-half fa-2x text-yellow-500"></i></div><div><p class="text-sm font-medium text-gray-600 dark:text-gray-300">Receitas Pendentes (período)</p><p id="dash-rec-pending" class="text-3xl font-bold text-gray-900 dark:text-white">R$ 0,00</p></div></div></div>
-                            </div>
-                            <!-- Gráfico e Ranking de Clientes -->
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                                    <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Receitas por Cliente</h4>
-                                    <canvas id="receitas-by-cliente-chart"></canvas>
-                                </div>
-                                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                                    <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Ranking de Clientes (por Receita)</h4>
-                                    <ul id="dash-top-clients-receitas-list" class="space-y-3">
-                                        <!-- Ranking será inserido aqui -->
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+                        <div id="dashboard-receitas" class="dashboard-content hidden">
+    <!-- Filtros da Aba Receitas -->
+    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            <div><label for="dash-rec-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label><select id="dash-rec-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"><option value="">Todos</option><option value="Pago">Pago</option><option value="Pendente">Pendente</option></select></div>
+            <div><label for="dash-rec-cliente" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label><select id="dash-rec-cliente" class="cliente-select bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></select></div>
+            <div><label for="dash-rec-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label><input type="date" id="dash-rec-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+            <div><label for="dash-rec-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Até</label><input type="date" id="dash-rec-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+            <div class="col-span-full flex items-center justify-start sm:justify-end space-x-2">
+                <button class="dash-rec-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="week">Semana</button>
+                <button class="dash-rec-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="month">Mês</button>
+                <button class="dash-rec-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="year">Ano</button>
+            </div>
+        </div>
+    </div>
+    <!-- Cards de Métricas de Receitas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow"><div class="flex items-center"><div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900 mr-4"><i class="fas fa-arrow-up fa-2x text-blue-500"></i></div><div><p class="text-sm font-medium text-gray-600 dark:text-gray-300">Total de Receitas (período)</p><p id="dash-rec-total" class="text-3xl font-bold text-gray-900 dark:text-white">R$ 0,00</p></div></div></div>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow"><div class="flex items-center"><div class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900 mr-4"><i class="fas fa-hourglass-half fa-2x text-yellow-500"></i></div><div><p class="text-sm font-medium text-gray-600 dark:text-gray-300">Receitas Pendentes (período)</p><p id="dash-rec-pending" class="text-3xl font-bold text-gray-900 dark:text-white">R$ 0,00</p></div></div></div>
+    </div>
+    <!-- Gráfico e Ranking de Clientes -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+            <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Receitas por Cliente</h4>
+            <canvas id="receitas-by-cliente-chart"></canvas>
+        </div>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+            <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Ranking de Clientes (por Receita)</h4>
+            <ul id="dash-top-clients-receitas-list" class="space-y-3">
+                <!-- Ranking será inserido aqui -->
+            </ul>
+        </div>
+    </div>
+</div>
 
                         <!-- NOVO PAINEL DA ABA CUSTOS (Placeholder) -->
                          <div id="dashboard-custos" class="dashboard-content hidden">
-                            <!-- Filtros da Aba Custos -->
-                            <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-                                    <div><label for="dash-cos-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label><select id="dash-cos-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"><option value="">Todos</option><option value="Pago">Pago</option><option value="Pendente">Pendente</option></select></div>
-                                    <div><label for="dash-cos-credor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Credor</label><input type="text" id="dash-cos-credor" placeholder="Nome do credor..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
-                                    <div><label for="dash-cos-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label><input type="date" id="dash-cos-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
-                                    <div><label for="dash-cos-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Até</label><input type="date" id="dash-cos-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
-                                </div>
-                            </div>
-                            <!-- Cards de Métricas de Custos -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow"><div class="flex items-center"><div class="p-3 rounded-full bg-red-100 dark:bg-red-900 mr-4"><i class="fas fa-arrow-down fa-2x text-red-500"></i></div><div><p class="text-sm font-medium text-gray-600 dark:text-gray-300">Total de Custos (período)</p><p id="dash-cos-total" class="text-3xl font-bold text-gray-900 dark:text-white">R$ 0,00</p></div></div></div>
-                                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow"><div class="flex items-center"><div class="p-3 rounded-full bg-orange-100 dark:bg-orange-900 mr-4"><i class="fas fa-exclamation-circle fa-2x text-orange-500"></i></div><div><p class="text-sm font-medium text-gray-600 dark:text-gray-300">Custos Pendentes (período)</p><p id="dash-cos-pending" class="text-3xl font-bold text-gray-900 dark:text-white">R$ 0,00</p></div></div></div>
-                            </div>
-                            <!-- Gráfico e Ranking de Credores -->
-                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                                    <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Custos por Credor</h4>
-                                    <canvas id="custos-by-credor-chart"></canvas>
-                                </div>
-                                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                                    <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Ranking de Credores (por Custo)</h4>
-                                    <ul id="dash-top-credores-custos-list" class="space-y-3">
-                                        <!-- Ranking será inserido aqui -->
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+    <!-- Filtros da Aba Custos -->
+    <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+            <div><label for="dash-cos-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label><select id="dash-cos-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"><option value="">Todos</option><option value="Pago">Pago</option><option value="Pendente">Pendente</option></select></div>
+            <div><label for="dash-cos-credor" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Credor</label><input type="text" id="dash-cos-credor" placeholder="Nome do credor..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"></div>
+            <div><label for="dash-cos-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">De</label><input type="date" id="dash-cos-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+            <div><label for="dash-cos-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Até</label><input type="date" id="dash-cos-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+            <div class="col-span-full flex items-center justify-start sm:justify-end space-x-2">
+                <button class="dash-cos-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="week">Semana</button>
+                <button class="dash-cos-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="month">Mês</button>
+                <button class="dash-cos-quick-filter px-3 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200" data-period="year">Ano</button>
+            </div>
+        </div>
+    </div>
+    <!-- Cards de Métricas de Custos -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow"><div class="flex items-center"><div class="p-3 rounded-full bg-red-100 dark:bg-red-900 mr-4"><i class="fas fa-arrow-down fa-2x text-red-500"></i></div><div><p class="text-sm font-medium text-gray-600 dark:text-gray-300">Total de Custos (período)</p><p id="dash-cos-total" class="text-3xl font-bold text-gray-900 dark:text-white">R$ 0,00</p></div></div></div>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow"><div class="flex items-center"><div class="p-3 rounded-full bg-orange-100 dark:bg-orange-900 mr-4"><i class="fas fa-exclamation-circle fa-2x text-orange-500"></i></div><div><p class="text-sm font-medium text-gray-600 dark:text-gray-300">Custos Pendentes (período)</p><p id="dash-cos-pending" class="text-3xl font-bold text-gray-900 dark:text-white">R$ 0,00</p></div></div></div>
+    </div>
+    <!-- Gráfico e Ranking de Credores -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+            <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Custos por Credor</h4>
+            <canvas id="custos-by-credor-chart"></canvas>
+        </div>
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+            <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Ranking de Credores (por Custo)</h4>
+            <ul id="dash-top-credores-custos-list" class="space-y-3">
+                <!-- Ranking será inserido aqui -->
+            </ul>
+        </div>
+    </div>
+</div>
                         <div id="dashboard-visitas" class="dashboard-content hidden">
                             <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
@@ -5765,7 +5775,29 @@ function renderAcoesCriticasTable(data) {
     tbody.innerHTML = tableHTML;
     cardsContainer.innerHTML = cardsHTML;
 }
-    function setDateFilter(e, p) { const period=e.target.dataset.period; document.querySelectorAll(`.dash-${p}-quick-filter`).forEach(b=>b.classList.remove('filter-btn-active')); e.target.classList.add('filter-btn-active'); const endI=document.getElementById(`dash-${p}-end`), startI=document.getElementById(`dash-${p}-start`), today=new Date(); endI.valueAsDate=today; let sD=new Date(); if(period==='week')sD.setDate(today.getDate()-today.getDay()); else if(period==='month')sD=new Date(today.getFullYear(),today.getMonth(),1); else if(period==='year')sD=new Date(today.getFullYear(),0,1); startI.valueAsDate=sD; if(p==='fin')updateFinanceDashboard(); else updateVisitsDashboard();}
+    function setDateFilter(e, p) { 
+        const period = e.target.dataset.period; 
+        document.querySelectorAll(`.dash-${p}-quick-filter`).forEach(b => b.classList.remove('filter-btn-active')); 
+        e.target.classList.add('filter-btn-active'); 
+        
+        const endI = document.getElementById(`dash-${p}-end`);
+        const startI = document.getElementById(`dash-${p}-start`);
+        const today = new Date(); 
+        
+        endI.valueAsDate = today; 
+        let sD = new Date(); 
+        
+        if (period === 'week') sD.setDate(today.getDate() - today.getDay()); 
+        else if (period === 'month') sD = new Date(today.getFullYear(), today.getMonth(), 1); 
+        else if (period === 'year') sD = new Date(today.getFullYear(), 0, 1); 
+        
+        startI.valueAsDate = sD; 
+        
+        if (p === 'fin') updateFinanceDashboard(); 
+        else if (p === 'visit') updateVisitsDashboard();
+        else if (p === 'rec') updateReceitasDashboard();
+        else if (p === 'cos') updateCustosDashboard();
+    }
     function updateFinanceDashboard() { const s=document.getElementById('dash-fin-status').value, st=document.getElementById('dash-fin-start').value, e=document.getElementById('dash-fin-end').value; const fR=receitasData.filter(r=>(!s||r.Status===s)&&(!st||r.Vencimento>=st)&&(!e||r.Vencimento<=e)); const fC=custosData.filter(c=>(!s||c.Status===s)&&(!st||c.Vencimento>=st)&&(!e||c.Vencimento<=e)); const tR=fR.reduce((sum,r)=>sum+(r.Valor||0),0), tC=fC.reduce((sum,c)=>sum+(c.Valor||0),0), bal=tR-tC; const tRP=receitasData.filter(r=>r.Status==='Pendente'&&(!st||r.Vencimento>=st)&&(!e||r.Vencimento<=e)).reduce((sum,r)=>sum+(r.Valor||0),0); const tCP=custosData.filter(c=>c.Status==='Pendente'&&(!st||c.Vencimento>=st)&&(!e||c.Vencimento<=e)).reduce((sum,c)=>sum+(c.Valor||0),0); const f=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); document.getElementById('dash-revenue').textContent=f(tR); document.getElementById('dash-costs').textContent=f(tC); document.getElementById('dash-balance').textContent=f(bal); document.getElementById('dash-revenue-pending').textContent=f(tRP); document.getElementById('dash-costs-pending').textContent=f(tCP); document.getElementById('dash-balance').classList.toggle('text-green-500',bal>=0); document.getElementById('dash-balance').classList.toggle('text-red-500',bal<0); updateFinanceChart(fR,fC); }
         function updateTopClientsByCount(visits) {
         const comp = visits.filter(v => v.Status === 'Concluída');
@@ -7133,7 +7165,7 @@ function renderReembolsos(data = reembolsosData) {
     }
 }
 
-    // --- Inicialização ---
+  // --- Inicialização ---
     function initializeApp() {
         ['filter-servico-start-date', 'filter-servico-end-date', 'filter-servico-status'].forEach(id => {
         document.getElementById(id)?.addEventListener('change', applyAndRenderServicos);
@@ -7192,8 +7224,34 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
         });
         document.getElementById('confirm-delete-btn')?.addEventListener('click', handleDelete);
         
+        // Listeners para os botões de filtro rápido
         document.querySelectorAll('.dash-fin-quick-filter').forEach(btn => btn.addEventListener('click', (e) => setDateFilter(e, 'fin')));
         document.querySelectorAll('.dash-visit-quick-filter').forEach(btn => btn.addEventListener('click', (e) => setDateFilter(e, 'visit')));
+        document.querySelectorAll('.dash-rec-quick-filter').forEach(btn => btn.addEventListener('click', (e) => setDateFilter(e, 'rec')));
+        document.querySelectorAll('.dash-cos-quick-filter').forEach(btn => btn.addEventListener('click', (e) => setDateFilter(e, 'cos')));
+
+        // Inicializa as datas de Receitas e Custos com o mês atual
+        const today = new Date();
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+        const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+
+        // Define Receitas
+        const recStart = document.getElementById('dash-rec-start');
+        const recEnd = document.getElementById('dash-rec-end');
+        if(recStart) recStart.value = firstDayOfMonth;
+        if(recEnd) recEnd.value = lastDayOfMonth;
+        // Ativa visualmente o botão 'Mês' para Receitas
+        document.querySelector('.dash-rec-quick-filter[data-period="month"]')?.classList.add('filter-btn-active');
+
+        // Define Custos
+        const cosStart = document.getElementById('dash-cos-start');
+        const cosEnd = document.getElementById('dash-cos-end');
+        if(cosStart) cosStart.value = firstDayOfMonth;
+        if(cosEnd) cosEnd.value = lastDayOfMonth;
+        // Ativa visualmente o botão 'Mês' para Custos
+        document.querySelector('.dash-cos-quick-filter[data-period="month"]')?.classList.add('filter-btn-active');
+
+
         ['dash-fin-status', 'dash-fin-start', 'dash-fin-end'].forEach(id => document.getElementById(id)?.addEventListener('change', updateFinanceDashboard));
         ['dash-visit-start', 'dash-visit-end'].forEach(id => document.getElementById(id)?.addEventListener('change', updateVisitsDashboard));
         document.getElementById('report-type')?.addEventListener('change', toggleReportSubtype);
@@ -7279,7 +7337,8 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
         checkSession();
 
     }
-// NOVA FUNÇÃO: Gera PDF consolidado das requisições selecionadas
+    
+    // NOVA FUNÇÃO: Gera PDF consolidado das requisições selecionadas
 function setDefaultRequisicaoDates() {
     const today = new Date();
     const pastDate = new Date();
