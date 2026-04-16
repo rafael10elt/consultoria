@@ -3106,11 +3106,11 @@ function updateNBBranding(activePageId = sessionStorage.getItem('currentPage') |
     const isNBPage = activePageId === 'nosso-bolo';
     if (headerTitle) headerTitle.textContent = isNBPage ? 'Nosso Bolo' : 'Pontes Consultoria';
     if (headerLogo) {
-        headerLogo.src = isNBPage ? NB_LOGO_URL : 'images/ponteslogosfundo4.png';
+        headerLogo.src = isNBPage ? NB_LOGO_URL : 'images/nb.jpeg';
         headerLogo.alt = isNBPage ? 'Logo Nosso Bolo' : 'Logo Pontes Consultoria';
     }
     if (sidebarLogo) {
-        sidebarLogo.src = isNBPage ? NB_LOGO_URL : 'images/ponteslogosfundo.png';
+        sidebarLogo.src = isNBPage ? NB_LOGO_URL : 'images/nb.jpeg';
         sidebarLogo.alt = isNBPage ? 'Logo Nosso Bolo' : 'Logo Pontes Consultoria';
     }
 }
