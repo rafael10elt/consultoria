@@ -3145,61 +3145,68 @@ function renderNBPanel() {
         container.innerHTML = '<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center text-gray-500 dark:text-gray-400">Cadastre categorias e produtos ativos para começar o Painel.</div>';
         return;
     }
-    // Cabeçalho dos dias da semana (uma única vez)
-    container.innerHTML = `
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead>
-                    <tr>
-                        <th class="px-2 py-3 bg-white dark:bg-gray-800"></th>
-                        ${weekDates.map(dateString => {
-                            const isToday = dateString === toDateInputValue(new Date());
-                            const isPast = new Date(dateString) < new Date(toDateInputValue(new Date()));
-                            const isFuture = new Date(dateString) > new Date(toDateInputValue(new Date()));
-                            let bg = isToday ? 'bg-brand-gold text-white' : isPast ? 'bg-gray-100 dark:bg-gray-700 text-gray-400' : 'bg-blue-50 dark:bg-blue-900 text-blue-800';
-                            return `<th class="px-2 py-3 text-center text-xs font-bold ${bg}">${getNBDateLabelFmt(dateString, true)}</th>`;
-                        }).join('')}
-                    </tr>
-                </thead>
-                <tbody>
-                    ${grouped.map(group => `
-                        <tr class="bg-gray-50 dark:bg-gray-900">
-                            <td colspan="${weekDates.length + 1}" class="px-2 py-2 font-semibold text-lg text-brand-dark dark:text-white border-t border-b border-brand-gold">${group.name}</td>
-                        </tr>
-                        ${group.products.map(product => `
-                            <tr>
-                                <td class="px-2 py-2 text-sm font-semibold text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700">${product.Nome}</td>
-                                ${weekDates.map(dateString => {
-                                    const record = getNBApontamento(dateString, product.Id) || {};
-                                    const editable = isNBPanelEditable(dateString);
-                                    const venda = computeNBVenda(record);
-                                    const totalDisponivel = normalizeNBNumber(record.Qtd_Sobra_Anterior) + normalizeNBNumber(record.Qtd_Producao);
-                                    const isToday = dateString === toDateInputValue(new Date());
-                                    const isPast = new Date(dateString) < new Date(toDateInputValue(new Date()));
-                                    const isFuture = new Date(dateString) > new Date(toDateInputValue(new Date()));
-                                    let bg = isToday ? 'ring-2 ring-brand-gold bg-yellow-50 dark:bg-yellow-900' : isPast ? 'bg-gray-50 dark:bg-gray-800' : 'bg-blue-50 dark:bg-blue-900';
-                                    return `<td class="align-top px-1 py-1 border-b border-gray-200 dark:border-gray-700 ${bg}">
-                                        <div class="grid grid-cols-2 gap-1 text-xs">
-                                            <label class="block"><span class="block text-[10px] mb-0.5 text-gray-500 dark:text-gray-400">Sobra Ant.</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Anterior)}" data-field="Qtd_Sobra_Anterior" class="nb-panel-input w-full p-1 rounded bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
-                                            <label class="block"><span class="block text-[10px] mb-0.5 text-gray-500 dark:text-gray-400">Produção</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Producao)}" data-field="Qtd_Producao" class="nb-panel-input w-full p-1 rounded bg-blue-100 text-gray-900 border border-blue-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
-                                            <label class="block"><span class="block text-[10px] mb-0.5 text-gray-500 dark:text-gray-400">Perda</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Perda)}" data-field="Qtd_Perda" class="nb-panel-input w-full p-1 rounded bg-red-100 text-gray-900 border border-red-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
-                                            <label class="block"><span class="block text-[10px] mb-0.5 text-gray-500 dark:text-gray-400">Sobra Atual</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Atual)}" data-field="Qtd_Sobra_Atual" class="nb-panel-input w-full p-1 rounded bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
-                                        </div>
-                                        <div class="mt-1 flex flex-col gap-1">
-                                            <div class="rounded bg-slate-100 dark:bg-slate-700 px-2 py-1 text-[10px] text-gray-500 dark:text-gray-300">Disponível: <span class="font-bold text-gray-800 dark:text-white" data-nb-available>${totalDisponivel}</span></div>
-                                            <div class="rounded bg-green-100 dark:bg-green-900 px-2 py-1 text-[10px] text-green-700 dark:text-green-200">Venda: <span class="font-bold text-green-800 dark:text-green-100" data-nb-venda>${venda}</span></div>
-                                        </div>
-                                    </td>`;
-                                }).join('')}
-                            </tr>
+    container.innerHTML = grouped.map(group => `
+        <section class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+            <div class="px-4 py-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-white">${group.name}</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Total disponível por dia: sobra anterior + produção</p>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-2 text-xs">
+                        ${weekDates.map(dateString => `
+                            <div class="rounded-lg bg-white dark:bg-gray-800 border dark:border-gray-700 px-3 py-2 text-center">
+                                <div class="font-semibold text-gray-700 dark:text-gray-200">${getNBDateLabelFmt(dateString, true)}</div>
+                                <div class="text-gray-500 dark:text-gray-400">Total: <span id="nb-total-${makeSafeDomId(group.id)}-${makeSafeDomId(dateString)}">0</span></div>
+                            </div>
                         `).join('')}
-                    `).join('')}
-                </tbody>
-            </table>
-        </div>
-    `;
+                    </div>
+                </div>
+            </div>
+            <div class="divide-y dark:divide-gray-700">
+                ${group.products.map(product => `
+                    <div class="p-4">
+                        <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2 mb-4">
+                            <div>
+                                <h4 class="font-semibold text-gray-800 dark:text-white">${product.Nome}</h4>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-4">
+                            ${weekDates.map(dateString => {
+                                const record = getNBApontamento(dateString, product.Id) || {};
+                                const editable = isNBPanelEditable(dateString);
+                                const venda = computeNBVenda(record);
+                                const totalDisponivel = normalizeNBNumber(record.Qtd_Sobra_Anterior) + normalizeNBNumber(record.Qtd_Producao);
+                                return `
+                                    <div class="rounded-xl border dark:border-gray-700 p-3" data-nb-cell data-date="${dateString}" data-product-id="${product.Id}">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">${getNBDateLabelFmt(dateString, true)}</span>
+                                            <span class="text-[11px] px-2 py-1 rounded-full ${editable ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}">${editable ? 'Editável' : getNBStatusForDate(dateString)}</span>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-2 text-sm">
+                                            <label class="block"><span class="block text-xs mb-1 text-gray-500 dark:text-gray-400">Sobra Ant.</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Anterior)}" data-field="Qtd_Sobra_Anterior" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
+                                            <label class="block"><span class="block text-xs mb-1 text-gray-500 dark:text-gray-400">Produção</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Producao)}" data-field="Qtd_Producao" class="nb-panel-input w-full p-2 rounded-lg bg-blue-100 text-gray-900 border border-blue-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
+                                            <label class="block"><span class="block text-xs mb-1 text-gray-500 dark:text-gray-400">Perda</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Perda)}" data-field="Qtd_Perda" class="nb-panel-input w-full p-2 rounded-lg bg-red-100 text-gray-900 border border-red-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
+                                            <label class="block"><span class="block text-xs mb-1 text-gray-500 dark:text-gray-400">Sobra Atual</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Atual)}" data-field="Qtd_Sobra_Atual" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
+                                        </div>
+                                        <div class="mt-3 grid grid-cols-2 gap-2">
+                                            <div class="rounded-lg bg-slate-100 dark:bg-slate-700 px-3 py-2"><div class="text-[11px] text-gray-500 dark:text-gray-300">Disponível</div><div class="font-bold text-gray-800 dark:text-white" data-nb-available>${totalDisponivel}</div></div>
+                                            <div class="rounded-lg bg-green-100 dark:bg-green-900 px-3 py-2"><div class="text-[11px] text-green-700 dark:text-green-200">Venda</div><div class="font-bold text-green-800 dark:text-green-100" data-nb-venda>${venda}</div></div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </section>
+    `).join('');
     renderNBPanelTotals();
+
+    // --- Top 10 Produtos Mais Vendidos da Semana ---
     renderNBTopProductsWeek();
+}
 
 // Renderiza o ranking dos 10 produtos mais vendidos na semana
 function renderNBTopProductsWeek() {
@@ -8704,6 +8711,8 @@ async function generateRequisicaoReport() {
 
     doc.save(`Relatorio_Requisicoes_${new Date().toISOString().slice(0,10)}.pdf`);
     hideLoadingOverlay();
+}
+
     initializeApp();
 });
 </script>
