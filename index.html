@@ -116,7 +116,7 @@ body {
                 overflow-x: hidden;
             }
         }
-        /* Adicione este cÃ³digo para ocultar o botÃ£o do calendÃ¡rio no mobile */
+        /* Adicione este cÃ³digo para ocultar o botão do calendário no mobile */
         @media (max-width: 1023px) {
             .view-toggle-btn[data-view="calendar-view"] {
                 display: none;
@@ -939,7 +939,7 @@ body {
                             </div>
 
                              <div class="flex flex-wrap justify-between items-center mb-4 gap-2">
-    <!-- BotÃ£o Novo adicionado -->
+    <!-- Botão Novo adicionado -->
     <button id="download-req-pdf-btn" class="bg-gray-600 text-white px-4 py-2 rounded-lg shadow hover:bg-gray-700 transition-colors">
         <i class="fas fa-file-pdf mr-2"></i>Baixar Selecionados
     </button>
@@ -974,7 +974,7 @@ body {
                                 <div class="p-2 bg-gray-200 dark:bg-gray-700 rounded-lg flex flex-wrap gap-2" id="item-category-filters">
                                     <!-- Os botÃµes de filtro sÃ£o inseridos aqui pelo JavaScript -->
                                 </div>
-                                <!-- BotÃ£o "Novo Item" agora ocupa a largura total em telas pequenas (w-full). O ID e o texto foram atualizados para corresponder ao que o seu JS jÃ¡ faz. -->
+                                <!-- Botão "Novo Item" agora ocupa a largura total em telas pequenas (w-full). O ID e o texto foram atualizados para corresponder ao que o seu JS jÃ¡ faz. -->
                                 <button id="show-new-item-btn" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors w-full sm:w-auto" style="display: none;">Novo Item</button>
                             </div>
                             <div id="item-management-container" class="space-y-6"></div>
@@ -2193,9 +2193,9 @@ body {
             <!-- BotÃµes de AÃ§Ã£o do Modal -->
             <div class="flex justify-end mt-6 space-x-4 pt-4 border-t dark:border-gray-700">
                 <button type="button" id="cancel-requisicao-item-form" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
-                <!-- INÃCIO DA ALTERAÃ‡ÃƒO: BotÃ£o para salvar a lista final -->
-                <button type="button" id="salvar-conteudo-requisicao-btn" class="px-4 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar ConteÃºdo</button>
-                <!-- FIM DA ALTERAÃ‡ÃƒO -->
+                <!-- INÍCIO DA ALTERAÇÃO: Botão para salvar a lista final -->
+                <button type="button" id="salvar-conteudo-requisicao-btn" class="px-4 py-2 text-sm font-medium text-white bg-brand-gold rounded-md hover:bg-brand-gold-dark">Salvar Conteúdo</button>
+                <!-- FIM DA ALTERAÇÃO -->
             </div>
         </div>
     </div>
@@ -2490,16 +2490,16 @@ const dataLoaded = {
                         });
                     },
                     (error) => {
-                        let errorMessage = 'NÃ£o foi possÃ­vel obter a localizaÃ§Ã£o.';
+                        let errorMessage = 'NÃ£o foi possí­vel obter a localizaçãão.';
                         switch(error.code) {
                             case error.PERMISSION_DENIED:
-                                errorMessage = "O usuÃ¡rio negou a permissÃ£o para geolocalizaÃ§Ã£o.";
+                                errorMessage = "O usuário negou a permissão para geolocalização.";
                                 break;
                             case error.POSITION_UNAVAILABLE:
-                                errorMessage = "A informaÃ§Ã£o de localizaÃ§Ã£o estÃ¡ indisponÃ­vel.";
-                                break;
+                                errorMessage = "A informação de localização  indisponível.";
+                                breaká
                             case error.TIMEOUT:
-                                errorMessage = "A requisiÃ§Ã£o para obter a localizaÃ§Ã£o do usuÃ¡rio expirou.";
+                                errorMessage = "A requisição para obter a localização do usuário expirou.";
                                 break;
                         }
                         reject(new Error(errorMessage));
@@ -2934,7 +2934,7 @@ async function verificarEAtualizarVencimentos() {
                     body: JSON.stringify({ Status: 'Vencido' })
                 }).then(result => {
                     if(result) {
-                        // Atualiza a memÃ³ria local para nÃ£o precisar recarregar a pÃ¡gina
+                        // Atualiza a memória local para não precisar recarregar a página
                         v.Status = 'Vencido'; 
                         contadorUpdates++;
                     }
@@ -3174,7 +3174,7 @@ function renderNBPanel() {
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div>
                         <h3 class="text-xl font-bold text-gray-800 dark:text-white">${group.name}</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Total disponÃ­vel por dia: sobra anterior + produção</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Total disponí­vel por dia: sobra anterior + produção</p>
                     </div>
                     <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-2 text-xs">
                         ${weekDates.map(dateString => `
@@ -3213,7 +3213,7 @@ function renderNBPanel() {
                                             <label class="block"><span class="block text-xs mb-1 text-gray-500 dark:text-gray-400">Sobra Atual</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Atual)}" data-field="Qtd_Sobra_Atual" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
                                         </div>
                                         <div class="mt-3 grid grid-cols-2 gap-2">
-                                            <div class="rounded-lg bg-slate-100 dark:bg-slate-700 px-3 py-2"><div class="text-[11px] text-gray-500 dark:text-gray-300">DisponÃ­vel</div><div class="font-bold text-gray-800 dark:text-white" data-nb-available>${totalDisponivel}</div></div>
+                                            <div class="rounded-lg bg-slate-100 dark:bg-slate-700 px-3 py-2"><div class="text-[11px] text-gray-500 dark:text-gray-300">Disponí­vel</div><div class="font-bold text-gray-800 dark:text-white" data-nb-available>${totalDisponivel}</div></div>
                                             <div class="rounded-lg bg-green-100 dark:bg-green-900 px-3 py-2"><div class="text-[11px] text-green-700 dark:text-green-200">Venda</div><div class="font-bold text-green-800 dark:text-green-100" data-nb-venda>${venda}</div></div>
                                         </div>
                                     </div>
@@ -3358,7 +3358,7 @@ function renderNBPanel() {
                                             <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">Sobra Atual</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Atual)}" data-field="Qtd_Sobra_Atual" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
                                         </div>
                                         <div class="mt-3 grid grid-cols-2 gap-2">
-                                            <div class="rounded-lg bg-slate-100 dark:bg-slate-700 px-3 py-2"><div class="text-[11px] text-gray-500 dark:text-gray-300">DisponÃ­vel</div><div class="font-bold text-gray-800 dark:text-white" data-nb-available>${totalDisponivel}</div></div>
+                                            <div class="rounded-lg bg-slate-100 dark:bg-slate-700 px-3 py-2"><div class="text-[11px] text-gray-500 dark:text-gray-300">Disponí­vel</div><div class="font-bold text-gray-800 dark:text-white" data-nb-available>${totalDisponivel}</div></div>
                                             <div class="rounded-lg bg-green-100 dark:bg-green-900 px-3 py-2"><div class="text-[11px] text-green-700 dark:text-green-200">Venda</div><div class="font-bold text-green-800 dark:text-green-100" data-nb-venda>${venda}</div></div>
                                         </div>
                                     </div>
@@ -4194,9 +4194,9 @@ async function loadInitialData() {
     hideLoadingOverlay();
 }
 
-// FunÃ§Ã£o inteligente que carrega dados apenas quando a pÃ¡gina Ã© acessada
+// Função inteligente que carrega dados apenas quando a página é acessada
 async function loadPageData(pageId) {
-    if (dataLoaded[pageId]) return; // Se jÃ¡ carregou, nÃ£o faz nada
+    if (dataLoaded[pageId]) return; // Se já carregou, não faz nada
 
     showLoadingOverlay('Carregando...');
 
@@ -4251,7 +4251,7 @@ case 'requisicao':
             applyAndRenderChamados();
             break;
         case 'financeiro':
-            // Garante que, se esta pÃ¡gina for acessada via menu, as tabelas estejam renderizadas
+            // Garante que, se esta página for acessada via menu, as tabelas estejam renderizadas
             applyAndRenderReceitas();
             applyAndRenderCustos();
             break;
@@ -4292,12 +4292,12 @@ async function fetchConsultores() {
                 // Limpa a sessÃ£o do navegador
                 sessionStorage.clear();
                 
-                // Recarrega a pÃ¡gina (o que vai jogar ele para a tela de login)
+                // Recarrega a página (o que vai jogar ele para a tela de login)
                 location.reload();
-                return; // Para a execuÃ§Ã£o aqui
+                return; // Para a execução aqui
             }
         }
-        // --- FIM DA VERIFICAÃ‡ÃƒO DE SEGURANÃ‡A ---
+        // --- FIM DA VERIFICAÇÃO DE SEGURANÇA ---
     }
 }
 function generateRandomCode() {
@@ -4389,7 +4389,7 @@ async function fetchRequisicoesItens() {
         // *** VERIFICAÃ‡ÃƒO DE STATUS ***
         if (user.Status === 'Inativo') {
             hideLoadingOverlay();
-            alert('Seu usuÃ¡rio estÃ¡ Inativo. Entre em contato com o administrador.');
+            alert('Seu usuÃ¡rio está Inativo. Entre em contato com o administrador.');
             return;
         }
 
@@ -4430,7 +4430,7 @@ async function initializeUserSession(user) {
         }
     }
 
-    // BotÃ£o Novo Cliente e Filtros de Categoria (Apenas Admin)
+    // Botão Novo Cliente e Filtros de Categoria (Apenas Admin)
     const novoClienteBtn = document.getElementById('show-cliente-form');
     const categoryFilters = document.getElementById('cliente-category-filters');
     
@@ -4517,11 +4517,11 @@ async function initializeUserSession(user) {
     // --- CORREÃ‡ÃƒO DO F5 E CARREGAMENTO DE PÃGINA ---
     let savedPage = sessionStorage.getItem('currentPage');
     
-    // Define pÃ¡gina padrÃ£o se nÃ£o houver salva
+    // Define página padrão se não houver salva
     savedPage = savedPage || (loggedInUser.Role === 'Admin' ? 'dashboard' : (canAccessNB() ? 'nosso-bolo' : 'visitas'));
 
-    // Importante: Chama o loadPageData para a pÃ¡gina que vai abrir.
-    // Isso garante que se for 'requisicao', ele baixe os dados e aplique a data padrÃ£o de 45 dias
+    // Importante: Chama o loadPageData para a página que vai abrir.
+    // Isso garante que se for 'requisicao', ele baixe os dados e aplique a data padrão de 45 dias
     if (savedPage) {
         await loadPageData(savedPage);
     }
@@ -4543,16 +4543,16 @@ async function checkSession() { const userString = sessionStorage.getItem('logge
         const savedSubTabId = sessionStorage.getItem(subTabKey);
 
         if (savedSubTabId) {
-            // Encontra o botÃ£o da sub-aba correspondente na pÃ¡gina que estÃ¡ sendo carregada
+            // Encontra o botão da sub-aba correspondente na página que está sendo carregada
             const subTabButton = document.querySelector(`#${currentPageId} button[data-target="${savedSubTabId}"]`);
             
             if (subTabButton) {
-                // Simula o clique no botÃ£o para ativar a aba e seu conteÃºdo corretamente
+                // Simula o clique no botão para ativar a aba e seu conteúdo corretamente
                 handleTabClick(subTabButton);
             }
         }
     }
-    // --- FunÃ§Ãµes de RenderizaÃ§Ã£o ---
+    // --- Funções de Renderização ---
     function handleTabClick(btn) {
     const tabContainer = btn.closest('ul');
     if (!tabContainer) return;
@@ -4594,12 +4594,12 @@ async function checkSession() { const userString = sessionStorage.getItem('logge
         }
     }
 
-    // Salva a sub-aba ativa para a pÃ¡gina atual
+    // Salva a sub-aba ativa para a página atual
     if (pageContainer) {
         sessionStorage.setItem(`activeSubTab_${pageContainer.id}`, btn.dataset.target);
     }
 
-    // LÃ³gica especÃ­fica para o botÃ£o "Novo Item" na tela de RequisiÃ§Ãµes
+    // Lógica específica para o botão "Novo Item" na tela de Requisições
     const newItemButton = document.getElementById('show-new-item-btn');
     if (newItemButton) {
         const shouldShow = (
@@ -4851,9 +4851,9 @@ function createConsultorCard(c) {
     data.forEach(r => {
         const statusClass = r.Status === 'Pago' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800';
         const recorrenteClass = r.Recorrente ? 'text-blue-500' : 'text-gray-400';
-        const recorrenteTitle = r.Recorrente ? 'Desativar recorrÃªncia' : 'Ativar recorrÃªncia';
+        const recorrenteTitle = r.Recorrente ? 'Desativar recorrência' : 'Ativar recorrência';
         
-        // ALTERAÃ‡ÃƒO: BotÃ£o de toggle status adicionado
+        // ALTERAÇÃO: Botão de toggle status adicionado
         const toggleStatusBtn = `<button class="toggle-status-btn ${r.Status === 'Pago' ? 'text-green-500' : 'text-gray-400'}" data-id="${r.Id}" data-type="receita" data-status="${r.Status}" title="${r.Status === 'Pago' ? 'Marcar como Pendente' : 'Marcar como Pago'}"><i class="fas fa-check-circle"></i></button>`;
 
         const actionsHTML = `
@@ -4899,9 +4899,9 @@ function renderCustos(data = custosData) {
     data.forEach(c => {
         const statusClass = c.Status === 'Pago' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800';
         const recorrenteClass = c.Recorrente ? 'text-blue-500' : 'text-gray-400';
-        const recorrenteTitle = c.Recorrente ? 'Custo Recorrente (Clique para desativar)' : 'Custo NÃ£o Recorrente (Clique para ativar)';
+        const recorrenteTitle = c.Recorrente ? 'Custo Recorrente (Clique para desativar)' : 'Custo Não Recorrente (Clique para ativar)';
 
-        // ALTERAÃ‡ÃƒO: BotÃ£o de toggle status adicionado
+        // ALTERAÇÃO: Botão de toggle status adicionado
         const toggleStatusBtn = `<button class="toggle-status-btn ${c.Status === 'Pago' ? 'text-green-500' : 'text-gray-400'}" data-id="${c.Id}" data-type="custo" data-status="${c.Status}" title="${c.Status === 'Pago' ? 'Marcar como Pendente' : 'Marcar como Pago'}"><i class="fas fa-check-circle"></i></button>`;
 
         const actionsHTML = `
@@ -5638,7 +5638,7 @@ async function handleEditItemQuantity(itemJoinId, currentQty, itemName, requisic
             cardQtyElement.textContent = `Quantidade: ${newQty}`;
         }
         
-        // 3. Atualiza o atributo onclick do botÃ£o de ediÃ§Ã£o para refletir a nova quantidade
+        // 3. Atualiza o atributo onclick do botão de edição para refletir a nova quantidade
         const safeItemName = itemName.replace(/'/g, "\\'").replace(/"/g, "&quot;");
         const editButtons = document.querySelectorAll(`button[onclick^="handleEditItemQuantity(${itemJoinId},"]`);
         editButtons.forEach(button => {
@@ -5679,7 +5679,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
         hideModal(allElements.detailsModal);
         const requisicaoParaAbrir = requisicoesData.find(r => r.Id == requisicaoId);
         if (requisicaoParaAbrir) {
-             // Simula o clique no botÃ£o para reabrir o modal
+             // Simula o clique no botão para reabrir o modal
             const fakeButton = document.createElement('button');
             fakeButton.dataset.type = 'requisicao';
             const fakeRow = document.createElement('tr');
@@ -5689,17 +5689,17 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
         }
 
     } else {
-        alert('Falha ao atualizar a observaÃ§Ã£o.');
+        alert('Falha ao atualizar a observação.');
     }
 }
    async function handleDeleteItemFromRequisition(itemJoinId, requisicaoId) {
-        if (await showConfirmModal('Tem certeza que deseja remover este item da requisiÃ§Ã£o?')) {
+        if (await showConfirmModal('Tem certeza que deseja remover este item da requisição?')) {
             showLoadingOverlay('Removendo item...');
             const result = await nocoFetch(`${TABLE_IDS.ItensRequisicao}/${itemJoinId}`, { method: 'DELETE' });
             hideLoadingOverlay();
 
             if (result && result.success) {
-                // --- INÃCIO DA ALTERAÃ‡ÃƒO ---
+                // --- INÍCIO DA ALTERAÇÃO ---
 
                 // 1. Busca os dados mais recentes para garantir que a lista local esteja correta.
                 await fetchRequisicoesItens();
@@ -5707,7 +5707,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
                 // 2. Fecha o modal de detalhes.
                 hideModal(allElements.detailsModal);
 
-                // 3. Atualiza a tabela principal de requisiÃ§Ãµes.
+                // 3. Atualiza a tabela principal de requisiçõ  es.
                 applyRequisicaoFilters();
 
                
@@ -5771,8 +5771,8 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
             table = TABLE_IDS.Reembolsos;
         } else if (type === 'servico') {
              table = TABLE_IDS.Servicos;
-             // LÃ³gica especÃ­fica para serviÃ§os se necessÃ¡rio (ex: Pendente -> Em Andamento -> Concluido)
-             // Como o botÃ£o atual Ã© apenas um toggle simples, vamos manter a lÃ³gica binÃ¡ria ou adaptar se for ciclo
+             // Lógica específica para serviços se necessário (ex: Pendente -> Em Andamento -> Concluido)
+             // Como o botão atual é apenas um toggle simples, vamos manter a lógica binária ou adaptar se for ciclo
              if(currentStatus === 'Pendente') newStatus = 'Em Andamento';
              else if(currentStatus === 'Em Andamento') newStatus = 'Concluido';
              else newStatus = 'Pendente'; 
@@ -5780,7 +5780,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
 
         if (!table) return;
 
-        // AtualizaÃ§Ã£o Otimista da Interface
+        // Atualização Otimista da Interface
         showLoadingOverlay('Atualizando status...');
         
         try {
@@ -6051,7 +6051,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
     // --- BOTÃ•ES GENÃ‰RICOS ---
     const btn=t.closest('button'); if(!btn)return; 
     
-    // NOVO: BotÃ£o de alternar status (Pago/Pendente)
+    // NOVO: Botão de alternar status (Pago/Pendente)
     if(btn.classList.contains('toggle-status-btn')) {
         handleStatusToggle(btn);
         return;
@@ -6185,7 +6185,7 @@ async function verificarEGerarCustosRecorrentes() {
                 promessasDeCriacao.push(
                     nocoFetch(TABLE_IDS.Custos, {
                         method: 'POST',
-                        body: JSON.stringify(novaReceitaBody) // Nota: o nome da variÃ¡vel no cÃ³digo original era 'novoCustoBody', mas na receita era 'novaReceitaBody'. Se você copiou a lÃ³gica, verifique se a variÃ¡vel estÃ¡ correta no contexto da funÃ§Ã£o de custos. No seu cÃ³digo original de custos estava 'novoCustoBody'. Vou manter 'novoCustoBody' abaixo para garantir.
+                        body: JSON.stringify(novoCustoBody) // Nota: o nome da variÃ¡vel no cÃ³digo original era 'novoCustoBody', mas na receita era 'novaReceitaBody'. Se você copiou a lógica, verifique se a variável está correta no contexto da funÃ§Ã£o de custos. No seu cÃ³digo original de custos estava 'novoCustoBody'. Vou manter 'novoCustoBody' abaixo para garantir.
                     })
                 );
                 // CorreÃ§Ã£o no code block para refletir a variÃ¡vel correta da funÃ§Ã£o de custos
@@ -6418,7 +6418,7 @@ async function handleNavClick(e) {
     const navLink = e.currentTarget;
     const targetId = navLink.dataset.target;
     
-    // --- NOVO: Carrega dados da pÃ¡gina se necessÃ¡rio ---
+    // --- NOVO: Carrega dados da página se necessário ---
     await loadPageData(targetId); 
     // --------------------------------------------------
 
@@ -6562,10 +6562,10 @@ const pageWidth = doc.internal.pageSize.getWidth();
                 lineWidth: 0.2
             },
             didDrawPage: function (data) {
-                // Adiciona footer com nÃºmero da pÃ¡gina
+                // Adiciona footer com nÃºmero da página
                 doc.setFontSize(9);
                 doc.setTextColor(150);
-                doc.text('PÃ¡gina ' + doc.internal.getCurrentPageInfo().pageNumber, data.settings.margin.left, doc.internal.pageSize.height - 10);
+                doc.text('Página ' + doc.internal.getCurrentPageInfo().pageNumber, data.settings.margin.left, doc.internal.pageSize.height - 10);
             }
         });
 
@@ -6807,7 +6807,7 @@ const openDetailsModal = (card) => {
     document.getElementById('modal-title').textContent = title;
     
     if (type === 'requisicao') {
-        // ... (cÃ³digo da requisiÃ§Ã£o que jÃ¡ estÃ¡ funcionando)
+        // ... (cÃ³digo da requisiÃ§Ã£o que jÃ¡ está funcionando)
         const itensFiltrados = requisicoesItensData.filter(item => item.Requisicoes_id === id);
         const showActions = loggedInUser.Role === 'Admin' || data.Status === 'Pendente';
         const actionsHeader = showActions ? '<th scope="col" class="px-6 py-3 text-center">AÃ§Ãµes</th>' : '';
@@ -7639,7 +7639,7 @@ function createKanbanCard(v){
     const canStartOrEnd = loggedInUser && (loggedInUser.Role === 'Admin' || v.Consultores?.Id == loggedInUser.Id);
 
     if (v.Status === 'Agendada') {
-        // SÃ³ mostra o botÃ£o 'Iniciar' se a condiÃ§Ã£o for verdadeira.
+        // SÃ³ mostra o botão 'Iniciar' se a condição for verdadeira.
         if (canStartOrEnd) {
             acts += `<button data-id="${v.Id}" class="iniciar-visita-btn w-full bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600">Iniciar</button>`;
         }        
@@ -7648,7 +7648,7 @@ function createKanbanCard(v){
             acts += `<button data-id="${v.Id}" class="remarcar-visita-btn w-full ${acts ? 'mt-2' : ''} bg-gray-500 text-white px-3 py-1 rounded-md text-sm hover:bg-gray-600">Remarcar</button>`;
         }  
     } else if (v.Status === 'Em Andamento') {
-        // SÃ³ mostra o botÃ£o 'Encerrar' se a condiÃ§Ã£o for verdadeira.
+        // SÃ³ mostra o botão 'Encerrar' se a condição for verdadeira.
         if (canStartOrEnd) {
             acts = `<button data-id="${v.Id}" class="encerrar-visita-btn w-full bg-red-500 text-white px-3 py-1 rounded-md text-sm hover:bg-red-600">Encerrar</button>`;
         }
@@ -8260,12 +8260,12 @@ function renderItensDeRequisicao(filterCategory = 'Todos') {
             const header = document.createElement('div');
             header.className = 'flex justify-between items-center mb-4';
             
-            // --- INÃCIO DA ALTERAÃ‡ÃƒO 1: BotÃ£o "Adicionar Item" condicional ---
+            // --- INÍCIO DA ALTERAÇÃO 1: Botão "Adicionar Item" condicional ---
             const addItemButtonHTML = (loggedInUser && loggedInUser.Role === 'Admin') ?  `<button class="add-item-btn bg-brand-gold text-white px-3 py-1 rounded-md text-sm hover:bg-brand-gold-dark" data-category="${category}">Adicionar Item</button>`
-                : ''; // Se nÃ£o for admin, o botÃ£o nÃ£o Ã© criado.
+                : ''; // Se não for admin, o botão não é criado.
 
             header.innerHTML = `<h3 class="text-xl font-bold text-gray-800 dark:text-white">${category}</h3>${addItemButtonHTML}`;
-            // --- FIM DA ALTERAÃ‡ÃƒO 1 ---
+            // --- FIM DA ALTERAÇÃO 1 ---
 
             categoryDiv.appendChild(header);
 
@@ -8328,7 +8328,7 @@ function renderServicos(data = servicosData) {
         const anexoUrl = s.Anexo && s.Anexo[0]?.signedPath ? `${NocoDB_BaseURL}/${s.Anexo[0].signedPath}` : null;
         const anexoIconHTML = anexoUrl ? `<a href="${anexoUrl}" target="_blank" class="text-gray-500" title="Ver Anexo"><i class="fas fa-paperclip"></i></a>` : '';
         
-        // BotÃ£o Toggle (Cores diferentes para status diferentes)
+        // Botão Toggle (Cores diferentes para status diferentes)
         let toggleColor = 'text-gray-400';
         if (s.Status === 'Em Andamento') toggleColor = 'text-blue-500';
         if (s.Status === 'Concluido') toggleColor = 'text-green-500';
@@ -8600,7 +8600,7 @@ function renderReembolsos(data = reembolsosData) {
         const statusClass = getStatusClass(r.Status);
         const canEditOrDelete = loggedInUser.Role === 'Admin' || (r.Status === 'Pendente' && r.Consultores?.Id == loggedInUser.Id);
         
-        // BotÃ£o Toggle (Apenas Admin ou Gestor geralmente aprovam, mas vou deixar aberto conforme solicitado. Ajuste se necessÃ¡rio)
+        // Botão Toggle (Apenas Admin ou Gestor geralmente aprovam, mas vou deixar aberto conforme solicitado. Ajuste se necessário)
         const toggleBtn = (loggedInUser.Role === 'Admin' || loggedInUser.Role === 'Gestor') 
             ? `<button class="toggle-status-btn ${r.Status === 'Pago' ? 'text-green-500' : 'text-gray-400'}" data-id="${r.Id}" data-type="reembolso" data-status="${r.Status}" title="Alterar Status"><i class="fas fa-check-circle"></i></button>`
             : '';
@@ -8833,7 +8833,7 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
         const recEnd = document.getElementById('dash-rec-end');
         if(recStart) recStart.value = firstDayOfMonth;
         if(recEnd) recEnd.value = lastDayOfMonth;
-        // Ativa visualmente o botÃ£o 'MÃªs' para Receitas
+        // Ativa visualmente o botão 'Mês' para Receitas
         document.querySelector('.dash-rec-quick-filter[data-period="month"]')?.classList.add('filter-btn-active');
 
         // Define Custos
@@ -8841,7 +8841,7 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
         const cosEnd = document.getElementById('dash-cos-end');
         if(cosStart) cosStart.value = firstDayOfMonth;
         if(cosEnd) cosEnd.value = lastDayOfMonth;
-        // Ativa visualmente o botÃ£o 'MÃªs' para Custos
+        // Ativa visualmente o botão 'Mês' para Custos
         document.querySelector('.dash-cos-quick-filter[data-period="month"]')?.classList.add('filter-btn-active');
 
 
@@ -9008,7 +9008,7 @@ async function generateRequisicaoReport() {
     for (let i = 0; i < selectedRequisitions.length; i++) {
         const req = selectedRequisitions[i];
         
-        // Verifica se precisa de nova pÃ¡gina
+        // Verifica se precisa de nova página
         if (currentY > 230) {
             doc.addPage();
             currentY = 20;
@@ -9053,8 +9053,8 @@ async function generateRequisicaoReport() {
 
         // --- TABELA DE ITENS ---
         // Prepara os dados da tabela
-        // Filtra os itens desta requisiÃ§Ã£o especÃ­fica a partir da lista global requisicoesItensData
-        // (Isso assume que requisicoesItensData estÃ¡ carregado. Se for sob demanda, pode precisar de fetch aqui)
+        // Filtra os itens desta requisiÃ§Ã£o especí­fica a partir da lista global requisicoesItensData
+        // (Isso assume que requisicoesItensData está carregado. Se for sob demanda, pode precisar de fetch aqui)
         const itensDaRequisicao = requisicoesItensData.filter(item => item.Requisicoes_id === req.Id);
         
         const tableBody = [];
@@ -9097,22 +9097,22 @@ async function generateRequisicaoReport() {
             },
             margin: { left: marginX, right: marginX },
             didDrawPage: function(data) {
-                // Se a tabela quebrar a pÃ¡gina, atualiza o currentY para a nova pÃ¡gina
+                // Se a tabela quebrar a página, atualiza o currentY para a nova página
                 currentY = data.cursor.y;
             }
         });
 
-        // Atualiza Y para o prÃ³ximo bloco apÃ³s a tabela
+        // Atualiza Y para o próximo bloco apÃ³s a tabela
         currentY = doc.lastAutoTable.finalY + 15;
     }
 
-    // RodapÃ© com nÃºmero de pÃ¡ginas
+    // Rodapé com número de páginas
     const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(150);
-        doc.text(`PÃ¡gina ${i} de ${totalPages}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+        doc.text(`Página ${i} de ${totalPages}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
     }
 
     doc.save(`Relatorio_Requisicoes_${new Date().toISOString().slice(0,10)}.pdf`);
