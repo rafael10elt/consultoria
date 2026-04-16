@@ -86,7 +86,25 @@ body {
             max-height: 250px;
             overflow-y: auto;
         }
+            #nb-top-products-week-list {
+                max-height: 250px;
+                overflow-y: auto;
+            }
 /* Adicione este novo código no final da sua tag <style> */
+/* Limitar altura e permitir rolagem nos blocos principais */
+#nb-expense-table-body {
+    max-height: 300px;
+    overflow-y: auto;
+}
+#nb-diary-feed {
+    max-height: 300px;
+    overflow-y: auto;
+}
+#nb-categories-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+/* Caso haja outros blocos similares, adicione aqui */
         @media (max-width: 1023px) {
             /* 
               Esta classe é adicionada via JS ao contêiner .flex-col.flex-1
@@ -105,6 +123,29 @@ body {
             }
         }
     </style>
+
+/* Reduzir tamanho dos gráficos principais */
+canvas[id*="chart"],
+canvas[id*="nb-chart"],
+canvas[id*="finance-chart"] {
+    max-height: 260px !important;
+    height: 260px !important;
+    width: 100% !important;
+    aspect-ratio: 2/1 !important;
+    margin: 0 auto;
+    display: block;
+}
+
+<!-- Modal de Confirmação Customizado -->
+<div id="custom-confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 hidden">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-full max-w-xs modal-content-animate">
+        <div id="custom-confirm-message" class="text-gray-800 dark:text-white mb-6 text-center"></div>
+        <div class="flex justify-center gap-4">
+            <button id="custom-confirm-cancel" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+            <button id="custom-confirm-ok" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Confirmar</button>
+        </div>
+    </div>
+</div>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-300 transition-colors duration-300">
 
@@ -114,7 +155,7 @@ body {
             <div class="flex flex-col items-center">
     <div class="flex flex-col items-center mb-4">
   <div class="logo-symbol">
-    <img src="images/ponteslogosfundo4.png" alt="Logo Lumitech" class="w-20 h-20 object-contain mr-3 ml-8">
+    <img src="images/nb.png" alt="Logo NB" class="w-20 h-20 object-contain mr-3 ml-8">
   </div>
   <div class="text-center">
     <h1 class="text-3xl font-bold text-brand-dark dark:text-gray-200">PONTES</h1>
@@ -136,7 +177,7 @@ body {
         <div class="flex h-screen bg-gray-100 dark:bg-gray-900">
             <aside id="sidebar" class="absolute z-30 flex-col items-center w-20 text-white transform -translate-x-full lg:relative lg:flex lg:translate-x-0 transition-transform duration-200 ease-in-out bg-brand-dark dark:bg-gray-800">
                 <div class="logo-symbol">
-                <img id="sidebar-logo-image" src="images/ponteslogosfundo.png" alt="Logo Pontes Consultoria" style="width: 58px; height: 50px; object-fit: contain; position: absolute; left: 18px; top: 15px; z-index: 2; pointer-events: none;" />
+                <img id="sidebar-logo-image" src="images/nb.png" alt="Logo NB" style="width: 58px; height: 50px; object-fit: contain; position: absolute; left: 18px; top: 15px; z-index: 2; pointer-events: none;" />
                </div>
                 <nav class="flex-1 mt-6">
                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg bg-brand-gold text-white" data-target="dashboard" title="Dashboard"><i class="fas fa-chart-pie"></i></a>
@@ -419,6 +460,12 @@ body {
                                 </div>
                             </div>
 
+                            <!-- Top 10 Produtos Mais Vendidos na Semana -->
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
+                                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Top 10 Produtos Mais Vendidos da Semana</h3>
+                                <ul id="nb-top-products-week-list" class="space-y-2"></ul>
+                            </div>
+
                             <div id="nb-panel-grid" class="space-y-6"></div>
                         </div>
 
@@ -521,6 +568,16 @@ body {
                                         <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Diário de Bordo</h3>
                                         <span class="text-sm text-gray-500 dark:text-gray-400">Mais recentes no topo</span>
                                     </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                                        <div>
+                                            <label for="nb-diary-filter-date" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Filtrar por Data</label>
+                                            <input type="date" id="nb-diary-filter-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        </div>
+                                        <div>
+                                            <label for="nb-diary-filter-user" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Filtrar por Usuário</label>
+                                            <input type="text" id="nb-diary-filter-user" placeholder="Nome do usuário..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        </div>
+                                    </div>
                                     <form id="nb-diary-form" class="mb-4">
                                         <textarea id="nb-diary-message" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Registrar observação, evento ou decisão do dia..."></textarea>
                                         <div class="flex justify-end mt-3">
@@ -550,6 +607,16 @@ body {
                                         </div>
                                         <div>
                                             <h4 class="font-semibold text-gray-800 dark:text-white mb-3">Produtos</h4>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                                                <div>
+                                                    <label for="nb-product-filter-name" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Filtrar por Produto</label>
+                                                    <input type="text" id="nb-product-filter-name" placeholder="Nome do produto..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                </div>
+                                                <div>
+                                                    <label for="nb-product-filter-category" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Filtrar por Categoria</label>
+                                                    <select id="nb-product-filter-category" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"><option value="">Todas</option></select>
+                                                </div>
+                                            </div>
                                             <form id="nb-product-form" class="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4">
                                                 <input type="hidden" id="nb-product-id">
                                                 <div class="md:col-span-2"><input type="text" id="nb-product-name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Nome do produto"></div>
@@ -2123,6 +2190,27 @@ body {
     </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+        // --- Modal de Confirmação Customizado ---
+        window.showConfirmModal = function(message) {
+            return new Promise(resolve => {
+                const modal = document.getElementById('custom-confirm-modal');
+                const msg = document.getElementById('custom-confirm-message');
+                const btnOk = document.getElementById('custom-confirm-ok');
+                const btnCancel = document.getElementById('custom-confirm-cancel');
+                msg.textContent = message;
+                modal.classList.remove('hidden');
+                function cleanup(result) {
+                    modal.classList.add('hidden');
+                    btnOk.removeEventListener('click', onOk);
+                    btnCancel.removeEventListener('click', onCancel);
+                    resolve(result);
+                }
+                function onOk() { cleanup(true); }
+                function onCancel() { cleanup(false); }
+                btnOk.addEventListener('click', onOk);
+                btnCancel.addEventListener('click', onCancel);
+            });
+        };
     // --- Configuração da API NocoDB ---
 
     const API_URL = '/.netlify/functions/api';
@@ -2889,10 +2977,23 @@ function getStartOfWeek(date = new Date()) {
     return base;
 }
 function getWeekDates(startDate = nbCurrentWeekStart || getStartOfWeek()) {
-    return Array.from({ length: 7 }, (_, index) => toDateInputValue(addDays(startDate, index)));
+    // Retorna apenas segunda a sábado (6 dias)
+    return Array.from({ length: 6 }, (_, index) => toDateInputValue(addDays(startDate, index)));
 }
 function getNBDateLabel(dateString) {
-    return parseDateOnly(dateString).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+    // Se quiser formato curto para gráficos, passe true como segundo argumento
+    return getNBDateLabelFmt(dateString, false);
+}
+
+function getNBDateLabelFmt(dateString, short = false) {
+    const date = parseDateOnly(dateString);
+    if (short) {
+        // Para gráficos: dd/MM
+        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    } else {
+        // Padrão: dd/MM/yy
+        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    }
 }
 function normalizeNBNumber(value) {
     const parsed = parseInt(value, 10);
@@ -3067,7 +3168,7 @@ function renderNBPanel() {
                     <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-2 text-xs">
                         ${weekDates.map(dateString => `
                             <div class="rounded-lg bg-white dark:bg-gray-800 border dark:border-gray-700 px-3 py-2 text-center">
-                                <div class="font-semibold text-gray-700 dark:text-gray-200">${getNBDateLabel(dateString)}</div>
+                                <div class="font-semibold text-gray-700 dark:text-gray-200">${getNBDateLabelFmt(dateString, true)}</div>
                                 <div class="text-gray-500 dark:text-gray-400">Total: <span id="nb-total-${makeSafeDomId(group.id)}-${makeSafeDomId(dateString)}">0</span></div>
                             </div>
                         `).join('')}
@@ -3080,7 +3181,6 @@ function renderNBPanel() {
                         <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2 mb-4">
                             <div>
                                 <h4 class="font-semibold text-gray-800 dark:text-white">${product.Nome}</h4>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Custo ${formatCurrencyBR(product.Preco_Custo)} | Venda ${formatCurrencyBR(product.Preco_Venda)}</p>
                             </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-4">
@@ -3092,7 +3192,7 @@ function renderNBPanel() {
                                 return `
                                     <div class="rounded-xl border dark:border-gray-700 p-3" data-nb-cell data-date="${dateString}" data-product-id="${product.Id}">
                                         <div class="flex items-center justify-between mb-3">
-                                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">${getNBDateLabel(dateString)}</span>
+                                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">${getNBDateLabelFmt(dateString, true)}</span>
                                             <span class="text-[11px] px-2 py-1 rounded-full ${editable ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}">${editable ? 'Editável' : getNBStatusForDate(dateString)}</span>
                                         </div>
                                         <div class="grid grid-cols-2 gap-2 text-sm">
@@ -3115,6 +3215,39 @@ function renderNBPanel() {
         </section>
     `).join('');
     renderNBPanelTotals();
+
+    // --- Top 10 Produtos Mais Vendidos da Semana ---
+    renderNBTopProductsWeek();
+}
+
+// Renderiza o ranking dos 10 produtos mais vendidos na semana
+function renderNBTopProductsWeek() {
+    const list = document.getElementById('nb-top-products-week-list');
+    if (!list) return;
+    // Pega as datas da semana atual
+    const weekDates = getWeekDates();
+    // Mapeia vendas por produto
+    const salesByProduct = {};
+    weekDates.forEach(dateString => {
+        nbProdutosData.forEach(product => {
+            const record = getNBApontamento(dateString, product.Id) || {};
+            const venda = computeNBVenda(record);
+            if (!salesByProduct[product.Id]) salesByProduct[product.Id] = { nome: product.Nome, total: 0 };
+            salesByProduct[product.Id].total += venda;
+        });
+    });
+    // Ordena por total vendido (desc), pega só produtos com venda > 0
+    const sorted = Object.entries(salesByProduct)
+        .filter(([, v]) => v.total > 0)
+        .sort((a, b) => b[1].total - a[1].total)
+        .slice(0, 10);
+    if (sorted.length === 0) {
+        list.innerHTML = '<li class="text-gray-500 dark:text-gray-400">Nenhuma venda registrada nesta semana.</li>';
+        return;
+    }
+    list.innerHTML = sorted.map(([_, v], idx) =>
+        `<li class="flex items-center gap-3"><span class="font-bold text-lg w-6 text-right">${idx + 1}.</span> <span class="flex-1">${v.nome}</span> <span class="font-mono bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded px-2 py-1">${v.total}</span></li>`
+    ).join('');
 }
 function getNBMetrics(startDate, endDate) {
     const productMap = new Map(nbProdutosData.map(product => [product.Id, product]));
@@ -3222,7 +3355,27 @@ function renderNBFinanceForm() {
 function renderNBDiaryFeed() {
     const feed = document.getElementById('nb-diary-feed');
     if (!feed) return;
-    feed.innerHTML = nbDiarioBordoData.map(entry => `<article class="rounded-lg border dark:border-gray-700 p-4"><p class="font-semibold text-gray-800 dark:text-white">${entry.Usuario?.Nome || entry.Usuario?.Login || 'Usuário não identificado'}</p><p class="text-sm text-gray-500 dark:text-gray-400">${new Date(entry.Data_Hora || entry.CreatedAt || Date.now()).toLocaleString('pt-BR')}</p><p class="mt-3 text-sm text-gray-700 dark:text-gray-200 whitespace-pre-wrap">${entry.Mensagem || ''}</p></article>`).join('') || '<div class="text-center text-gray-500 dark:text-gray-400 py-6">Nenhuma mensagem registrada ainda.</div>';
+    const filterDate = document.getElementById('nb-diary-filter-date')?.value;
+    const filterUser = (document.getElementById('nb-diary-filter-user')?.value || '').toLowerCase();
+    const filtered = nbDiarioBordoData.filter(entry => {
+        let match = true;
+        if (filterDate) {
+            // Considera apenas a data (YYYY-MM-DD)
+            const entryDate = (entry.Data_Hora || entry.CreatedAt || '').slice(0, 10);
+            match = match && entryDate === filterDate;
+        }
+        if (filterUser) {
+            const userName = (entry.Usuario?.Nome || entry.Usuario?.Login || '').toLowerCase();
+            match = match && userName.includes(filterUser);
+        }
+        return match;
+    });
+    feed.innerHTML = filtered.map(entry => `<article class="rounded-lg border dark:border-gray-700 p-4"><p class="font-semibold text-gray-800 dark:text-white">${entry.Usuario?.Nome || entry.Usuario?.Login || 'Usuário não identificado'}</p><p class="text-sm text-gray-500 dark:text-gray-400">${new Date(entry.Data_Hora || entry.CreatedAt || Date.now()).toLocaleString('pt-BR')}</p><p class="mt-3 text-sm text-gray-700 dark:text-gray-200 whitespace-pre-wrap">${entry.Mensagem || ''}</p></article>`).join('') || '<div class="text-center text-gray-500 dark:text-gray-400 py-6">Nenhuma mensagem registrada ainda.</div>';
+    // Filtros do Diário de Bordo
+    const diaryDateInput = document.getElementById('nb-diary-filter-date');
+    const diaryUserInput = document.getElementById('nb-diary-filter-user');
+    if (diaryDateInput) diaryDateInput.addEventListener('input', renderNBDiaryFeed);
+    if (diaryUserInput) diaryUserInput.addEventListener('input', renderNBDiaryFeed);
 }
 function resetNBExpenseForm() {
     document.getElementById('nb-expense-id').value = '';
@@ -3247,9 +3400,34 @@ function renderNBProductsList() {
     const container = document.getElementById('nb-products-list');
     const select = document.getElementById('nb-product-category');
     if (select) select.innerHTML = '<option value="">Selecione uma categoria</option>' + nbCategoriasData.map(category => `<option value="${category.Id}">${category.Nome}</option>`).join('');
+    // Popular filtro de categoria
+    const filterCategory = document.getElementById('nb-product-filter-category');
+    if (filterCategory) {
+        const current = filterCategory.value;
+        filterCategory.innerHTML = '<option value="">Todas</option>' + nbCategoriasData.map(category => `<option value="${category.Id}">${category.Nome}</option>`).join('');
+        filterCategory.value = current;
+    }
     if (!container) return;
     const canManage = canAccessNBManagement();
-    container.innerHTML = nbProdutosData.map(product => `<div class="rounded-lg border dark:border-gray-700 p-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3"><div><p class="font-semibold text-gray-800 dark:text-white">${product.Nome}</p><p class="text-sm text-gray-500 dark:text-gray-400">${product.Categoria?.Nome || 'Sem categoria'} | Custo ${formatCurrencyBR(product.Preco_Custo)} | Venda ${formatCurrencyBR(product.Preco_Venda)}</p><p class="text-sm ${product.Ativo === false ? 'text-red-500' : 'text-green-600'}">${product.Ativo === false ? 'Inativo' : 'Ativo'}</p></div><div class="flex gap-2">${canManage ? `<button type="button" class="nb-product-edit-btn px-3 py-2 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200" data-id="${product.Id}">Editar</button><button type="button" class="nb-product-toggle-btn px-3 py-2 rounded-lg ${product.Ativo === false ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'}" data-id="${product.Id}">${product.Ativo === false ? 'Ativar' : 'Desativar'}</button>` : ''}</div></div>`).join('') || '<div class="text-gray-500 dark:text-gray-400">Nenhum produto cadastrado.</div>';
+    // Filtros
+    const filterName = (document.getElementById('nb-product-filter-name')?.value || '').toLowerCase();
+    const filterCat = document.getElementById('nb-product-filter-category')?.value;
+    const filtered = nbProdutosData.filter(product => {
+        let match = true;
+        if (filterName) {
+            match = match && (product.Nome || '').toLowerCase().includes(filterName);
+        }
+        if (filterCat) {
+            match = match && String(getNBProductCategoryId(product)) === filterCat;
+        }
+        return match;
+    });
+    container.innerHTML = filtered.map(product => `<div class="rounded-lg border dark:border-gray-700 p-3 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3"><div><p class="font-semibold text-gray-800 dark:text-white">${product.Nome}</p><p class="text-sm text-gray-500 dark:text-gray-400">${product.Categoria?.Nome || 'Sem categoria'} | Custo ${formatCurrencyBR(product.Preco_Custo)} | Venda ${formatCurrencyBR(product.Preco_Venda)}</p><p class="text-sm ${product.Ativo === false ? 'text-red-500' : 'text-green-600'}">${product.Ativo === false ? 'Inativo' : 'Ativo'}</p></div><div class="flex gap-2">${canManage ? `<button type="button" class="nb-product-edit-btn px-3 py-2 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200" data-id="${product.Id}">Editar</button><button type="button" class="nb-product-toggle-btn px-3 py-2 rounded-lg ${product.Ativo === false ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'}" data-id="${product.Id}">${product.Ativo === false ? 'Ativar' : 'Desativar'}</button>` : ''}</div></div>`).join('') || '<div class="text-gray-500 dark:text-gray-400">Nenhum produto cadastrado.</div>';
+    // Filtros de produto em Manutenção
+    const prodNameInput = document.getElementById('nb-product-filter-name');
+    const prodCatInput = document.getElementById('nb-product-filter-category');
+    if (prodNameInput) prodNameInput.addEventListener('input', renderNBProductsList);
+    if (prodCatInput) prodCatInput.addEventListener('change', renderNBProductsList);
 }
 function renderNBManagement() {
     renderNBCharts();
@@ -3420,7 +3598,14 @@ async function handleNBProductSubmit(e) {
         Preco_Venda: Number(document.getElementById('nb-product-price').value || 0),
         Ativo: true
     };
-    if (id) body.Categoria_id = categoryId; else body.Categoria = { Id: categoryId };
+    if (id) {
+        // PATCH: sempre envie Categoria_id
+        body.Categoria_id = categoryId || null;
+        // Remover Categoria se existir
+        if (body.Categoria) delete body.Categoria;
+    } else {
+        body.Categoria = { Id: categoryId };
+    }
     const result = await nocoFetch(id ? `${TABLE_IDS.NB_Produtos}/${id}` : TABLE_IDS.NB_Produtos, { method: id ? 'PATCH' : 'POST', body: JSON.stringify(body) });
     if (result) {
         await fetchNBProdutos();
@@ -3437,7 +3622,9 @@ function startNBExpenseEdit(id) {
     document.getElementById('nb-expense-value').value = Number(item.Valor || 0);
 }
 async function deleteNBExpense(id) {
-    if (!canAccessNBManagement() || !confirm('Deseja apagar este lançamento?')) return;
+    if (!canAccessNBManagement()) return;
+    const confirmed = await showConfirmModal('Deseja apagar este lançamento?');
+    if (!confirmed) return;
     const result = await nocoFetch(`${TABLE_IDS.NB_Despesas_Vales}/${id}`, { method: 'DELETE' });
     if (result?.success) {
         await fetchNBDespesasVales();
@@ -3485,11 +3672,17 @@ async function handleNBCloseDay() {
     if (!canAccessNBManagement()) return;
     const controlDay = await ensureNBControlDay(nbSelectedDate);
     if (!controlDay || controlDay.Status === 'Fechado') return;
-    if (!confirm(`Fechar o dia ${parseDateOnly(nbSelectedDate).toLocaleDateString('pt-BR')} e transferir as sobras para o próximo dia?`)) return;
+    const confirmed = await showConfirmModal(`Fechar o dia ${parseDateOnly(nbSelectedDate).toLocaleDateString('pt-BR')} e transferir as sobras para o próximo dia?`);
+    if (!confirmed) return;
     const patchResult = await nocoFetch(`${TABLE_IDS.NB_Controle_Dias}/${controlDay.Id}`, { method: 'PATCH', body: JSON.stringify({ Status: 'Fechado' }) });
     if (!patchResult) return;
     await fetchNBControleDias();
-    const nextDate = toDateInputValue(addDays(parseDateOnly(nbSelectedDate), 1));
+    // Calcular próximo dia útil (pular domingo)
+    let nextDateObj = addDays(parseDateOnly(nbSelectedDate), 1);
+    if (nextDateObj.getDay() === 0) { // 0 = domingo
+        nextDateObj = addDays(nextDateObj, 1); // pula para segunda
+    }
+    const nextDate = toDateInputValue(nextDateObj);
     const nextControlDay = await ensureNBControlDay(nextDate);
     if (nextControlDay) {
         for (const product of nbProdutosData.filter(item => item.Ativo !== false)) {
@@ -4525,8 +4718,7 @@ function applyAndRenderValidades() {
     const confirmMessage = newRecorrenteState 
         ? 'Deseja marcar esta receita como recorrente e gerar a fatura para o próximo mês?'
         : 'Deseja desativar a recorrência desta receita? Faturas futuras não serão mais geradas automaticamente a partir desta.';
-
-    if (confirm(confirmMessage)) {
+    if (await showConfirmModal(confirmMessage)) {
         showLoadingOverlay('Atualizando...');
         const result = await nocoFetch(`${TABLE_IDS.Receitas}/${id}`, {
             method: 'PATCH',
@@ -4557,8 +4749,7 @@ function applyAndRenderValidades() {
     const confirmMessage = newRecorrenteState 
         ? 'Deseja marcar este custo como recorrente e gerar a fatura para o próximo mês?'
         : 'Deseja desativar a recorrência deste custo? Faturas futuras não serão mais geradas automaticamente a partir deste.';
-
-    if (confirm(confirmMessage)) {
+    if (await showConfirmModal(confirmMessage)) {
         showLoadingOverlay('Atualizando...');
          const result = await nocoFetch(`${TABLE_IDS.Custos}/${id}`, {
             method: 'PATCH',
@@ -5071,7 +5262,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
     }
 }
    async function handleDeleteItemFromRequisition(itemJoinId, requisicaoId) {
-        if (confirm('Tem certeza que deseja remover este item da requisição?')) {
+        if (await showConfirmModal('Tem certeza que deseja remover este item da requisição?')) {
             showLoadingOverlay('Removendo item...');
             const result = await nocoFetch(`${TABLE_IDS.ItensRequisicao}/${itemJoinId}`, { method: 'DELETE' });
             hideLoadingOverlay();
