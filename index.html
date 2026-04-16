@@ -403,7 +403,7 @@ body {
                         <div class="flex flex-col lg:flex-row justify-between lg:items-center gap-4 mb-4">
                             <div>
                                 <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Nosso Bolo</h2>
-                                <p class="text-gray-600 dark:text-gray-300">OperaÃ§Ã£o diÃ¡ria, gestÃ£o estratÃ©gica e manutenÃ§Ã£o do mÃ³dulo NB.</p>
+                                <p class="text-gray-600 dark:text-gray-300">Operação diária, gestão estratégica e manutenção do módulo NB.</p>
                             </div>
                             <div class="flex flex-wrap items-center gap-2">
                                 <span id="nb-role-badge" class="px-3 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"></span>
@@ -423,11 +423,11 @@ body {
                                 <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
                                     <div class="flex flex-wrap items-center gap-2">
                                         <button id="nb-prev-week-btn" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
-                                            <i class="fas fa-chevron-left mr-2"></i>Semana anterior
+                                            <i class="fas fa-chevron-left mr-2"></i>Semana Anterior
                                         </button>
                                         <button id="nb-current-week-btn" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Semana atual</button>
                                         <button id="nb-next-week-btn" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
-                                            PrÃ³xima semana<i class="fas fa-chevron-right ml-2"></i>
+                                            Próxima Semana<i class="fas fa-chevron-right ml-2"></i>
                                         </button>
                                     </div>
                                     <div class="flex flex-col xl:items-end">
@@ -439,7 +439,7 @@ body {
                                 <div class="mt-4">
                                     <div class="flex items-center justify-between gap-3 mb-3">
                                         <label for="nb-panel-product-search" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Pesquisar produto</label>
-                                        <span class="text-xs text-gray-500 dark:text-gray-400">Filtra os produtos visÃ­veis no painel</span>
+                                        <span class="text-xs text-gray-500 dark:text-gray-400">Filtra os produtos ativos no painel</span>
                                     </div>
                                     <input type="text" id="nb-panel-product-search" placeholder="Digite o nome do produto..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full md:max-w-xl p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                 </div>
@@ -458,11 +458,11 @@ body {
                                 <div class="xl:col-span-3 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                                         <div>
-                                            <label for="nb-analytics-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PerÃ­odo de</label>
+                                            <label for="nb-analytics-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período de</label>
                                             <input type="date" id="nb-analytics-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                         </div>
                                         <div>
-                                            <label for="nb-analytics-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">PerÃ­odo atÃ©</label>
+                                            <label for="nb-analytics-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período até</label>
                                             <input type="date" id="nb-analytics-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                         </div>
                                         <div>
@@ -542,12 +542,12 @@ body {
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                                     <div class="flex items-center justify-between mb-4">
                                         <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Despesas e Vales</h3>
-                                        <span class="text-sm text-gray-500 dark:text-gray-400">Ligado Ã  data selecionada</span>
+                                       <span class="text-sm text-gray-500 dark:text-gray-400">Ligado à data selecionada</span>
                                     </div>
                                     <form id="nb-expense-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                                         <input type="hidden" id="nb-expense-id">
                                         <div><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo</label><select id="nb-expense-type" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"><option value="Despesa">Despesa</option><option value="Vale">Vale</option></select></div>
-                                        <div class="md:col-span-2"><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">DescriÃ§Ã£o</label><input type="text" id="nb-expense-description" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+                                        <div class="md:col-span-2"><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descrição</label><input type="text" id="nb-expense-description" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
                                         <div><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor</label><input type="number" step="0.01" id="nb-expense-value" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
                                         <div class="md:col-span-4 flex justify-end gap-2">
                                             <button type="button" id="nb-expense-cancel-btn" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
@@ -559,9 +559,9 @@ body {
                                             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                                 <tr>
                                                     <th class="px-4 py-3">Tipo</th>
-                                                    <th class="px-4 py-3">DescriÃ§Ã£o</th>
+                                                    <th class="px-4 py-3">Descrição</th>
                                                     <th class="px-4 py-3">Valor</th>
-                                                    <th class="px-4 py-3">AÃ§Ãµes</th>
+                                                    <th class="px-4 py-3">Ações</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="nb-expense-table-body"></tbody>
@@ -573,7 +573,7 @@ body {
                             <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                                     <div class="flex items-center justify-between mb-4">
-                                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white">DiÃ¡rio de Bordo</h3>
+                                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Diário de Bordo</h3>
                                         <span class="text-sm text-gray-500 dark:text-gray-400">Mais recentes no topo</span>
                                     </div>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
@@ -582,7 +582,7 @@ body {
                                             <input type="date" id="nb-diary-filter-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                         </div>
                                         <div>
-                                            <label for="nb-diary-filter-user" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Filtrar por UsuÃ¡rio</label>
+                                            <label for="nb-diary-filter-user" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Filtrar por Usuário</label>
                                             <input type="text" id="nb-diary-filter-user" placeholder="Nome do usuÃ¡rio..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                         </div>
                                     </div>
@@ -597,8 +597,8 @@ body {
 
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                                     <div class="flex items-center justify-between mb-4">
-                                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white">ManutenÃ§Ã£o</h3>
-                                        <span class="text-sm text-gray-500 dark:text-gray-400">Soft delete com histÃ³rico preservado</span>
+                                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Manutenção</h3>
+                                        <span class="text-sm text-gray-500 dark:text-gray-400">Soft delete com histórico preservado</span>
                                     </div>
                                     <div class="grid grid-cols-1 gap-6">
                                         <div>
@@ -1235,7 +1235,7 @@ body {
     </select>
 </div>
              <div class="md:col-span-2">
-                <label for="reembolso-motivo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Motivo / DescriÃ§Ã£o</label>
+                <label for="reembolso-motivo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Motivo / Descrição</label>
                 <textarea id="reembolso-motivo" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600" required></textarea>
             </div>
             <div class="md:col-span-2">
@@ -1342,11 +1342,11 @@ body {
                 </select>
             </div>
              <div class="md:col-span-2">
-                <label for="servico-descricao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">DescriÃ§Ã£o do ServiÃ§o</label>
+                <label for="servico-descricao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descrição do Serviço</label>
                 <textarea id="servico-descricao" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600"></textarea>
             </div>
             <div class="md:col-span-2">
-                <label for="servico-observacao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">ObservaÃ§Ã£o</label>
+                <label for="servico-observacao" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label>
                 <textarea id="servico-observacao" rows="3" class="block p-2.5 w-full text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-brand-gold focus:border-brand-gold dark:bg-gray-700 dark:border-gray-600"></textarea>
             </div>
             <div class="md:col-span-2">
@@ -1720,7 +1720,7 @@ body {
         <select id="filter-chamado-demanda" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
             <option value="">Todas</option>
             <option value="Qualidade / ExigÃªncias SanitÃ¡rias">Qualidade</option>
-            <option value="GestÃ£o / OrganizaÃ§Ã£o do NegÃ³cio">GestÃ£o</option>
+            <option value="Gestão / OrganizaÃ§Ã£o do NegÃ³cio">GestÃ£o</option>
             <option value="DocumentaÃ§Ã£o TÃ©cnica e Legal">DocumentaÃ§Ã£o</option>
             <option value="Outros">Outros</option>
         </select>
@@ -1808,9 +1808,9 @@ body {
                     <label for="chamado-demanda" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Demanda</label>
                     <select id="chamado-demanda" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600">
                         <option value="">Selecione...</option>
-                        <option value="Qualidade / ExigÃªncias SanitÃ¡rias">Qualidade / ExigÃªncias SanitÃ¡rias</option>
-                        <option value="GestÃ£o / OrganizaÃ§Ã£o do NegÃ³cio">GestÃ£o / OrganizaÃ§Ã£o do NegÃ³cio</option>
-                        <option value="DocumentaÃ§Ã£o TÃ©cnica e Legal">DocumentaÃ§Ã£o TÃ©cnica e Legal</option>
+                        <option value="Qualidade / Exigências Sanitárias">Qualidade / Exigências Sanitárias</option>
+                        <option value="Gestão / Organização do Negócio">Gestão / Organização do Negócio</option>
+                        <option value="Documentação Técnica e Legal">Documentação Técnica e Legal</option>
                         <option value="Outros">Outros</option>
                     </select>
                 </div>
@@ -2358,7 +2358,7 @@ const dataLoaded = {
         datacontratacao: 'Data de ContrataÃ§Ã£o',
         dataentrega: 'Data de Entrega',
         contato: 'Contato',
-        descricao: 'DescriÃ§Ã£o',
+        descricao: 'Descrição',
     };
 
     // --- VariÃ¡veis de Estado da UI ---
@@ -3174,7 +3174,7 @@ function renderNBPanel() {
                 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div>
                         <h3 class="text-xl font-bold text-gray-800 dark:text-white">${group.name}</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Total disponÃ­vel por dia: sobra anterior + produÃ§Ã£o</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Total disponÃ­vel por dia: sobra anterior + produção</p>
                     </div>
                     <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-2 text-xs">
                         ${weekDates.map(dateString => `
@@ -3208,7 +3208,7 @@ function renderNBPanel() {
                                         </div>
                                         <div class="grid grid-cols-2 gap-2 text-sm">
                                             <label class="block"><span class="block text-xs mb-1 text-gray-500 dark:text-gray-400">Sobra Ant.</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Anterior)}" data-field="Qtd_Sobra_Anterior" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
-                                            <label class="block"><span class="block text-xs mb-1 text-gray-500 dark:text-gray-400">ProduÃ§Ã£o</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Producao)}" data-field="Qtd_Producao" class="nb-panel-input w-full p-2 rounded-lg bg-blue-100 text-gray-900 border border-blue-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
+                                            <label class="block"><span class="block text-xs mb-1 text-gray-500 dark:text-gray-400">Produção</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Producao)}" data-field="Qtd_Producao" class="nb-panel-input w-full p-2 rounded-lg bg-blue-100 text-gray-900 border border-blue-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
                                             <label class="block"><span class="block text-xs mb-1 text-gray-500 dark:text-gray-400">Perda</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Perda)}" data-field="Qtd_Perda" class="nb-panel-input w-full p-2 rounded-lg bg-red-100 text-gray-900 border border-red-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
                                             <label class="block"><span class="block text-xs mb-1 text-gray-500 dark:text-gray-400">Sobra Atual</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Atual)}" data-field="Qtd_Sobra_Atual" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
                                         </div>
@@ -3329,7 +3329,7 @@ function renderNBPanel() {
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
                         <h3 class="text-xl font-bold text-gray-800 dark:text-white">${group.name}</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">${group.products.length} produto(s) visÃ­vel(is) nesta categoria</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">${group.products.length} produto(s) ativos(s) nesta categoria</p>
                     </div>
                 </div>
             </div>
@@ -3353,7 +3353,7 @@ function renderNBPanel() {
                                     <div class="rounded-2xl border dark:border-gray-700 p-3 bg-white/80 dark:bg-gray-800/80" data-nb-cell data-date="${dateString}" data-product-id="${product.Id}">
                                         <div class="grid grid-cols-2 gap-2 text-sm">
                                             <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">Sobra Ant.</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Anterior)}" data-field="Qtd_Sobra_Anterior" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
-                                            <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">ProduÃ§Ã£o</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Producao)}" data-field="Qtd_Producao" class="nb-panel-input w-full p-2 rounded-lg bg-blue-100 text-gray-900 border border-blue-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
+                                            <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">Produção</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Producao)}" data-field="Qtd_Producao" class="nb-panel-input w-full p-2 rounded-lg bg-blue-100 text-gray-900 border border-blue-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
                                             <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">Perda</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Perda)}" data-field="Qtd_Perda" class="nb-panel-input w-full p-2 rounded-lg bg-red-100 text-gray-900 border border-red-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
                                             <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">Sobra Atual</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Atual)}" data-field="Qtd_Sobra_Atual" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
                                         </div>
@@ -3668,7 +3668,7 @@ function renderNBDiaryFeed() {
     feed.style.maxHeight = shouldScroll ? '300px' : '';
     feed.style.overflowY = shouldScroll ? 'auto' : '';
     feed.style.paddingRight = shouldScroll ? '0.5rem' : '';
-    // Filtros do DiÃ¡rio de Bordo
+    // Filtros do Diário de Bordo
     const diaryDateInput = document.getElementById('nb-diary-filter-date');
     const diaryUserInput = document.getElementById('nb-diary-filter-user');
     if (diaryDateInput) diaryDateInput.addEventListener('input', renderNBDiaryFeed);
@@ -3742,7 +3742,7 @@ function renderNBManagement() {
     renderNBDiaryFeed();
     renderNBCategoriesList();
     renderNBProductsList();
-// Ranking dos 10 produtos mais vendidos na GestÃ£o (perÃ­odo customizado)
+// Ranking dos 10 produtos mais vendidos na Gestão (período customizado)
 function renderNBTopProductsGestao() {
     const list = document.getElementById('nb-top-products-gestao-list');
     if (!list) return;
