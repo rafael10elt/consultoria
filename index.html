@@ -280,7 +280,7 @@ body {
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
             <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Ranking de Clientes (por Receita)</h4>
             <ul id="dash-top-clients-receitas-list" class="space-y-3">
-                <!-- Ranking serÃ¡ inserido aqui -->
+                <!-- Ranking será inserido aqui -->
             </ul>
         </div>
     </div>
@@ -316,7 +316,7 @@ body {
         <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
             <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Ranking de Credores (por Custo)</h4>
             <ul id="dash-top-credores-custos-list" class="space-y-3">
-                <!-- Ranking serÃ¡ inserido aqui -->
+                <!-- Ranking será inserido aqui -->
             </ul>
         </div>
     </div>
@@ -378,7 +378,7 @@ body {
                                 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
                                     <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Ranking de Clientes (por NÂº de Visitas)</h4>
                                     <ul id="dash-top-clients-list" class="space-y-3">
-                                        <!-- Ranking por contagem serÃ¡ inserido aqui -->
+                                        <!-- Ranking por contagem será inserido aqui -->
                                     </ul>
                                 </div>
                             </div>
@@ -392,7 +392,7 @@ body {
                                 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
                                     <h4 class="font-bold text-lg text-gray-800 dark:text-white mb-4">Ranking de Clientes (por Horas)</h4>
                                     <ul id="dash-top-clients-hours-list" class="space-y-3">
-                                        <!-- Ranking por horas serÃ¡ inserido aqui -->
+                                        <!-- Ranking por horas será inserido aqui -->
                                     </ul>
                                 </div>
                             </div>       
@@ -1915,7 +1915,7 @@ body {
     <div id="delete-confirm-modal" class="fixed inset-0 z-[70] items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
         <div class="w-full max-w-sm p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
             <h2 class="text-xl font-bold text-gray-900 dark:text-white">Confirmar ExclusÃ£o</h2>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">VocÃª tem certeza que deseja apagar este registro? Esta aÃ§Ã£o nÃ£o pode ser desfeita.</p>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Você tem certeza que deseja apagar este registro? Esta aÃ§Ã£o nÃ£o pode ser desfeita.</p>
             <div class="flex justify-end mt-6 space-x-4">
                 <button id="cancel-delete-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
                 <button id="confirm-delete-btn" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Apagar</button>
@@ -1924,8 +1924,8 @@ body {
     </div>
     <div id="logout-confirm-modal" class="fixed inset-0 z-50 items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
         <div class="w-full max-w-sm p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Confirmar SaÃ­da</h2>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">VocÃª tem certeza que deseja sair do sistema?</p>
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Confirmar Saí­da</h2>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Você tem certeza que deseja sair do sistema?</p>
             <div class="flex justify-end mt-6 space-x-4">
                 <button id="cancel-logout-btn" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
                 <button id="confirm-logout-btn" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Sair</button>
@@ -2183,7 +2183,7 @@ body {
                     <!-- INÃCIO DA ALTERAÃ‡ÃƒO: Container para a lista de itens selecionados -->
                     <div id="itens-para-adicionar-container" class="border rounded-lg p-2 h-80 overflow-y-auto bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
                         <ul id="itens-para-adicionar-list" class="space-y-2">
-                            <!-- A lista de itens serÃ¡ inserida aqui pelo JavaScript -->
+                            <!-- A lista de itens será inserida aqui pelo JavaScript -->
                         </ul>
                     </div>
                     <!-- FIM DA ALTERAÃ‡ÃƒO -->
@@ -4287,7 +4287,7 @@ async function fetchConsultores() {
                 hideLoadingOverlay();
                 
                 // Alerta o usuÃ¡rio
-                alert('Sua conta foi desativada pelo administrador. VocÃª serÃ¡ desconectado.');
+                alert('Sua conta foi desativada pelo administrador. Você será desconectado.');
                 
                 // Limpa a sessÃ£o do navegador
                 sessionStorage.clear();
@@ -6185,7 +6185,7 @@ async function verificarEGerarCustosRecorrentes() {
                 promessasDeCriacao.push(
                     nocoFetch(TABLE_IDS.Custos, {
                         method: 'POST',
-                        body: JSON.stringify(novaReceitaBody) // Nota: o nome da variÃ¡vel no cÃ³digo original era 'novoCustoBody', mas na receita era 'novaReceitaBody'. Se vocÃª copiou a lÃ³gica, verifique se a variÃ¡vel estÃ¡ correta no contexto da funÃ§Ã£o de custos. No seu cÃ³digo original de custos estava 'novoCustoBody'. Vou manter 'novoCustoBody' abaixo para garantir.
+                        body: JSON.stringify(novaReceitaBody) // Nota: o nome da variÃ¡vel no cÃ³digo original era 'novoCustoBody', mas na receita era 'novaReceitaBody'. Se você copiou a lÃ³gica, verifique se a variÃ¡vel estÃ¡ correta no contexto da funÃ§Ã£o de custos. No seu cÃ³digo original de custos estava 'novoCustoBody'. Vou manter 'novoCustoBody' abaixo para garantir.
                     })
                 );
                 // CorreÃ§Ã£o no code block para refletir a variÃ¡vel correta da funÃ§Ã£o de custos
