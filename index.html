@@ -435,11 +435,7 @@ body {
                                         <span id="nb-week-subtitle" class="text-sm text-gray-500 dark:text-gray-400"></span>
                                     </div>
                                 </div>
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 text-sm">
-                                    <div class="p-3 rounded-lg bg-yellow-100 text-yellow-900 dark:bg-yellow-900 dark:text-yellow-100">Amarelo: Sobra anterior / atual</div>
-                                    <div class="p-3 rounded-lg bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100">Azul: Produção</div>
-                                    <div class="p-3 rounded-lg bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-100">Vermelho: Perda</div>
-                                    <div class="p-3 rounded-lg bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100">Verde: Venda calculada</div>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-base md:text-lg">
                                 </div>
                                 <div class="flex flex-wrap items-center gap-3 mt-4">
                                     <input type="date" id="nb-selected-day-input" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
@@ -492,6 +488,10 @@ body {
                             </div>
 
                             <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+                                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Top 10 Produtos Mais Vendidos (Período)</h3>
+                                    <ul id="nb-top-products-gestao-list" class="space-y-2"></ul>
+                                </div>
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4"><h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Faturamento vs Perdas</h3><canvas id="nb-chart-revenue-loss"></canvas></div>
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4"><h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Faturamento por Categoria</h3><canvas id="nb-chart-category-share"></canvas></div>
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4"><h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Faturamento Cronológico</h3><canvas id="nb-chart-timeline"></canvas></div>
@@ -3145,68 +3145,61 @@ function renderNBPanel() {
         container.innerHTML = '<div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center text-gray-500 dark:text-gray-400">Cadastre categorias e produtos ativos para começar o Painel.</div>';
         return;
     }
-    container.innerHTML = grouped.map(group => `
-        <section class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-            <div class="px-4 py-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div>
-                        <h3 class="text-xl font-bold text-gray-800 dark:text-white">${group.name}</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Total disponível por dia: sobra anterior + produção</p>
-                    </div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-2 text-xs">
-                        ${weekDates.map(dateString => `
-                            <div class="rounded-lg bg-white dark:bg-gray-800 border dark:border-gray-700 px-3 py-2 text-center">
-                                <div class="font-semibold text-gray-700 dark:text-gray-200">${getNBDateLabelFmt(dateString, true)}</div>
-                                <div class="text-gray-500 dark:text-gray-400">Total: <span id="nb-total-${makeSafeDomId(group.id)}-${makeSafeDomId(dateString)}">0</span></div>
-                            </div>
+    // Cabeçalho dos dias da semana (uma única vez)
+    container.innerHTML = `
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead>
+                    <tr>
+                        <th class="px-2 py-3 bg-white dark:bg-gray-800"></th>
+                        ${weekDates.map(dateString => {
+                            const isToday = dateString === toDateInputValue(new Date());
+                            const isPast = new Date(dateString) < new Date(toDateInputValue(new Date()));
+                            const isFuture = new Date(dateString) > new Date(toDateInputValue(new Date()));
+                            let bg = isToday ? 'bg-brand-gold text-white' : isPast ? 'bg-gray-100 dark:bg-gray-700 text-gray-400' : 'bg-blue-50 dark:bg-blue-900 text-blue-800';
+                            return `<th class="px-2 py-3 text-center text-xs font-bold ${bg}">${getNBDateLabelFmt(dateString, true)}</th>`;
+                        }).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${grouped.map(group => `
+                        <tr class="bg-gray-50 dark:bg-gray-900">
+                            <td colspan="${weekDates.length + 1}" class="px-2 py-2 font-semibold text-lg text-brand-dark dark:text-white border-t border-b border-brand-gold">${group.name}</td>
+                        </tr>
+                        ${group.products.map(product => `
+                            <tr>
+                                <td class="px-2 py-2 text-sm font-semibold text-gray-800 dark:text-white border-b border-gray-200 dark:border-gray-700">${product.Nome}</td>
+                                ${weekDates.map(dateString => {
+                                    const record = getNBApontamento(dateString, product.Id) || {};
+                                    const editable = isNBPanelEditable(dateString);
+                                    const venda = computeNBVenda(record);
+                                    const totalDisponivel = normalizeNBNumber(record.Qtd_Sobra_Anterior) + normalizeNBNumber(record.Qtd_Producao);
+                                    const isToday = dateString === toDateInputValue(new Date());
+                                    const isPast = new Date(dateString) < new Date(toDateInputValue(new Date()));
+                                    const isFuture = new Date(dateString) > new Date(toDateInputValue(new Date()));
+                                    let bg = isToday ? 'ring-2 ring-brand-gold bg-yellow-50 dark:bg-yellow-900' : isPast ? 'bg-gray-50 dark:bg-gray-800' : 'bg-blue-50 dark:bg-blue-900';
+                                    return `<td class="align-top px-1 py-1 border-b border-gray-200 dark:border-gray-700 ${bg}">
+                                        <div class="grid grid-cols-2 gap-1 text-xs">
+                                            <label class="block"><span class="block text-[10px] mb-0.5 text-gray-500 dark:text-gray-400">Sobra Ant.</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Anterior)}" data-field="Qtd_Sobra_Anterior" class="nb-panel-input w-full p-1 rounded bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
+                                            <label class="block"><span class="block text-[10px] mb-0.5 text-gray-500 dark:text-gray-400">Produção</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Producao)}" data-field="Qtd_Producao" class="nb-panel-input w-full p-1 rounded bg-blue-100 text-gray-900 border border-blue-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
+                                            <label class="block"><span class="block text-[10px] mb-0.5 text-gray-500 dark:text-gray-400">Perda</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Perda)}" data-field="Qtd_Perda" class="nb-panel-input w-full p-1 rounded bg-red-100 text-gray-900 border border-red-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
+                                            <label class="block"><span class="block text-[10px] mb-0.5 text-gray-500 dark:text-gray-400">Sobra Atual</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Atual)}" data-field="Qtd_Sobra_Atual" class="nb-panel-input w-full p-1 rounded bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
+                                        </div>
+                                        <div class="mt-1 flex flex-col gap-1">
+                                            <div class="rounded bg-slate-100 dark:bg-slate-700 px-2 py-1 text-[10px] text-gray-500 dark:text-gray-300">Disponível: <span class="font-bold text-gray-800 dark:text-white" data-nb-available>${totalDisponivel}</span></div>
+                                            <div class="rounded bg-green-100 dark:bg-green-900 px-2 py-1 text-[10px] text-green-700 dark:text-green-200">Venda: <span class="font-bold text-green-800 dark:text-green-100" data-nb-venda>${venda}</span></div>
+                                        </div>
+                                    </td>`;
+                                }).join('')}
+                            </tr>
                         `).join('')}
-                    </div>
-                </div>
-            </div>
-            <div class="divide-y dark:divide-gray-700">
-                ${group.products.map(product => `
-                    <div class="p-4">
-                        <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2 mb-4">
-                            <div>
-                                <h4 class="font-semibold text-gray-800 dark:text-white">${product.Nome}</h4>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-4">
-                            ${weekDates.map(dateString => {
-                                const record = getNBApontamento(dateString, product.Id) || {};
-                                const editable = isNBPanelEditable(dateString);
-                                const venda = computeNBVenda(record);
-                                const totalDisponivel = normalizeNBNumber(record.Qtd_Sobra_Anterior) + normalizeNBNumber(record.Qtd_Producao);
-                                return `
-                                    <div class="rounded-xl border dark:border-gray-700 p-3" data-nb-cell data-date="${dateString}" data-product-id="${product.Id}">
-                                        <div class="flex items-center justify-between mb-3">
-                                            <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">${getNBDateLabelFmt(dateString, true)}</span>
-                                            <span class="text-[11px] px-2 py-1 rounded-full ${editable ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}">${editable ? 'Editável' : getNBStatusForDate(dateString)}</span>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-2 text-sm">
-                                            <label class="block"><span class="block text-xs mb-1 text-gray-500 dark:text-gray-400">Sobra Ant.</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Anterior)}" data-field="Qtd_Sobra_Anterior" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
-                                            <label class="block"><span class="block text-xs mb-1 text-gray-500 dark:text-gray-400">Produção</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Producao)}" data-field="Qtd_Producao" class="nb-panel-input w-full p-2 rounded-lg bg-blue-100 text-gray-900 border border-blue-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
-                                            <label class="block"><span class="block text-xs mb-1 text-gray-500 dark:text-gray-400">Perda</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Perda)}" data-field="Qtd_Perda" class="nb-panel-input w-full p-2 rounded-lg bg-red-100 text-gray-900 border border-red-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
-                                            <label class="block"><span class="block text-xs mb-1 text-gray-500 dark:text-gray-400">Sobra Atual</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Atual)}" data-field="Qtd_Sobra_Atual" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
-                                        </div>
-                                        <div class="mt-3 grid grid-cols-2 gap-2">
-                                            <div class="rounded-lg bg-slate-100 dark:bg-slate-700 px-3 py-2"><div class="text-[11px] text-gray-500 dark:text-gray-300">Disponível</div><div class="font-bold text-gray-800 dark:text-white" data-nb-available>${totalDisponivel}</div></div>
-                                            <div class="rounded-lg bg-green-100 dark:bg-green-900 px-3 py-2"><div class="text-[11px] text-green-700 dark:text-green-200">Venda</div><div class="font-bold text-green-800 dark:text-green-100" data-nb-venda>${venda}</div></div>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        </section>
-    `).join('');
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
     renderNBPanelTotals();
-
-    // --- Top 10 Produtos Mais Vendidos da Semana ---
     renderNBTopProductsWeek();
-}
 
 // Renderiza o ranking dos 10 produtos mais vendidos na semana
 function renderNBTopProductsWeek() {
@@ -3419,11 +3412,52 @@ function renderNBProductsList() {
 }
 function renderNBManagement() {
     renderNBCharts();
+    renderNBTopProductsGestao();
     renderNBFinanceForm();
     renderNBExpensesTable();
     renderNBDiaryFeed();
     renderNBCategoriesList();
     renderNBProductsList();
+// Ranking dos 10 produtos mais vendidos na Gestão (período customizado)
+function renderNBTopProductsGestao() {
+    const list = document.getElementById('nb-top-products-gestao-list');
+    if (!list) return;
+    // Pega período e granularidade selecionados
+    const startDate = document.getElementById('nb-analytics-start')?.value || '';
+    const endDate = document.getElementById('nb-analytics-end')?.value || '';
+    // Mapeia vendas por produto no período
+    const salesByProduct = {};
+    nbProdutosData.forEach(product => {
+        salesByProduct[product.Id] = { nome: product.Nome, total: 0 };
+    });
+    nbApontamentosData.forEach(record => {
+        const date = getNBLinkedDateValue(record);
+        if (date && (!startDate || date >= startDate) && (!endDate || date <= endDate)) {
+            const productId = getNBLinkedProductId(record);
+            if (salesByProduct[productId]) {
+                salesByProduct[productId].total += computeNBVenda(record);
+            }
+        }
+    });
+    // Ordena por total vendido (desc), pega só produtos com venda > 0
+    const sorted = Object.entries(salesByProduct)
+        .filter(([, v]) => v.total > 0)
+        .sort((a, b) => b[1].total - a[1].total)
+        .slice(0, 10);
+    if (sorted.length === 0) {
+        list.innerHTML = '<li class="text-gray-500 dark:text-gray-400">Nenhuma venda registrada no período.</li>';
+        return;
+    }
+    list.innerHTML = sorted.map(([_, v], idx) =>
+        `<li class="flex items-center gap-3"><span class="font-bold text-lg w-6 text-right">${idx + 1}.</span> <span class="flex-1">${v.nome}</span> <span class="font-mono bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded px-2 py-1">${v.total}</span></li>`
+    ).join('');
+    
+    // Atualiza ranking ao mudar período/granularidade
+    const startInput = document.getElementById('nb-analytics-start');
+    const endInput = document.getElementById('nb-analytics-end');
+    if (startInput) startInput.onchange = renderNBTopProductsGestao;
+    if (endInput) endInput.onchange = renderNBTopProductsGestao;
+}
 }
 function renderNBModule() {
     if (!canAccessNB()) return;
@@ -3478,10 +3512,10 @@ async function saveNBPanelCell(dateString, productId, cell) {
     const controlDay = await ensureNBControlDay(dateString);
     if (!controlDay) return;
     const values = {
-        Qtd_Sobra_Anterior: normalizeNBNumber(cell.querySelector('[data-field="Qtd_Sobra_Anterior"]')?.value),
-        Qtd_Producao: normalizeNBNumber(cell.querySelector('[data-field="Qtd_Producao"]')?.value),
-        Qtd_Perda: normalizeNBNumber(cell.querySelector('[data-field="Qtd_Perda"]')?.value),
-        Qtd_Sobra_Atual: normalizeNBNumber(cell.querySelector('[data-field="Qtd_Sobra_Atual"]')?.value)
+        Qtd_Sobra_Anterior: Math.max(0, normalizeNBNumber(cell.querySelector('[data-field="Qtd_Sobra_Anterior"]')?.value)),
+        Qtd_Producao: Math.max(0, normalizeNBNumber(cell.querySelector('[data-field="Qtd_Producao"]')?.value)),
+        Qtd_Perda: Math.max(0, normalizeNBNumber(cell.querySelector('[data-field="Qtd_Perda"]')?.value)),
+        Qtd_Sobra_Atual: Math.max(0, normalizeNBNumber(cell.querySelector('[data-field="Qtd_Sobra_Atual"]')?.value))
     };
     values.Qtd_Venda = computeNBVenda(values);
     const existing = upsertLocalNBApontamento(dateString, productId, values);
@@ -3584,14 +3618,13 @@ async function handleNBProductSubmit(e) {
         Nome: document.getElementById('nb-product-name').value,
         Preco_Custo: Number(document.getElementById('nb-product-cost').value || 0),
         Preco_Venda: Number(document.getElementById('nb-product-price').value || 0),
-        Ativo: true
+        Ativo: true,
+        Categoria_id: categoryId || null
     };
-    if (id) {
-        // PATCH: sempre envie Categoria_id
-        body.Categoria_id = categoryId || null;
-        // Remover Categoria se existir
-        if (body.Categoria) delete body.Categoria;
-    } else {
+    // Sempre remova Categoria se existir
+    if (body.Categoria) delete body.Categoria;
+    // Para POST, envie também o objeto Categoria
+    if (!id) {
         body.Categoria = { Id: categoryId };
     }
     const result = await nocoFetch(id ? `${TABLE_IDS.NB_Produtos}/${id}` : TABLE_IDS.NB_Produtos, { method: id ? 'PATCH' : 'POST', body: JSON.stringify(body) });
