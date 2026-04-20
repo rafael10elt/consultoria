@@ -469,7 +469,7 @@ body {
                                             <span class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período rápido</span>
                                             <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                                                 <button type="button" data-nb-analytics-preset="day" class="nb-analytics-preset-btn px-3 py-2 rounded-lg border text-sm font-medium transition">Dia</button>
-                                                <button type="button" data-nb-analytics-preset="week" class="nb-analytics-preset-btn px-3 py-2 rounded-lg border text-sm font-medium transition">Semana</button>
+                                                <button type="button" data-nb-analytics-preset="week" class="nb-analytics-preset-btn px-3 py-2 rounded-lg border text-sm font-medium transition">Sem</button>
                                                 <button type="button" data-nb-analytics-preset="month" class="nb-analytics-preset-btn px-3 py-2 rounded-lg border text-sm font-medium transition">Mês</button>
                                                 <button type="button" data-nb-analytics-preset="year" class="nb-analytics-preset-btn px-3 py-2 rounded-lg border text-sm font-medium transition">Ano</button>
                                             </div>
@@ -545,6 +545,7 @@ body {
                                     <div class="flex items-center justify-between mb-4">
                                         <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Financeiro do Dia</h3>
                                         <span id="nb-financial-date-label" class="text-sm text-gray-500 dark:text-gray-400"></span>
+                                        <span class="block text-xs text-brand-gold mt-1">Abaixo: listagem de todos os registros do período selecionado</span>
                                     </div>
                                     <form id="nb-finance-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Caixa Inicial</label><input type="number" step="0.01" id="nb-fin-caixa-inicial" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
@@ -561,8 +562,8 @@ body {
                                     <div id="nb-finance-summary" class="mt-4 text-sm text-gray-600 dark:text-gray-300"></div>
                                     <div class="mt-4">
                                         <div class="flex items-center justify-between mb-3">
-                                            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Registros do período</h4>
-                                            <span class="text-xs text-gray-500 dark:text-gray-400">Baseado em NB_Controle_Dias</span>
+                                            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Registros do período selecionado</h4>
+                                            <span class="text-xs text-brand-gold">Todos os registros entre as datas do filtro</span>
                                         </div>
                                         <div id="nb-finance-period-list" class="space-y-3"></div>
                                     </div>
@@ -571,7 +572,7 @@ body {
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                                     <div class="flex items-center justify-between mb-4">
                                         <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Despesas e Vales</h3>
-                                       <span class="text-sm text-gray-500 dark:text-gray-400">Ligado à data selecionada</span>
+                                        <span class="text-sm text-brand-gold">Listagem de todos os registros do período selecionado</span>
                                     </div>
                                     <form id="nb-expense-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                                         <input type="hidden" id="nb-expense-id">
@@ -608,10 +609,10 @@ body {
 
                             <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                                    <div class="flex items-center justify-between mb-4">
-                                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Diário de Bordo</h3>
-                                        <span class="text-sm text-gray-500 dark:text-gray-400">Mais recentes no topo</span>
-                                    </div>
+                                        <div class="flex items-center justify-between mb-3">
+                                            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Registros do período selecionado</h4>
+                                            <span class="text-xs text-brand-gold">Todos os registros entre as datas do filtro</span>
+                                        </div>
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
                                         <div>
                                             <label for="nb-diary-filter-date" class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Filtrar por Data</label>
