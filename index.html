@@ -481,10 +481,11 @@ body {
                                         </div>
                                     </div>
                                 </div>
-                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 xl:col-span-1">
+                                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 xl:col-span-1">
                                     <p class="text-sm text-gray-500 dark:text-gray-400">Resumo</p>
-                                    <p id="nb-summary-revenue" class="text-2xl font-bold text-green-600 mt-2">R$ 0,00</p>
+                                    <p id="nb-summary-revenue" class="text-2xl font-bold text-green-600 mt-2">Faturamento: R$ 0,00</p>
                                     <p id="nb-summary-loss" class="text-sm text-red-500 mt-1">Perdas: R$ 0,00</p>
+                                    <p id="nb-summary-expenses" class="text-sm text-gray-700 dark:text-gray-200 mt-1">Despesas: R$ 0,00</p>
                                     <p id="nb-summary-profit" class="text-sm text-gray-700 dark:text-gray-200 mt-1">Lucro estimado: R$ 0,00</p>
                                 </div>
                             </div>
@@ -3545,12 +3546,15 @@ function renderNBCharts() {
     const endDate = document.getElementById('nb-analytics-end')?.value || '';
     const granularity = document.getElementById('nb-analytics-granularity')?.value || 'day';
     const { records, revenue, loss, costOfGoods, categoryRevenue, productMap } = getNBMetrics(startDate, endDate);
+    const totalDespesasPeriodo = getNBExpenseRecordsInPeriod().reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const summaryRevenue = document.getElementById('nb-summary-revenue');
     const summaryLoss = document.getElementById('nb-summary-loss');
     const summaryProfit = document.getElementById('nb-summary-profit');
-    if (summaryRevenue) summaryRevenue.textContent = formatCurrencyBR(revenue);
+    const summaryExpenses = document.getElementById('nb-summary-expenses');
+    if (summaryRevenue) summaryRevenue.textContent = `Faturamento: ${formatCurrencyBR(revenue)}`;
     if (summaryLoss) summaryLoss.textContent = `Perdas: ${formatCurrencyBR(loss)}`;
-    if (summaryProfit) summaryProfit.textContent = `Lucro estimado: ${formatCurrencyBR(revenue - costOfGoods)}`;
+    if (summaryExpenses) summaryExpenses.textContent = `Despesas: ${formatCurrencyBR(totalDespesasPeriodo)}`;
+    if (summaryProfit) summaryProfit.textContent = `Lucro estimado: ${formatCurrencyBR(revenue - costOfGoods - totalDespesasPeriodo)}`;
     const donutOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -4196,7 +4200,7 @@ function renderNBFinanceForm() {
             const sangria = Number(item.Sangria || 0);
             const saidas = despesas + vales + sangria;
             return `
-                <article class="rounded-lg border dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30">
+                <article class="rounded-lg border dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30 flex flex-col gap-2">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
                         <div>
                             <p class="font-semibold text-gray-800 dark:text-white">${parseDateOnly(dateValue).toLocaleDateString('pt-BR')}</p>
@@ -4209,6 +4213,10 @@ function renderNBFinanceForm() {
                         <div class="rounded-md bg-white dark:bg-gray-800 p-2"><span class="block text-gray-500 dark:text-gray-400">Caixa Final</span><strong class="text-gray-800 dark:text-white">${formatCurrencyBR(item.Caixa_Final || 0)}</strong></div>
                         <div class="rounded-md bg-white dark:bg-gray-800 p-2"><span class="block text-gray-500 dark:text-gray-400">Entradas</span><strong class="text-gray-800 dark:text-white">${formatCurrencyBR(entradas)}</strong></div>
                         <div class="rounded-md bg-white dark:bg-gray-800 p-2"><span class="block text-gray-500 dark:text-gray-400">Saídas</span><strong class="text-gray-800 dark:text-white">${formatCurrencyBR(saidas)}</strong></div>
+                    </div>
+                    <div class="flex gap-2 justify-end mt-2">
+                        <button type="button" class="nb-finance-edit-btn px-3 py-1 rounded bg-blue-100 text-blue-800 hover:bg-blue-200" data-id="${item.Id}"><i class="fas fa-edit"></i> Editar</button>
+                        <button type="button" class="nb-finance-delete-btn px-3 py-1 rounded bg-red-100 text-red-800 hover:bg-red-200" data-id="${item.Id}"><i class="fas fa-trash"></i> Apagar</button>
                     </div>
                 </article>
             `;
@@ -4260,7 +4268,7 @@ function renderNBExpensesTable() {
     if (periodList) {
         const periodRecords = getNBExpenseRecordsInPeriod().sort((a, b) => (getNBLinkedDateValue(a) || '').localeCompare(getNBLinkedDateValue(b) || '') || (a.Tipo || '').localeCompare(b.Tipo || '') || (a.Descricao || '').localeCompare(b.Descricao || ''));
         periodList.innerHTML = periodRecords.map(item => `
-            <article class="rounded-lg border dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30">
+            <article class="rounded-lg border dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30 flex flex-col gap-2">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
                         <p class="font-semibold text-gray-800 dark:text-white">${parseDateOnly(getNBLinkedDateValue(item)).toLocaleDateString('pt-BR')}</p>
@@ -4269,6 +4277,10 @@ function renderNBExpensesTable() {
                     <span class="text-sm font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(item.Valor)}</span>
                 </div>
                 <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">${item.Descricao || '-'}</p>
+                <div class="flex gap-2 justify-end mt-2">
+                    <button type="button" class="nb-expense-edit-btn px-3 py-1 rounded bg-blue-100 text-blue-800 hover:bg-blue-200" data-id="${item.Id}"><i class="fas fa-edit"></i> Editar</button>
+                    <button type="button" class="nb-expense-delete-btn px-3 py-1 rounded bg-red-100 text-red-800 hover:bg-red-200" data-id="${item.Id}"><i class="fas fa-trash"></i> Apagar</button>
+                </div>
             </article>
         `).join('') || '<div class="text-sm text-gray-500 dark:text-gray-400">Nenhuma despesa ou vale encontrado no período selecionado.</div>';
     }
@@ -9392,6 +9404,54 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
 
         allElements.loginForm?.addEventListener('submit', handleLogin);
         document.body.addEventListener('click', handleGlobalClick);
+
+        // Listeners para botões de editar/apagar dos registros do período (Financeiro)
+        document.body.addEventListener('click', function(e) {
+            // Editar Financeiro
+            if (e.target.closest('.nb-finance-edit-btn')) {
+                const id = e.target.closest('.nb-finance-edit-btn').dataset.id;
+                const record = nbFinanceiroData.find(item => String(item.Id) === String(id));
+                if (record) {
+                    setNBSelectedDate(getNBLinkedDateValue(record));
+                    renderNBModule();
+                }
+            }
+            // Apagar Financeiro
+            if (e.target.closest('.nb-finance-delete-btn')) {
+                const id = e.target.closest('.nb-finance-delete-btn').dataset.id;
+                showConfirmModal('Tem certeza que deseja apagar este registro financeiro?').then(async confirmed => {
+                    if (confirmed) {
+                        await nocoFetch(`${TABLE_IDS.NB_Financeiro}/${id}`, { method: 'DELETE' });
+                        await fetchNBFinanceiro();
+                        renderNBManagement();
+                    }
+                });
+            }
+            // Editar Despesa/Vale
+            if (e.target.closest('.nb-expense-edit-btn')) {
+                const id = e.target.closest('.nb-expense-edit-btn').dataset.id;
+                const record = nbDespesasValesData.find(item => String(item.Id) === String(id));
+                if (record) {
+                    setNBSelectedDate(getNBLinkedDateValue(record));
+                    document.getElementById('nb-expense-id').value = record.Id;
+                    document.getElementById('nb-expense-type').value = record.Tipo;
+                    document.getElementById('nb-expense-description').value = record.Descricao || '';
+                    document.getElementById('nb-expense-value').value = record.Valor || '';
+                    renderNBManagement();
+                }
+            }
+            // Apagar Despesa/Vale
+            if (e.target.closest('.nb-expense-delete-btn')) {
+                const id = e.target.closest('.nb-expense-delete-btn').dataset.id;
+                showConfirmModal('Tem certeza que deseja apagar este lançamento?').then(async confirmed => {
+                    if (confirmed) {
+                        await nocoFetch(`${TABLE_IDS.NB_Despesas_Vales}/${id}`, { method: 'DELETE' });
+                        await fetchNBDespesasVales();
+                        renderNBManagement();
+                    }
+                });
+            }
+        });
         const customHandledForms = new Set(['nb-finance-form', 'nb-expense-form', 'nb-diary-form', 'nb-category-form', 'nb-product-form']);
         document.querySelectorAll('form').forEach(form => { 
             if (form.id === 'report-form') { form.addEventListener('submit', generatePdfReport); } 
