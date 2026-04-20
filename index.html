@@ -3922,6 +3922,49 @@ function renderNBCharts() {
             { label: 'Custo Vendido', data: timelineCost, backgroundColor: '#f97316' }
         ]
     };
+    const groupedRevenueExpenses = {};
+    nbDespesasValesData.filter(item => item.Tipo === 'Despesa').forEach(item => {
+        const dateValue = getNBLinkedDateValue(item);
+        if (!dateValue) return;
+        const key = getNBGroupKey(dateValue, granularity);
+        if (!groupedRevenueExpenses[key]) {
+            const parsed = parseDateOnly(dateValue);
+            let label = '';
+            let tooltip = '';
+            if (granularity === 'year') {
+                label = parsed.toLocaleDateString('pt-BR', { year: 'numeric' });
+                tooltip = parsed.toLocaleDateString('pt-BR', { year: 'numeric' });
+            } else if (granularity === 'month') {
+                label = formatNBMonthYearLabel(dateValue, false);
+                tooltip = formatNBMonthYearLabel(dateValue, true);
+            } else if (granularity === 'week') {
+                const weekStart = getStartOfWeek(parsed);
+                const weekEnd = addDays(weekStart, 6);
+                label = weekStart.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                tooltip = `${weekStart.toLocaleDateString('pt-BR')} a ${weekEnd.toLocaleDateString('pt-BR')}`;
+            } else {
+                label = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                tooltip = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+            groupedRevenueExpenses[key] = { revenue: 0, expenses: 0, label, tooltip };
+        }
+        groupedRevenueExpenses[key].expenses += Number(item.Valor || 0);
+    });
+    timelineKeys.forEach(key => {
+        if (!groupedRevenueExpenses[key]) groupedRevenueExpenses[key] = { revenue: 0, expenses: 0, label: groupedTimeline[key].label, tooltip: groupedTimeline[key].tooltip };
+        groupedRevenueExpenses[key].revenue += groupedTimeline[key].revenue;
+    });
+    const revenueExpenseKeys = Object.keys(groupedRevenueExpenses).sort();
+    const revenueExpenseLabels = revenueExpenseKeys.map(key => groupedRevenueExpenses[key].label);
+    const revenueExpenseRevenue = revenueExpenseKeys.map(key => groupedRevenueExpenses[key].revenue);
+    const revenueExpenseCosts = revenueExpenseKeys.map(key => groupedRevenueExpenses[key].expenses);
+    const revenueExpensesData = {
+        labels: revenueExpenseLabels,
+        datasets: [
+            { label: 'Faturamento', data: revenueExpenseRevenue, backgroundColor: 'rgba(34, 197, 94, 0.8)' },
+            { label: 'Despesas', data: revenueExpenseCosts, backgroundColor: 'rgba(239, 68, 68, 0.8)' }
+        ]
+    };
     const chart1Ctx = document.getElementById('nb-chart-revenue-loss')?.getContext('2d');
     const chart2Ctx = document.getElementById('nb-chart-category-share')?.getContext('2d');
     const chart3Ctx = document.getElementById('nb-chart-timeline')?.getContext('2d');
