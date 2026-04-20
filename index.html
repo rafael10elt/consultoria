@@ -465,13 +465,15 @@ body {
                                             <label for="nb-analytics-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período até</label>
                                             <input type="date" id="nb-analytics-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                         </div>
-                                        <div>
-                                            <label for="nb-analytics-granularity" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Agrupar por</label>
-                                            <select id="nb-analytics-granularity" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                                <option value="day">Dia</option>
-                                                <option value="week">Semana</option>
-                                                <option value="month">Mês</option>
-                                            </select>
+                                        <div class="md:col-span-2 xl:col-span-1">
+                                            <span class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período rápido</span>
+                                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                <button type="button" data-nb-analytics-preset="day" class="nb-analytics-preset-btn px-3 py-2 rounded-lg border text-sm font-medium transition">Dia</button>
+                                                <button type="button" data-nb-analytics-preset="week" class="nb-analytics-preset-btn px-3 py-2 rounded-lg border text-sm font-medium transition">Semana</button>
+                                                <button type="button" data-nb-analytics-preset="month" class="nb-analytics-preset-btn px-3 py-2 rounded-lg border text-sm font-medium transition">Mês</button>
+                                                <button type="button" data-nb-analytics-preset="year" class="nb-analytics-preset-btn px-3 py-2 rounded-lg border text-sm font-medium transition">Ano</button>
+                                            </div>
+                                            <input type="hidden" id="nb-analytics-granularity" value="day">
                                         </div>
                                         <div>
                                             <label for="nb-management-day-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data operacional</label>
@@ -488,8 +490,15 @@ body {
                             </div>
 
                             <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
-                                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 xl:col-span-2">
-                                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Top 10 Produtos Mais Vendidos (Período)</h3>
+                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 xl:col-span-2">
+                                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Top Produtos Mais Vendidos (Período)</h3>
+                                        <div class="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                            <button type="button" data-nb-top-limit="5" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-brand-gold text-white">5</button>
+                                            <button type="button" data-nb-top-limit="10" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200">10</button>
+                                            <button type="button" data-nb-top-limit="20" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200">20</button>
+                                        </div>
+                                    </div>
                                     <ul id="nb-top-products-gestao-list" class="space-y-2"></ul>
                                 </div>
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
@@ -514,6 +523,12 @@ body {
                                     <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Venda Bruta x Custo Vendido</h3>
                                     <div class="h-56 md:h-64">
                                         <canvas id="nb-chart-profit-stack" class="w-full h-full"></canvas>
+                                    </div>
+                                </div>
+                                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 xl:col-span-2">
+                                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Faturamento x Despesas</h3>
+                                    <div class="h-64 md:h-72">
+                                        <canvas id="nb-chart-revenue-expenses" class="w-full h-full"></canvas>
                                     </div>
                                 </div>
                             </div>
@@ -2262,6 +2277,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let nbCurrentWeekStart = null;
     let nbSelectedDate = null;
     let nbLastPanelSync = null;
+    let nbTopProductsGestaoLimit = 5;
+    let nbAnalyticsPreset = 'day';
 
     // --- NOVO: Controle de Carregamento ---
 const dataLoaded = {
@@ -2367,7 +2384,7 @@ const dataLoaded = {
     let activeTableRow = null;
     let calendar;
     let financeChart, visitsStatusChart, clientsVisitsChart, clientsHoursChart, receitasByClienteChart, custosByCredorChart;
-    let nbRevenueLossChart, nbCategoryShareChart, nbTimelineChart, nbProfitStackChart;
+    let nbRevenueLossChart, nbCategoryShareChart, nbTimelineChart, nbProfitStackChart, nbRevenueExpensesChart;
     let activeDeleteItem = { id: null, type: null, element: null };
     let validadesStatusGeralChart; 
     let validadesConsultorCargaChart, validadesParetoChart;
@@ -2969,6 +2986,73 @@ function canAccessNBManagement() {
 function formatCurrencyBR(value = 0) {
     return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
+function getNBChartCurrencyValue(context) {
+    const raw = context?.parsed;
+    if (raw == null) return 0;
+    if (typeof raw === 'number') return raw;
+    if (typeof raw === 'object') return Number(raw.y ?? raw.x ?? raw.r ?? 0);
+    return Number(raw || 0);
+}
+function formatNBMoneyTooltipValue(value = 0) {
+    return formatCurrencyBR(value);
+}
+function getNBAnalyticsPresetRange(preset, anchorDate = nbSelectedDate || toDateInputValue(new Date())) {
+    const anchor = parseDateOnly(anchorDate);
+    if (preset === 'week') {
+        const start = getStartOfWeek(anchor);
+        return { start: toDateInputValue(start), end: toDateInputValue(addDays(start, 6)) };
+    }
+    if (preset === 'month') {
+        const start = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+        const end = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0);
+        return { start: toDateInputValue(start), end: toDateInputValue(end) };
+    }
+    if (preset === 'year') {
+        const start = new Date(anchor.getFullYear(), 0, 1);
+        const end = new Date(anchor.getFullYear(), 11, 31);
+        return { start: toDateInputValue(start), end: toDateInputValue(end) };
+    }
+    return { start: toDateInputValue(anchor), end: toDateInputValue(anchor) };
+}
+function syncNBAnalyticsPresetButtons() {
+    document.querySelectorAll('[data-nb-analytics-preset]').forEach(btn => {
+        const active = btn.dataset.nbAnalyticsPreset === nbAnalyticsPreset;
+        btn.classList.toggle('bg-brand-gold', active);
+        btn.classList.toggle('text-white', active);
+        btn.classList.toggle('border-brand-gold', active);
+        btn.classList.toggle('bg-gray-100', !active);
+        btn.classList.toggle('text-gray-700', !active);
+        btn.classList.toggle('border-gray-300', !active);
+    });
+}
+function syncNBTopProductsLimitButtons() {
+    document.querySelectorAll('[data-nb-top-limit]').forEach(btn => {
+        const active = Number(btn.dataset.nbTopLimit) === Number(nbTopProductsGestaoLimit);
+        btn.classList.toggle('bg-brand-gold', active);
+        btn.classList.toggle('text-white', active);
+        btn.classList.toggle('bg-white', !active);
+        btn.classList.toggle('text-gray-700', !active);
+        btn.classList.toggle('dark:bg-gray-800', !active);
+        btn.classList.toggle('dark:text-gray-200', !active);
+    });
+}
+function applyNBAnalyticsPreset(preset, render = true) {
+    nbAnalyticsPreset = preset;
+    const range = getNBAnalyticsPresetRange(preset);
+    const startInput = document.getElementById('nb-analytics-start');
+    const endInput = document.getElementById('nb-analytics-end');
+    const granularityInput = document.getElementById('nb-analytics-granularity');
+    if (startInput) startInput.value = range.start;
+    if (endInput) endInput.value = range.end;
+    if (granularityInput) granularityInput.value = preset;
+    syncNBAnalyticsPresetButtons();
+    if (render) renderNBManagement();
+}
+function applyNBTopProductsLimit(limit, render = true) {
+    nbTopProductsGestaoLimit = Number(limit) || 5;
+    syncNBTopProductsLimitButtons();
+    if (render) renderNBTopProductsGestao();
+}
 function parseDateOnly(dateString) {
     return new Date(`${dateString}T00:00:00`);
 }
@@ -3073,6 +3157,7 @@ async function ensureNBControlDay(dateString) {
 async function fetchNBCategorias() {
     const result = await nocoFetch(`${TABLE_IDS.NB_Categorias}?nested[all]=true`);
     nbCategoriasData = result?.list ? result.list.sort((a, b) => (a.Nome || '').localeCompare(b.Nome || '')) : [];
+    syncNBProductCategoryOptions();
 }
 async function fetchNBProdutos() {
     const result = await nocoFetch(`${TABLE_IDS.NB_Produtos}?nested[all]=true`);
@@ -3383,7 +3468,7 @@ function renderNBPanel() {
     syncNBPanelDayMarkers();
 }
 function renderNBCharts() {
-    const frames = ['nb-chart-revenue-loss', 'nb-chart-category-share', 'nb-chart-timeline', 'nb-chart-profit-stack'];
+    const frames = ['nb-chart-revenue-loss', 'nb-chart-category-share', 'nb-chart-timeline', 'nb-chart-profit-stack', 'nb-chart-revenue-expenses'];
     frames.forEach(id => {
         const canvas = document.getElementById(id);
         if (!canvas) return;
@@ -3410,7 +3495,20 @@ function renderNBCharts() {
     if (summaryRevenue) summaryRevenue.textContent = formatCurrencyBR(revenue);
     if (summaryLoss) summaryLoss.textContent = `Perdas: ${formatCurrencyBR(loss)}`;
     if (summaryProfit) summaryProfit.textContent = `Lucro estimado: ${formatCurrencyBR(revenue - costOfGoods)}`;
-    const donutOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } };
+    const donutOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+                callbacks: {
+                    label(context) {
+                        return `${context.label}: ${formatCurrencyBR(getNBChartCurrencyValue(context))}`;
+                    }
+                }
+            }
+        }
+    };
     const revenueLossData = { labels: ['Faturamento', 'Perdas'], datasets: [{ data: [revenue, loss], backgroundColor: ['#22c55e', '#ef4444'] }] };
     const categoryEntries = Object.entries(categoryRevenue).sort((a, b) => b[1] - a[1]);
     const categoryData = {
@@ -3438,6 +3536,49 @@ function renderNBCharts() {
         datasets: [
             { label: 'Venda Bruta', data: timelineRevenue, backgroundColor: '#22c55e' },
             { label: 'Custo Vendido', data: timelineCost, backgroundColor: '#f97316' }
+        ]
+    };
+    const groupedRevenueExpenses = {};
+    nbDespesasValesData.filter(item => item.Tipo === 'Despesa').forEach(item => {
+        const dateValue = getNBLinkedDateValue(item);
+        if (!dateValue) return;
+        const key = getNBGroupKey(dateValue, granularity);
+        if (!groupedRevenueExpenses[key]) {
+            const parsed = parseDateOnly(dateValue);
+            let label = '';
+            let tooltip = '';
+            if (granularity === 'year') {
+                label = parsed.toLocaleDateString('pt-BR', { year: 'numeric' });
+                tooltip = parsed.toLocaleDateString('pt-BR', { year: 'numeric' });
+            } else if (granularity === 'month') {
+                label = formatNBMonthYearLabel(dateValue, false);
+                tooltip = formatNBMonthYearLabel(dateValue, true);
+            } else if (granularity === 'week') {
+                const weekStart = getStartOfWeek(parsed);
+                const weekEnd = addDays(weekStart, 6);
+                label = weekStart.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                tooltip = `${weekStart.toLocaleDateString('pt-BR')} a ${weekEnd.toLocaleDateString('pt-BR')}`;
+            } else {
+                label = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                tooltip = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+            groupedRevenueExpenses[key] = { revenue: 0, expenses: 0, label, tooltip };
+        }
+        groupedRevenueExpenses[key].expenses += Number(item.Valor || 0);
+    });
+    timelineKeys.forEach(key => {
+        if (!groupedRevenueExpenses[key]) groupedRevenueExpenses[key] = { revenue: 0, expenses: 0, label: groupedTimeline[key].label, tooltip: groupedTimeline[key].tooltip };
+        groupedRevenueExpenses[key].revenue += groupedTimeline[key].revenue;
+    });
+    const revenueExpenseKeys = Object.keys(groupedRevenueExpenses).sort();
+    const revenueExpenseLabels = revenueExpenseKeys.map(key => groupedRevenueExpenses[key].label);
+    const revenueExpenseRevenue = revenueExpenseKeys.map(key => groupedRevenueExpenses[key].revenue);
+    const revenueExpenseCosts = revenueExpenseKeys.map(key => groupedRevenueExpenses[key].expenses);
+    const revenueExpensesData = {
+        labels: revenueExpenseLabels,
+        datasets: [
+            { label: 'Faturamento', data: revenueExpenseRevenue, backgroundColor: 'rgba(34, 197, 94, 0.8)' },
+            { label: 'Despesas', data: revenueExpenseCosts, backgroundColor: 'rgba(239, 68, 68, 0.8)' }
         ]
     };
     const chart1Ctx = document.getElementById('nb-chart-revenue-loss')?.getContext('2d');
@@ -3509,6 +3650,7 @@ function getNBMetrics(startDate, endDate) {
 }
 function getNBGroupKey(dateString, granularity) {
     const date = parseDateOnly(dateString);
+    if (granularity === 'year') return `${date.getFullYear()}`;
     if (granularity === 'month') return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     if (granularity === 'week') return toDateInputValue(getStartOfWeek(date));
     return dateString;
@@ -3525,7 +3667,19 @@ function renderNBCharts() {
     if (summaryLoss) summaryLoss.textContent = `Perdas: ${formatCurrencyBR(loss)}`;
     if (summaryProfit) summaryProfit.textContent = `Lucro estimado: ${formatCurrencyBR(revenue - costOfGoods)}`;
 
-    const donutOptions = { responsive: true, plugins: { legend: { position: 'bottom' } } };
+    const donutOptions = {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+                callbacks: {
+                    label(context) {
+                        return `${context.label}: ${formatCurrencyBR(getNBChartCurrencyValue(context))}`;
+                    }
+                }
+            }
+        }
+    };
     const revenueLossData = { labels: ['Faturamento', 'Perdas'], datasets: [{ data: [revenue, loss], backgroundColor: ['#22c55e', '#ef4444'] }] };
     const categoryEntries = Object.entries(categoryRevenue).sort((a, b) => b[1] - a[1]);
     const categoryData = {
@@ -3538,8 +3692,28 @@ function renderNBCharts() {
         const product = productMap.get(getNBLinkedProductId(record));
         const dateValue = getNBLinkedDateValue(record);
         if (!product || !dateValue) return;
-        const key = getNBGroupKey(dateValue, 'month');
-        if (!groupedTimeline[key]) groupedTimeline[key] = { revenue: 0, cost: 0, label: formatNBMonthYearLabel(dateValue, false), tooltip: formatNBMonthYearLabel(dateValue, true) };
+        const key = getNBGroupKey(dateValue, granularity);
+        if (!groupedTimeline[key]) {
+            const parsed = parseDateOnly(dateValue);
+            let label = '';
+            let tooltip = '';
+            if (granularity === 'year') {
+                label = parsed.toLocaleDateString('pt-BR', { year: 'numeric' });
+                tooltip = parsed.toLocaleDateString('pt-BR', { year: 'numeric' });
+            } else if (granularity === 'month') {
+                label = formatNBMonthYearLabel(dateValue, false);
+                tooltip = formatNBMonthYearLabel(dateValue, true);
+            } else if (granularity === 'week') {
+                const weekStart = getStartOfWeek(parsed);
+                const weekEnd = addDays(weekStart, 6);
+                label = weekStart.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                tooltip = `${weekStart.toLocaleDateString('pt-BR')} a ${weekEnd.toLocaleDateString('pt-BR')}`;
+            } else {
+                label = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                tooltip = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+            groupedTimeline[key] = { revenue: 0, cost: 0, label, tooltip };
+        }
         groupedTimeline[key].revenue += computeNBVenda(record) * Number(product.Preco_Venda || 0);
         groupedTimeline[key].cost += computeNBVenda(record) * Number(product.Preco_Custo || 0);
     });
@@ -3555,19 +3729,120 @@ function renderNBCharts() {
             { label: 'Custo Vendido', data: timelineCost, backgroundColor: '#f97316' }
         ]
     };
-
+    const groupedRevenueExpenses = {};
+    nbDespesasValesData.filter(item => item.Tipo === 'Despesa').forEach(item => {
+        const dateValue = getNBLinkedDateValue(item);
+        if (!dateValue) return;
+        const key = getNBGroupKey(dateValue, granularity);
+        if (!groupedRevenueExpenses[key]) {
+            const parsed = parseDateOnly(dateValue);
+            let label = '';
+            let tooltip = '';
+            if (granularity === 'month') {
+                label = formatNBMonthYearLabel(dateValue, false);
+                tooltip = formatNBMonthYearLabel(dateValue, true);
+            } else if (granularity === 'week') {
+                const weekStart = getStartOfWeek(parsed);
+                const weekEnd = addDays(weekStart, 6);
+                label = weekStart.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                tooltip = `${weekStart.toLocaleDateString('pt-BR')} a ${weekEnd.toLocaleDateString('pt-BR')}`;
+            } else if (granularity === 'year') {
+                label = parsed.toLocaleDateString('pt-BR', { year: 'numeric' });
+                tooltip = parsed.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }).replace(/\b\w/g, char => char.toUpperCase());
+            } else {
+                label = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                tooltip = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            }
+            groupedRevenueExpenses[key] = { revenue: 0, expenses: 0, label, tooltip };
+        }
+        groupedRevenueExpenses[key].expenses += Number(item.Valor || 0);
+    });
+    timelineKeys.forEach(key => {
+        if (!groupedRevenueExpenses[key]) groupedRevenueExpenses[key] = { revenue: 0, expenses: 0, label: groupedTimeline[key].label, tooltip: groupedTimeline[key].tooltip };
+        groupedRevenueExpenses[key].revenue += groupedTimeline[key].revenue;
+    });
+    const revenueExpenseKeys = Object.keys(groupedRevenueExpenses).sort();
+    const revenueExpenseLabels = revenueExpenseKeys.map(key => groupedRevenueExpenses[key].label);
+    const revenueExpenseRevenue = revenueExpenseKeys.map(key => groupedRevenueExpenses[key].revenue);
+    const revenueExpenseCosts = revenueExpenseKeys.map(key => groupedRevenueExpenses[key].expenses);
+    const revenueExpensesData = {
+        labels: revenueExpenseLabels,
+        datasets: [
+            { label: 'Faturamento', data: revenueExpenseRevenue, backgroundColor: 'rgba(34, 197, 94, 0.8)' },
+            { label: 'Despesas', data: revenueExpenseCosts, backgroundColor: 'rgba(239, 68, 68, 0.8)' }
+        ]
+    };
     const chart1Ctx = document.getElementById('nb-chart-revenue-loss')?.getContext('2d');
     const chart2Ctx = document.getElementById('nb-chart-category-share')?.getContext('2d');
     const chart3Ctx = document.getElementById('nb-chart-timeline')?.getContext('2d');
     const chart4Ctx = document.getElementById('nb-chart-profit-stack')?.getContext('2d');
-    if (!chart1Ctx || !chart2Ctx || !chart3Ctx || !chart4Ctx) return;
-    if (nbRevenueLossChart) { nbRevenueLossChart.data = revenueLossData; nbRevenueLossChart.update(); } else { nbRevenueLossChart = new Chart(chart1Ctx, { type: 'doughnut', data: revenueLossData, options: donutOptions }); }
-    if (nbCategoryShareChart) { nbCategoryShareChart.data = categoryData; nbCategoryShareChart.update(); } else { nbCategoryShareChart = new Chart(chart2Ctx, { type: 'doughnut', data: categoryData, options: donutOptions }); }
-    if (nbTimelineChart) { nbTimelineChart.data = timelineData; nbTimelineChart.update(); } else { nbTimelineChart = new Chart(chart3Ctx, { type: 'bar', data: timelineData, options: { responsive: true, plugins: { legend: { display: false } } } }); }
-    if (nbProfitStackChart) { nbProfitStackChart.data = stackData; nbProfitStackChart.update(); } else { nbProfitStackChart = new Chart(chart4Ctx, { type: 'bar', data: stackData, options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true } } } }); }
+    const chart5Ctx = document.getElementById('nb-chart-revenue-expenses')?.getContext('2d');
+    if (!chart1Ctx || !chart2Ctx || !chart3Ctx || !chart4Ctx || !chart5Ctx) return;
+    const timelineOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    title(items) {
+                        const index = items?.[0]?.dataIndex ?? 0;
+                        return timelineKeys[index] ? groupedTimeline[timelineKeys[index]].tooltip : '';
+                    },
+                    label(context) {
+                        return `${context.dataset.label}: ${formatCurrencyBR(getNBChartCurrencyValue(context))}`;
+                    }
+                }
+            }
+        },
+        scales: { x: { ticks: { maxRotation: 0, autoSkip: true } }, y: { beginAtZero: true } }
+    };
+    const stackOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+                callbacks: {
+                    title(items) {
+                        const index = items?.[0]?.dataIndex ?? 0;
+                        return timelineKeys[index] ? groupedTimeline[timelineKeys[index]].tooltip : '';
+                    },
+                    label(context) {
+                        return `${context.dataset.label}: ${formatCurrencyBR(getNBChartCurrencyValue(context))}`;
+                    }
+                }
+            }
+        }
+    };
+    const revenueExpensesOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+                callbacks: {
+                    title(items) {
+                        const index = items?.[0]?.dataIndex ?? 0;
+                        return revenueExpenseKeys[index] ? groupedRevenueExpenses[revenueExpenseKeys[index]].tooltip : '';
+                    },
+                    label(context) {
+                        return `${context.dataset.label}: ${formatCurrencyBR(getNBChartCurrencyValue(context))}`;
+                    }
+                }
+            }
+        },
+        scales: { x: { stacked: false }, y: { beginAtZero: true } }
+    };
+    if (nbRevenueLossChart) { nbRevenueLossChart.data = revenueLossData; nbRevenueLossChart.options = donutOptions; nbRevenueLossChart.update(); } else { nbRevenueLossChart = new Chart(chart1Ctx, { type: 'doughnut', data: revenueLossData, options: donutOptions }); }
+    if (nbCategoryShareChart) { nbCategoryShareChart.data = categoryData; nbCategoryShareChart.options = donutOptions; nbCategoryShareChart.update(); } else { nbCategoryShareChart = new Chart(chart2Ctx, { type: 'doughnut', data: categoryData, options: donutOptions }); }
+    if (nbTimelineChart) { nbTimelineChart.data = timelineData; nbTimelineChart.options = timelineOptions; nbTimelineChart.update(); } else { nbTimelineChart = new Chart(chart3Ctx, { type: 'bar', data: timelineData, options: timelineOptions }); }
+    if (nbProfitStackChart) { nbProfitStackChart.data = stackData; nbProfitStackChart.options = stackOptions; nbProfitStackChart.update(); } else { nbProfitStackChart = new Chart(chart4Ctx, { type: 'bar', data: stackData, options: stackOptions }); }
+    if (nbRevenueExpensesChart) { nbRevenueExpensesChart.data = revenueExpensesData; nbRevenueExpensesChart.options = revenueExpensesOptions; nbRevenueExpensesChart.update(); } else { nbRevenueExpensesChart = new Chart(chart5Ctx, { type: 'bar', data: revenueExpensesData, options: revenueExpensesOptions }); }
 }
 function renderNBCharts() {
-    const frames = ['nb-chart-revenue-loss', 'nb-chart-category-share', 'nb-chart-timeline', 'nb-chart-profit-stack'];
+    const frames = ['nb-chart-revenue-loss', 'nb-chart-category-share', 'nb-chart-timeline', 'nb-chart-profit-stack', 'nb-chart-revenue-expenses'];
     frames.forEach(id => {
         const canvas = document.getElementById(id);
         if (canvas?.parentElement) {
@@ -3585,7 +3860,20 @@ function renderNBCharts() {
     if (summaryRevenue) summaryRevenue.textContent = formatCurrencyBR(revenue);
     if (summaryLoss) summaryLoss.textContent = `Perdas: ${formatCurrencyBR(loss)}`;
     if (summaryProfit) summaryProfit.textContent = `Lucro estimado: ${formatCurrencyBR(revenue - costOfGoods)}`;
-    const donutOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } };
+    const donutOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+                callbacks: {
+                    label(context) {
+                        return `${context.label}: ${formatCurrencyBR(getNBChartCurrencyValue(context))}`;
+                    }
+                }
+            }
+        }
+    };
     const revenueLossData = { labels: ['Faturamento', 'Perdas'], datasets: [{ data: [revenue, loss], backgroundColor: ['#22c55e', '#ef4444'] }] };
     const categoryEntries = Object.entries(categoryRevenue).sort((a, b) => b[1] - a[1]);
     const categoryData = {
@@ -3602,7 +3890,10 @@ function renderNBCharts() {
             const parsed = parseDateOnly(dateValue);
             let label = '';
             let tooltip = '';
-            if (granularity === 'month') {
+            if (granularity === 'year') {
+                label = parsed.toLocaleDateString('pt-BR', { year: 'numeric' });
+                tooltip = parsed.toLocaleDateString('pt-BR', { year: 'numeric' });
+            } else if (granularity === 'month') {
                 label = formatNBMonthYearLabel(dateValue, false);
                 tooltip = formatNBMonthYearLabel(dateValue, true);
             } else if (granularity === 'week') {
@@ -3635,9 +3926,8 @@ function renderNBCharts() {
     const chart2Ctx = document.getElementById('nb-chart-category-share')?.getContext('2d');
     const chart3Ctx = document.getElementById('nb-chart-timeline')?.getContext('2d');
     const chart4Ctx = document.getElementById('nb-chart-profit-stack')?.getContext('2d');
-    if (!chart1Ctx || !chart2Ctx || !chart3Ctx || !chart4Ctx) return;
-    if (nbRevenueLossChart) { nbRevenueLossChart.data = revenueLossData; nbRevenueLossChart.options = donutOptions; nbRevenueLossChart.update(); } else { nbRevenueLossChart = new Chart(chart1Ctx, { type: 'doughnut', data: revenueLossData, options: donutOptions }); }
-    if (nbCategoryShareChart) { nbCategoryShareChart.data = categoryData; nbCategoryShareChart.options = donutOptions; nbCategoryShareChart.update(); } else { nbCategoryShareChart = new Chart(chart2Ctx, { type: 'doughnut', data: categoryData, options: donutOptions }); }
+    const chart5Ctx = document.getElementById('nb-chart-revenue-expenses')?.getContext('2d');
+    if (!chart1Ctx || !chart2Ctx || !chart3Ctx || !chart4Ctx || !chart5Ctx) return;
     const timelineOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -3648,6 +3938,9 @@ function renderNBCharts() {
                     title(items) {
                         const index = items?.[0]?.dataIndex ?? 0;
                         return timelineKeys[index] ? groupedTimeline[timelineKeys[index]].tooltip : '';
+                    },
+                    label(context) {
+                        return `${context.dataset.label}: ${formatCurrencyBR(getNBChartCurrencyValue(context))}`;
                     }
                 }
             }
@@ -3665,13 +3958,38 @@ function renderNBCharts() {
                     title(items) {
                         const index = items?.[0]?.dataIndex ?? 0;
                         return timelineKeys[index] ? groupedTimeline[timelineKeys[index]].tooltip : '';
+                    },
+                    label(context) {
+                        return `${context.dataset.label}: ${formatCurrencyBR(getNBChartCurrencyValue(context))}`;
                     }
                 }
             }
         }
     };
+    const revenueExpensesOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+                callbacks: {
+                    title(items) {
+                        const index = items?.[0]?.dataIndex ?? 0;
+                        return revenueExpenseKeys[index] ? groupedRevenueExpenses[revenueExpenseKeys[index]].tooltip : '';
+                    },
+                    label(context) {
+                        return `${context.dataset.label}: ${formatCurrencyBR(getNBChartCurrencyValue(context))}`;
+                    }
+                }
+            }
+        },
+        scales: { x: { stacked: false }, y: { beginAtZero: true } }
+    };
+    if (nbRevenueLossChart) { nbRevenueLossChart.data = revenueLossData; nbRevenueLossChart.options = donutOptions; nbRevenueLossChart.update(); } else { nbRevenueLossChart = new Chart(chart1Ctx, { type: 'doughnut', data: revenueLossData, options: donutOptions }); }
+    if (nbCategoryShareChart) { nbCategoryShareChart.data = categoryData; nbCategoryShareChart.options = donutOptions; nbCategoryShareChart.update(); } else { nbCategoryShareChart = new Chart(chart2Ctx, { type: 'doughnut', data: categoryData, options: donutOptions }); }
     if (nbTimelineChart) { nbTimelineChart.data = timelineData; nbTimelineChart.options = timelineOptions; nbTimelineChart.update(); } else { nbTimelineChart = new Chart(chart3Ctx, { type: 'bar', data: timelineData, options: timelineOptions }); }
     if (nbProfitStackChart) { nbProfitStackChart.data = stackData; nbProfitStackChart.options = stackOptions; nbProfitStackChart.update(); } else { nbProfitStackChart = new Chart(chart4Ctx, { type: 'bar', data: stackData, options: stackOptions }); }
+    if (nbRevenueExpensesChart) { nbRevenueExpensesChart.data = revenueExpensesData; nbRevenueExpensesChart.options = revenueExpensesOptions; nbRevenueExpensesChart.update(); } else { nbRevenueExpensesChart = new Chart(chart5Ctx, { type: 'bar', data: revenueExpensesData, options: revenueExpensesOptions }); }
 }
 function syncNBPanelDayMarkers() {
     const todayString = toDateInputValue(new Date());
@@ -3828,6 +4146,13 @@ function renderNBProductsList() {
     if (prodCatInput) prodCatInput.addEventListener('change', renderNBProductsList);
 }
 function renderNBManagement() {
+    syncNBAnalyticsPresetButtons();
+    syncNBTopProductsLimitButtons();
+    const startInput = document.getElementById('nb-analytics-start');
+    const endInput = document.getElementById('nb-analytics-end');
+    if (startInput && endInput && !startInput.value && !endInput.value) {
+        applyNBAnalyticsPreset(nbAnalyticsPreset, false);
+    }
     renderNBCharts();
     renderNBTopProductsGestao();
     renderNBFinanceForm();
@@ -3835,14 +4160,13 @@ function renderNBManagement() {
     renderNBDiaryFeed();
     renderNBCategoriesList();
     renderNBProductsList();
+}
 // Ranking dos 10 produtos mais vendidos na Gestão (período customizado)
 function renderNBTopProductsGestao() {
     const list = document.getElementById('nb-top-products-gestao-list');
     if (!list) return;
-    // Pega período e granularidade selecionados
     const startDate = document.getElementById('nb-analytics-start')?.value || '';
     const endDate = document.getElementById('nb-analytics-end')?.value || '';
-    // Mapeia vendas por produto no período
     const salesByProduct = {};
     nbProdutosData.forEach(product => {
         salesByProduct[product.Id] = { nome: product.Nome, total: 0 };
@@ -3856,11 +4180,10 @@ function renderNBTopProductsGestao() {
             }
         }
     });
-    // Ordena por total vendido (desc), pega só produtos com venda > 0
     const sorted = Object.entries(salesByProduct)
         .filter(([, v]) => v.total > 0)
         .sort((a, b) => b[1].total - a[1].total)
-        .slice(0, 10);
+        .slice(0, nbTopProductsGestaoLimit);
     if (sorted.length === 0) {
         list.innerHTML = '<li class="text-gray-500 dark:text-gray-400">Nenhuma venda registrada no período.</li>';
         return;
@@ -3868,13 +4191,6 @@ function renderNBTopProductsGestao() {
     list.innerHTML = sorted.map(([_, v], idx) =>
         `<li class="flex items-center gap-3"><span class="font-bold text-lg w-6 text-right">${idx + 1}.</span> <span class="flex-1">${v.nome}</span> <span class="font-mono bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded px-2 py-1">${v.total}</span></li>`
     ).join('');
-    
-    // Atualiza ranking ao mudar período/granularidade
-    const startInput = document.getElementById('nb-analytics-start');
-    const endInput = document.getElementById('nb-analytics-end');
-    if (startInput) startInput.onchange = renderNBTopProductsGestao;
-    if (endInput) endInput.onchange = renderNBTopProductsGestao;
-}
 }
 function renderNBModule() {
     if (!canAccessNB()) return;
@@ -4135,6 +4451,7 @@ function resetNBProductForm() {
 function startNBProductEdit(id) {
     const product = nbProdutosData.find(item => item.Id == id);
     if (!product) return;
+    syncNBProductCategoryOptions();
     document.getElementById('nb-product-id').value = product.Id;
     document.getElementById('nb-product-name').value = product.Nome || '';
     document.getElementById('nb-product-cost').value = Number(product.Preco_Custo || 0);
@@ -8822,7 +9139,9 @@ function renderReembolsos(data = reembolsosData) {
         document.getElementById('nb-management-day-input')?.addEventListener('change', async e => { setNBSelectedDate(e.target.value); await ensureNBControlDay(nbSelectedDate); renderNBModule(); });
         document.getElementById('nb-sync-selected-day-btn')?.addEventListener('click', async () => { const value = document.getElementById('nb-selected-day-input')?.value || toDateInputValue(new Date()); setNBSelectedDate(value); await ensureNBControlDay(nbSelectedDate); renderNBModule(); });
         document.getElementById('nb-close-day-btn')?.addEventListener('click', handleNBCloseDay);
-        ['nb-analytics-start', 'nb-analytics-end', 'nb-analytics-granularity'].forEach(id => document.getElementById(id)?.addEventListener('change', renderNBCharts));
+        document.querySelectorAll('[data-nb-analytics-preset]').forEach(btn => btn.addEventListener('click', () => applyNBAnalyticsPreset(btn.dataset.nbAnalyticsPreset)));
+        document.querySelectorAll('[data-nb-top-limit]').forEach(btn => btn.addEventListener('click', () => applyNBTopProductsLimit(btn.dataset.nbTopLimit)));
+        ['nb-analytics-start', 'nb-analytics-end'].forEach(id => document.getElementById(id)?.addEventListener('change', () => renderNBManagement()));
         document.getElementById('nb-panel-grid')?.addEventListener('input', e => {
             if (!e.target.classList.contains('nb-panel-input')) return;
             const cell = e.target.closest('[data-nb-cell]');
@@ -9018,13 +9337,7 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
     window.handleDeleteItemFromRequisition = handleDeleteItemFromRequisition;
     window.showImageModal = showImageModal;
 
-        const analyticsStart = document.getElementById('nb-analytics-start');
-        const analyticsEnd = document.getElementById('nb-analytics-end');
-        if (analyticsStart && analyticsEnd) {
-            const today = new Date();
-            analyticsEnd.value = toDateInputValue(today);
-            analyticsStart.value = toDateInputValue(addDays(today, -30));
-        }
+        applyNBAnalyticsPreset('day', false);
         nbCurrentWeekStart = getStartOfWeek();
         setNBSelectedDate(toDateInputValue(new Date()));
         checkSession();
