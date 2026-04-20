@@ -490,7 +490,7 @@ body {
                             </div>
 
                             <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
-                            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 xl:col-span-2">
+                                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
                                         <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Top Produtos Mais Vendidos (Período)</h3>
                                         <div class="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -502,17 +502,13 @@ body {
                                     <ul id="nb-top-products-gestao-list" class="space-y-2"></ul>
                                 </div>
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Faturamento vs Perdas</h3>
-                                    <div class="h-56 md:h-64">
-                                        <canvas id="nb-chart-revenue-loss" class="w-full h-full"></canvas>
-                                    </div>
-                                </div>
-                                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                                     <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Faturamento por Categoria</h3>
                                     <div class="h-56 md:h-64">
                                         <canvas id="nb-chart-category-share" class="w-full h-full"></canvas>
                                     </div>
                                 </div>
+                            </div>
+                            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                                     <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Faturamento Cronológico</h3>
                                     <div class="h-56 md:h-64">
@@ -525,10 +521,21 @@ body {
                                         <canvas id="nb-chart-profit-stack" class="w-full h-full"></canvas>
                                     </div>
                                 </div>
-                                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 xl:col-span-2">
+                            </div>
+                            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-6">
+                                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                                     <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Faturamento x Despesas</h3>
                                     <div class="h-64 md:h-72">
                                         <canvas id="nb-chart-revenue-expenses" class="w-full h-full"></canvas>
+                                    </div>
+                                </div>
+                                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+                                    <div class="flex items-center justify-between gap-3 mb-4">
+                                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Fluxo Financeiro do Período</h3>
+                                        <span class="text-sm text-gray-500 dark:text-gray-400">Baseado em NB_Controle_Dias</span>
+                                    </div>
+                                    <div class="h-64 md:h-72">
+                                        <canvas id="nb-chart-finance-period" class="w-full h-full"></canvas>
                                     </div>
                                 </div>
                             </div>
@@ -552,6 +559,13 @@ body {
                                         </div>
                                     </form>
                                     <div id="nb-finance-summary" class="mt-4 text-sm text-gray-600 dark:text-gray-300"></div>
+                                    <div class="mt-4">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Registros do período</h4>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">Baseado em NB_Controle_Dias</span>
+                                        </div>
+                                        <div id="nb-finance-period-list" class="space-y-3"></div>
+                                    </div>
                                 </div>
 
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
@@ -581,6 +595,13 @@ body {
                                             </thead>
                                             <tbody id="nb-expense-table-body"></tbody>
                                         </table>
+                                    </div>
+                                    <div class="mt-4">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Registros do período</h4>
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">Lançamentos filtrados pela data selecionada</span>
+                                        </div>
+                                        <div id="nb-expense-period-list" class="space-y-3"></div>
                                     </div>
                                 </div>
                             </div>
@@ -2384,7 +2405,7 @@ const dataLoaded = {
     let activeTableRow = null;
     let calendar;
     let financeChart, visitsStatusChart, clientsVisitsChart, clientsHoursChart, receitasByClienteChart, custosByCredorChart;
-    let nbRevenueLossChart, nbCategoryShareChart, nbTimelineChart, nbProfitStackChart, nbRevenueExpensesChart;
+    let nbRevenueLossChart, nbCategoryShareChart, nbTimelineChart, nbProfitStackChart, nbRevenueExpensesChart, nbFinancePeriodChart;
     let activeDeleteItem = { id: null, type: null, element: null };
     let validadesStatusGeralChart; 
     let validadesConsultorCargaChart, validadesParetoChart;
@@ -3135,6 +3156,40 @@ function getNBFinanceRecord(dateString) {
 function getNBExpenseRecords(dateString) {
     return nbDespesasValesData.filter(item => getNBLinkedDateValue(item) === dateString);
 }
+function getNBAnalyticsPeriodRange() {
+    return {
+        start: document.getElementById('nb-analytics-start')?.value || '',
+        end: document.getElementById('nb-analytics-end')?.value || ''
+    };
+}
+function isNBDateWithinRange(dateString, startDate, endDate) {
+    if (!dateString) return false;
+    if (startDate && dateString < startDate) return false;
+    if (endDate && dateString > endDate) return false;
+    return true;
+}
+function getNBControleDaysInPeriod() {
+    const { start, end } = getNBAnalyticsPeriodRange();
+    return nbControleDiasData
+        .filter(day => isNBDateWithinRange(day.Data, start, end))
+        .sort((a, b) => (a.Data || '').localeCompare(b.Data || ''));
+}
+function getNBFinanceRecordsInPeriod() {
+    const { start, end } = getNBAnalyticsPeriodRange();
+    return nbFinanceiroData
+        .filter(item => isNBDateWithinRange(getNBLinkedDateValue(item), start, end))
+        .sort((a, b) => (getNBLinkedDateValue(a) || '').localeCompare(getNBLinkedDateValue(b) || ''));
+}
+function getNBExpenseRecordsInPeriod() {
+    const { start, end } = getNBAnalyticsPeriodRange();
+    return nbDespesasValesData
+        .filter(item => isNBDateWithinRange(getNBLinkedDateValue(item), start, end))
+        .sort((a, b) => (getNBLinkedDateValue(a) || '').localeCompare(getNBLinkedDateValue(b) || ''));
+}
+function getNBFinanceEntryTotal(record = {}) {
+    return ['Entrada_Dinheiro', 'Entrada_PIX', 'Entrada_App', 'Entrada_Maquineta']
+        .reduce((sum, key) => sum + Number(record[key] || 0), 0);
+}
 function isNBPanelEditable(dateString) {
     if (!canAccessNB()) return false;
     if (getNBStatusForDate(dateString) !== 'Aberto') return false;
@@ -3842,7 +3897,7 @@ function renderNBCharts() {
     if (nbRevenueExpensesChart) { nbRevenueExpensesChart.data = revenueExpensesData; nbRevenueExpensesChart.options = revenueExpensesOptions; nbRevenueExpensesChart.update(); } else { nbRevenueExpensesChart = new Chart(chart5Ctx, { type: 'bar', data: revenueExpensesData, options: revenueExpensesOptions }); }
 }
 function renderNBCharts() {
-    const frames = ['nb-chart-revenue-loss', 'nb-chart-category-share', 'nb-chart-timeline', 'nb-chart-profit-stack', 'nb-chart-revenue-expenses'];
+    const frames = ['nb-chart-category-share', 'nb-chart-timeline', 'nb-chart-profit-stack', 'nb-chart-revenue-expenses', 'nb-chart-finance-period'];
     frames.forEach(id => {
         const canvas = document.getElementById(id);
         if (canvas?.parentElement) {
@@ -3860,6 +3915,33 @@ function renderNBCharts() {
     if (summaryRevenue) summaryRevenue.textContent = formatCurrencyBR(revenue);
     if (summaryLoss) summaryLoss.textContent = `Perdas: ${formatCurrencyBR(loss)}`;
     if (summaryProfit) summaryProfit.textContent = `Lucro estimado: ${formatCurrencyBR(revenue - costOfGoods)}`;
+    const buildPeriodMeta = (dateString) => {
+        const parsed = parseDateOnly(dateString);
+        if (granularity === 'year') {
+            return {
+                label: parsed.toLocaleDateString('pt-BR', { year: 'numeric' }),
+                tooltip: parsed.toLocaleDateString('pt-BR', { year: 'numeric' })
+            };
+        }
+        if (granularity === 'month') {
+            return {
+                label: formatNBMonthYearLabel(dateString, false),
+                tooltip: formatNBMonthYearLabel(dateString, true)
+            };
+        }
+        if (granularity === 'week') {
+            const weekStart = getStartOfWeek(parsed);
+            const weekEnd = addDays(weekStart, 6);
+            return {
+                label: weekStart.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+                tooltip: `${weekStart.toLocaleDateString('pt-BR')} a ${weekEnd.toLocaleDateString('pt-BR')}`
+            };
+        }
+        return {
+            label: parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+            tooltip: parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+        };
+    };
     const donutOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -3874,7 +3956,6 @@ function renderNBCharts() {
             }
         }
     };
-    const revenueLossData = { labels: ['Faturamento', 'Perdas'], datasets: [{ data: [revenue, loss], backgroundColor: ['#22c55e', '#ef4444'] }] };
     const categoryEntries = Object.entries(categoryRevenue).sort((a, b) => b[1] - a[1]);
     const categoryData = {
         labels: categoryEntries.map(([name, value]) => `${name} (${formatCurrencyBR(value)})`),
@@ -3886,27 +3967,7 @@ function renderNBCharts() {
         const dateValue = getNBLinkedDateValue(record);
         if (!product || !dateValue) return;
         const key = getNBGroupKey(dateValue, granularity);
-        if (!groupedTimeline[key]) {
-            const parsed = parseDateOnly(dateValue);
-            let label = '';
-            let tooltip = '';
-            if (granularity === 'year') {
-                label = parsed.toLocaleDateString('pt-BR', { year: 'numeric' });
-                tooltip = parsed.toLocaleDateString('pt-BR', { year: 'numeric' });
-            } else if (granularity === 'month') {
-                label = formatNBMonthYearLabel(dateValue, false);
-                tooltip = formatNBMonthYearLabel(dateValue, true);
-            } else if (granularity === 'week') {
-                const weekStart = getStartOfWeek(parsed);
-                const weekEnd = addDays(weekStart, 6);
-                label = `${weekStart.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}`;
-                tooltip = `${weekStart.toLocaleDateString('pt-BR')} a ${weekEnd.toLocaleDateString('pt-BR')}`;
-            } else {
-                label = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                tooltip = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            }
-            groupedTimeline[key] = { revenue: 0, cost: 0, label, tooltip };
-        }
+        if (!groupedTimeline[key]) groupedTimeline[key] = { revenue: 0, cost: 0, ...buildPeriodMeta(dateValue) };
         groupedTimeline[key].revenue += computeNBVenda(record) * Number(product.Preco_Venda || 0);
         groupedTimeline[key].cost += computeNBVenda(record) * Number(product.Preco_Custo || 0);
     });
@@ -3927,27 +3988,7 @@ function renderNBCharts() {
         const dateValue = getNBLinkedDateValue(item);
         if (!dateValue) return;
         const key = getNBGroupKey(dateValue, granularity);
-        if (!groupedRevenueExpenses[key]) {
-            const parsed = parseDateOnly(dateValue);
-            let label = '';
-            let tooltip = '';
-            if (granularity === 'year') {
-                label = parsed.toLocaleDateString('pt-BR', { year: 'numeric' });
-                tooltip = parsed.toLocaleDateString('pt-BR', { year: 'numeric' });
-            } else if (granularity === 'month') {
-                label = formatNBMonthYearLabel(dateValue, false);
-                tooltip = formatNBMonthYearLabel(dateValue, true);
-            } else if (granularity === 'week') {
-                const weekStart = getStartOfWeek(parsed);
-                const weekEnd = addDays(weekStart, 6);
-                label = weekStart.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                tooltip = `${weekStart.toLocaleDateString('pt-BR')} a ${weekEnd.toLocaleDateString('pt-BR')}`;
-            } else {
-                label = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-                tooltip = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            }
-            groupedRevenueExpenses[key] = { revenue: 0, expenses: 0, label, tooltip };
-        }
+        if (!groupedRevenueExpenses[key]) groupedRevenueExpenses[key] = { revenue: 0, expenses: 0, ...buildPeriodMeta(dateValue) };
         groupedRevenueExpenses[key].expenses += Number(item.Valor || 0);
     });
     timelineKeys.forEach(key => {
@@ -3961,15 +4002,40 @@ function renderNBCharts() {
     const revenueExpensesData = {
         labels: revenueExpenseLabels,
         datasets: [
-            { label: 'Faturamento', data: revenueExpenseRevenue, backgroundColor: 'rgba(34, 197, 94, 0.8)' },
-            { label: 'Despesas', data: revenueExpenseCosts, backgroundColor: 'rgba(239, 68, 68, 0.8)' }
+            { label: 'Faturamento', data: revenueExpenseRevenue, borderColor: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.18)', pointBackgroundColor: '#22c55e', tension: 0.3, fill: false },
+            { label: 'Despesas', data: revenueExpenseCosts, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.18)', pointBackgroundColor: '#ef4444', tension: 0.3, fill: false }
         ]
     };
-    const chart1Ctx = document.getElementById('nb-chart-revenue-loss')?.getContext('2d');
-    const chart2Ctx = document.getElementById('nb-chart-category-share')?.getContext('2d');
-    const chart3Ctx = document.getElementById('nb-chart-timeline')?.getContext('2d');
-    const chart4Ctx = document.getElementById('nb-chart-profit-stack')?.getContext('2d');
-    const chart5Ctx = document.getElementById('nb-chart-revenue-expenses')?.getContext('2d');
+    const financeGroups = {};
+    getNBControleDaysInPeriod().forEach(day => {
+        const dateValue = day.Data;
+        const key = getNBGroupKey(dateValue, granularity);
+        if (!financeGroups[key]) financeGroups[key] = { entradas: 0, saidas: 0, label: buildPeriodMeta(dateValue).label, tooltip: buildPeriodMeta(dateValue).tooltip };
+        const financeRecord = getNBFinanceRecord(dateValue) || {};
+        const expenseRecords = getNBExpenseRecords(dateValue);
+        const totalDespesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+        const totalVales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+        financeGroups[key].entradas += getNBFinanceEntryTotal(financeRecord);
+        financeGroups[key].saidas += totalDespesas + totalVales + Number(financeRecord.Sangria || 0);
+    });
+    const financeKeys = Object.keys(financeGroups).sort();
+    const financeLabels = financeKeys.map(key => financeGroups[key].label);
+    const financeEntradas = financeKeys.map(key => financeGroups[key].entradas);
+    const financeSaidas = financeKeys.map(key => financeGroups[key].saidas);
+    const financeResultado = financeKeys.map(key => financeGroups[key].entradas - financeGroups[key].saidas);
+    const financePeriodData = {
+        labels: financeLabels,
+        datasets: [
+            { label: 'Entradas', data: financeEntradas, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.18)', pointBackgroundColor: '#3b82f6', tension: 0.3, fill: false },
+            { label: 'Saídas', data: financeSaidas, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.18)', pointBackgroundColor: '#ef4444', tension: 0.3, fill: false },
+            { label: 'Resultado', data: financeResultado, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.18)', pointBackgroundColor: '#f59e0b', tension: 0.3, fill: false }
+        ]
+    };
+    const chart1Ctx = document.getElementById('nb-chart-category-share')?.getContext('2d');
+    const chart2Ctx = document.getElementById('nb-chart-timeline')?.getContext('2d');
+    const chart3Ctx = document.getElementById('nb-chart-profit-stack')?.getContext('2d');
+    const chart4Ctx = document.getElementById('nb-chart-revenue-expenses')?.getContext('2d');
+    const chart5Ctx = document.getElementById('nb-chart-finance-period')?.getContext('2d');
     if (!chart1Ctx || !chart2Ctx || !chart3Ctx || !chart4Ctx || !chart5Ctx) return;
     const timelineOptions = {
         responsive: true,
@@ -4026,13 +4092,32 @@ function renderNBCharts() {
                 }
             }
         },
-        scales: { x: { stacked: false }, y: { beginAtZero: true } }
+        scales: { x: { ticks: { maxRotation: 0, autoSkip: true } }, y: { beginAtZero: true } }
     };
-    if (nbRevenueLossChart) { nbRevenueLossChart.data = revenueLossData; nbRevenueLossChart.options = donutOptions; nbRevenueLossChart.update(); } else { nbRevenueLossChart = new Chart(chart1Ctx, { type: 'doughnut', data: revenueLossData, options: donutOptions }); }
-    if (nbCategoryShareChart) { nbCategoryShareChart.data = categoryData; nbCategoryShareChart.options = donutOptions; nbCategoryShareChart.update(); } else { nbCategoryShareChart = new Chart(chart2Ctx, { type: 'doughnut', data: categoryData, options: donutOptions }); }
-    if (nbTimelineChart) { nbTimelineChart.data = timelineData; nbTimelineChart.options = timelineOptions; nbTimelineChart.update(); } else { nbTimelineChart = new Chart(chart3Ctx, { type: 'bar', data: timelineData, options: timelineOptions }); }
-    if (nbProfitStackChart) { nbProfitStackChart.data = stackData; nbProfitStackChart.options = stackOptions; nbProfitStackChart.update(); } else { nbProfitStackChart = new Chart(chart4Ctx, { type: 'bar', data: stackData, options: stackOptions }); }
-    if (nbRevenueExpensesChart) { nbRevenueExpensesChart.data = revenueExpensesData; nbRevenueExpensesChart.options = revenueExpensesOptions; nbRevenueExpensesChart.update(); } else { nbRevenueExpensesChart = new Chart(chart5Ctx, { type: 'bar', data: revenueExpensesData, options: revenueExpensesOptions }); }
+    const financePeriodOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+                callbacks: {
+                    title(items) {
+                        const index = items?.[0]?.dataIndex ?? 0;
+                        return financeKeys[index] ? financeGroups[financeKeys[index]].tooltip : '';
+                    },
+                    label(context) {
+                        return `${context.dataset.label}: ${formatCurrencyBR(getNBChartCurrencyValue(context))}`;
+                    }
+                }
+            }
+        },
+        scales: { x: { ticks: { maxRotation: 0, autoSkip: true } }, y: { beginAtZero: true } }
+    };
+    if (nbCategoryShareChart) { nbCategoryShareChart.data = categoryData; nbCategoryShareChart.options = donutOptions; nbCategoryShareChart.update(); } else { nbCategoryShareChart = new Chart(chart1Ctx, { type: 'doughnut', data: categoryData, options: donutOptions }); }
+    if (nbTimelineChart) { nbTimelineChart.data = timelineData; nbTimelineChart.options = timelineOptions; nbTimelineChart.update(); } else { nbTimelineChart = new Chart(chart2Ctx, { type: 'bar', data: timelineData, options: timelineOptions }); }
+    if (nbProfitStackChart) { nbProfitStackChart.data = stackData; nbProfitStackChart.options = stackOptions; nbProfitStackChart.update(); } else { nbProfitStackChart = new Chart(chart3Ctx, { type: 'bar', data: stackData, options: stackOptions }); }
+    if (nbRevenueExpensesChart) { nbRevenueExpensesChart.data = revenueExpensesData; nbRevenueExpensesChart.options = revenueExpensesOptions; nbRevenueExpensesChart.update(); } else { nbRevenueExpensesChart = new Chart(chart4Ctx, { type: 'line', data: revenueExpensesData, options: revenueExpensesOptions }); }
+    if (nbFinancePeriodChart) { nbFinancePeriodChart.data = financePeriodData; nbFinancePeriodChart.options = financePeriodOptions; nbFinancePeriodChart.update(); } else { nbFinancePeriodChart = new Chart(chart5Ctx, { type: 'line', data: financePeriodData, options: financePeriodOptions }); }
 }
 function syncNBPanelDayMarkers() {
     const todayString = toDateInputValue(new Date());
@@ -4098,6 +4183,36 @@ function renderNBFinanceForm() {
     const totalDespesas = getNBExpenseRecords(nbSelectedDate).filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const totalVales = getNBExpenseRecords(nbSelectedDate).filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     if (summary) summary.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-3 gap-3"><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Entradas</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totalEntradas)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Despesas</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totalDespesas)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Vales</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totalVales)}</div></div></div>`;
+    const financePeriodList = document.getElementById('nb-finance-period-list');
+    if (financePeriodList) {
+        const periodRecords = getNBFinanceRecordsInPeriod();
+        financePeriodList.innerHTML = periodRecords.map(item => {
+            const dateValue = getNBLinkedDateValue(item);
+            const expenseRecords = getNBExpenseRecords(dateValue);
+            const despesas = expenseRecords.filter(exp => exp.Tipo === 'Despesa').reduce((sum, exp) => sum + Number(exp.Valor || 0), 0);
+            const vales = expenseRecords.filter(exp => exp.Tipo === 'Vale').reduce((sum, exp) => sum + Number(exp.Valor || 0), 0);
+            const entradas = getNBFinanceEntryTotal(item);
+            const sangria = Number(item.Sangria || 0);
+            const saidas = despesas + vales + sangria;
+            return `
+                <article class="rounded-lg border dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+                        <div>
+                            <p class="font-semibold text-gray-800 dark:text-white">${parseDateOnly(dateValue).toLocaleDateString('pt-BR')}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">${getNBStatusForDate(dateValue)}</p>
+                        </div>
+                        <span class="text-sm font-semibold text-brand-gold">${formatCurrencyBR(item.Caixa_Final || 0)}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="rounded-md bg-white dark:bg-gray-800 p-2"><span class="block text-gray-500 dark:text-gray-400">Caixa Inicial</span><strong class="text-gray-800 dark:text-white">${formatCurrencyBR(item.Caixa_Inicial || 0)}</strong></div>
+                        <div class="rounded-md bg-white dark:bg-gray-800 p-2"><span class="block text-gray-500 dark:text-gray-400">Caixa Final</span><strong class="text-gray-800 dark:text-white">${formatCurrencyBR(item.Caixa_Final || 0)}</strong></div>
+                        <div class="rounded-md bg-white dark:bg-gray-800 p-2"><span class="block text-gray-500 dark:text-gray-400">Entradas</span><strong class="text-gray-800 dark:text-white">${formatCurrencyBR(entradas)}</strong></div>
+                        <div class="rounded-md bg-white dark:bg-gray-800 p-2"><span class="block text-gray-500 dark:text-gray-400">Saídas</span><strong class="text-gray-800 dark:text-white">${formatCurrencyBR(saidas)}</strong></div>
+                    </div>
+                </article>
+            `;
+        }).join('') || '<div class="text-sm text-gray-500 dark:text-gray-400">Nenhum financeiro encontrado no período selecionado.</div>';
+    }
 }
 function renderNBDiaryFeed() {
     const feed = document.getElementById('nb-diary-feed');
@@ -4140,6 +4255,22 @@ function renderNBExpensesTable() {
     const canManage = canAccessNBManagement();
     const rows = getNBExpenseRecords(nbSelectedDate).sort((a, b) => (a.Tipo || '').localeCompare(b.Tipo || '') || (a.Descricao || '').localeCompare(b.Descricao || ''));
     tbody.innerHTML = rows.map(item => `<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700"><td class="px-4 py-3">${item.Tipo}</td><td class="px-4 py-3">${item.Descricao || '-'}</td><td class="px-4 py-3">${formatCurrencyBR(item.Valor)}</td><td class="px-4 py-3 space-x-2">${canManage ? `<button type="button" class="nb-expense-edit-btn text-blue-500 hover:text-blue-700" data-id="${item.Id}" title="Editar"><i class="fas fa-edit"></i></button><button type="button" class="nb-expense-delete-btn text-red-500 hover:text-red-700" data-id="${item.Id}" title="Apagar"><i class="fas fa-trash"></i></button>` : '<span class="text-xs text-gray-400">Somente leitura</span>'}</td></tr>`).join('') || '<tr><td colspan="4" class="px-4 py-4 text-center text-gray-500">Nenhum lançamento para a data selecionada.</td></tr>';
+    const periodList = document.getElementById('nb-expense-period-list');
+    if (periodList) {
+        const periodRecords = getNBExpenseRecordsInPeriod().sort((a, b) => (getNBLinkedDateValue(a) || '').localeCompare(getNBLinkedDateValue(b) || '') || (a.Tipo || '').localeCompare(b.Tipo || '') || (a.Descricao || '').localeCompare(b.Descricao || ''));
+        periodList.innerHTML = periodRecords.map(item => `
+            <article class="rounded-lg border dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                        <p class="font-semibold text-gray-800 dark:text-white">${parseDateOnly(getNBLinkedDateValue(item)).toLocaleDateString('pt-BR')}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">${item.Tipo}</p>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(item.Valor)}</span>
+                </div>
+                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">${item.Descricao || '-'}</p>
+            </article>
+        `).join('') || '<div class="text-sm text-gray-500 dark:text-gray-400">Nenhuma despesa ou vale encontrado no período selecionado.</div>';
+    }
 }
 function renderNBCategoriesList() {
     const container = document.getElementById('nb-categories-list');
