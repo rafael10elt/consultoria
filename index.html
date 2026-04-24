@@ -437,13 +437,14 @@ body {
                                 </div>
                                 <div id="nb-week-day-cards" class="mt-4 overflow-x-auto"></div>
                                 <div class="mt-4">
-                                    <div class="flex items-center justify-between gap-3 mb-3">
+                                <div class="flex items-center justify-between gap-3 mb-3">
                                         <label for="nb-panel-product-search" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Pesquisar produto</label>
                                         <span class="text-xs text-gray-500 dark:text-gray-400">Filtra os produtos ativos no painel</span>
                                     </div>
                                     <input type="text" id="nb-panel-product-search" placeholder="Digite o nome do produto..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full md:max-w-xl p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                 </div>
                                 <div class="flex flex-wrap items-center gap-3 mt-4">
+                                    <button type="button" id="nb-panel-finance-btn" class="hidden px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Lançar Financeiro do Dia</button>
                                 </div>
                             </div>
 
@@ -2231,6 +2232,54 @@ body {
             </div>
         </div>
     </div>
+    <div id="nb-panel-finance-modal" class="fixed inset-0 z-[60] items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
+        <div class="w-full max-w-3xl p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate max-h-[90vh] flex flex-col">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Financeiro do Dia</h2>
+                    <p id="nb-panel-finance-date-label" class="text-sm text-gray-500 dark:text-gray-400 mt-1"></p>
+                </div>
+                <button type="button" id="close-nb-panel-finance-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <form id="nb-panel-finance-form" class="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto">
+                <div>
+                    <label for="nb-panel-fin-caixa-inicial" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Caixa Inicial</label>
+                    <input type="number" step="0.01" id="nb-panel-fin-caixa-inicial" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <div>
+                    <label for="nb-panel-fin-caixa-final" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Caixa Final</label>
+                    <input type="number" step="0.01" id="nb-panel-fin-caixa-final" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <div>
+                    <label for="nb-panel-fin-sangria" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sangria</label>
+                    <input type="number" step="0.01" id="nb-panel-fin-sangria" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <div>
+                    <label for="nb-panel-fin-entrada-dinheiro" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Entrada Dinheiro</label>
+                    <input type="number" step="0.01" id="nb-panel-fin-entrada-dinheiro" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <div>
+                    <label for="nb-panel-fin-entrada-pix" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Entrada PIX</label>
+                    <input type="number" step="0.01" id="nb-panel-fin-entrada-pix" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <div>
+                    <label for="nb-panel-fin-entrada-app" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Entrada App</label>
+                    <input type="number" step="0.01" id="nb-panel-fin-entrada-app" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <div>
+                    <label for="nb-panel-fin-entrada-maquineta" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Entrada Maquineta</label>
+                    <input type="number" step="0.01" id="nb-panel-fin-entrada-maquineta" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                </div>
+                <div class="md:col-span-2">
+                    <div id="nb-panel-finance-summary" class="text-sm text-gray-600 dark:text-gray-300"></div>
+                </div>
+                <div class="md:col-span-2 flex justify-end gap-3 pt-2">
+                    <button type="button" id="close-nb-panel-finance-form" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Salvar Financeiro</button>
+                </div>
+            </form>
+        </div>
+    </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
         // --- Modal de Confirmação Customizado ---
@@ -2531,7 +2580,7 @@ const dataLoaded = {
                                 break;
                             case error.POSITION_UNAVAILABLE:
                                 errorMessage = "A informação de localização  indisponível.";
-                                breaká
+                                break;
                             case error.TIMEOUT:
                                 errorMessage = "A requisição para obter a localização do usuário expirou.";
                                 break;
@@ -3207,12 +3256,80 @@ function getNBControlDayFinancialSnapshot(dateString) {
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const totalExpenses = despesas + vales;
     const entradas = getNBFinanceEntryTotal(financeRecord);
+    const faturamentoDinheiro = (Number(financeRecord.Caixa_Final || 0) + Number(financeRecord.Sangria || 0) + totalExpenses) - Number(financeRecord.Caixa_Inicial || 0);
+    const faturamentoTotal = faturamentoDinheiro + Number(financeRecord.Entrada_PIX || 0) + Number(financeRecord.Entrada_App || 0) + Number(financeRecord.Entrada_Maquineta || 0);
     const saidas = totalExpenses + Number(financeRecord.Sangria || 0);
-    return { dateString, revenue, loss, costOfGoods, despesas, vales, totalExpenses, entradas, saidas, resultado: entradas - saidas };
+    return {
+        dateString,
+        revenue,
+        loss,
+        costOfGoods,
+        despesas,
+        vales,
+        totalExpenses,
+        entradas,
+        saidas,
+        faturamentoDinheiro,
+        faturamentoTotal,
+        resultado: faturamentoTotal - loss - totalExpenses
+    };
 }
 function getNBFinanceEntryTotal(record = {}) {
     return ['Entrada_Dinheiro', 'Entrada_PIX', 'Entrada_App', 'Entrada_Maquineta']
         .reduce((sum, key) => sum + Number(record[key] || 0), 0);
+}
+function isNBOperatorRole() {
+    return loggedInUser?.Role === 'Operador';
+}
+function getNBFinanceDaySummary(dateString) {
+    const financeRecord = getNBFinanceRecord(dateString) || {};
+    const expenseRecords = getNBExpenseRecords(dateString);
+    const caixaInicial = Number(financeRecord.Caixa_Inicial || 0);
+    const caixaFinal = Number(financeRecord.Caixa_Final || 0);
+    const sangria = Number(financeRecord.Sangria || 0);
+    const entradasDinheiro = Number(financeRecord.Entrada_Dinheiro || 0);
+    const entradasPix = Number(financeRecord.Entrada_PIX || 0);
+    const entradasApp = Number(financeRecord.Entrada_App || 0);
+    const entradasMaquineta = Number(financeRecord.Entrada_Maquineta || 0);
+    const despesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    const faturamentoDinheiro = (caixaFinal + sangria + despesas + vales) - caixaInicial;
+    const faturamentoTotal = faturamentoDinheiro + entradasPix + entradasApp + entradasMaquineta;
+    return {
+        financeRecord,
+        caixaInicial,
+        caixaFinal,
+        sangria,
+        entradasDinheiro,
+        entradasPix,
+        entradasApp,
+        entradasMaquineta,
+        despesas,
+        vales,
+        faturamentoDinheiro,
+        faturamentoTotal
+    };
+}
+function getNBFinanceFieldMap(prefix) {
+    return {
+        [`${prefix}caixa-inicial`]: 'Caixa_Inicial',
+        [`${prefix}caixa-final`]: 'Caixa_Final',
+        [`${prefix}sangria`]: 'Sangria',
+        [`${prefix}entrada-dinheiro`]: 'Entrada_Dinheiro',
+        [`${prefix}entrada-pix`]: 'Entrada_PIX',
+        [`${prefix}entrada-app`]: 'Entrada_App',
+        [`${prefix}entrada-maquineta`]: 'Entrada_Maquineta'
+    };
+}
+function syncNBPanelFinanceButtonVisibility() {
+    const btn = document.getElementById('nb-panel-finance-btn');
+    if (!btn) return;
+    btn.classList.toggle('hidden', !isNBOperatorRole());
+}
+function openNBPanelFinanceModal() {
+    if (!isNBOperatorRole()) return;
+    renderNBPanelFinanceModal();
+    showModal(document.getElementById('nb-panel-finance-modal'));
 }
 function isNBPanelEditable(dateString) {
     if (!canAccessNB()) return false;
@@ -3539,6 +3656,7 @@ function renderNBPanel() {
     `).join('');
     renderNBPanelTotals();
     syncNBPanelDayMarkers();
+    syncNBPanelFinanceButtonVisibility();
 }
 function renderNBCharts() {
     const frames = ['nb-chart-revenue-loss', 'nb-chart-category-share', 'nb-chart-timeline', 'nb-chart-profit-stack', 'nb-chart-revenue-expenses'];
@@ -3962,23 +4080,39 @@ function renderNBCharts() {
         };
     };
     const periodSnapshots = periodDays.map(day => {
-        const snapshot = getNBControlDayFinancialSnapshot(day.Data);
+        const controlSnapshot = getNBControlDayFinancialSnapshot(day.Data);
+        const financeSnapshot = getNBFinanceDaySummary(day.Data);
         const parsed = parseDateOnly(day.Data);
         const meta = {
             label: parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
             tooltip: parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
         };
-        return { ...snapshot, label: meta.label, tooltip: meta.tooltip };
+        const totalExpenses = financeSnapshot.despesas + financeSnapshot.vales;
+        const faturamentoTotal = financeSnapshot.faturamentoTotal;
+        const resultadoFinanceiro = faturamentoTotal - controlSnapshot.loss - totalExpenses;
+        return {
+            ...controlSnapshot,
+            ...financeSnapshot,
+            totalExpenses,
+            faturamentoTotal,
+            resultadoFinanceiro,
+            entradasTotal: financeSnapshot.entradasDinheiro + financeSnapshot.entradasPix + financeSnapshot.entradasApp + financeSnapshot.entradasMaquineta,
+            label: meta.label,
+            tooltip: meta.tooltip
+        };
     });
-    const expenseTotalsPeriod = periodSnapshots.reduce((sum, item) => sum + item.totalExpenses, 0);
+    const periodRevenueTotal = periodSnapshots.reduce((sum, item) => sum + Number(item.faturamentoTotal || 0), 0);
+    const periodLossTotal = periodSnapshots.reduce((sum, item) => sum + Number(item.loss || 0), 0);
+    const periodExpensesTotal = periodSnapshots.reduce((sum, item) => sum + Number(item.totalExpenses || 0), 0);
+    const periodProfitTotal = periodRevenueTotal - periodLossTotal - periodExpensesTotal;
     const summaryRevenue = document.getElementById('nb-summary-revenue');
     const summaryLoss = document.getElementById('nb-summary-loss');
     const summaryExpenses = document.getElementById('nb-summary-expenses');
     const summaryProfit = document.getElementById('nb-summary-profit');
-    if (summaryRevenue) summaryRevenue.textContent = `Faturamento: ${formatCurrencyBR(revenue)}`;
-    if (summaryLoss) summaryLoss.textContent = `Perdas: ${formatCurrencyBR(loss)}`;
-    if (summaryExpenses) summaryExpenses.textContent = `Despesas: ${formatCurrencyBR(expenseTotalsPeriod)}`;
-    if (summaryProfit) summaryProfit.textContent = `Lucro estimado: ${formatCurrencyBR(revenue - costOfGoods - expenseTotalsPeriod)}`;
+    if (summaryRevenue) summaryRevenue.textContent = `Faturamento Total: ${formatCurrencyBR(periodRevenueTotal)}`;
+    if (summaryLoss) summaryLoss.textContent = `Perdas: ${formatCurrencyBR(periodLossTotal)}`;
+    if (summaryExpenses) summaryExpenses.textContent = `Despesas: ${formatCurrencyBR(periodExpensesTotal)}`;
+    if (summaryProfit) summaryProfit.textContent = `Lucro estimado: ${formatCurrencyBR(periodProfitTotal)}`;
     const donutOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -4021,7 +4155,7 @@ function renderNBCharts() {
         ]
     };
     const revenueExpenseLabels = periodSnapshots.map(item => item.label);
-    const revenueExpenseRevenue = periodSnapshots.map(item => item.revenue);
+    const revenueExpenseRevenue = periodSnapshots.map(item => item.faturamentoTotal);
     const revenueExpenseCosts = periodSnapshots.map(item => item.totalExpenses);
     const revenueExpenseTooltips = periodSnapshots.map(item => item.tooltip);
     const revenueExpensesData = {
@@ -4033,13 +4167,17 @@ function renderNBCharts() {
     };
     const financeLabels = periodSnapshots.map(item => item.label);
     const financeTooltips = periodSnapshots.map(item => item.tooltip);
-    const financeEntradas = periodSnapshots.map(item => item.entradas);
-    const financeSaidas = periodSnapshots.map(item => item.saidas);
-    const financeResultado = periodSnapshots.map(item => item.resultado);
+    const financeCaixaInicial = periodSnapshots.map(item => item.caixaInicial);
+    const financeCaixaFinal = periodSnapshots.map(item => item.caixaFinal);
+    const financeEntradas = periodSnapshots.map(item => item.entradasTotal);
+    const financeSaidas = periodSnapshots.map(item => item.totalExpenses + Number(item.sangria || 0));
+    const financeResultado = periodSnapshots.map(item => item.resultadoFinanceiro);
     const financePeriodData = {
         labels: financeLabels,
         datasets: [
-            { label: 'Entradas', data: financeEntradas, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.18)', pointBackgroundColor: '#3b82f6', tension: 0.3, fill: false },
+            { label: 'Caixa Inicial', data: financeCaixaInicial, borderColor: '#6b7280', backgroundColor: 'rgba(107, 114, 128, 0.18)', pointBackgroundColor: '#6b7280', tension: 0.3, fill: false },
+            { label: 'Caixa Final', data: financeCaixaFinal, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.18)', pointBackgroundColor: '#3b82f6', tension: 0.3, fill: false },
+            { label: 'Entradas', data: financeEntradas, borderColor: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.18)', pointBackgroundColor: '#22c55e', tension: 0.3, fill: false },
             { label: 'Saídas', data: financeSaidas, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.18)', pointBackgroundColor: '#ef4444', tension: 0.3, fill: false },
             { label: 'Resultado', data: financeResultado, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.18)', pointBackgroundColor: '#f59e0b', tension: 0.3, fill: false }
         ]
@@ -4178,35 +4316,20 @@ function syncNBPanelDayMarkers() {
 }
 function renderNBFinanceForm() {
     const record = getNBFinanceRecord(nbSelectedDate) || {};
-    const fieldMap = {
-        'nb-fin-caixa-inicial': 'Caixa_Inicial',
-        'nb-fin-caixa-final': 'Caixa_Final',
-        'nb-fin-sangria': 'Sangria',
-        'nb-fin-entrada-dinheiro': 'Entrada_Dinheiro',
-        'nb-fin-entrada-pix': 'Entrada_PIX',
-        'nb-fin-entrada-app': 'Entrada_App',
-        'nb-fin-entrada-maquineta': 'Entrada_Maquineta'
-    };
+    const fieldMap = getNBFinanceFieldMap('nb-fin-');
     Object.entries(fieldMap).forEach(([id, key]) => {
         const input = document.getElementById(id);
         if (input) input.value = Number(record[key] || 0);
     });
     const summary = document.getElementById('nb-finance-summary');
-    const totalEntradas = ['Entrada_Dinheiro', 'Entrada_PIX', 'Entrada_App', 'Entrada_Maquineta'].reduce((sum, key) => sum + Number(record[key] || 0), 0);
-    const totalDespesas = getNBExpenseRecords(nbSelectedDate).filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
-    const totalVales = getNBExpenseRecords(nbSelectedDate).filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
-    if (summary) summary.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-3 gap-3"><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Entradas</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totalEntradas)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Despesas</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totalDespesas)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Vales</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totalVales)}</div></div></div>`;
+    const totals = getNBFinanceDaySummary(nbSelectedDate);
+    if (summary) summary.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-4 gap-3"><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento em dinheiro</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoDinheiro)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento total</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoTotal)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Despesas + Vales</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.despesas + totals.vales)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Entradas em cartões/Pix</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.entradasPix + totals.entradasApp + totals.entradasMaquineta)}</div></div></div>`;
     const financePeriodList = document.getElementById('nb-finance-period-list');
     if (financePeriodList) {
         const periodRecords = getNBFinanceRecordsInPeriod();
         financePeriodList.innerHTML = periodRecords.map(item => {
             const dateValue = getNBLinkedDateValue(item);
-            const expenseRecords = getNBExpenseRecords(dateValue);
-            const despesas = expenseRecords.filter(exp => exp.Tipo === 'Despesa').reduce((sum, exp) => sum + Number(exp.Valor || 0), 0);
-            const vales = expenseRecords.filter(exp => exp.Tipo === 'Vale').reduce((sum, exp) => sum + Number(exp.Valor || 0), 0);
-            const entradas = getNBFinanceEntryTotal(item);
-            const sangria = Number(item.Sangria || 0);
-            const saidas = despesas + vales + sangria;
+            const totals = getNBFinanceDaySummary(dateValue);
             return `
                 <article class="rounded-lg border dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30 flex flex-col gap-2">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
@@ -4214,13 +4337,13 @@ function renderNBFinanceForm() {
                             <p class="font-semibold text-gray-800 dark:text-white">${parseDateOnly(dateValue).toLocaleDateString('pt-BR')}</p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">${getNBStatusForDate(dateValue)}</p>
                         </div>
-                        <span class="text-sm font-semibold text-brand-gold">${formatCurrencyBR(item.Caixa_Final || 0)}</span>
+                        <span class="text-sm font-semibold text-brand-gold">${formatCurrencyBR(totals.faturamentoTotal)}</span>
                     </div>
                     <div class="grid grid-cols-2 gap-2 text-xs">
-                        <div class="rounded-md bg-white dark:bg-gray-800 p-2"><span class="block text-gray-500 dark:text-gray-400">Caixa Inicial</span><strong class="text-gray-800 dark:text-white">${formatCurrencyBR(item.Caixa_Inicial || 0)}</strong></div>
-                        <div class="rounded-md bg-white dark:bg-gray-800 p-2"><span class="block text-gray-500 dark:text-gray-400">Caixa Final</span><strong class="text-gray-800 dark:text-white">${formatCurrencyBR(item.Caixa_Final || 0)}</strong></div>
-                        <div class="rounded-md bg-white dark:bg-gray-800 p-2"><span class="block text-gray-500 dark:text-gray-400">Entradas</span><strong class="text-gray-800 dark:text-white">${formatCurrencyBR(entradas)}</strong></div>
-                        <div class="rounded-md bg-white dark:bg-gray-800 p-2"><span class="block text-gray-500 dark:text-gray-400">Saídas</span><strong class="text-gray-800 dark:text-white">${formatCurrencyBR(saidas)}</strong></div>
+                        <div class="rounded-md bg-white dark:bg-gray-800 p-2"><span class="block text-gray-500 dark:text-gray-400">Caixa Inicial</span><strong class="text-gray-800 dark:text-white">${formatCurrencyBR(totals.caixaInicial)}</strong></div>
+                        <div class="rounded-md bg-white dark:bg-gray-800 p-2"><span class="block text-gray-500 dark:text-gray-400">Caixa Final</span><strong class="text-gray-800 dark:text-white">${formatCurrencyBR(totals.caixaFinal)}</strong></div>
+                        <div class="rounded-md bg-white dark:bg-gray-800 p-2"><span class="block text-gray-500 dark:text-gray-400">Faturamento em dinheiro</span><strong class="text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoDinheiro)}</strong></div>
+                        <div class="rounded-md bg-white dark:bg-gray-800 p-2"><span class="block text-gray-500 dark:text-gray-400">Faturamento total</span><strong class="text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoTotal)}</strong></div>
                     </div>
                     <div class="flex gap-2 justify-end mt-2">
                         <button type="button" class="nb-finance-edit-btn px-3 py-1 rounded bg-blue-100 text-blue-800 hover:bg-blue-200" data-id="${item.Id}"><i class="fas fa-edit"></i> Editar</button>
@@ -4229,6 +4352,39 @@ function renderNBFinanceForm() {
                 </article>
             `;
         }).join('') || '<div class="text-sm text-gray-500 dark:text-gray-400">Nenhum financeiro encontrado no período selecionado.</div>';
+    }
+}
+function renderNBPanelFinanceModal() {
+    const today = toDateInputValue(new Date());
+    const label = document.getElementById('nb-panel-finance-date-label');
+    const summary = document.getElementById('nb-panel-finance-summary');
+    const record = getNBFinanceRecord(today) || {};
+    const fieldMap = getNBFinanceFieldMap('nb-panel-fin-');
+    Object.entries(fieldMap).forEach(([id, key]) => {
+        const input = document.getElementById(id);
+        if (input) input.value = Number(record[key] || 0);
+    });
+    if (label) label.textContent = `Registro do dia ${parseDateOnly(today).toLocaleDateString('pt-BR')}`;
+    const totals = getNBFinanceDaySummary(today);
+    if (summary) summary.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-4 gap-3"><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento em dinheiro</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoDinheiro)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento total</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoTotal)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Despesas + Vales</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.despesas + totals.vales)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Entradas em cartões/Pix</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.entradasPix + totals.entradasApp + totals.entradasMaquineta)}</div></div></div>`;
+}
+async function handleNBPanelFinanceSubmit(e) {
+    e.preventDefault();
+    if (!canAccessNB() || canAccessNBManagement() || !isNBOperatorRole()) return;
+    const today = toDateInputValue(new Date());
+    const controlDay = await ensureNBControlDay(today);
+    if (!controlDay) return;
+    const fieldMap = getNBFinanceFieldMap('nb-panel-fin-');
+    const body = Object.fromEntries(Object.entries(fieldMap).map(([id, key]) => [key, Number(document.getElementById(id)?.value || 0)]));
+    const existing = getNBFinanceRecord(today);
+    const result = await nocoFetch(existing ? `${TABLE_IDS.NB_Financeiro}/${existing.Id}` : TABLE_IDS.NB_Financeiro, {
+        method: existing ? 'PATCH' : 'POST',
+        body: JSON.stringify(existing ? body : { ...body, Data: { Id: controlDay.Id } })
+    });
+    if (result) {
+        await fetchNBFinanceiro();
+        renderNBModule();
+        hideModal(document.getElementById('nb-panel-finance-modal'));
     }
 }
 function renderNBDiaryFeed() {
@@ -4405,6 +4561,8 @@ async function loadNBModuleData(force = false) {
     const today = toDateInputValue(new Date());
     if (!nbSelectedDate) setNBSelectedDate(today);
     await ensureNBControlDay(today);
+    await normalizeNBCarryForwardAll();
+    await fetchNBApontamentos();
     dataLoaded['nosso-bolo'] = true;
     renderNBModule();
     hideLoadingOverlay();
@@ -4421,6 +4579,82 @@ function updateNBCellDom(cell) {
     const availableEl = cell.querySelector('[data-nb-available]');
     if (vendaEl) vendaEl.textContent = venda;
     if (availableEl) availableEl.textContent = available;
+}
+function getNextNBOperationalDate(dateString) {
+    let nextDate = addDays(parseDateOnly(dateString), 1);
+    while (nextDate.getDay() === 0) {
+        nextDate = addDays(nextDate, 1);
+    }
+    return toDateInputValue(nextDate);
+}
+async function syncNBSobraCarryForwardFrom(dateString, productId) {
+    const currentRecord = getNBApontamento(dateString, productId);
+    if (!currentRecord) return;
+    let carryValue = normalizeNBNumber(currentRecord.Qtd_Sobra_Atual);
+    let nextDate = getNextNBOperationalDate(dateString);
+    const visited = new Set();
+    while (getNBControlDayByDate(nextDate) && !visited.has(nextDate)) {
+        visited.add(nextDate);
+        const nextControlDay = await ensureNBControlDay(nextDate);
+        if (!nextControlDay) break;
+        const nextRecord = getNBApontamento(nextDate, productId);
+        if (nextRecord?.Id) {
+            const payload = {
+                Qtd_Sobra_Anterior: carryValue,
+                Qtd_Venda: computeNBVenda({ ...nextRecord, Qtd_Sobra_Anterior: carryValue })
+            };
+            const result = await nocoFetch(`${TABLE_IDS.NB_Apontamentos}/${nextRecord.Id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+            if (result) {
+                Object.assign(nextRecord, result);
+            } else {
+                Object.assign(nextRecord, payload);
+            }
+        } else {
+            const payload = {
+                Data: { Id: nextControlDay.Id },
+                Produto: { Id: Number(productId) },
+                Qtd_Sobra_Anterior: carryValue,
+                Qtd_Producao: 0,
+                Qtd_Perda: 0,
+                Qtd_Sobra_Atual: 0,
+                Qtd_Venda: carryValue
+            };
+            const result = await nocoFetch(TABLE_IDS.NB_Apontamentos, { method: 'POST', body: JSON.stringify(payload) });
+            if (result) {
+                nbApontamentosData.push(result);
+            }
+        }
+        carryValue = normalizeNBNumber(getNBApontamento(nextDate, productId)?.Qtd_Sobra_Atual);
+        nextDate = getNextNBOperationalDate(nextDate);
+    }
+}
+async function normalizeNBCarryForwardAll() {
+    const activeProducts = nbProdutosData.filter(product => product.Ativo !== false);
+    const controlDates = nbControleDiasData
+        .map(day => day.Data)
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
+    for (const product of activeProducts) {
+        let previousCarry = 0;
+        for (const dateString of controlDates) {
+            const record = getNBApontamento(dateString, product.Id);
+            if (!record) continue;
+            const desiredPrevious = previousCarry;
+            if (normalizeNBNumber(record.Qtd_Sobra_Anterior) !== desiredPrevious) {
+                const payload = {
+                    Qtd_Sobra_Anterior: desiredPrevious,
+                    Qtd_Venda: computeNBVenda({ ...record, Qtd_Sobra_Anterior: desiredPrevious })
+                };
+                const result = await nocoFetch(`${TABLE_IDS.NB_Apontamentos}/${record.Id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+                if (result) {
+                    Object.assign(record, result);
+                } else {
+                    Object.assign(record, payload);
+                }
+            }
+            previousCarry = normalizeNBNumber(record.Qtd_Sobra_Atual);
+        }
+    }
 }
 function upsertLocalNBApontamento(dateString, productId, values) {
     let record = getNBApontamento(dateString, productId);
@@ -4452,8 +4686,9 @@ async function saveNBPanelCell(dateString, productId, cell) {
     const body = existing.Id ? values : { ...values, Data: { Id: controlDay.Id }, Produto: { Id: Number(productId) } };
     const result = await nocoFetch(endpoint, { method, body: JSON.stringify(body) });
     if (result) Object.assign(existing, result);
-    renderNBPanelTotals();
-    renderNBCharts();
+    await syncNBSobraCarryForwardFrom(dateString, Number(productId));
+    await fetchNBApontamentos();
+    renderNBModule();
 }
 async function handleNBFinanceSubmit(e) {
     e.preventDefault();
@@ -4700,33 +4935,7 @@ function renderNBProductsList() {
     container.style.paddingRight = needsScroll ? '0.5rem' : '';
 }
 async function handleNBCloseDay() {
-    if (!canAccessNBManagement()) return;
-    const controlDay = await ensureNBControlDay(nbSelectedDate);
-    if (!controlDay || controlDay.Status === 'Fechado') return;
-    const confirmed = await showConfirmModal(`Fechar o dia ${parseDateOnly(nbSelectedDate).toLocaleDateString('pt-BR')} e transferir as sobras para o próximo dia?`);
-    if (!confirmed) return;
-    const patchResult = await nocoFetch(`${TABLE_IDS.NB_Controle_Dias}/${controlDay.Id}`, { method: 'PATCH', body: JSON.stringify({ Status: 'Fechado' }) });
-    if (!patchResult) return;
-    await fetchNBControleDias();
-    // Calcular próximo dia útil (pular domingo)
-    let nextDateObj = addDays(parseDateOnly(nbSelectedDate), 1);
-    if (nextDateObj.getDay() === 0) { // 0 = domingo
-        nextDateObj = addDays(nextDateObj, 1); // pula para segunda
-    }
-    const nextDate = toDateInputValue(nextDateObj);
-    const nextControlDay = await ensureNBControlDay(nextDate);
-    if (nextControlDay) {
-        for (const product of nbProdutosData.filter(item => item.Ativo !== false)) {
-            const currentRecord = getNBApontamento(nbSelectedDate, product.Id);
-            const carryValue = normalizeNBNumber(currentRecord?.Qtd_Sobra_Atual);
-            const nextRecord = getNBApontamento(nextDate, product.Id);
-            if (nextRecord?.Id) {
-                await nocoFetch(`${TABLE_IDS.NB_Apontamentos}/${nextRecord.Id}`, { method: 'PATCH', body: JSON.stringify({ Qtd_Sobra_Anterior: carryValue, Qtd_Venda: computeNBVenda({ ...nextRecord, Qtd_Sobra_Anterior: carryValue }) }) });
-            } else {
-                await nocoFetch(TABLE_IDS.NB_Apontamentos, { method: 'POST', body: JSON.stringify({ Qtd_Sobra_Anterior: carryValue, Qtd_Producao: 0, Qtd_Perda: 0, Qtd_Sobra_Atual: 0, Qtd_Venda: carryValue, Data: { Id: nextControlDay.Id }, Produto: { Id: product.Id } }) });
-            }
-        }
-    }
+    await normalizeNBCarryForwardAll();
     await fetchNBApontamentos();
     renderNBModule();
 }
@@ -9318,8 +9527,12 @@ function renderReembolsos(data = reembolsosData) {
 }
 
   // --- Inicialização ---
-    function initializeApp() {
+function initializeApp() {
         document.getElementById('nb-finance-form')?.addEventListener('submit', handleNBFinanceSubmit);
+        document.getElementById('nb-panel-finance-btn')?.addEventListener('click', openNBPanelFinanceModal);
+        document.getElementById('nb-panel-finance-form')?.addEventListener('submit', handleNBPanelFinanceSubmit);
+        document.getElementById('close-nb-panel-finance-modal')?.addEventListener('click', () => hideModal(document.getElementById('nb-panel-finance-modal')));
+        document.getElementById('close-nb-panel-finance-form')?.addEventListener('click', () => hideModal(document.getElementById('nb-panel-finance-modal')));
         document.getElementById('nb-expense-form')?.addEventListener('submit', handleNBExpenseSubmit);
         document.getElementById('nb-diary-form')?.addEventListener('submit', handleNBDiarySubmit);
         document.getElementById('nb-category-form')?.addEventListener('submit', handleNBCategorySubmit);
@@ -9456,7 +9669,7 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
                 });
             }
         });
-        const customHandledForms = new Set(['nb-finance-form', 'nb-expense-form', 'nb-diary-form', 'nb-category-form', 'nb-product-form']);
+        const customHandledForms = new Set(['nb-finance-form', 'nb-panel-finance-form', 'nb-expense-form', 'nb-diary-form', 'nb-category-form', 'nb-product-form']);
         document.querySelectorAll('form').forEach(form => { 
             if (form.id === 'report-form') { form.addEventListener('submit', generatePdfReport); } 
             else if (form.id !== 'login-form' && !customHandledForms.has(form.id)) { form.addEventListener('submit', handleFormSubmit); }
