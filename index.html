@@ -546,11 +546,21 @@ body {
                                         <div><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Caixa Inicial</label><input type="number" step="0.01" id="nb-fin-caixa-inicial" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
                                         <div><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Caixa Final</label><input type="number" step="0.01" id="nb-fin-caixa-final" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
                                         <div><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Sangria</label><input type="number" step="0.01" id="nb-fin-sangria" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
-                                        <div><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Entrada Dinheiro</label><input type="number" step="0.01" id="nb-fin-entrada-dinheiro" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
+                                        <div class="md:col-span-2">
+                                            <div class="rounded-lg border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 p-4">
+                                                <span class="block text-sm font-medium text-gray-900 dark:text-white">Entrada Dinheiro</span>
+                                                <span class="block text-xs text-gray-500 dark:text-gray-300 mt-1">Calculado automaticamente pela fórmula do faturamento em dinheiro.</span>
+                                                <div id="nb-fin-entrada-dinheiro-display" class="mt-2 text-lg font-bold text-brand-gold">R$ 0,00</div>
+                                            </div>
+                                        </div>
                                         <div><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Entrada PIX</label><input type="number" step="0.01" id="nb-fin-entrada-pix" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
                                         <div><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Entrada App</label><input type="number" step="0.01" id="nb-fin-entrada-app" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
                                         <div><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Entrada Maquineta</label><input type="number" step="0.01" id="nb-fin-entrada-maquineta" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
-                                        <div class="md:col-span-2 flex justify-end">
+                                        <div class="md:col-span-2 flex flex-wrap items-center justify-between gap-3">
+                                            <div class="flex items-center gap-2">
+                                                <span id="nb-fin-status-pill" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Aberto</span>
+                                                <button type="button" id="nb-fin-status-toggle-btn" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Fechar Dia</button>
+                                            </div>
                                             <button type="submit" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Salvar Financeiro</button>
                                         </div>
                                     </form>
@@ -2233,7 +2243,7 @@ body {
         </div>
     </div>
     <div id="nb-panel-finance-modal" class="fixed inset-0 z-[60] items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
-        <div class="w-full max-w-3xl p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate max-h-[90vh] flex flex-col">
+        <div class="w-full max-w-5xl p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate max-h-[90vh] flex flex-col">
             <div class="flex items-start justify-between gap-4 mb-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900 dark:text-white">Financeiro do Dia</h2>
@@ -2255,8 +2265,11 @@ body {
                     <input type="number" step="0.01" id="nb-panel-fin-sangria" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                 </div>
                 <div>
-                    <label for="nb-panel-fin-entrada-dinheiro" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Entrada Dinheiro</label>
-                    <input type="number" step="0.01" id="nb-panel-fin-entrada-dinheiro" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <div class="rounded-lg border border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 p-4 h-full">
+                        <span class="block text-sm font-medium text-gray-900 dark:text-white">Entrada Dinheiro</span>
+                        <span class="block text-xs text-gray-500 dark:text-gray-300 mt-1">Valor calculado automaticamente.</span>
+                        <div id="nb-panel-fin-entrada-dinheiro-display" class="mt-2 text-lg font-bold text-brand-gold">R$ 0,00</div>
+                    </div>
                 </div>
                 <div>
                     <label for="nb-panel-fin-entrada-pix" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Entrada PIX</label>
@@ -2273,9 +2286,46 @@ body {
                 <div class="md:col-span-2">
                     <div id="nb-panel-finance-summary" class="text-sm text-gray-600 dark:text-gray-300"></div>
                 </div>
-                <div class="md:col-span-2 flex justify-end gap-3 pt-2">
-                    <button type="button" id="close-nb-panel-finance-form" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
-                    <button type="submit" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Salvar Financeiro</button>
+                <div class="md:col-span-2">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-2">
+                            <button type="button" id="nb-panel-expense-toggle" class="px-4 py-2 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200">Adicionar Despesa/Vale</button>
+                            <span id="nb-panel-expense-status" class="text-xs text-gray-500 dark:text-gray-400"></span>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="button" id="close-nb-panel-finance-form" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+                            <button type="submit" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Salvar Financeiro</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="nb-panel-expense-section" class="md:col-span-2 hidden border-t dark:border-gray-700 pt-4">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                        <input type="hidden" id="nb-panel-expense-id">
+                        <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo</label>
+                            <select id="nb-panel-expense-type" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <option value="Despesa">Despesa</option>
+                                <option value="Vale">Vale</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descrição</label>
+                            <input type="text" id="nb-panel-expense-description" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div>
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor</label>
+                            <input type="number" step="0.01" id="nb-panel-expense-value" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        </div>
+                        <div class="md:col-span-4 flex justify-end gap-2">
+                            <button type="button" id="nb-panel-expense-cancel-btn" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+                            <button type="button" id="nb-panel-expense-save-btn" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Salvar Lançamento</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Despesas e Vales do dia</h4>
+                        <span class="text-xs text-brand-gold">Conectado ao dia atual</span>
+                    </div>
+                    <div id="nb-panel-expense-list" class="space-y-3"></div>
                 </div>
             </form>
         </div>
@@ -3189,13 +3239,19 @@ function getNBControlDayByDate(dateString) {
     return nbControleDiasData.find(day => day.Data === dateString) || null;
 }
 function getNBStatusForDate(dateString) {
-    return getNBControlDayByDate(dateString)?.Status || 'Aberto';
+    return getNBFinanceRecord(dateString)?.Status || getNBControlDayByDate(dateString)?.Status || 'Aberto';
 }
 function getNBApontamento(dateString, productId) {
     return nbApontamentosData.find(item => getNBLinkedDateValue(item) === dateString && getNBLinkedProductId(item) == productId) || null;
 }
 function getNBFinanceRecord(dateString) {
     return nbFinanceiroData.find(item => getNBLinkedDateValue(item) === dateString) || null;
+}
+function getNBFinanceDayStatus(dateString) {
+    return getNBFinanceRecord(dateString)?.Status || 'Aberto';
+}
+function isNBFinanceDayOpen(dateString) {
+    return getNBFinanceDayStatus(dateString) !== 'Fechado';
 }
 function getNBExpenseRecords(dateString) {
     return nbDespesasValesData.filter(item => getNBLinkedDateValue(item) === dateString);
@@ -3307,7 +3363,8 @@ function getNBFinanceDaySummary(dateString) {
         despesas,
         vales,
         faturamentoDinheiro,
-        faturamentoTotal
+        faturamentoTotal,
+        status: financeRecord.Status || 'Aberto'
     };
 }
 function getNBFinanceFieldMap(prefix) {
@@ -3321,13 +3378,24 @@ function getNBFinanceFieldMap(prefix) {
         [`${prefix}entrada-maquineta`]: 'Entrada_Maquineta'
     };
 }
+function buildNBFinancePayload(prefix, dateString, statusOverride = null) {
+    const fieldMap = getNBFinanceFieldMap(prefix);
+    const body = Object.fromEntries(Object.entries(fieldMap).map(([id, key]) => [key, Number(document.getElementById(id)?.value || 0)]));
+    const despesas = getNBExpenseRecords(dateString).filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    const vales = getNBExpenseRecords(dateString).filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    body.Entrada_Dinheiro = (Number(body.Caixa_Final || 0) + Number(body.Sangria || 0) + despesas + vales) - Number(body.Caixa_Inicial || 0);
+    body.Status = statusOverride || getNBFinanceDayStatus(dateString);
+    return body;
+}
 function syncNBPanelFinanceButtonVisibility() {
     const btn = document.getElementById('nb-panel-finance-btn');
     if (!btn) return;
-    btn.classList.toggle('hidden', !isNBOperatorRole());
+    const today = toDateInputValue(new Date());
+    btn.classList.toggle('hidden', !isNBOperatorRole() || !isNBFinanceDayOpen(today));
 }
 function openNBPanelFinanceModal() {
-    if (!isNBOperatorRole()) return;
+    if (!isNBOperatorRole() || !isNBFinanceDayOpen(toDateInputValue(new Date()))) return;
+    resetNBPanelExpenseForm();
     renderNBPanelFinanceModal();
     showModal(document.getElementById('nb-panel-finance-modal'));
 }
@@ -4321,9 +4389,22 @@ function renderNBFinanceForm() {
         const input = document.getElementById(id);
         if (input) input.value = Number(record[key] || 0);
     });
+    const status = getNBFinanceDayStatus(nbSelectedDate);
+    const statusPill = document.getElementById('nb-fin-status-pill');
+    const statusToggle = document.getElementById('nb-fin-status-toggle-btn');
+    const entryDisplay = document.getElementById('nb-fin-entrada-dinheiro-display');
+    if (statusPill) {
+        statusPill.textContent = status;
+        statusPill.className = `inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${status === 'Fechado' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'}`;
+    }
+    if (statusToggle) {
+        statusToggle.textContent = status === 'Fechado' ? 'Reabrir Dia' : 'Fechar Dia';
+        statusToggle.dataset.status = status;
+    }
     const summary = document.getElementById('nb-finance-summary');
     const totals = getNBFinanceDaySummary(nbSelectedDate);
-    if (summary) summary.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-4 gap-3"><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento em dinheiro</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoDinheiro)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento total</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoTotal)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Despesas + Vales</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.despesas + totals.vales)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Entradas em cartões/Pix</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.entradasPix + totals.entradasApp + totals.entradasMaquineta)}</div></div></div>`;
+    if (entryDisplay) entryDisplay.textContent = formatCurrencyBR(totals.faturamentoDinheiro);
+    if (summary) summary.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-5 gap-3"><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento em dinheiro</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoDinheiro)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento total</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoTotal)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Despesas + Vales</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.despesas + totals.vales)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Entradas em cartões/Pix</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.entradasPix + totals.entradasApp + totals.entradasMaquineta)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Status do dia</span><div class="font-bold ${status === 'Fechado' ? 'text-red-600 dark:text-red-300' : 'text-green-600 dark:text-green-300'}">${status}</div></div></div>`;
     const financePeriodList = document.getElementById('nb-finance-period-list');
     if (financePeriodList) {
         const periodRecords = getNBFinanceRecordsInPeriod();
@@ -4358,6 +4439,10 @@ function renderNBPanelFinanceModal() {
     const today = toDateInputValue(new Date());
     const label = document.getElementById('nb-panel-finance-date-label');
     const summary = document.getElementById('nb-panel-finance-summary');
+    const entryDisplay = document.getElementById('nb-panel-fin-entrada-dinheiro-display');
+    const statusText = document.getElementById('nb-panel-expense-status');
+    const toggleBtn = document.getElementById('nb-panel-expense-toggle');
+    const expenseSection = document.getElementById('nb-panel-expense-section');
     const record = getNBFinanceRecord(today) || {};
     const fieldMap = getNBFinanceFieldMap('nb-panel-fin-');
     Object.entries(fieldMap).forEach(([id, key]) => {
@@ -4366,16 +4451,40 @@ function renderNBPanelFinanceModal() {
     });
     if (label) label.textContent = `Registro do dia ${parseDateOnly(today).toLocaleDateString('pt-BR')}`;
     const totals = getNBFinanceDaySummary(today);
-    if (summary) summary.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-4 gap-3"><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento em dinheiro</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoDinheiro)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento total</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoTotal)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Despesas + Vales</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.despesas + totals.vales)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Entradas em cartões/Pix</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.entradasPix + totals.entradasApp + totals.entradasMaquineta)}</div></div></div>`;
+    if (entryDisplay) entryDisplay.textContent = formatCurrencyBR(totals.faturamentoDinheiro);
+    if (statusText) statusText.textContent = `Status do dia: ${totals.status}`;
+    if (summary) summary.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-5 gap-3"><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento em dinheiro</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoDinheiro)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento total</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoTotal)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Despesas + Vales</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.despesas + totals.vales)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Entradas em cartões/Pix</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.entradasPix + totals.entradasApp + totals.entradasMaquineta)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Status do dia</span><div class="font-bold ${totals.status === 'Fechado' ? 'text-red-600 dark:text-red-300' : 'text-green-600 dark:text-green-300'}">${totals.status}</div></div></div>`;
+    if (toggleBtn) toggleBtn.style.display = isNBFinanceDayOpen(today) ? '' : 'none';
+    if (toggleBtn) toggleBtn.textContent = expenseSection?.classList.contains('hidden') ? 'Adicionar Despesa/Vale' : 'Ocultar Despesas/Vale';
+    if (expenseSection) expenseSection.classList.toggle('hidden', !isNBFinanceDayOpen(today));
+    const expenseList = document.getElementById('nb-panel-expense-list');
+    if (expenseList) {
+        const records = getNBExpenseRecords(today).sort((a, b) => (a.Tipo || '').localeCompare(b.Tipo || '') || (a.Descricao || '').localeCompare(b.Descricao || ''));
+        expenseList.innerHTML = records.map(item => `
+            <article class="rounded-lg border dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30 flex flex-col gap-2">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <p class="font-semibold text-gray-800 dark:text-white">${item.Tipo}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">${item.Descricao || '-'}</p>
+                    </div>
+                    <span class="font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(item.Valor)}</span>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" class="nb-panel-expense-edit-btn px-3 py-1 rounded bg-blue-100 text-blue-800 hover:bg-blue-200" data-id="${item.Id}"><i class="fas fa-edit"></i> Editar</button>
+                    <button type="button" class="nb-panel-expense-delete-btn px-3 py-1 rounded bg-red-100 text-red-800 hover:bg-red-200" data-id="${item.Id}"><i class="fas fa-trash"></i> Apagar</button>
+                </div>
+            </article>
+        `).join('') || '<div class="text-sm text-gray-500 dark:text-gray-400">Nenhuma despesa ou vale lançado para hoje.</div>';
+    }
 }
 async function handleNBPanelFinanceSubmit(e) {
     e.preventDefault();
     if (!canAccessNB() || canAccessNBManagement() || !isNBOperatorRole()) return;
     const today = toDateInputValue(new Date());
+    if (!isNBFinanceDayOpen(today)) return;
     const controlDay = await ensureNBControlDay(today);
     if (!controlDay) return;
-    const fieldMap = getNBFinanceFieldMap('nb-panel-fin-');
-    const body = Object.fromEntries(Object.entries(fieldMap).map(([id, key]) => [key, Number(document.getElementById(id)?.value || 0)]));
+    const body = buildNBFinancePayload('nb-panel-fin-', today, getNBFinanceDayStatus(today));
     const existing = getNBFinanceRecord(today);
     const result = await nocoFetch(existing ? `${TABLE_IDS.NB_Financeiro}/${existing.Id}` : TABLE_IDS.NB_Financeiro, {
         method: existing ? 'PATCH' : 'POST',
@@ -4385,6 +4494,53 @@ async function handleNBPanelFinanceSubmit(e) {
         await fetchNBFinanceiro();
         renderNBModule();
         hideModal(document.getElementById('nb-panel-finance-modal'));
+    }
+}
+function resetNBPanelExpenseForm() {
+    document.getElementById('nb-panel-expense-id').value = '';
+    document.getElementById('nb-panel-expense-type').value = 'Despesa';
+    document.getElementById('nb-panel-expense-description').value = '';
+    document.getElementById('nb-panel-expense-value').value = '';
+}
+async function handleNBPanelExpenseSubmit() {
+    if (!canAccessNB() || canAccessNBManagement() || !isNBOperatorRole()) return;
+    const today = toDateInputValue(new Date());
+    if (!isNBFinanceDayOpen(today)) return;
+    const controlDay = await ensureNBControlDay(today);
+    if (!controlDay) return;
+    const expenseId = document.getElementById('nb-panel-expense-id').value;
+    const body = {
+        Tipo: document.getElementById('nb-panel-expense-type').value,
+        Descricao: document.getElementById('nb-panel-expense-description').value,
+        Valor: Number(document.getElementById('nb-panel-expense-value').value || 0)
+    };
+    const result = await nocoFetch(expenseId ? `${TABLE_IDS.NB_Despesas_Vales}/${expenseId}` : TABLE_IDS.NB_Despesas_Vales, {
+        method: expenseId ? 'PATCH' : 'POST',
+        body: JSON.stringify(expenseId ? body : { ...body, Data: { Id: controlDay.Id } })
+    });
+    if (result) {
+        await fetchNBDespesasVales();
+        resetNBPanelExpenseForm();
+        renderNBPanelFinanceModal();
+        renderNBModule();
+    }
+}
+async function handleNBFinanceStatusToggle() {
+    if (!canAccessNBManagement()) return;
+    const today = nbSelectedDate;
+    const controlDay = await ensureNBControlDay(today);
+    if (!controlDay) return;
+    const nextStatus = getNBFinanceDayStatus(today) === 'Fechado' ? 'Aberto' : 'Fechado';
+    const body = buildNBFinancePayload('nb-fin-', today, nextStatus);
+    const existing = getNBFinanceRecord(today);
+    const result = await nocoFetch(existing ? `${TABLE_IDS.NB_Financeiro}/${existing.Id}` : TABLE_IDS.NB_Financeiro, {
+        method: existing ? 'PATCH' : 'POST',
+        body: JSON.stringify(existing ? body : { ...body, Data: { Id: controlDay.Id } })
+    });
+    if (result) {
+        await fetchNBFinanceiro();
+        renderNBModule();
+        syncNBPanelFinanceButtonVisibility();
     }
 }
 function renderNBDiaryFeed() {
@@ -4695,15 +4851,7 @@ async function handleNBFinanceSubmit(e) {
     if (!canAccessNBManagement()) return;
     const controlDay = await ensureNBControlDay(nbSelectedDate);
     if (!controlDay) return;
-    const body = {
-        Caixa_Inicial: Number(document.getElementById('nb-fin-caixa-inicial').value || 0),
-        Caixa_Final: Number(document.getElementById('nb-fin-caixa-final').value || 0),
-        Sangria: Number(document.getElementById('nb-fin-sangria').value || 0),
-        Entrada_Dinheiro: Number(document.getElementById('nb-fin-entrada-dinheiro').value || 0),
-        Entrada_PIX: Number(document.getElementById('nb-fin-entrada-pix').value || 0),
-        Entrada_App: Number(document.getElementById('nb-fin-entrada-app').value || 0),
-        Entrada_Maquineta: Number(document.getElementById('nb-fin-entrada-maquineta').value || 0)
-    };
+    const body = buildNBFinancePayload('nb-fin-', nbSelectedDate, getNBFinanceDayStatus(nbSelectedDate));
     const existing = getNBFinanceRecord(nbSelectedDate);
     const result = await nocoFetch(existing ? `${TABLE_IDS.NB_Financeiro}/${existing.Id}` : TABLE_IDS.NB_Financeiro, {
         method: existing ? 'PATCH' : 'POST',
@@ -9533,6 +9681,15 @@ function initializeApp() {
         document.getElementById('nb-panel-finance-form')?.addEventListener('submit', handleNBPanelFinanceSubmit);
         document.getElementById('close-nb-panel-finance-modal')?.addEventListener('click', () => hideModal(document.getElementById('nb-panel-finance-modal')));
         document.getElementById('close-nb-panel-finance-form')?.addEventListener('click', () => hideModal(document.getElementById('nb-panel-finance-modal')));
+        document.getElementById('nb-panel-expense-save-btn')?.addEventListener('click', handleNBPanelExpenseSubmit);
+        document.getElementById('nb-panel-expense-cancel-btn')?.addEventListener('click', resetNBPanelExpenseForm);
+        document.getElementById('nb-panel-expense-toggle')?.addEventListener('click', () => {
+            const section = document.getElementById('nb-panel-expense-section');
+            const toggleBtn = document.getElementById('nb-panel-expense-toggle');
+            if (section) section.classList.toggle('hidden');
+            if (toggleBtn && section) toggleBtn.textContent = section.classList.contains('hidden') ? 'Adicionar Despesa/Vale' : 'Ocultar Despesas/Vale';
+        });
+        document.getElementById('nb-fin-status-toggle-btn')?.addEventListener('click', handleNBFinanceStatusToggle);
         document.getElementById('nb-expense-form')?.addEventListener('submit', handleNBExpenseSubmit);
         document.getElementById('nb-diary-form')?.addEventListener('submit', handleNBDiarySubmit);
         document.getElementById('nb-category-form')?.addEventListener('submit', handleNBCategorySubmit);
@@ -9665,6 +9822,31 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
                         await nocoFetch(`${TABLE_IDS.NB_Despesas_Vales}/${id}`, { method: 'DELETE' });
                         await fetchNBDespesasVales();
                         renderNBManagement();
+                    }
+                });
+            }
+            if (e.target.closest('.nb-panel-expense-edit-btn')) {
+                const id = e.target.closest('.nb-panel-expense-edit-btn').dataset.id;
+                const record = nbDespesasValesData.find(item => String(item.Id) === String(id));
+                if (record) {
+                    const section = document.getElementById('nb-panel-expense-section');
+                    if (section) section.classList.remove('hidden');
+                    document.getElementById('nb-panel-expense-id').value = record.Id;
+                    document.getElementById('nb-panel-expense-type').value = record.Tipo;
+                    document.getElementById('nb-panel-expense-description').value = record.Descricao || '';
+                    document.getElementById('nb-panel-expense-value').value = record.Valor || '';
+                    renderNBPanelFinanceModal();
+                }
+            }
+            if (e.target.closest('.nb-panel-expense-delete-btn')) {
+                const id = e.target.closest('.nb-panel-expense-delete-btn').dataset.id;
+                showConfirmModal('Tem certeza que deseja apagar este lançamento do dia?').then(async confirmed => {
+                    if (confirmed) {
+                        await nocoFetch(`${TABLE_IDS.NB_Despesas_Vales}/${id}`, { method: 'DELETE' });
+                        await fetchNBDespesasVales();
+                        resetNBPanelExpenseForm();
+                        renderNBPanelFinanceModal();
+                        renderNBModule();
                     }
                 });
             }
