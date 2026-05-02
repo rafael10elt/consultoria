@@ -444,6 +444,7 @@ body {
                                     <input type="text" id="nb-panel-product-search" placeholder="Digite o nome do produto..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full md:max-w-xl p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                 </div>
                                 <div class="flex flex-wrap items-center gap-3 mt-4">
+                                    <button type="button" id="nb-panel-category-btn" class="hidden px-4 py-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Categorias do Painel</button>
                                     <button type="button" id="nb-panel-finance-btn" class="hidden px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Lançar Financeiro do Dia</button>
                                 </div>
                             </div>
@@ -511,9 +512,9 @@ body {
                                     </div>
                                 </div>
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Venda Bruta x Custo Vendido</h3>
+                                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Lucro Bruto Diário</h3>
                                     <div class="h-56 md:h-64">
-                                        <canvas id="nb-chart-profit-stack" class="w-full h-full"></canvas>
+                                        <canvas id="nb-chart-gross-profit" class="w-full h-full"></canvas>
                                     </div>
                                 </div>
                             </div>
@@ -527,7 +528,6 @@ body {
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                                     <div class="flex items-center justify-between gap-3 mb-4">
                                         <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Fluxo Financeiro do Período</h3>
-                                        /* <span class="text-sm text-gray-500 dark:text-gray-400"></span> */
                                     </div>
                                     <div class="h-64 md:h-72">
                                         <canvas id="nb-chart-finance-period" class="w-full h-full"></canvas>
@@ -2323,6 +2323,29 @@ body {
             </form>
         </div>
     </div>
+    <div id="nb-panel-category-modal" class="fixed inset-0 z-[70] items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
+        <div class="w-full max-w-3xl p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate max-h-[90vh] flex flex-col">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Categorias do Painel</h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Escolha quais categorias entram nos cards da semana.</p>
+                </div>
+                <button type="button" id="close-nb-panel-category-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div class="flex items-center justify-between gap-3 mb-4">
+                <span class="text-sm text-gray-500 dark:text-gray-400">Selecionadas: <span id="nb-panel-category-count" class="font-semibold text-gray-800 dark:text-white">0/0</span></span>
+                <div class="flex gap-2">
+                    <button type="button" id="nb-panel-category-select-all" class="px-3 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Todas</button>
+                    <button type="button" id="nb-panel-category-clear" class="px-3 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Limpar</button>
+                </div>
+            </div>
+            <div id="nb-panel-category-list" class="grid grid-cols-1 md:grid-cols-2 gap-3 overflow-y-auto pr-1"></div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" id="cancel-nb-panel-category-modal" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+                <button type="button" id="save-nb-panel-category-modal" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Salvar</button>
+            </div>
+        </div>
+    </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
         // --- Modal de Confirmação Customizado ---
@@ -2410,6 +2433,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let nbLastPanelSync = null;
     let nbTopProductsGestaoLimit = 5;
     let nbAnalyticsPreset = 'day';
+    const NB_PANEL_CATEGORY_SELECTION_KEY = 'nb-panel-selected-category-ids';
 
     // --- NOVO: Controle de Carregamento ---
 const dataLoaded = {
@@ -3385,6 +3409,7 @@ function getNBFinanceDaySummary(dateString) {
 }
 function getNBPanelDayTotals(dateString, groups = getVisibleNBPanelGroups()) {
     const products = groups.flatMap(group => group.products || []);
+    const productMap = new Map(products.map(product => [product.Id, product]));
     const records = products.map(product => getNBApontamento(dateString, product.Id)).filter(Boolean);
     const producao = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Producao), 0);
     const venda = records.reduce((sum, record) => sum + computeNBVenda(record), 0);
@@ -3392,7 +3417,12 @@ function getNBPanelDayTotals(dateString, groups = getVisibleNBPanelGroups()) {
     const perda = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Perda), 0);
     const sobraAtual = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Atual), 0);
     const disponivel = sobraAnterior + producao;
-    return { disponivel, producao, venda, sobraAnterior, perda, sobraAtual };
+    const faturamentoTotal = records.reduce((sum, record) => {
+        const product = productMap.get(getNBLinkedProductId(record));
+        if (!product) return sum;
+        return sum + (computeNBVenda(record) * Number(product.Preco_Venda || 0));
+    }, 0);
+    return { disponivel, producao, venda, sobraAnterior, perda, sobraAtual, faturamentoTotal };
 }
 function getNBFinanceFieldMap(prefix) {
     return {
@@ -3449,6 +3479,7 @@ async function fetchNBCategorias() {
     const result = await nocoFetch(`${TABLE_IDS.NB_Categorias}?nested[all]=true`);
     nbCategoriasData = result?.list ? result.list.sort((a, b) => (a.Nome || '').localeCompare(b.Nome || '')) : [];
     syncNBProductCategoryOptions();
+    syncNBPanelCategorySelection();
 }
 async function fetchNBProdutos() {
     const result = await nocoFetch(`${TABLE_IDS.NB_Produtos}?nested[all]=true`);
@@ -3504,6 +3535,78 @@ function updateNBStatusBadge() {
     const status = getNBStatusForDate(nbSelectedDate);
     badge.textContent = `Dia ${parseDateOnly(nbSelectedDate).toLocaleDateString('pt-BR')}: ${status}`;
     badge.className = `px-3 py-1 text-xs font-semibold rounded-full ${status === 'Fechado' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'}`;
+}
+function getNBPanelActiveCategoryIds() {
+    return nbCategoriasData
+        .filter(category => category && category.Ativo !== false && category.Id != null)
+        .map(category => Number(category.Id))
+        .filter(id => Number.isFinite(id));
+}
+function readNBPanelSelectedCategoryIds() {
+    const raw = localStorage.getItem(NB_PANEL_CATEGORY_SELECTION_KEY);
+    if (raw == null) return null;
+    try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed.map(id => Number(id)).filter(id => Number.isFinite(id));
+    } catch {
+        return [];
+    }
+}
+function getNBPanelSelectedCategoryIds() {
+    const activeIds = getNBPanelActiveCategoryIds();
+    const storedIds = readNBPanelSelectedCategoryIds();
+    if (storedIds === null) return activeIds;
+    return storedIds.filter(id => activeIds.includes(id));
+}
+function syncNBPanelCategorySelection() {
+    if (readNBPanelSelectedCategoryIds() === null) {
+        localStorage.setItem(NB_PANEL_CATEGORY_SELECTION_KEY, JSON.stringify(getNBPanelSelectedCategoryIds()));
+    }
+}
+function setNBPanelSelectedCategoryIds(ids, render = true) {
+    const activeIds = new Set(getNBPanelActiveCategoryIds());
+    const normalized = [...new Set((ids || []).map(id => Number(id)).filter(id => activeIds.has(id)))];
+    localStorage.setItem(NB_PANEL_CATEGORY_SELECTION_KEY, JSON.stringify(normalized));
+    if (render) {
+        renderNBPanel();
+        renderNBPanelTotals();
+    }
+}
+function renderNBPanelCategoryModal() {
+    const list = document.getElementById('nb-panel-category-list');
+    const count = document.getElementById('nb-panel-category-count');
+    if (!list) return;
+    const selected = new Set(getNBPanelSelectedCategoryIds());
+    const categories = nbCategoriasData.filter(category => category && category.Ativo !== false);
+    if (count) count.textContent = `${selected.size}/${categories.length}`;
+    if (categories.length === 0) {
+        list.innerHTML = '<div class="text-sm text-gray-500 dark:text-gray-400">Cadastre categorias ativas para configurar os cards da semana.</div>';
+        return;
+    }
+    list.innerHTML = categories.map(category => {
+        const checked = selected.has(Number(category.Id));
+        return `
+            <label class="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-4 py-3">
+                <input type="checkbox" class="nb-panel-category-checkbox h-4 w-4 text-brand-gold focus:ring-brand-gold" value="${category.Id}" ${checked ? 'checked' : ''}>
+                <span class="flex-1">
+                    <span class="block font-semibold text-gray-800 dark:text-white">${category.Nome || 'Sem nome'}</span>
+                    <span class="block text-xs text-gray-500 dark:text-gray-400">Ativa</span>
+                </span>
+            </label>
+        `;
+    }).join('');
+}
+function openNBPanelCategoryModal() {
+    if (!canAccessNBManagement()) return;
+    renderNBPanelCategoryModal();
+    showModal(document.getElementById('nb-panel-category-modal'));
+}
+function saveNBPanelCategorySelection() {
+    const selected = [...document.querySelectorAll('.nb-panel-category-checkbox:checked')].map(input => Number(input.value));
+    setNBPanelSelectedCategoryIds(selected);
+    hideModal(document.getElementById('nb-panel-category-modal'));
+    showNBToast('Categorias do painel atualizadas.', 'success');
 }
 function groupNBProductsByCategory(activeOnly = true) {
     const categoriesMap = new Map(nbCategoriasData.map(category => [category.Id, category]));
@@ -3637,7 +3740,9 @@ function renderNBTopProductsWeek() {
 }
 function getVisibleNBPanelGroups() {
     const search = (document.getElementById('nb-panel-product-search')?.value || '').trim().toLowerCase();
+    const selectedCategoryIds = new Set(getNBPanelSelectedCategoryIds().map(id => String(id)));
     return groupNBProductsByCategory(true)
+        .filter(group => group.id === 'sem-categoria' || selectedCategoryIds.has(String(group.id)))
         .map(group => ({
             ...group,
             products: group.products.filter(product => !search || (product.Nome || '').toLowerCase().includes(search))
@@ -3653,6 +3758,7 @@ function renderNBPanelTotals() {
             const el = document.getElementById(`nb-day-${suffix}-${makeSafeDomId(dateString)}`);
             if (el) el.textContent = value;
         };
+        setText('revenue', formatCurrencyBR(totals.faturamentoTotal));
         setText('produced', totals.producao);
         setText('sold', totals.venda);
         setText('carry', totals.sobraAnterior);
@@ -3672,12 +3778,18 @@ function renderNBPanel() {
     if (weekSubtitle && nbCurrentWeekStart) {
         weekSubtitle.textContent = 'Apontamentos da semana exibida';
     }
+    const categoryBtn = document.getElementById('nb-panel-category-btn');
+    if (categoryBtn) {
+        const count = getNBPanelSelectedCategoryIds().length;
+        categoryBtn.classList.toggle('hidden', !canAccessNBManagement());
+        categoryBtn.textContent = `Categorias do Painel (${count})`;
+    }
     cardsContainer.innerHTML = `
         <div class="overflow-x-auto">
-            <div class="min-w-[1080px]">
-                <div class="grid gap-4" style="grid-template-columns:repeat(${weekDates.length},minmax(12rem,1fr));">
+            <div class="min-w-[1140px]">
+                <div class="grid gap-4" style="grid-template-columns:repeat(${weekDates.length},minmax(13rem,1fr));">
                     ${weekDates.map(dateString => `
-                        <div id="nb-day-card-${makeSafeDomId(dateString)}" class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-4 min-h-[13.5rem] flex flex-col justify-between shadow-sm">
+                        <div id="nb-day-card-${makeSafeDomId(dateString)}" class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-4 min-h-[18rem] flex flex-col shadow-sm">
                             <div class="flex items-start justify-between gap-2">
                                 <div>
                                     <div class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">${parseDateOnly(dateString).toLocaleDateString('pt-BR', { weekday: 'short' })}</div>
@@ -3685,24 +3797,28 @@ function renderNBPanel() {
                                 </div>
                                 <span class="inline-flex items-center shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${getNBStatusForDate(dateString) === 'Fechado' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : (dateString === toDateInputValue(new Date()) ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200')}">${dateString === toDateInputValue(new Date()) ? 'Hoje' : (getNBStatusForDate(dateString) === 'Fechado' ? 'Fechado' : 'Disponível')}</span>
                             </div>
+                            <div class="mt-3 rounded-2xl border border-brand-gold/15 bg-brand-gold/10 px-3 py-2.5">
+                                <div class="text-[11px] font-semibold uppercase tracking-wide text-brand-dark/70">Faturamento Total</div>
+                                <div class="text-base font-bold text-brand-dark dark:text-white" id="nb-day-revenue-${makeSafeDomId(dateString)}">R$ 0,00</div>
+                            </div>
                             <div class="grid grid-cols-2 gap-2 text-[10px] leading-tight mt-3">
-                                <div class="rounded-xl bg-slate-50 dark:bg-slate-700 px-2 py-2 min-h-[4.15rem] flex flex-col justify-between">
+                                <div class="rounded-xl bg-slate-50 dark:bg-slate-700 px-2 py-2 min-h-[3.85rem] flex flex-col justify-between">
                                     <div class="text-gray-500 dark:text-gray-300">Produzido</div>
                                     <div class="font-bold text-gray-800 dark:text-white" id="nb-day-produced-${makeSafeDomId(dateString)}">0</div>
                                 </div>
-                                <div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/40 px-2 py-2 min-h-[4.15rem] flex flex-col justify-between">
+                                <div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/40 px-2 py-2 min-h-[3.85rem] flex flex-col justify-between">
                                     <div class="text-emerald-600 dark:text-emerald-200">Vendido</div>
                                     <div class="font-bold text-emerald-700 dark:text-emerald-100" id="nb-day-sold-${makeSafeDomId(dateString)}">0</div>
                                 </div>
-                                <div class="rounded-xl bg-yellow-50 dark:bg-yellow-900/40 px-2 py-2 min-h-[4.15rem] flex flex-col justify-between">
+                                <div class="rounded-xl bg-yellow-50 dark:bg-yellow-900/40 px-2 py-2 min-h-[3.85rem] flex flex-col justify-between">
                                     <div class="text-yellow-700 dark:text-yellow-200">Sobra anterior</div>
                                     <div class="font-bold text-yellow-800 dark:text-yellow-100" id="nb-day-carry-${makeSafeDomId(dateString)}">0</div>
                                 </div>
-                                <div class="rounded-xl bg-red-50 dark:bg-red-900/40 px-2 py-2 min-h-[4.15rem] flex flex-col justify-between">
+                                <div class="rounded-xl bg-red-50 dark:bg-red-900/40 px-2 py-2 min-h-[3.85rem] flex flex-col justify-between">
                                     <div class="text-red-600 dark:text-red-200">Perda</div>
                                     <div class="font-bold text-red-700 dark:text-red-100" id="nb-day-loss-${makeSafeDomId(dateString)}">0</div>
                                 </div>
-                                <div class="rounded-xl bg-yellow-50 dark:bg-yellow-900/40 px-2 py-2 min-h-[4.15rem] flex flex-col justify-between">
+                                <div class="rounded-xl bg-yellow-50 dark:bg-yellow-900/40 px-2 py-2 min-h-[3.85rem] flex flex-col justify-between col-span-2">
                                     <div class="text-yellow-700 dark:text-yellow-200">Sobra atual</div>
                                     <div class="font-bold text-yellow-800 dark:text-yellow-100" id="nb-day-current-${makeSafeDomId(dateString)}">0</div>
                                 </div>
@@ -4152,7 +4268,7 @@ function renderNBCharts() {
     if (nbRevenueExpensesChart) { nbRevenueExpensesChart.data = revenueExpensesData; nbRevenueExpensesChart.options = revenueExpensesOptions; nbRevenueExpensesChart.update(); } else { nbRevenueExpensesChart = new Chart(chart5Ctx, { type: 'bar', data: revenueExpensesData, options: revenueExpensesOptions }); }
 }
 function renderNBCharts() {
-    const frames = ['nb-chart-category-share', 'nb-chart-timeline', 'nb-chart-profit-stack', 'nb-chart-revenue-expenses', 'nb-chart-finance-period'];
+    const frames = ['nb-chart-category-share', 'nb-chart-timeline', 'nb-chart-gross-profit', 'nb-chart-revenue-expenses', 'nb-chart-finance-period'];
     frames.forEach(id => {
         const canvas = document.getElementById(id);
         if (canvas?.parentElement) {
@@ -4202,12 +4318,14 @@ function renderNBCharts() {
         };
         const totalExpenses = financeSnapshot.despesas + financeSnapshot.vales;
         const faturamentoTotal = financeSnapshot.faturamentoTotal;
+        const lucroBruto = faturamentoTotal - controlSnapshot.costOfGoods;
         const resultadoFinanceiro = faturamentoTotal - controlSnapshot.loss - totalExpenses;
         return {
             ...controlSnapshot,
             ...financeSnapshot,
             totalExpenses,
             faturamentoTotal,
+            lucroBruto,
             resultadoFinanceiro,
             entradasTotal: financeSnapshot.entradasDinheiro + financeSnapshot.entradasPix + financeSnapshot.entradasApp + financeSnapshot.entradasMaquineta,
             label: meta.label,
@@ -4260,11 +4378,18 @@ function renderNBCharts() {
     const timelineRevenue = timelineKeys.map(key => groupedTimeline[key].revenue);
     const timelineCost = timelineKeys.map(key => groupedTimeline[key].cost);
     const timelineData = { labels: timelineLabels, datasets: [{ label: 'Faturamento', data: timelineRevenue, backgroundColor: '#3b82f6' }] };
-    const stackData = {
-        labels: timelineLabels,
+    const grossProfitData = {
+        labels: periodSnapshots.map(item => item.label),
         datasets: [
-            { label: 'Venda Bruta', data: timelineRevenue, backgroundColor: '#22c55e' },
-            { label: 'Custo Vendido', data: timelineCost, backgroundColor: '#f97316' }
+            {
+                label: 'Lucro Bruto',
+                data: periodSnapshots.map(item => item.lucroBruto),
+                borderColor: '#8b5cf6',
+                backgroundColor: 'rgba(139, 92, 246, 0.18)',
+                pointBackgroundColor: '#8b5cf6',
+                tension: 0.3,
+                fill: false
+            }
         ]
     };
     const revenueExpenseLabels = periodSnapshots.map(item => item.label);
@@ -4297,7 +4422,7 @@ function renderNBCharts() {
     };
     const chart1Ctx = document.getElementById('nb-chart-category-share')?.getContext('2d');
     const chart2Ctx = document.getElementById('nb-chart-timeline')?.getContext('2d');
-    const chart3Ctx = document.getElementById('nb-chart-profit-stack')?.getContext('2d');
+    const chart3Ctx = document.getElementById('nb-chart-gross-profit')?.getContext('2d');
     const chart4Ctx = document.getElementById('nb-chart-revenue-expenses')?.getContext('2d');
     const chart5Ctx = document.getElementById('nb-chart-finance-period')?.getContext('2d');
     if (!chart1Ctx || !chart2Ctx || !chart3Ctx || !chart4Ctx || !chart5Ctx) return;
@@ -4320,17 +4445,17 @@ function renderNBCharts() {
         },
         scales: { x: { ticks: { maxRotation: 0, autoSkip: true } }, y: { beginAtZero: true } }
     };
-    const stackOptions = {
+    const grossProfitOptions = {
         responsive: true,
         maintainAspectRatio: false,
-        scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
+        scales: { x: { ticks: { maxRotation: 0, autoSkip: true } }, y: { beginAtZero: true } },
         plugins: {
-            legend: { position: 'bottom' },
+            legend: { display: false },
             tooltip: {
                 callbacks: {
                     title(items) {
                         const index = items?.[0]?.dataIndex ?? 0;
-                        return timelineKeys[index] ? groupedTimeline[timelineKeys[index]].tooltip : '';
+                        return periodSnapshots[index]?.tooltip || '';
                     },
                     label(context) {
                         return `${context.dataset.label}: ${formatCurrencyBR(getNBChartCurrencyValue(context))}`;
@@ -4379,7 +4504,7 @@ function renderNBCharts() {
     };
     if (nbCategoryShareChart) { nbCategoryShareChart.data = categoryData; nbCategoryShareChart.options = donutOptions; nbCategoryShareChart.update(); } else { nbCategoryShareChart = new Chart(chart1Ctx, { type: 'doughnut', data: categoryData, options: donutOptions }); }
     if (nbTimelineChart) { nbTimelineChart.data = timelineData; nbTimelineChart.options = timelineOptions; nbTimelineChart.update(); } else { nbTimelineChart = new Chart(chart2Ctx, { type: 'bar', data: timelineData, options: timelineOptions }); }
-    if (nbProfitStackChart) { nbProfitStackChart.data = stackData; nbProfitStackChart.options = stackOptions; nbProfitStackChart.update(); } else { nbProfitStackChart = new Chart(chart3Ctx, { type: 'bar', data: stackData, options: stackOptions }); }
+    if (nbProfitStackChart) { nbProfitStackChart.data = grossProfitData; nbProfitStackChart.options = grossProfitOptions; nbProfitStackChart.update(); } else { nbProfitStackChart = new Chart(chart3Ctx, { type: 'line', data: grossProfitData, options: grossProfitOptions }); }
     if (nbRevenueExpensesChart) { nbRevenueExpensesChart.data = revenueExpensesData; nbRevenueExpensesChart.options = revenueExpensesOptions; nbRevenueExpensesChart.update(); } else { nbRevenueExpensesChart = new Chart(chart4Ctx, { type: 'line', data: revenueExpensesData, options: revenueExpensesOptions }); }
     if (nbFinancePeriodChart) { nbFinancePeriodChart.data = financePeriodData; nbFinancePeriodChart.options = financePeriodOptions; nbFinancePeriodChart.update(); } else { nbFinancePeriodChart = new Chart(chart5Ctx, { type: 'line', data: financePeriodData, options: financePeriodOptions }); }
 }
@@ -9734,9 +9859,22 @@ function renderReembolsos(data = reembolsosData) {
 function initializeApp() {
         document.getElementById('nb-finance-form')?.addEventListener('submit', handleNBFinanceSubmit);
         document.getElementById('nb-panel-finance-btn')?.addEventListener('click', openNBPanelFinanceModal);
+        document.getElementById('nb-panel-category-btn')?.addEventListener('click', openNBPanelCategoryModal);
         document.getElementById('nb-panel-finance-form')?.addEventListener('submit', handleNBPanelFinanceSubmit);
         document.getElementById('close-nb-panel-finance-modal')?.addEventListener('click', () => hideModal(document.getElementById('nb-panel-finance-modal')));
         document.getElementById('close-nb-panel-finance-form')?.addEventListener('click', () => hideModal(document.getElementById('nb-panel-finance-modal')));
+        document.getElementById('close-nb-panel-category-modal')?.addEventListener('click', () => hideModal(document.getElementById('nb-panel-category-modal')));
+        document.getElementById('cancel-nb-panel-category-modal')?.addEventListener('click', () => hideModal(document.getElementById('nb-panel-category-modal')));
+        document.getElementById('save-nb-panel-category-modal')?.addEventListener('click', saveNBPanelCategorySelection);
+        document.getElementById('nb-panel-category-select-all')?.addEventListener('click', () => {
+            const ids = getNBPanelActiveCategoryIds();
+            document.querySelectorAll('.nb-panel-category-checkbox').forEach(input => { input.checked = ids.includes(Number(input.value)); });
+            renderNBPanelCategoryModal();
+        });
+        document.getElementById('nb-panel-category-clear')?.addEventListener('click', () => {
+            document.querySelectorAll('.nb-panel-category-checkbox').forEach(input => { input.checked = false; });
+            renderNBPanelCategoryModal();
+        });
         document.getElementById('nb-panel-expense-save-btn')?.addEventListener('click', handleNBPanelExpenseSubmit);
         document.getElementById('nb-panel-expense-cancel-btn')?.addEventListener('click', resetNBPanelExpenseForm);
         document.getElementById('nb-panel-expense-toggle')?.addEventListener('click', () => {
