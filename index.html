@@ -3393,6 +3393,7 @@ function getNBFinanceDaySummary(dateString) {
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const faturamentoDinheiro = (caixaFinal + sangria + despesas + vales) - caixaInicial;
     const faturamentoTotal = faturamentoDinheiro + entradasPix + entradasApp + entradasMaquineta;
+    const faturamentoFinal = faturamentoTotal - faturamentoDinheiro;
     return {
         financeRecord,
         caixaInicial,
@@ -3406,6 +3407,7 @@ function getNBFinanceDaySummary(dateString) {
         vales,
         faturamentoDinheiro,
         faturamentoTotal,
+        faturamentoFinal,
         status: financeRecord.Status || 'Aberto'
     };
 }
@@ -3787,50 +3789,46 @@ function renderNBPanel() {
         categoryBtn.textContent = `Categorias do Painel (${count})`;
     }
     cardsContainer.innerHTML = `
-        <div class="overflow-x-auto">
-            <div class="min-w-[1140px]">
-                <div class="grid gap-4" style="grid-template-columns:repeat(${weekDates.length},minmax(13rem,1fr));">
-                    ${weekDates.map(dateString => `
-                        <div id="nb-day-card-${makeSafeDomId(dateString)}" class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-4 min-h-[18rem] flex flex-col shadow-sm">
-                            <div class="flex items-start justify-between gap-2">
-                                <div>
-                                    <div class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">${parseDateOnly(dateString).toLocaleDateString('pt-BR', { weekday: 'short' })}</div>
-                                    <div class="text-xl font-bold text-gray-900 dark:text-white">${parseDateOnly(dateString).toLocaleDateString('pt-BR')}</div>
-                                </div>
-                                <span class="inline-flex items-center shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${getNBStatusForDate(dateString) === 'Fechado' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : (dateString === toDateInputValue(new Date()) ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200')}">${dateString === toDateInputValue(new Date()) ? 'Hoje' : (getNBStatusForDate(dateString) === 'Fechado' ? 'Fechado' : 'Disponível')}</span>
-                            </div>
-                            ${!isNBOperatorRole() || dateString === toDateInputValue(new Date()) ? `
-                            <div class="mt-3 rounded-2xl border border-brand-gold/15 bg-brand-gold/10 px-3 py-2.5">
-                                <div class="text-[11px] font-semibold uppercase tracking-wide text-brand-dark/70">Faturamento Teórico</div>
-                                <div class="text-base font-bold text-brand-dark dark:text-white" id="nb-day-revenue-${makeSafeDomId(dateString)}">R$ 0,00</div>
-                            </div>
-                            ` : ''}
-                            <div class="grid grid-cols-2 gap-2 text-[10px] leading-tight mt-3">
-                                <div class="rounded-xl bg-slate-50 dark:bg-slate-700 px-2 py-2 min-h-[3.85rem] flex flex-col justify-between">
-                                    <div class="text-gray-500 dark:text-gray-300">Produzido</div>
-                                    <div class="font-bold text-gray-800 dark:text-white" id="nb-day-produced-${makeSafeDomId(dateString)}">0</div>
-                                </div>
-                                <div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/40 px-2 py-2 min-h-[3.85rem] flex flex-col justify-between">
-                                    <div class="text-emerald-600 dark:text-emerald-200">Vendido</div>
-                                    <div class="font-bold text-emerald-700 dark:text-emerald-100" id="nb-day-sold-${makeSafeDomId(dateString)}">0</div>
-                                </div>
-                                <div class="rounded-xl bg-yellow-50 dark:bg-yellow-900/40 px-2 py-2 min-h-[3.85rem] flex flex-col justify-between">
-                                    <div class="text-yellow-700 dark:text-yellow-200">Sobra anterior</div>
-                                    <div class="font-bold text-yellow-800 dark:text-yellow-100" id="nb-day-carry-${makeSafeDomId(dateString)}">0</div>
-                                </div>
-                                <div class="rounded-xl bg-red-50 dark:bg-red-900/40 px-2 py-2 min-h-[3.85rem] flex flex-col justify-between">
-                                    <div class="text-red-600 dark:text-red-200">Perda</div>
-                                    <div class="font-bold text-red-700 dark:text-red-100" id="nb-day-loss-${makeSafeDomId(dateString)}">0</div>
-                                </div>
-                                <div class="rounded-xl bg-yellow-50 dark:bg-yellow-900/40 px-2 py-2 min-h-[3.85rem] flex flex-col justify-between col-span-2">
-                                    <div class="text-yellow-700 dark:text-yellow-200">Sobra atual</div>
-                                    <div class="font-bold text-yellow-800 dark:text-yellow-100" id="nb-day-current-${makeSafeDomId(dateString)}">0</div>
-                                </div>
-                            </div>
+        <div class="grid gap-4 xl:grid-cols-6 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1">
+            ${weekDates.map(dateString => `
+                <div id="nb-day-card-${makeSafeDomId(dateString)}" class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-4 min-h-[18rem] flex flex-col shadow-sm">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <div class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">${parseDateOnly(dateString).toLocaleDateString('pt-BR', { weekday: 'short' })}</div>
+                            <div class="text-xl font-bold text-gray-900 dark:text-white">${parseDateOnly(dateString).toLocaleDateString('pt-BR')}</div>
                         </div>
-                    `).join('')}
+                        ${dateString === toDateInputValue(new Date()) ? `<span class="inline-flex items-center shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200">Hoje</span>` : ''}
+                    </div>
+                    ${!isNBOperatorRole() || dateString === toDateInputValue(new Date()) ? `
+                    <div class="mt-3 rounded-2xl border border-brand-gold/15 bg-brand-gold/10 px-3 py-2.5">
+                        <div class="text-[11px] font-semibold uppercase tracking-wide text-brand-dark/70">Faturamento Teórico</div>
+                        <div class="text-base font-bold text-brand-dark dark:text-white" id="nb-day-revenue-${makeSafeDomId(dateString)}">R$ 0,00</div>
+                    </div>
+                    ` : ''}
+                    <div class="grid grid-cols-2 gap-2 text-[10px] leading-tight mt-3">
+                        <div class="rounded-xl bg-slate-50 dark:bg-slate-700 px-2 py-2 min-h-[3.85rem] flex flex-col justify-between">
+                            <div class="text-gray-500 dark:text-gray-300">Produzido</div>
+                            <div class="font-bold text-gray-800 dark:text-white" id="nb-day-produced-${makeSafeDomId(dateString)}">0</div>
+                        </div>
+                        <div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/40 px-2 py-2 min-h-[3.85rem] flex flex-col justify-between">
+                            <div class="text-emerald-600 dark:text-emerald-200">Vendido</div>
+                            <div class="font-bold text-emerald-700 dark:text-emerald-100" id="nb-day-sold-${makeSafeDomId(dateString)}">0</div>
+                        </div>
+                        <div class="rounded-xl bg-yellow-50 dark:bg-yellow-900/40 px-2 py-2 min-h-[3.85rem] flex flex-col justify-between">
+                            <div class="text-yellow-700 dark:text-yellow-200">Sobra anterior</div>
+                            <div class="font-bold text-yellow-800 dark:text-yellow-100" id="nb-day-carry-${makeSafeDomId(dateString)}">0</div>
+                        </div>
+                        <div class="rounded-xl bg-red-50 dark:bg-red-900/40 px-2 py-2 min-h-[3.85rem] flex flex-col justify-between">
+                            <div class="text-red-600 dark:text-red-200">Perda</div>
+                            <div class="font-bold text-red-700 dark:text-red-100" id="nb-day-loss-${makeSafeDomId(dateString)}">0</div>
+                        </div>
+                        <div class="rounded-xl bg-yellow-50 dark:bg-yellow-900/40 px-2 py-2 min-h-[3.85rem] flex flex-col justify-between col-span-2">
+                            <div class="text-yellow-700 dark:text-yellow-200">Sobra atual</div>
+                            <div class="font-bold text-yellow-800 dark:text-yellow-100" id="nb-day-current-${makeSafeDomId(dateString)}">0</div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            `).join('')}
         </div>
     `;
     if (groups.length === 0) {
@@ -4580,7 +4578,7 @@ function renderNBFinanceForm() {
     }
     const summary = document.getElementById('nb-finance-summary');
     const totals = getNBFinanceDaySummary(nbSelectedDate);
-    if (summary) summary.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-5 gap-3"><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento em dinheiro</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoDinheiro)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento Real</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoTotal)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Despesas + Vales</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.despesas + totals.vales)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Entradas em cartões/Pix</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.entradasPix + totals.entradasApp + totals.entradasMaquineta)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Status do dia</span><div class="font-bold ${status === 'Fechado' ? 'text-red-600 dark:text-red-300' : 'text-green-600 dark:text-green-300'}">${status}</div></div></div>`;
+    if (summary) summary.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-6 gap-3"><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento em dinheiro</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoDinheiro)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento Real</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoTotal)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento Final</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoFinal)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Despesas + Vales</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.despesas + totals.vales)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Entradas em cartões/Pix</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.entradasPix + totals.entradasApp + totals.entradasMaquineta)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Status do dia</span><div class="font-bold ${status === 'Fechado' ? 'text-red-600 dark:text-red-300' : 'text-green-600 dark:text-green-300'}">${status}</div></div></div>`;
     const financePeriodList = document.getElementById('nb-finance-period-list');
     if (financePeriodList) {
         const periodRecords = getNBFinanceRecordsInPeriod();
@@ -4627,7 +4625,7 @@ function renderNBPanelFinanceModal() {
     if (label) label.textContent = `Registro do dia ${parseDateOnly(today).toLocaleDateString('pt-BR')}`;
     const totals = getNBFinanceDaySummary(today);
     if (statusText) statusText.textContent = `Status do dia: ${totals.status}`;
-    if (summary) summary.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-5 gap-3"><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento em dinheiro</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoDinheiro)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento Real</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoTotal)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Despesas + Vales</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.despesas + totals.vales)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Entradas em cartões/Pix</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.entradasPix + totals.entradasApp + totals.entradasMaquineta)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Status do dia</span><div class="font-bold ${totals.status === 'Fechado' ? 'text-red-600 dark:text-red-300' : 'text-green-600 dark:text-green-300'}">${totals.status}</div></div></div>`;
+    if (summary) summary.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-6 gap-3"><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento em dinheiro</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoDinheiro)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento Real</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoTotal)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento Final</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoFinal)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Despesas + Vales</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.despesas + totals.vales)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Entradas em cartões/Pix</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.entradasPix + totals.entradasApp + totals.entradasMaquineta)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Status do dia</span><div class="font-bold ${totals.status === 'Fechado' ? 'text-red-600 dark:text-red-300' : 'text-green-600 dark:text-green-300'}">${totals.status}</div></div></div>`;
     if (toggleBtn) toggleBtn.style.display = isNBFinanceDayOpen(today) ? '' : 'none';
     const hasExpenseDraft = Boolean(document.getElementById('nb-panel-expense-id')?.value);
     if (expenseSection) expenseSection.classList.toggle('hidden', !hasExpenseDraft);
