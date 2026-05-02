@@ -3417,8 +3417,11 @@ function getNBPanelDayTotals(dateString, groups = getVisibleNBPanelGroups()) {
     const perda = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Perda), 0);
     const sobraAtual = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Atual), 0);
     const disponivel = sobraAnterior + producao;
-    const faturamentoTotal = records.reduce((sum, record) => {
-        const product = productMap.get(getNBLinkedProductId(record));
+    const revenueProducts = nbProdutosData.filter(product => product && product.Ativo !== false);
+    const revenueProductMap = new Map(revenueProducts.map(product => [product.Id, product]));
+    const revenueRecords = revenueProducts.map(product => getNBApontamento(dateString, product.Id)).filter(Boolean);
+    const faturamentoTotal = revenueRecords.reduce((sum, record) => {
+        const product = revenueProductMap.get(getNBLinkedProductId(record));
         if (!product) return sum;
         return sum + (computeNBVenda(record) * Number(product.Preco_Venda || 0));
     }, 0);
