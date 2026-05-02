@@ -3781,6 +3781,7 @@ function renderNBPanel() {
     const container = document.getElementById('nb-panel-grid');
     const cardsContainer = document.getElementById('nb-week-day-cards');
     if (!container || !cardsContainer) return;
+    const searchTerm = (document.getElementById('nb-panel-product-search')?.value || '').trim().toLowerCase();
     const groups = getVisibleNBPanelGroups();
     const weekDates = getWeekDates();
     const weekLabel = document.getElementById('nb-week-label');
