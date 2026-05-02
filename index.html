@@ -3617,7 +3617,7 @@ function updateNBPanelCategoryModalCount() {
     count.textContent = `${selected}/${categories.length}`;
 }
 function openNBPanelCategoryModal() {
-    if (!canAccessNBManagement()) return;
+    if (!canAccessNB()) return;
     renderNBPanelCategoryModal();
     showModal(document.getElementById('nb-panel-category-modal'));
 }
