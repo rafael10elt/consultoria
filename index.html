@@ -3621,6 +3621,21 @@ function saveNBPanelCategorySelection() {
     hideModal(document.getElementById('nb-panel-category-modal'));
     showNBToast('Categorias do painel atualizadas.', 'success');
 }
+function syncNBPanelCategoryAccordion() {
+    const container = document.getElementById('nb-panel-grid');
+    if (!container) return;
+    const items = [...container.querySelectorAll('.nb-panel-category-details')];
+    items.forEach(details => {
+        if (details.dataset.accordionBound === '1') return;
+        details.dataset.accordionBound = '1';
+        details.addEventListener('toggle', () => {
+            if (!details.open) return;
+            items.forEach(other => {
+                if (other !== details) other.open = false;
+            });
+        });
+    });
+}
 function groupNBProductsByCategory(activeOnly = true) {
     const categoriesMap = new Map(nbCategoriasData.map(category => [category.Id, category]));
     const grouped = {};
@@ -3847,7 +3862,7 @@ function renderNBPanel() {
         return;
     }
     container.innerHTML = groups.map(group => `
-        <details class="bg-white dark:bg-gray-800 rounded-2xl shadow overflow-hidden" ${searchTerm ? 'open' : ''}>
+        <details class="nb-panel-category-details bg-white dark:bg-gray-800 rounded-2xl shadow overflow-hidden" ${searchTerm ? 'open' : ''}>
             <summary class="cursor-pointer list-none px-4 py-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                 <div class="flex items-center justify-between gap-4">
                     <div class="min-w-0">
@@ -3894,11 +3909,12 @@ function renderNBPanel() {
                     </div>
                 `).join('')}
             </div>
-        </section>
+        </details>
     `).join('');
     renderNBPanelTotals();
     syncNBPanelDayMarkers();
     syncNBPanelFinanceButtonVisibility();
+    syncNBPanelCategoryAccordion();
 }
 function renderNBCharts() {
     const frames = ['nb-chart-revenue-loss', 'nb-chart-category-share', 'nb-chart-timeline', 'nb-chart-profit-stack', 'nb-chart-revenue-expenses'];
