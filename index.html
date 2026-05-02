@@ -3653,7 +3653,6 @@ function renderNBPanelTotals() {
             const el = document.getElementById(`nb-day-${suffix}-${makeSafeDomId(dateString)}`);
             if (el) el.textContent = value;
         };
-        setText('available', totals.disponivel);
         setText('produced', totals.producao);
         setText('sold', totals.venda);
         setText('carry', totals.sobraAnterior);
@@ -3685,37 +3684,34 @@ function renderNBPanel() {
                         </div>
                     </div>
                     ${weekDates.map(dateString => `
-                        <div id="nb-day-card-${makeSafeDomId(dateString)}" class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-4 min-h-[12rem] flex flex-col justify-between shadow-sm">
-                            <div>
-                                <div class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">${parseDateOnly(dateString).toLocaleDateString('pt-BR', { weekday: 'short' })}</div>
-                                <div class="text-xl font-bold text-gray-900 dark:text-white">${parseDateOnly(dateString).toLocaleDateString('pt-BR')}</div>
-                            </div>
-                            <div class="space-y-3">
-                                <div class="flex items-center justify-between gap-2">
-                                    <span class="text-xs font-medium text-gray-500 dark:text-gray-400">${getNBStatusForDate(dateString) === 'Fechado' ? 'Fechado' : 'Disponível'}</span>
-                                    <span class="text-sm font-semibold text-brand-gold">Disponível: <span id="nb-day-available-${makeSafeDomId(dateString)}">0</span></span>
+                        <div id="nb-day-card-${makeSafeDomId(dateString)}" class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-4 min-h-[14rem] flex flex-col justify-between shadow-sm">
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <div class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">${parseDateOnly(dateString).toLocaleDateString('pt-BR', { weekday: 'short' })}</div>
+                                    <div class="text-xl font-bold text-gray-900 dark:text-white">${parseDateOnly(dateString).toLocaleDateString('pt-BR')}</div>
                                 </div>
-                                <div class="grid grid-cols-2 gap-2 text-[10px] leading-tight">
-                                    <div class="rounded-lg bg-slate-50 dark:bg-slate-700 px-2 py-2">
-                                        <div class="text-gray-500 dark:text-gray-300">Produzido</div>
-                                        <div class="font-bold text-gray-800 dark:text-white" id="nb-day-produced-${makeSafeDomId(dateString)}">0</div>
-                                    </div>
-                                    <div class="rounded-lg bg-emerald-50 dark:bg-emerald-900/40 px-2 py-2">
-                                        <div class="text-emerald-600 dark:text-emerald-200">Vendido</div>
-                                        <div class="font-bold text-emerald-700 dark:text-emerald-100" id="nb-day-sold-${makeSafeDomId(dateString)}">0</div>
-                                    </div>
-                                    <div class="rounded-lg bg-yellow-50 dark:bg-yellow-900/40 px-2 py-2">
-                                        <div class="text-yellow-700 dark:text-yellow-200">Sobra anterior</div>
-                                        <div class="font-bold text-yellow-800 dark:text-yellow-100" id="nb-day-carry-${makeSafeDomId(dateString)}">0</div>
-                                    </div>
-                                    <div class="rounded-lg bg-red-50 dark:bg-red-900/40 px-2 py-2">
-                                        <div class="text-red-600 dark:text-red-200">Perda</div>
-                                        <div class="font-bold text-red-700 dark:text-red-100" id="nb-day-loss-${makeSafeDomId(dateString)}">0</div>
-                                    </div>
-                                    <div class="rounded-lg bg-yellow-50 dark:bg-yellow-900/40 px-2 py-2">
-                                        <div class="text-yellow-700 dark:text-yellow-200">Sobra atual</div>
-                                        <div class="font-bold text-yellow-800 dark:text-yellow-100" id="nb-day-current-${makeSafeDomId(dateString)}">0</div>
-                                    </div>
+                                <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${getNBStatusForDate(dateString) === 'Fechado' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : (dateString === toDateInputValue(new Date()) ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200')}">${dateString === toDateInputValue(new Date()) ? 'Hoje' : (getNBStatusForDate(dateString) === 'Fechado' ? 'Fechado' : 'Disponível')}</span>
+                            </div>
+                            <div class="grid grid-cols-2 xl:grid-cols-3 gap-2 text-[10px] leading-tight mt-3">
+                                <div class="rounded-xl bg-slate-50 dark:bg-slate-700 px-2 py-2 min-h-[4rem] flex flex-col justify-between">
+                                    <div class="text-gray-500 dark:text-gray-300">Produzido</div>
+                                    <div class="font-bold text-gray-800 dark:text-white" id="nb-day-produced-${makeSafeDomId(dateString)}">0</div>
+                                </div>
+                                <div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/40 px-2 py-2 min-h-[4rem] flex flex-col justify-between">
+                                    <div class="text-emerald-600 dark:text-emerald-200">Vendido</div>
+                                    <div class="font-bold text-emerald-700 dark:text-emerald-100" id="nb-day-sold-${makeSafeDomId(dateString)}">0</div>
+                                </div>
+                                <div class="rounded-xl bg-yellow-50 dark:bg-yellow-900/40 px-2 py-2 min-h-[4rem] flex flex-col justify-between">
+                                    <div class="text-yellow-700 dark:text-yellow-200">Sobra anterior</div>
+                                    <div class="font-bold text-yellow-800 dark:text-yellow-100" id="nb-day-carry-${makeSafeDomId(dateString)}">0</div>
+                                </div>
+                                <div class="rounded-xl bg-red-50 dark:bg-red-900/40 px-2 py-2 min-h-[4rem] flex flex-col justify-between">
+                                    <div class="text-red-600 dark:text-red-200">Perda</div>
+                                    <div class="font-bold text-red-700 dark:text-red-100" id="nb-day-loss-${makeSafeDomId(dateString)}">0</div>
+                                </div>
+                                <div class="rounded-xl bg-yellow-50 dark:bg-yellow-900/40 px-2 py-2 min-h-[4rem] flex flex-col justify-between">
+                                    <div class="text-yellow-700 dark:text-yellow-200">Sobra atual</div>
+                                    <div class="font-bold text-yellow-800 dark:text-yellow-100" id="nb-day-current-${makeSafeDomId(dateString)}">0</div>
                                 </div>
                             </div>
                         </div>
