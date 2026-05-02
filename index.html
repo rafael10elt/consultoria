@@ -3424,6 +3424,12 @@ function getNBPanelDayTotals(dateString, groups = getVisibleNBPanelGroups()) {
     }, 0);
     return { disponivel, producao, venda, sobraAnterior, perda, sobraAtual, faturamentoTotal };
 }
+function getNBPanelCalculationGroups() {
+    const selectedCategoryIds = new Set(getNBPanelSelectedCategoryIds().map(id => String(id)));
+    return groupNBProductsByCategory(true)
+        .filter(group => selectedCategoryIds.has(String(group.id)))
+        .filter(group => group.products.length > 0);
+}
 function getNBFinanceFieldMap(prefix) {
     return {
         [`${prefix}caixa-inicial`]: 'Caixa_Inicial',
@@ -3579,7 +3585,6 @@ function renderNBPanelCategoryModal() {
     if (!list) return;
     const selected = new Set(getNBPanelSelectedCategoryIds());
     const categories = nbCategoriasData.filter(category => category && category.Ativo !== false);
-    if (count) count.textContent = `${selected.size}/${categories.length}`;
     if (categories.length === 0) {
         list.innerHTML = '<div class="text-sm text-gray-500 dark:text-gray-400">Cadastre categorias ativas para configurar os cards da semana.</div>';
         return;
@@ -3596,6 +3601,14 @@ function renderNBPanelCategoryModal() {
             </label>
         `;
     }).join('');
+    updateNBPanelCategoryModalCount();
+}
+function updateNBPanelCategoryModalCount() {
+    const count = document.getElementById('nb-panel-category-count');
+    if (!count) return;
+    const categories = nbCategoriasData.filter(category => category && category.Ativo !== false);
+    const selected = document.querySelectorAll('.nb-panel-category-checkbox:checked').length;
+    count.textContent = `${selected}/${categories.length}`;
 }
 function openNBPanelCategoryModal() {
     if (!canAccessNBManagement()) return;
@@ -3704,7 +3717,7 @@ function renderNBPanel() {
                     </div>
                 `).join('')}
             </div>
-        </section>
+        </details>
     `).join('');
     renderNBPanelTotals();
 }
@@ -3740,9 +3753,7 @@ function renderNBTopProductsWeek() {
 }
 function getVisibleNBPanelGroups() {
     const search = (document.getElementById('nb-panel-product-search')?.value || '').trim().toLowerCase();
-    const selectedCategoryIds = new Set(getNBPanelSelectedCategoryIds().map(id => String(id)));
     return groupNBProductsByCategory(true)
-        .filter(group => group.id === 'sem-categoria' || selectedCategoryIds.has(String(group.id)))
         .map(group => ({
             ...group,
             products: group.products.filter(product => !search || (product.Nome || '').toLowerCase().includes(search))
@@ -3751,7 +3762,7 @@ function getVisibleNBPanelGroups() {
 }
 function renderNBPanelTotals() {
     const weekDates = getWeekDates();
-    const groups = getVisibleNBPanelGroups();
+    const groups = getNBPanelCalculationGroups();
     weekDates.forEach(dateString => {
         const totals = getNBPanelDayTotals(dateString, groups);
         const setText = (suffix, value) => {
@@ -3835,15 +3846,16 @@ function renderNBPanel() {
         return;
     }
     container.innerHTML = groups.map(group => `
-        <section class="bg-white dark:bg-gray-800 rounded-2xl shadow overflow-hidden">
-            <div class="px-4 py-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div>
-                        <h3 class="text-xl font-bold text-gray-800 dark:text-white">${group.name}</h3>
+        <details class="bg-white dark:bg-gray-800 rounded-2xl shadow overflow-hidden" ${searchTerm ? 'open' : ''}>
+            <summary class="cursor-pointer list-none px-4 py-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                <div class="flex items-center justify-between gap-4">
+                    <div class="min-w-0">
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-white truncate">${group.name}</h3>
                         <p class="text-sm text-gray-500 dark:text-gray-400">${group.products.length} produto(s) ativos(s) nesta categoria</p>
                     </div>
+                    <span class="text-sm text-brand-gold font-semibold whitespace-nowrap">Clique para expandir</span>
                 </div>
-            </div>
+            </summary>
             <div class="divide-y dark:divide-gray-700">
                 ${group.products.map(product => `
                     <div class="px-4 py-4">
@@ -9866,14 +9878,15 @@ function initializeApp() {
         document.getElementById('close-nb-panel-category-modal')?.addEventListener('click', () => hideModal(document.getElementById('nb-panel-category-modal')));
         document.getElementById('cancel-nb-panel-category-modal')?.addEventListener('click', () => hideModal(document.getElementById('nb-panel-category-modal')));
         document.getElementById('save-nb-panel-category-modal')?.addEventListener('click', saveNBPanelCategorySelection);
+        document.getElementById('nb-panel-category-list')?.addEventListener('change', updateNBPanelCategoryModalCount);
         document.getElementById('nb-panel-category-select-all')?.addEventListener('click', () => {
             const ids = getNBPanelActiveCategoryIds();
             document.querySelectorAll('.nb-panel-category-checkbox').forEach(input => { input.checked = ids.includes(Number(input.value)); });
-            renderNBPanelCategoryModal();
+            updateNBPanelCategoryModalCount();
         });
         document.getElementById('nb-panel-category-clear')?.addEventListener('click', () => {
             document.querySelectorAll('.nb-panel-category-checkbox').forEach(input => { input.checked = false; });
-            renderNBPanelCategoryModal();
+            updateNBPanelCategoryModalCount();
         });
         document.getElementById('nb-panel-expense-save-btn')?.addEventListener('click', handleNBPanelExpenseSubmit);
         document.getElementById('nb-panel-expense-cancel-btn')?.addEventListener('click', resetNBPanelExpenseForm);
