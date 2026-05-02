@@ -2431,6 +2431,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let nbCurrentWeekStart = null;
     let nbSelectedDate = null;
     let nbLastPanelSync = null;
+    let nbModuleRefreshTimer = null;
+    let nbModuleRefreshInProgress = false;
     let nbTopProductsGestaoLimit = 5;
     let nbAnalyticsPreset = 'day';
     const NB_PANEL_CATEGORY_SELECTION_KEY = 'nb-panel-selected-category-ids';
@@ -3544,6 +3546,45 @@ function updateNBStatusBadge() {
     const status = getNBStatusForDate(nbSelectedDate);
     badge.textContent = `Dia ${parseDateOnly(nbSelectedDate).toLocaleDateString('pt-BR')}: ${status}`;
     badge.className = `px-3 py-1 text-xs font-semibold rounded-full ${status === 'Fechado' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'}`;
+}
+function isNBModuleInputFocused() {
+    const active = document.activeElement;
+    if (!active) return false;
+    if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName) && !active.isContentEditable) return false;
+    return Boolean(active.closest('#nb-painel-content, #nb-gestao-content, #nb-panel-finance-modal, #nb-panel-category-modal'));
+}
+function startNBModuleAutoRefresh() {
+    if (nbModuleRefreshTimer) return;
+    nbModuleRefreshTimer = setInterval(() => {
+        refreshNBModuleSilently();
+    }, 25000);
+}
+function stopNBModuleAutoRefresh() {
+    if (!nbModuleRefreshTimer) return;
+    clearInterval(nbModuleRefreshTimer);
+    nbModuleRefreshTimer = null;
+}
+async function refreshNBModuleSilently() {
+    if (!canAccessNB() || !dataLoaded['nosso-bolo'] || nbModuleRefreshInProgress) return;
+    if (document.hidden || isNBModuleInputFocused()) return;
+    nbModuleRefreshInProgress = true;
+    try {
+        await Promise.all([
+            fetchNBCategorias(),
+            fetchNBProdutos(),
+            fetchNBControleDias(),
+            fetchNBApontamentos(),
+            fetchNBFinanceiro(),
+            fetchNBDespesasVales(),
+            fetchNBDiarioBordo()
+        ]);
+        if (nbCurrentWeekStart == null) nbCurrentWeekStart = getStartOfWeek();
+        renderNBModule();
+    } catch (error) {
+        console.warn('NB auto-refresh falhou:', error);
+    } finally {
+        nbModuleRefreshInProgress = false;
+    }
 }
 function isNBRecordActive(value) {
     return value === true || value === 1 || value === '1' || value === 'true' || value === 'True' || value === 'Sim';
@@ -4850,6 +4891,7 @@ function renderNBModule() {
 async function loadNBModuleData(force = false) {
     if (!force && dataLoaded['nosso-bolo']) {
         renderNBModule();
+        startNBModuleAutoRefresh();
         return;
     }
     showLoadingOverlay('Carregando Nosso Bolo...');
@@ -4862,6 +4904,7 @@ async function loadNBModuleData(force = false) {
     await fetchNBApontamentos();
     dataLoaded['nosso-bolo'] = true;
     renderNBModule();
+    startNBModuleAutoRefresh();
     hideLoadingOverlay();
 }
 function updateNBCellDom(cell) {
@@ -4890,7 +4933,9 @@ async function syncNBSobraCarryForwardFrom(dateString, productId) {
     let carryValue = normalizeNBNumber(currentRecord.Qtd_Sobra_Atual);
     let nextDate = getNextNBOperationalDate(dateString);
     const visited = new Set();
-    while (getNBControlDayByDate(nextDate) && !visited.has(nextDate)) {
+    const latestControlDate = nbControleDiasData.length ? parseDateOnly(nbControleDiasData[nbControleDiasData.length - 1].Data) : null;
+    const propagationLimit = latestControlDate ? addDays(latestControlDate, 7) : addDays(parseDateOnly(dateString), 7);
+    while (!visited.has(nextDate) && parseDateOnly(nextDate) <= propagationLimit) {
         visited.add(nextDate);
         const nextControlDay = await ensureNBControlDay(nextDate);
         if (!nextControlDay) break;
@@ -4926,7 +4971,7 @@ async function syncNBSobraCarryForwardFrom(dateString, productId) {
     }
 }
 async function normalizeNBCarryForwardAll() {
-    const activeProducts = nbProdutosData.filter(product => product.Ativo !== false);
+    const activeProducts = nbProdutosData.filter(product => isNBRecordActive(product.Ativo));
     const controlDates = nbControleDiasData
         .map(day => day.Data)
         .filter(Boolean)
@@ -5256,8 +5301,11 @@ async function loadInitialData() {
         const today = toDateInputValue(new Date());
         if (!nbSelectedDate) setNBSelectedDate(today);
         await ensureNBControlDay(today);
+        await normalizeNBCarryForwardAll();
+        await fetchNBApontamentos();
         dataLoaded['nosso-bolo'] = true;
         renderNBModule();
+        startNBModuleAutoRefresh();
         hideLoadingOverlay();
         return;
     }
@@ -9940,6 +9988,12 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
 
         allElements.loginForm?.addEventListener('submit', handleLogin);
         document.body.addEventListener('click', handleGlobalClick);
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) refreshNBModuleSilently();
+        });
+        window.addEventListener('focus', () => {
+            refreshNBModuleSilently();
+        });
 
         // Listeners para botões de editar/apagar dos registros do período (Financeiro)
         document.body.addEventListener('click', function(e) {
