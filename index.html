@@ -3742,7 +3742,7 @@ function renderNBPanel() {
     const categoryBtn = document.getElementById('nb-panel-category-btn');
     if (categoryBtn) {
         const count = getNBPanelSelectedCategoryIds().length;
-        categoryBtn.classList.toggle('hidden', !canAccessNBManagement());
+        categoryBtn.classList.toggle('hidden', !canAccessNB());
         categoryBtn.textContent = `Categorias do Painel (${count})`;
     }
     cardsContainer.innerHTML = `
@@ -3758,10 +3758,12 @@ function renderNBPanel() {
                                 </div>
                                 <span class="inline-flex items-center shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap ${getNBStatusForDate(dateString) === 'Fechado' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : (dateString === toDateInputValue(new Date()) ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200' : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200')}">${dateString === toDateInputValue(new Date()) ? 'Hoje' : (getNBStatusForDate(dateString) === 'Fechado' ? 'Fechado' : 'Disponível')}</span>
                             </div>
+                            ${!isNBOperatorRole() || dateString === toDateInputValue(new Date()) ? `
                             <div class="mt-3 rounded-2xl border border-brand-gold/15 bg-brand-gold/10 px-3 py-2.5">
                                 <div class="text-[11px] font-semibold uppercase tracking-wide text-brand-dark/70">Faturamento Total</div>
                                 <div class="text-base font-bold text-brand-dark dark:text-white" id="nb-day-revenue-${makeSafeDomId(dateString)}">R$ 0,00</div>
                             </div>
+                            ` : ''}
                             <div class="grid grid-cols-2 gap-2 text-[10px] leading-tight mt-3">
                                 <div class="rounded-xl bg-slate-50 dark:bg-slate-700 px-2 py-2 min-h-[3.85rem] flex flex-col justify-between">
                                     <div class="text-gray-500 dark:text-gray-300">Produzido</div>
