@@ -3658,16 +3658,18 @@ function groupNBProductsByCategory(activeOnly = true) {
         .forEach(category => {
             grouped[category.Id] = { id: category.Id, name: category.Nome || 'Sem nome', products: [] };
         });
-    grouped['sem-categoria'] = grouped['sem-categoria'] || { id: 'sem-categoria', name: 'Sem categoria', products: [] };
     nbProdutosData.filter(product => !activeOnly || isNBRecordActive(product.Ativo)).forEach(product => {
         const categoryId = getNBProductCategoryId(product) || 'sem-categoria';
         const category = categoriesMap.get(categoryId);
-        if (activeOnly && categoryId !== 'sem-categoria' && !isNBRecordActive(category?.Ativo)) return;
+        if (!categoryId || categoryId === 'sem-categoria') return;
+        if (activeOnly && !isNBRecordActive(category?.Ativo)) return;
         const categoryName = category?.Nome || 'Sem categoria';
         if (!grouped[categoryId]) grouped[categoryId] = { id: categoryId, name: categoryName, products: [] };
         grouped[categoryId].products.push(product);
     });
-    return Object.values(grouped).sort((a, b) => a.name.localeCompare(b.name));
+    return Object.values(grouped)
+        .filter(group => group.id !== 'sem-categoria' || group.products.length > 0)
+        .sort((a, b) => a.name.localeCompare(b.name));
 }
 function renderNBPanelTotals() {
     const grouped = groupNBProductsByCategory(true);
