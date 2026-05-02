@@ -3642,6 +3642,12 @@ function syncNBPanelCategoryAccordion() {
 function groupNBProductsByCategory(activeOnly = true) {
     const categoriesMap = new Map(nbCategoriasData.map(category => [category.Id, category]));
     const grouped = {};
+    nbCategoriasData
+        .filter(category => !activeOnly || category.Ativo !== false)
+        .forEach(category => {
+            grouped[category.Id] = { id: category.Id, name: category.Nome || 'Sem nome', products: [] };
+        });
+    grouped['sem-categoria'] = grouped['sem-categoria'] || { id: 'sem-categoria', name: 'Sem categoria', products: [] };
     nbProdutosData.filter(product => !activeOnly || product.Ativo !== false).forEach(product => {
         const categoryId = getNBProductCategoryId(product) || 'sem-categoria';
         const categoryName = categoriesMap.get(categoryId)?.Nome || 'Sem categoria';
@@ -3876,7 +3882,9 @@ function renderNBPanel() {
                 </div>
             </summary>
             <div class="divide-y dark:divide-gray-700">
-                ${group.products.map(product => `
+                ${group.products.length === 0 ? `
+                    <div class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">Nenhum produto ativo nesta categoria.</div>
+                ` : group.products.map(product => `
                     <div class="px-4 py-4">
                         <div class="overflow-x-auto">
                             <div class="min-w-[980px] grid gap-3" style="grid-template-columns:minmax(16rem,20rem) repeat(${weekDates.length},minmax(10rem,1fr));">
