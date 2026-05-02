@@ -3411,6 +3411,39 @@ function getNBFinanceDaySummary(dateString) {
         status: financeRecord.Status || 'Aberto'
     };
 }
+function getNBFinanceDraftSummary(dateString, prefix) {
+    const financeRecord = getNBFinanceRecord(dateString) || {};
+    const expenseRecords = getNBExpenseRecords(dateString);
+    const readDraftValue = (suffix, recordValue = 0) => {
+        const input = document.getElementById(`${prefix}${suffix}`);
+        return input ? normalizeNBNumber(input.value) : Number(recordValue || 0);
+    };
+    const caixaInicial = readDraftValue('caixa-inicial', financeRecord.Caixa_Inicial);
+    const caixaFinal = readDraftValue('caixa-final', financeRecord.Caixa_Final);
+    const sangria = readDraftValue('sangria', financeRecord.Sangria);
+    const entradasPix = readDraftValue('entrada-pix', financeRecord.Entrada_PIX);
+    const entradasApp = readDraftValue('entrada-app', financeRecord.Entrada_App);
+    const entradasMaquineta = readDraftValue('entrada-maquineta', financeRecord.Entrada_Maquineta);
+    const despesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    const faturamentoDinheiro = (caixaFinal + sangria + despesas + vales) - caixaInicial;
+    const faturamentoTotal = faturamentoDinheiro + entradasPix + entradasApp + entradasMaquineta;
+    const faturamentoFinal = faturamentoTotal - faturamentoDinheiro;
+    return {
+        caixaInicial,
+        caixaFinal,
+        sangria,
+        entradasPix,
+        entradasApp,
+        entradasMaquineta,
+        despesas,
+        vales,
+        faturamentoDinheiro,
+        faturamentoTotal,
+        faturamentoFinal,
+        status: financeRecord.Status || 'Aberto'
+    };
+}
 function getNBPanelDayTotals(dateString, groups = getVisibleNBPanelGroups()) {
     const products = groups.flatMap(group => group.products || []);
     const productMap = new Map(products.map(product => [product.Id, product]));
@@ -4577,7 +4610,9 @@ function renderNBFinanceForm() {
         statusToggle.dataset.status = status;
     }
     const summary = document.getElementById('nb-finance-summary');
-    const totals = getNBFinanceDaySummary(nbSelectedDate);
+    const totals = getNBFinanceDraftSummary(nbSelectedDate, 'nb-fin-');
+    const entradaDinheiroDisplay = document.getElementById('nb-fin-entrada-dinheiro-display');
+    if (entradaDinheiroDisplay) entradaDinheiroDisplay.textContent = formatCurrencyBR(totals.faturamentoDinheiro);
     if (summary) summary.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-6 gap-3"><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento em dinheiro</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoDinheiro)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento Real</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoTotal)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Real - Teórico</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoFinal)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Despesas + Vales</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.despesas + totals.vales)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Entradas em cartões/Pix</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.entradasPix + totals.entradasApp + totals.entradasMaquineta)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Status do dia</span><div class="font-bold ${status === 'Fechado' ? 'text-red-600 dark:text-red-300' : 'text-green-600 dark:text-green-300'}">${status}</div></div></div>`;
     const financePeriodList = document.getElementById('nb-finance-period-list');
     if (financePeriodList) {
@@ -4623,7 +4658,7 @@ function renderNBPanelFinanceModal() {
         if (input) input.value = Number(record[key] || 0);
     });
     if (label) label.textContent = `Registro do dia ${parseDateOnly(today).toLocaleDateString('pt-BR')}`;
-    const totals = getNBFinanceDaySummary(today);
+    const totals = getNBFinanceDraftSummary(today, 'nb-panel-fin-');
     if (statusText) statusText.textContent = `Status do dia: ${totals.status}`;
     if (summary) summary.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-6 gap-3"><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento em dinheiro</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoDinheiro)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Faturamento Real</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoTotal)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Real - Teórico</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.faturamentoFinal)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Despesas + Vales</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.despesas + totals.vales)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Entradas em cartões/Pix</span><div class="font-bold text-gray-800 dark:text-white">${formatCurrencyBR(totals.entradasPix + totals.entradasApp + totals.entradasMaquineta)}</div></div><div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-3"><span class="text-xs text-gray-500 dark:text-gray-300">Status do dia</span><div class="font-bold ${totals.status === 'Fechado' ? 'text-red-600 dark:text-red-300' : 'text-green-600 dark:text-green-300'}">${totals.status}</div></div></div>`;
     if (toggleBtn) toggleBtn.style.display = isNBFinanceDayOpen(today) ? '' : 'none';
@@ -9874,6 +9909,22 @@ function initializeApp() {
         document.getElementById('nb-panel-finance-btn')?.addEventListener('click', openNBPanelFinanceModal);
         document.getElementById('nb-panel-category-btn')?.addEventListener('click', openNBPanelCategoryModal);
         document.getElementById('nb-panel-finance-form')?.addEventListener('submit', handleNBPanelFinanceSubmit);
+        [
+            'nb-fin-caixa-inicial',
+            'nb-fin-caixa-final',
+            'nb-fin-sangria',
+            'nb-fin-entrada-pix',
+            'nb-fin-entrada-app',
+            'nb-fin-entrada-maquineta'
+        ].forEach(id => document.getElementById(id)?.addEventListener('input', renderNBFinanceForm));
+        [
+            'nb-panel-fin-caixa-inicial',
+            'nb-panel-fin-caixa-final',
+            'nb-panel-fin-sangria',
+            'nb-panel-fin-entrada-pix',
+            'nb-panel-fin-entrada-app',
+            'nb-panel-fin-entrada-maquineta'
+        ].forEach(id => document.getElementById(id)?.addEventListener('input', renderNBPanelFinanceModal));
         document.getElementById('close-nb-panel-finance-modal')?.addEventListener('click', () => hideModal(document.getElementById('nb-panel-finance-modal')));
         document.getElementById('close-nb-panel-finance-form')?.addEventListener('click', () => hideModal(document.getElementById('nb-panel-finance-modal')));
         document.getElementById('close-nb-panel-category-modal')?.addEventListener('click', () => hideModal(document.getElementById('nb-panel-category-modal')));
