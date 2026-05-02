@@ -3545,9 +3545,12 @@ function updateNBStatusBadge() {
     badge.textContent = `Dia ${parseDateOnly(nbSelectedDate).toLocaleDateString('pt-BR')}: ${status}`;
     badge.className = `px-3 py-1 text-xs font-semibold rounded-full ${status === 'Fechado' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'}`;
 }
+function isNBRecordActive(value) {
+    return value === true || value === 1 || value === '1' || value === 'true' || value === 'True' || value === 'Sim';
+}
 function getNBPanelActiveCategoryIds() {
     return nbCategoriasData
-        .filter(category => category && category.Ativo !== false && category.Id != null)
+        .filter(category => category && isNBRecordActive(category.Ativo) && category.Id != null)
         .map(category => Number(category.Id))
         .filter(id => Number.isFinite(id));
 }
@@ -3587,7 +3590,7 @@ function renderNBPanelCategoryModal() {
     const count = document.getElementById('nb-panel-category-count');
     if (!list) return;
     const selected = new Set(getNBPanelSelectedCategoryIds());
-    const categories = nbCategoriasData.filter(category => category && category.Ativo !== false);
+    const categories = nbCategoriasData.filter(category => category && isNBRecordActive(category.Ativo));
     if (categories.length === 0) {
         list.innerHTML = '<div class="text-sm text-gray-500 dark:text-gray-400">Cadastre categorias ativas para configurar os cards da semana.</div>';
         return;
@@ -3609,7 +3612,7 @@ function renderNBPanelCategoryModal() {
 function updateNBPanelCategoryModalCount() {
     const count = document.getElementById('nb-panel-category-count');
     if (!count) return;
-    const categories = nbCategoriasData.filter(category => category && category.Ativo !== false);
+    const categories = nbCategoriasData.filter(category => category && isNBRecordActive(category.Ativo));
     const selected = document.querySelectorAll('.nb-panel-category-checkbox:checked').length;
     count.textContent = `${selected}/${categories.length}`;
 }
@@ -3636,6 +3639,14 @@ function syncNBPanelCategoryAccordion() {
             items.forEach(other => {
                 if (other !== details) other.open = false;
             });
+            const target = details.querySelector('[data-nb-category-products]');
+            if (target) {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        target.scrollIntoView({ block: 'start', behavior: 'smooth' });
+                    });
+                });
+            }
         });
     });
 }
@@ -3643,14 +3654,16 @@ function groupNBProductsByCategory(activeOnly = true) {
     const categoriesMap = new Map(nbCategoriasData.map(category => [category.Id, category]));
     const grouped = {};
     nbCategoriasData
-        .filter(category => !activeOnly || category.Ativo !== false)
+        .filter(category => !activeOnly || isNBRecordActive(category.Ativo))
         .forEach(category => {
             grouped[category.Id] = { id: category.Id, name: category.Nome || 'Sem nome', products: [] };
         });
     grouped['sem-categoria'] = grouped['sem-categoria'] || { id: 'sem-categoria', name: 'Sem categoria', products: [] };
-    nbProdutosData.filter(product => !activeOnly || product.Ativo !== false).forEach(product => {
+    nbProdutosData.filter(product => !activeOnly || isNBRecordActive(product.Ativo)).forEach(product => {
         const categoryId = getNBProductCategoryId(product) || 'sem-categoria';
-        const categoryName = categoriesMap.get(categoryId)?.Nome || 'Sem categoria';
+        const category = categoriesMap.get(categoryId);
+        if (activeOnly && categoryId !== 'sem-categoria' && !isNBRecordActive(category?.Ativo)) return;
+        const categoryName = category?.Nome || 'Sem categoria';
         if (!grouped[categoryId]) grouped[categoryId] = { id: categoryId, name: categoryName, products: [] };
         grouped[categoryId].products.push(product);
     });
@@ -3782,7 +3795,7 @@ function getVisibleNBPanelGroups() {
             ...group,
             products: group.products.filter(product => !search || (product.Nome || '').toLowerCase().includes(search))
         }))
-        .filter(group => group.products.length > 0);
+        .filter(group => group.products.length > 0 || !search);
 }
 function renderNBPanelTotals() {
     const weekDates = getWeekDates();
@@ -3881,7 +3894,7 @@ function renderNBPanel() {
                     <span class="text-sm text-brand-gold font-semibold whitespace-nowrap">Clique para expandir</span>
                 </div>
             </summary>
-            <div class="divide-y dark:divide-gray-700">
+            <div class="divide-y dark:divide-gray-700" data-nb-category-products>
                 ${group.products.length === 0 ? `
                     <div class="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">Nenhum produto ativo nesta categoria.</div>
                 ` : group.products.map(product => `
