@@ -2437,7 +2437,7 @@ body {
                 </div>
                 <div class="rounded-2xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/40">
                     <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 flex-1">
                             <div>
                                 <label for="nb-encomenda-product-category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Categoria</label>
                                 <select id="nb-encomenda-product-category" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
@@ -2448,7 +2448,7 @@ body {
                                 <label for="nb-encomenda-product-search" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pesquisar produto</label>
                                 <input type="text" id="nb-encomenda-product-search" placeholder="Digite o nome do produto..." class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                             </div>
-                            <div>
+                            <div class="md:col-span-2">
                                 <label for="nb-encomenda-product" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Produto ativo</label>
                                 <select id="nb-encomenda-product" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white"></select>
                             </div>
@@ -2456,8 +2456,8 @@ body {
                                 <label for="nb-encomenda-quantity" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Quantidade</label>
                                 <input type="number" min="1" step="1" id="nb-encomenda-quantity" placeholder="1" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                             </div>
-                            <div class="flex items-end">
-                                <button type="button" id="nb-encomenda-add-item-btn" class="w-full px-4 py-2 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-100 dark:hover:bg-blue-800">Adicionar Item</button>
+                            <div class="md:col-span-5 flex items-end">
+                                <button type="button" id="nb-encomenda-add-item-btn" class="w-full md:w-auto md:min-w-52 px-4 py-2 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-100 dark:hover:bg-blue-800">Adicionar Item</button>
                             </div>
                         </div>
                     </div>
@@ -3618,6 +3618,31 @@ function normalizeNBEncomendaDraftItems(items = []) {
     });
     return [...grouped.values()];
 }
+function getNBEncomendaItemProductId(item = {}) {
+    return Number(item?.Produto?.Id || item?.NB_Produtos?.Id || item?.Produto_id || item?.NB_Produtos_id || getNBLinkedProductId(item) || 0);
+}
+function getNBEncomendaItemProduct(item = {}) {
+    const productId = getNBEncomendaItemProductId(item);
+    if (!productId) return null;
+    return nbProdutosData.find(product => Number(product?.Id) === productId) || item?.Produto || item?.NB_Produtos || null;
+}
+function getNBEncomendaItemQuantity(item = {}) {
+    return Math.max(1, normalizeNBNumber(item?.Quantidade || 0));
+}
+function getNBEncomendaItemUnitPrice(item = {}) {
+    const product = getNBEncomendaItemProduct(item);
+    const unitPrice = Number(item?.Preco_Unitario ?? item?.Valor_Unitario ?? item?.Produto?.Preco_Venda ?? item?.NB_Produtos?.Preco_Venda ?? product?.Preco_Venda ?? 0);
+    return Number.isFinite(unitPrice) ? unitPrice : 0;
+}
+function getNBEncomendaItemSubtotal(item = {}) {
+    const subtotal = Number(item?.Subtotal ?? item?.Valor_Total ?? 0);
+    if (subtotal > 0) return subtotal;
+    return getNBEncomendaItemQuantity(item) * getNBEncomendaItemUnitPrice(item);
+}
+function getNBEncomendaItemName(item = {}) {
+    const product = getNBEncomendaItemProduct(item);
+    return item?.Produto?.Nome || item?.NB_Produtos?.Nome || item?.Produto_Nome || item?.ProdutoNome || item?.Nome || product?.Nome || 'Produto';
+}
 function getNBControlDayFinancialSnapshot(dateString) {
     const productMap = new Map(nbProdutosData.map(product => [product.Id, product]));
     const apontamentos = nbApontamentosData.filter(item => getNBLinkedDateValue(item) === dateString);
@@ -3921,7 +3946,7 @@ function getNBEncomendaDraftHeader() {
     };
 }
 function getNBEncomendaDraftTotals(header = getNBEncomendaDraftHeader(), items = nbEncomendaDraftItems, payments = nbEncomendaDraftPayments) {
-    const totalProdutos = items.reduce((sum, item) => sum + Number(item.Subtotal || 0), 0);
+    const totalProdutos = items.reduce((sum, item) => sum + getNBEncomendaItemSubtotal(item), 0);
     const acrescimo = Number(header?.Acrescimo_Valor || 0);
     const totalGeral = totalProdutos + acrescimo;
     const totalPago = payments.reduce((sum, item) => sum + Number(item.Valor || 0), 0);
@@ -4036,10 +4061,10 @@ function renderNBEncomendaSelectedCard(order = null) {
                     ${orderItems.map(item => `
                         <div class="flex items-center justify-between gap-3 rounded-lg bg-gray-50 dark:bg-gray-700/60 px-3 py-2">
                             <div class="min-w-0">
-                                <div class="font-medium text-gray-900 dark:text-white truncate">${escapeNBHtml(item.NB_Produtos?.Nome || item.Produto?.Nome || 'Produto')}</div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">${normalizeNBNumber(item.Quantidade)} x ${formatCurrencyBR(item.Preco_Unitario || 0)}</div>
+                                <div class="font-medium text-gray-900 dark:text-white truncate">${escapeNBHtml(getNBEncomendaItemName(item))}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">${getNBEncomendaItemQuantity(item)} x ${formatCurrencyBR(getNBEncomendaItemUnitPrice(item))}</div>
                             </div>
-                            <div class="font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(item.Subtotal || 0)}</div>
+                            <div class="font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(getNBEncomendaItemSubtotal(item))}</div>
                         </div>
                     `).join('') || '<div class="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500 dark:text-gray-400">Nenhum item adicionado.</div>'}
                 </div>
@@ -4128,10 +4153,10 @@ function setNBEncomendaDraftFromRecord(record = null) {
     nbEncomendaDraftItems = normalizeNBEncomendaDraftItems(getNBEncomendaItemsByOrderId(record.Id).map(item => ({
         tempId: item.Id,
         Id: item.Id,
-        Produto: item.NB_Produtos || item.Produto || null,
-        Quantidade: Number(item.Quantidade || 0),
-        Preco_Unitario: Number(item.Preco_Unitario || 0),
-        Subtotal: Number(item.Subtotal || 0),
+        Produto: item.NB_Produtos || item.Produto || getNBEncomendaItemProduct(item),
+        Quantidade: getNBEncomendaItemQuantity(item),
+        Preco_Unitario: getNBEncomendaItemUnitPrice(item),
+        Subtotal: getNBEncomendaItemSubtotal(item),
         Observacao_Item: item.Observacao_Item || ''
     })));
     nbEncomendaDraftPayments = getNBEncomendaPaymentsByOrderId(record.Id).map(payment => ({
