@@ -2348,7 +2348,7 @@ body {
         </div>
     </div>
     <div id="nb-encomendas-modal" class="fixed inset-0 z-[80] items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
-        <div class="w-full max-w-7xl p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate max-h-[92vh] flex flex-col">
+        <div class="w-full max-w-7xl p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate max-h-[92vh] overflow-hidden flex flex-col">
             <div class="flex items-start justify-between gap-4 mb-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900 dark:text-white">Encomendas</h2>
@@ -2365,7 +2365,7 @@ body {
                     <div id="nb-encomenda-list" class="space-y-3 overflow-y-auto pr-1 flex-1"></div>
                 </div>
                 <div class="flex flex-col gap-4 min-h-0 overflow-hidden">
-                    <form id="nb-encomenda-form" class="flex flex-col gap-4 flex-1 min-h-0 overflow-hidden">
+                    <form id="nb-encomenda-form" class="flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto pr-2 pb-2">
                         <input type="hidden" id="nb-encomenda-id">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -2407,7 +2407,17 @@ body {
                         </div>
                         <div class="rounded-2xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/40">
                             <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
+                                    <div>
+                                        <label for="nb-encomenda-product-category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Categoria</label>
+                                        <select id="nb-encomenda-product-category" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                            <option value="all">Todas</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="nb-encomenda-product-search" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pesquisar produto</label>
+                                        <input type="text" id="nb-encomenda-product-search" placeholder="Digite o nome do produto..." class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                    </div>
                                     <div>
                                         <label for="nb-encomenda-product" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Produto ativo</label>
                                         <select id="nb-encomenda-product" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white"></select>
@@ -2492,7 +2502,7 @@ body {
                                 <div id="nb-encomenda-balance" class="text-lg font-bold text-gray-800 dark:text-white">R$ 0,00</div>
                             </div>
                         </div>
-                        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between pt-3 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm">
                             <div class="flex items-center gap-2">
                                 <a id="nb-encomenda-whatsapp-btn" href="#" target="_blank" rel="noopener noreferrer" class="hidden px-4 py-2 rounded-lg bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900 dark:text-green-100 dark:hover:bg-green-800">Abrir WhatsApp</a>
                                 <span id="nb-encomenda-selected-info" class="text-sm text-gray-500 dark:text-gray-400"></span>
@@ -2602,6 +2612,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let nbEncomendaDraftHeader = null;
     let nbEncomendaDraftItems = [];
     let nbEncomendaDraftPayments = [];
+    let nbEncomendaProductCategoryFilter = 'all';
+    let nbEncomendaProductSearchFilter = '';
     let nbTopProductsGestaoLimit = 5;
     let nbAnalyticsPreset = 'day';
     const NB_PANEL_CATEGORY_SELECTION_KEY = 'nb-panel-selected-category-ids';
@@ -3852,12 +3864,35 @@ function getNBEncomendaDraftTotals(header = getNBEncomendaDraftHeader(), items =
         saldoPendente: totalGeral - totalPago
     };
 }
+function getNBEncomendaProductFilterCategoryId() {
+    const value = document.getElementById('nb-encomenda-product-category')?.value || 'all';
+    return value === 'all' ? 'all' : Number(value);
+}
+function getNBEncomendaProductFilterSearchTerm() {
+    return (document.getElementById('nb-encomenda-product-search')?.value || '').trim().toLowerCase();
+}
+function renderNBEncomendaCategoryOptions() {
+    const select = document.getElementById('nb-encomenda-product-category');
+    if (!select) return;
+    const current = select.value || nbEncomendaProductCategoryFilter || 'all';
+    const categories = nbCategoriasData
+        .filter(category => category && isNBRecordActive(category.Ativo))
+        .sort((a, b) => (a.Nome || '').localeCompare(b.Nome || ''));
+    select.innerHTML = ['<option value="all">Todas</option>']
+        .concat(categories.map(category => `<option value="${category.Id}">${escapeNBHtml(category.Nome || 'Sem nome')}</option>`))
+        .join('');
+    select.value = current;
+}
 function syncNBEncomendaProductOptions() {
     const select = document.getElementById('nb-encomenda-product');
     if (!select) return;
     const current = select.value;
+    const categoryFilter = getNBEncomendaProductFilterCategoryId();
+    const searchFilter = getNBEncomendaProductFilterSearchTerm();
     const options = nbProdutosData
         .filter(product => product && product.Ativo !== false)
+        .filter(product => categoryFilter === 'all' || String(getNBProductCategoryId(product) || '') === String(categoryFilter))
+        .filter(product => !searchFilter || (product.Nome || '').toLowerCase().includes(searchFilter))
         .sort((a, b) => (a.Nome || '').localeCompare(b.Nome || ''))
         .map(product => `<option value="${product.Id}">${escapeNBHtml(product.Nome || '')}${product.Categoria?.Nome ? ` - ${escapeNBHtml(product.Categoria.Nome)}` : ''} (${formatCurrencyBR(product.Preco_Venda || 0)})</option>`)
         .join('');
@@ -3917,6 +3952,7 @@ function syncNBEncomendaHeaderFromForm() {
 function renderNBEncomendasModal() {
     const modal = document.getElementById('nb-encomendas-modal');
     if (!modal) return;
+    renderNBEncomendaCategoryOptions();
     syncNBEncomendaProductOptions();
     const selectedRecord = nbSelectedEncomendaId ? getNBEncomendaById(nbSelectedEncomendaId) : null;
     const header = nbEncomendaDraftHeader || (selectedRecord ? {
@@ -3946,12 +3982,9 @@ function renderNBEncomendasModal() {
             return !search || client.includes(search) || phone.includes(search) || status.includes(search);
         });
         list.innerHTML = filtered.map(order => {
-            const totals = {
-                totalProdutos: Number(order.Total_Produtos || 0),
-                totalGeral: Number(order.Total_Geral || 0),
-                totalPago: Number(order.Total_Pago || 0),
-                saldoPendente: Number(order.Saldo_Pendente || 0)
-            };
+            const orderItems = getNBEncomendaItemsByOrderId(order.Id);
+            const orderPayments = getNBEncomendaPaymentsByOrderId(order.Id);
+            const totals = getNBEncomendaDraftTotals(order, orderItems, orderPayments);
             const badgeClass = order.Status === 'Finalizada'
                 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
                 : order.Status === 'Cancelada'
@@ -4128,7 +4161,6 @@ function deleteNBEncomendaDraftPayment(tempId) {
 function getNBEncomendaHeaderPayload() {
     syncNBEncomendaHeaderFromForm();
     const header = getNBEncomendaDraftHeader();
-    const totals = getNBEncomendaDraftTotals(header);
     return {
         Cliente_Nome: header.Cliente_Nome,
         Telefone: header.Telefone,
@@ -4137,10 +4169,6 @@ function getNBEncomendaHeaderPayload() {
         Data_Entrega_Prevista: header.Data_Entrega_Prevista,
         Data_Entrega_Real: header.Data_Entrega_Real || null,
         Acrescimo_Valor: Number(header.Acrescimo_Valor || 0),
-        Total_Produtos: totals.totalProdutos,
-        Total_Geral: totals.totalGeral,
-        Total_Pago: totals.totalPago,
-        Saldo_Pendente: totals.saldoPendente,
         Status: header.Status || 'Aberta'
     };
 }
@@ -10629,6 +10657,14 @@ function initializeApp() {
             renderNBEncomendasModal();
         });
         document.getElementById('nb-encomenda-search')?.addEventListener('input', renderNBEncomendasModal);
+        document.getElementById('nb-encomenda-product-category')?.addEventListener('change', () => {
+            nbEncomendaProductCategoryFilter = getNBEncomendaProductFilterCategoryId();
+            renderNBEncomendasModal();
+        });
+        document.getElementById('nb-encomenda-product-search')?.addEventListener('input', () => {
+            nbEncomendaProductSearchFilter = getNBEncomendaProductFilterSearchTerm();
+            renderNBEncomendasModal();
+        });
         document.getElementById('nb-encomenda-add-item-btn')?.addEventListener('click', addNBEncomendaDraftItem);
         document.getElementById('nb-encomenda-add-payment-btn')?.addEventListener('click', addNBEncomendaDraftPayment);
         document.getElementById('nb-encomenda-cancel-btn')?.addEventListener('click', () => {
