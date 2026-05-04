@@ -2503,15 +2503,14 @@ body {
                             </div>
                         </div>
                         <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between pt-3 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm">
-                            <div class="flex items-center gap-2">
-                                <a id="nb-encomenda-whatsapp-btn" href="#" target="_blank" rel="noopener noreferrer" class="hidden px-4 py-2 rounded-lg bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900 dark:text-green-100 dark:hover:bg-green-800">Abrir WhatsApp</a>
+                        <div class="flex items-center gap-2">
                                 <span id="nb-encomenda-selected-info" class="text-sm text-gray-500 dark:text-gray-400"></span>
-                            </div>
-                            <div class="flex flex-wrap gap-3">
+                        </div>
+                        <div class="flex flex-wrap gap-3">
                                 <button type="button" id="nb-encomenda-delete-btn" class="hidden px-4 py-2 rounded-lg bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-800">Apagar Encomenda</button>
                                 <button type="button" id="nb-encomenda-cancel-btn" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Limpar</button>
                                 <button type="submit" id="nb-encomenda-save-btn" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Salvar Encomenda</button>
-                            </div>
+                        </div>
                         </div>
                     </form>
                 </div>
@@ -3450,7 +3449,7 @@ function getNBLinkedDateValue(record) {
 }
 function getNBLinkedProductId(record) {
     if (!record) return null;
-    return record.Produto?.Id || record.Produto_id || null;
+    return record.NB_Produtos?.Id || record.NB_Produtos_id || record.Produto?.Id || record.Produto_id || null;
 }
 function getNBProductCategoryId(product) {
     return product?.Categoria?.Id || product?.NB_Categorias_id || product?.Categoria_id || null;
@@ -3524,17 +3523,19 @@ function getNBExpensePeriodTotals(startDate, endDate) {
 }
 function getNBLinkedEncomendaId(record) {
     if (!record) return null;
-    return record.Encomenda?.Id || record.Encomenda_id || null;
+    return record.NB_Encomendas?.Id || record.NB_Encomendas_id || record.Encomenda?.Id || record.Encomenda_id || null;
 }
 function getNBEncomendaPaymentDateValue(record) {
     if (!record) return null;
     if (record.Data_Pagamento) return record.Data_Pagamento;
+    if (record.NB_Controle_Dias && typeof record.NB_Controle_Dias === 'object') return record.NB_Controle_Dias.Data || null;
+    if (record.NB_Controlle_Dias && typeof record.NB_Controlle_Dias === 'object') return record.NB_Controlle_Dias.Data || null;
     if (record.Controle_Dia && typeof record.Controle_Dia === 'object') return record.Controle_Dia.Data || null;
     return getNBLinkedDateValue(record);
 }
 function getNBEncomendaPaymentControlDayId(record) {
     if (!record) return null;
-    return record.Controle_Dia?.Id || record.Controle_Dia_id || null;
+    return record.NB_Controle_Dias?.Id || record.NB_Controle_Dias_id || record.NB_Controlle_Dias?.Id || record.NB_Controlle_Dias_id || record.Controle_Dia?.Id || record.Controle_Dia_id || null;
 }
 function getNBEncomendaPaymentsForDate(dateString) {
     return nbEncomendaPagamentosData.filter(item => getNBEncomendaPaymentDateValue(item) === dateString);
@@ -3731,10 +3732,10 @@ function syncNBPanelFinanceButtonVisibility() {
     const btn = document.getElementById('nb-panel-finance-btn');
     if (!btn) return;
     const today = toDateInputValue(new Date());
-    btn.classList.toggle('hidden', !isNBOperatorRole() || !isNBFinanceDayOpen(today));
+    btn.classList.toggle('hidden', !canAccessNB() || !isNBFinanceDayOpen(today));
 }
 function openNBPanelFinanceModal() {
-    if (!isNBOperatorRole() || !isNBFinanceDayOpen(toDateInputValue(new Date()))) return;
+    if (!canAccessNB() || !isNBFinanceDayOpen(toDateInputValue(new Date()))) return;
     resetNBPanelExpenseForm();
     renderNBPanelFinanceModal();
     showModal(document.getElementById('nb-panel-finance-modal'));
@@ -3791,9 +3792,13 @@ async function fetchNBDiarioBordo() {
 async function fetchNBEncomendas() {
     const result = await nocoFetch(`${TABLE_IDS.NB_Encomendas}?nested[all]=true`);
     nbEncomendasData = result?.list ? result.list.sort((a, b) => {
-        const left = a.Data_Pedido || a.CreatedAt || '';
-        const right = b.Data_Pedido || b.CreatedAt || '';
-        return String(right).localeCompare(String(left));
+        const statusPriority = { Aberta: 0, Parcial: 1, Finalizada: 2, Cancelada: 3 };
+        const leftStatus = statusPriority[a.Status] ?? 4;
+        const rightStatus = statusPriority[b.Status] ?? 4;
+        if (leftStatus !== rightStatus) return leftStatus - rightStatus;
+        const leftDate = a.Data_Pedido || a.CreatedAt || '';
+        const rightDate = b.Data_Pedido || b.CreatedAt || '';
+        return String(leftDate).localeCompare(String(rightDate));
     }) : [];
 }
 async function fetchNBEncomendaItens() {
@@ -3883,6 +3888,24 @@ function renderNBEncomendaCategoryOptions() {
         .join('');
     select.value = current;
 }
+function getNBEncomendaDisplayStatus(order, totalsOverride = null) {
+    const totals = totalsOverride || {
+        totalPago: Number(order?.Total_Pago || 0),
+        saldoPendente: Number(order?.Saldo_Pendente || 0)
+    };
+    if ((order?.Status || '') === 'Finalizada') return 'Finalizada';
+    if ((order?.Status || '') === 'Cancelada') return 'Cancelada';
+    if (totals.totalPago > 0 && totals.saldoPendente > 0) return 'Parcial';
+    return 'Aberta';
+}
+function getNBEncomendasPendingCount() {
+    return nbEncomendasData.filter(order => {
+        const orderItems = getNBEncomendaItemsByOrderId(order.Id);
+        const orderPayments = getNBEncomendaPaymentsByOrderId(order.Id);
+        const totals = getNBEncomendaDraftTotals(order, orderItems, orderPayments);
+        return getNBEncomendaDisplayStatus(order, totals) === 'Aberta' || getNBEncomendaDisplayStatus(order, totals) === 'Parcial';
+    }).length;
+}
 function syncNBEncomendaProductOptions() {
     const select = document.getElementById('nb-encomenda-product');
     if (!select) return;
@@ -3921,7 +3944,7 @@ function setNBEncomendaDraftFromRecord(record = null) {
     nbEncomendaDraftItems = getNBEncomendaItemsByOrderId(record.Id).map(item => ({
         tempId: item.Id,
         Id: item.Id,
-        Produto: item.Produto || null,
+        Produto: item.NB_Produtos || item.Produto || null,
         Quantidade: Number(item.Quantidade || 0),
         Preco_Unitario: Number(item.Preco_Unitario || 0),
         Subtotal: Number(item.Subtotal || 0),
@@ -3971,7 +3994,8 @@ function renderNBEncomendasModal() {
     const subtitle = document.getElementById('nb-encomendas-modal-subtitle');
     const form = document.getElementById('nb-encomenda-form');
     if (subtitle) {
-        subtitle.textContent = selectedRecord ? `Editando encomenda de ${selectedRecord.Cliente_Nome || 'cliente'}`
+        subtitle.textContent = selectedRecord
+            ? `Editando encomenda de ${selectedRecord.Cliente_Nome || 'cliente'}`
             : 'Crie uma nova encomenda ou selecione uma existente.';
     }
     if (list) {
@@ -3985,14 +4009,16 @@ function renderNBEncomendasModal() {
             const orderItems = getNBEncomendaItemsByOrderId(order.Id);
             const orderPayments = getNBEncomendaPaymentsByOrderId(order.Id);
             const totals = getNBEncomendaDraftTotals(order, orderItems, orderPayments);
-            const badgeClass = order.Status === 'Finalizada'
+            const displayStatus = getNBEncomendaDisplayStatus(order, totals);
+            const badgeClass = displayStatus === 'Finalizada'
                 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
-                : order.Status === 'Cancelada'
+                : displayStatus === 'Cancelada'
                     ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
+                    : displayStatus === 'Parcial'
+                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100'
                     : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
             const isSelected = String(order.Id) === String(nbSelectedEncomendaId);
             const whatsappDigits = normalizeNBPhoneDigits(order.Telefone);
-            const whatsappUrl = whatsappDigits ? `https://wa.me/55${whatsappDigits}` : '#';
             return `
                 <div class="rounded-2xl border ${isSelected ? 'border-brand-gold ring-2 ring-brand-gold/40' : 'border-gray-200 dark:border-gray-700'} bg-white dark:bg-gray-800 px-4 py-3 shadow-sm">
                     <button type="button" class="nb-encomenda-select-btn w-full text-left" data-id="${order.Id}">
@@ -4001,22 +4027,49 @@ function renderNBEncomendasModal() {
                             <div class="font-semibold text-gray-900 dark:text-white truncate">${escapeNBHtml(order.Cliente_Nome || 'Sem cliente')}</div>
                             <div class="text-xs text-gray-500 dark:text-gray-400">${formatNBPhoneBR(order.Telefone || '') || 'Sem telefone'}</div>
                         </div>
-                        <span class="inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${badgeClass}">${escapeNBHtml(order.Status || 'Aberta')}</span>
+                        <span class="inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${badgeClass}">${escapeNBHtml(displayStatus)}</span>
                     </div>
                     <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
                         <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
-                            <span class="block text-gray-500 dark:text-gray-300">Total</span>
+                            <span class="block text-gray-500 dark:text-gray-300">Total geral</span>
                             <strong class="text-gray-800 dark:text-white">${formatCurrencyBR(totals.totalGeral)}</strong>
                         </div>
                         <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
                             <span class="block text-gray-500 dark:text-gray-300">Saldo</span>
                             <strong class="text-gray-800 dark:text-white">${formatCurrencyBR(totals.saldoPendente)}</strong>
                         </div>
+                        <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
+                            <span class="block text-gray-500 dark:text-gray-300">Total pago</span>
+                            <strong class="text-gray-800 dark:text-white">${formatCurrencyBR(totals.totalPago)}</strong>
+                        </div>
+                        <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
+                            <span class="block text-gray-500 dark:text-gray-300">Pedido</span>
+                            <strong class="text-gray-800 dark:text-white">${order.Data_Pedido ? parseDateOnly(order.Data_Pedido).toLocaleDateString('pt-BR') : '-'}</strong>
+                        </div>
+                        <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
+                            <span class="block text-gray-500 dark:text-gray-300">Prevista</span>
+                            <strong class="text-gray-800 dark:text-white">${order.Data_Entrega_Prevista ? parseDateOnly(order.Data_Entrega_Prevista).toLocaleDateString('pt-BR') : '-'}</strong>
+                        </div>
+                        <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
+                            <span class="block text-gray-500 dark:text-gray-300">Itens</span>
+                            <strong class="text-gray-800 dark:text-white">${orderItems.length}</strong>
+                        </div>
+                        <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
+                            <span class="block text-gray-500 dark:text-gray-300">Pagamentos</span>
+                            <strong class="text-gray-800 dark:text-white">${orderPayments.length}</strong>
+                        </div>
+                        <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
+                            <span class="block text-gray-500 dark:text-gray-300">Realizada</span>
+                            <strong class="text-gray-800 dark:text-white">${order.Data_Entrega_Real ? parseDateOnly(order.Data_Entrega_Real).toLocaleDateString('pt-BR') : '-'}</strong>
+                        </div>
+                        <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2 col-span-2">
+                            <span class="block text-gray-500 dark:text-gray-300">Observações</span>
+                            <strong class="text-gray-800 dark:text-white line-clamp-2">${escapeNBHtml(order.Observacoes || 'Sem observações')}</strong>
+                        </div>
                     </div>
                     </button>
-                    <div class="mt-3 flex items-center justify-between gap-2 text-xs">
-                        <span class="text-gray-500 dark:text-gray-400">Entrega: ${order.Data_Entrega_Prevista ? parseDateOnly(order.Data_Entrega_Prevista).toLocaleDateString('pt-BR') : '-'}</span>
-                        ${whatsappDigits ? `<a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="text-green-700 hover:text-green-800 dark:text-green-300 dark:hover:text-green-200 font-semibold">WhatsApp</a>` : '<span class="text-gray-400">Sem WhatsApp</span>'}
+                    <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                        Entrega: ${order.Data_Entrega_Prevista ? parseDateOnly(order.Data_Entrega_Prevista).toLocaleDateString('pt-BR') : '-'}
                     </div>
                 </div>
             `;
@@ -4050,12 +4103,6 @@ function renderNBEncomendasModal() {
     }
     const deleteBtn = document.getElementById('nb-encomenda-delete-btn');
     if (deleteBtn) deleteBtn.classList.toggle('hidden', !selectedRecord);
-    const whatsappBtn = document.getElementById('nb-encomenda-whatsapp-btn');
-    const phoneDigits = normalizeNBPhoneDigits(header.Telefone || '');
-    if (whatsappBtn) {
-        whatsappBtn.classList.toggle('hidden', !phoneDigits);
-        whatsappBtn.href = phoneDigits ? `https://wa.me/55${phoneDigits}` : '#';
-    }
     const itemsList = document.getElementById('nb-encomenda-items-list');
     if (itemsList) {
         itemsList.innerHTML = nbEncomendaDraftItems.map(item => {
@@ -4086,9 +4133,9 @@ function renderNBEncomendasModal() {
                     </div>
                     <button type="button" class="nb-encomenda-payment-delete-btn text-red-600 hover:text-red-700 dark:text-red-300 dark:hover:text-red-200" data-id="${payment.tempId}"><i class="fas fa-trash"></i></button>
                 </div>
-                <div class="mt-2 text-sm font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(payment.Valor)}</div>
-            </article>
-        `).join('') || '<div class="rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500 dark:text-gray-400">Nenhum pagamento adicionado.</div>';
+                        <div class="mt-2 text-sm font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(payment.Valor)}</div>
+                    </article>
+                `).join('') || '<div class="rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500 dark:text-gray-400">Nenhum pagamento adicionado.</div>';
     }
 }
 function openNBEncomendasModal() {
@@ -4181,8 +4228,8 @@ async function persistNBEncomendaChildren(encomendaId) {
             Preco_Unitario: Number(item.Preco_Unitario || 0),
             Subtotal: Number(item.Subtotal || 0),
             Observacao_Item: item.Observacao_Item || '',
-            Encomenda: { Id: encomendaId },
-            Produto: { Id: Number(item.Produto?.Id || 0) }
+            NB_Encomendas: { Id: encomendaId },
+            NB_Produtos: { Id: Number(item.Produto?.Id || 0) }
         };
         return nocoFetch(TABLE_IDS.NB_Encomendas_Itens, { method: 'POST', body: JSON.stringify(body) });
     }));
@@ -4198,8 +4245,9 @@ async function persistNBEncomendaChildren(encomendaId) {
             Tipo: payment.Tipo || 'Entrada',
             Observacao: payment.Observacao || '',
             Valor: Number(payment.Valor || 0),
-            Encomenda: { Id: encomendaId },
-            Controle_Dia: { Id: controlDay.Id }
+            NB_Encomendas: { Id: encomendaId },
+            NB_Controle_Dias: { Id: controlDay.Id },
+            NB_Controlle_Dias: { Id: controlDay.Id }
         };
         return nocoFetch(TABLE_IDS.NB_Encomendas_Pagamentos, { method: 'POST', body: JSON.stringify(body) });
     }));
@@ -4530,6 +4578,12 @@ function renderNBPanel() {
         const count = getNBPanelSelectedCategoryIds().length;
         categoryBtn.classList.toggle('hidden', !canAccessNB());
         categoryBtn.textContent = `Categorias do Painel (${count})`;
+    }
+    const encomendasBtn = document.getElementById('nb-panel-encomendas-btn');
+    if (encomendasBtn) {
+        const pendingCount = getNBEncomendasPendingCount();
+        encomendasBtn.classList.toggle('hidden', !canAccessNB());
+        encomendasBtn.textContent = `Encomendas (${pendingCount})`;
     }
     cardsContainer.innerHTML = `
         <div class="grid gap-4 xl:grid-cols-6 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1">
