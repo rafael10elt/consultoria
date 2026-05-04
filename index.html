@@ -3464,6 +3464,12 @@ function normalizeNBDecimal(value) {
     const parsed = Number(String(value ?? '').replace(',', '.'));
     return Number.isNaN(parsed) ? 0 : parsed;
 }
+function getNBRelationId(value) {
+    if (value == null) return null;
+    if (typeof value === 'object') return value.Id ?? value.id ?? null;
+    const numeric = Number(value);
+    return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
+}
 function computeNBVenda(record = {}) {
     return normalizeNBNumber(record.Qtd_Sobra_Anterior) + normalizeNBNumber(record.Qtd_Producao) - normalizeNBNumber(record.Qtd_Perda) - normalizeNBNumber(record.Qtd_Sobra_Atual);
 }
@@ -3474,7 +3480,7 @@ function getNBLinkedDateValue(record) {
 }
 function getNBLinkedProductId(record) {
     if (!record) return null;
-    return record.NB_Produtos?.Id || record.NB_Produtos_id || record.Produto?.Id || record.Produto_id || null;
+    return getNBRelationId(record.Produto) || record.Produto_id || getNBRelationId(record.NB_Produtos) || record.NB_Produtos_id || null;
 }
 function getNBProductCategoryId(product) {
     return product?.Categoria?.Id || product?.NB_Categorias_id || product?.Categoria_id || null;
@@ -3591,10 +3597,11 @@ function getNBEncomendaPaymentsTotalsForDate(dateString) {
 function normalizeNBEncomendaDraftItems(items = []) {
     const grouped = new Map();
     items.forEach(item => {
-        const productId = Number(item?.Produto?.Id || item?.NB_Produtos?.Id || 0);
+        const productId = Number(getNBRelationId(item?.Produto) || getNBRelationId(item?.NB_Produtos) || item?.Produto_id || item?.NB_Produtos_id || 0);
         if (!productId) return;
         const quantity = Math.max(1, normalizeNBNumber(item.Quantidade || 0));
-        const unitPrice = Number(item.Preco_Unitario ?? item.Produto?.Preco_Venda ?? item.NB_Produtos?.Preco_Venda ?? 0);
+        const product = nbProdutosData.find(productItem => Number(productItem?.Id) === productId) || item?.Produto || item?.NB_Produtos || null;
+        const unitPrice = Number(item.Preco_Unitario ?? item.Valor_Unitario ?? product?.Preco_Venda ?? 0);
         const current = grouped.get(productId);
         if (current) {
             current.Quantidade += quantity;
@@ -3607,8 +3614,9 @@ function normalizeNBEncomendaDraftItems(items = []) {
             Id: item.Id || null,
             Produto: {
                 Id: productId,
-                Nome: item.Produto?.Nome || item.NB_Produtos?.Nome || item.Nome || 'Produto',
-                Preco_Venda: unitPrice
+                Nome: product?.Nome || item.Produto?.Nome || item.NB_Produtos?.Nome || item.Nome || 'Produto',
+                Preco_Venda: unitPrice,
+                Categoria: product?.Categoria || item.Produto?.Categoria || item.NB_Produtos?.Categoria || item.Categoria || null
             },
             Quantidade: quantity,
             Preco_Unitario: unitPrice,
@@ -3623,7 +3631,7 @@ function normalizeNBEncomendaDraftItems(items = []) {
     });
 }
 function getNBEncomendaItemProductId(item = {}) {
-    return Number(item?.Produto?.Id || item?.NB_Produtos?.Id || item?.Produto_id || item?.NB_Produtos_id || getNBLinkedProductId(item) || 0);
+    return Number(getNBRelationId(item?.Produto) || getNBRelationId(item?.NB_Produtos) || item?.Produto_id || item?.NB_Produtos_id || getNBLinkedProductId(item) || 0);
 }
 function getNBEncomendaItemProduct(item = {}) {
     const productId = getNBEncomendaItemProductId(item);
@@ -3645,11 +3653,11 @@ function getNBEncomendaItemSubtotal(item = {}) {
 }
 function getNBEncomendaItemName(item = {}) {
     const product = getNBEncomendaItemProduct(item);
-    return item?.Produto?.Nome || item?.NB_Produtos?.Nome || item?.Produto_Nome || item?.ProdutoNome || item?.Nome || product?.Nome || 'Produto';
+    return product?.Nome || item?.Produto?.Nome || item?.NB_Produtos?.Nome || item?.Produto_Nome || item?.ProdutoNome || item?.Nome || 'Produto';
 }
 function getNBEncomendaItemCategoryName(item = {}) {
     const product = getNBEncomendaItemProduct(item);
-    return item?.Produto?.Categoria?.Nome || item?.NB_Produtos?.Categoria?.Nome || item?.Categoria?.Nome || product?.Categoria?.Nome || 'Sem categoria';
+    return product?.Categoria?.Nome || item?.Produto?.Categoria?.Nome || item?.NB_Produtos?.Categoria?.Nome || item?.Categoria?.Nome || 'Sem categoria';
 }
 function getNBEncomendaItemDisplayLabel(item = {}) {
     return `${getNBEncomendaItemName(item)} • ${getNBEncomendaItemCategoryName(item)}`;
@@ -4230,7 +4238,7 @@ function setNBEncomendaDraftFromRecord(record = null) {
     nbEncomendaDraftItems = normalizeNBEncomendaDraftItems(getNBEncomendaItemsByOrderId(record.Id).map(item => ({
         tempId: item.Id,
         Id: item.Id,
-        Produto: item.NB_Produtos || item.Produto || getNBEncomendaItemProduct(item),
+        Produto: item.Produto || item.NB_Produtos || getNBEncomendaItemProduct(item),
         Quantidade: getNBEncomendaItemQuantity(item),
         Preco_Unitario: getNBEncomendaItemUnitPrice(item),
         Subtotal: getNBEncomendaItemSubtotal(item),
@@ -4541,7 +4549,7 @@ async function persistNBEncomendaChildren(encomendaId) {
             {
                 ...baseBody,
                 NB_Encomendas: { Id: encomendaId },
-                NB_Produtos: { Id: Number(item.Produto?.Id || 0) }
+                Produto: { Id: Number(item.Produto?.Id || 0) }
             },
             {
                 ...baseBody,
