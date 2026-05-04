@@ -3616,7 +3616,11 @@ function normalizeNBEncomendaDraftItems(items = []) {
             Observacao_Item: item.Observacao_Item || ''
         });
     });
-    return [...grouped.values()];
+    return [...grouped.values()].sort((a, b) => {
+        const categoryCompare = getNBEncomendaItemCategoryName(a).localeCompare(getNBEncomendaItemCategoryName(b));
+        if (categoryCompare !== 0) return categoryCompare;
+        return getNBEncomendaItemName(a).localeCompare(getNBEncomendaItemName(b));
+    });
 }
 function getNBEncomendaItemProductId(item = {}) {
     return Number(item?.Produto?.Id || item?.NB_Produtos?.Id || item?.Produto_id || item?.NB_Produtos_id || getNBLinkedProductId(item) || 0);
@@ -3642,6 +3646,13 @@ function getNBEncomendaItemSubtotal(item = {}) {
 function getNBEncomendaItemName(item = {}) {
     const product = getNBEncomendaItemProduct(item);
     return item?.Produto?.Nome || item?.NB_Produtos?.Nome || item?.Produto_Nome || item?.ProdutoNome || item?.Nome || product?.Nome || 'Produto';
+}
+function getNBEncomendaItemCategoryName(item = {}) {
+    const product = getNBEncomendaItemProduct(item);
+    return item?.Produto?.Categoria?.Nome || item?.NB_Produtos?.Categoria?.Nome || item?.Categoria?.Nome || product?.Categoria?.Nome || 'Sem categoria';
+}
+function getNBEncomendaItemDisplayLabel(item = {}) {
+    return `${getNBEncomendaItemName(item)} • ${getNBEncomendaItemCategoryName(item)}`;
 }
 function getNBControlDayFinancialSnapshot(dateString) {
     const productMap = new Map(nbProdutosData.map(product => [product.Id, product]));
@@ -3984,6 +3995,58 @@ function renderNBEncomendaCategoryOptions() {
         .join('');
     select.value = current;
 }
+function renderNBEncomendaDraftItemsList() {
+    const target = document.getElementById('nb-encomenda-items-list');
+    if (!target) return;
+    if (!nbEncomendaDraftItems.length) {
+        target.innerHTML = '<div class="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-sm text-gray-500 dark:text-gray-400">Nenhum item adicionado.</div>';
+        return;
+    }
+    target.innerHTML = nbEncomendaDraftItems.map(item => `
+        <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div class="min-w-0">
+                    <div class="text-sm font-semibold text-gray-900 dark:text-white truncate">${escapeNBHtml(getNBEncomendaItemName(item))}</div>
+                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">${escapeNBHtml(getNBEncomendaItemCategoryName(item))}</div>
+                    <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">${getNBEncomendaItemQuantity(item)} x ${formatCurrencyBR(getNBEncomendaItemUnitPrice(item))}</div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right">
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Subtotal</div>
+                        <div class="text-base font-bold text-gray-900 dark:text-white">${formatCurrencyBR(getNBEncomendaItemSubtotal(item))}</div>
+                    </div>
+                    <button type="button" class="nb-encomenda-item-delete-btn px-3 py-2 rounded-lg bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-800" data-id="${escapeNBHtml(item.tempId)}">Remover</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+function renderNBEncomendaDraftPaymentsList() {
+    const target = document.getElementById('nb-encomenda-payments-list');
+    if (!target) return;
+    if (!nbEncomendaDraftPayments.length) {
+        target.innerHTML = '<div class="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-sm text-gray-500 dark:text-gray-400">Nenhum pagamento adicionado.</div>';
+        return;
+    }
+    target.innerHTML = nbEncomendaDraftPayments.map(payment => `
+        <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div class="min-w-0">
+                    <div class="text-sm font-semibold text-gray-900 dark:text-white">${escapeNBHtml(payment.Tipo || 'Pagamento')}</div>
+                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">${payment.Data_Pagamento ? parseDateOnly(payment.Data_Pagamento).toLocaleDateString('pt-BR') : '-'} • ${escapeNBHtml(payment.Forma_Pagamento || '')}</div>
+                    <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">${escapeNBHtml(payment.Observacao || 'Sem observação')}</div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="text-right">
+                        <div class="text-xs text-gray-500 dark:text-gray-400">Valor</div>
+                        <div class="text-base font-bold text-gray-900 dark:text-white">${formatCurrencyBR(payment.Valor || 0)}</div>
+                    </div>
+                    <button type="button" class="nb-encomenda-payment-delete-btn px-3 py-2 rounded-lg bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-800" data-id="${escapeNBHtml(payment.tempId)}">Remover</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
 function renderNBEncomendaSelectedCard(order = null) {
     const target = document.getElementById('nb-encomenda-selected-card');
     if (!target) return;
@@ -4062,7 +4125,7 @@ function renderNBEncomendaSelectedCard(order = null) {
                         <div class="flex items-center justify-between gap-3 rounded-lg bg-gray-50 dark:bg-gray-700/60 px-3 py-2">
                             <div class="min-w-0">
                                 <div class="font-medium text-gray-900 dark:text-white truncate">${escapeNBHtml(getNBEncomendaItemName(item))}</div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400">${getNBEncomendaItemQuantity(item)} x ${formatCurrencyBR(getNBEncomendaItemUnitPrice(item))}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">${escapeNBHtml(getNBEncomendaItemCategoryName(item))} • ${getNBEncomendaItemQuantity(item)} x ${formatCurrencyBR(getNBEncomendaItemUnitPrice(item))}</div>
                             </div>
                             <div class="font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(getNBEncomendaItemSubtotal(item))}</div>
                         </div>
@@ -4118,13 +4181,27 @@ function syncNBEncomendaProductOptions() {
     const current = select.value;
     const categoryFilter = getNBEncomendaProductFilterCategoryId();
     const searchFilter = getNBEncomendaProductFilterSearchTerm();
-    const options = nbProdutosData
+    const products = nbProdutosData
         .filter(product => product && product.Ativo !== false)
         .filter(product => categoryFilter === 'all' || String(getNBProductCategoryId(product) || '') === String(categoryFilter))
         .filter(product => !searchFilter || (product.Nome || '').toLowerCase().includes(searchFilter))
-        .sort((a, b) => (a.Nome || '').localeCompare(b.Nome || ''))
-        .map(product => `<option value="${product.Id}">${escapeNBHtml(product.Nome || '')}${product.Categoria?.Nome ? ` - ${escapeNBHtml(product.Categoria.Nome)}` : ''} (${formatCurrencyBR(product.Preco_Venda || 0)})</option>`)
-        .join('');
+        .sort((a, b) => {
+            const categoryA = (a.Categoria?.Nome || '').localeCompare(b.Categoria?.Nome || '');
+            if (categoryA !== 0) return categoryA;
+            return (a.Nome || '').localeCompare(b.Nome || '');
+        });
+    const grouped = products.reduce((acc, product) => {
+        const categoryName = product.Categoria?.Nome || 'Sem categoria';
+        if (!acc.has(categoryName)) acc.set(categoryName, []);
+        acc.get(categoryName).push(product);
+        return acc;
+    }, new Map());
+    const options = [...grouped.entries()].map(([categoryName, categoryProducts]) => {
+        const optionsHtml = categoryProducts
+            .map(product => `<option value="${product.Id}">${escapeNBHtml(product.Nome || '')} (${formatCurrencyBR(product.Preco_Venda || 0)})</option>`)
+            .join('');
+        return `<optgroup label="${escapeNBHtml(categoryName)}">${optionsHtml}</optgroup>`;
+    }).join('');
     select.innerHTML = options
         ? `<option value="">Selecione um produto</option>${options}`
         : '<option value="">Nenhum produto ativo</option>';
@@ -4275,6 +4352,8 @@ function renderNBEncomendasModal() {
         }).join('') || '<div class="rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500 dark:text-gray-400">Nenhuma encomenda encontrada.</div>';
     }
     renderNBEncomendaSelectedCard(selectedRecord);
+    renderNBEncomendaDraftItemsList();
+    renderNBEncomendaDraftPaymentsList();
     const setValue = (id, value) => {
         const el = document.getElementById(id);
         if (el) el.value = value ?? '';
@@ -4319,6 +4398,12 @@ function closeNBEncomendasModal() {
 }
 function openNBEncomendaFormModal(record = null) {
     if (!canAccessNB()) return;
+    nbEncomendaProductCategoryFilter = 'all';
+    nbEncomendaProductSearchFilter = '';
+    const categorySelect = document.getElementById('nb-encomenda-product-category');
+    const searchInput = document.getElementById('nb-encomenda-product-search');
+    if (categorySelect) categorySelect.value = 'all';
+    if (searchInput) searchInput.value = '';
     setNBEncomendaDraftFromRecord(record);
     renderNBEncomendasModal();
     showModal(document.getElementById('nb-encomenda-form-modal'));
