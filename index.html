@@ -436,7 +436,7 @@ body {
                                         <span id="nb-week-subtitle" class="text-sm text-gray-500 dark:text-gray-400"></span>
                                     </div>
                                 </div>
-                                <div id="nb-week-day-cards" class="mt-4 overflow-x-auto"></div>
+                                <div id="nb-week-day-cards" class="mt-4"></div>
                                 <div class="mt-4">
                                 <div class="flex items-center justify-between gap-3 mb-3">
                                         <label for="nb-panel-product-search" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Pesquisar produto</label>
@@ -444,7 +444,8 @@ body {
                                     <input type="text" id="nb-panel-product-search" placeholder="Digite o nome do produto..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full md:max-w-xl p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                 </div>
                                 <div class="flex flex-wrap items-center gap-3 mt-4">
-                                    <button type="button" id="nb-panel-category-btn" class="hidden px-4 py-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Categorias do Painel</button>
+                                    <button type="button" id="nb-panel-category-btn" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Categorias do Painel</button>
+                                    <button type="button" id="nb-panel-encomendas-btn" class="px-4 py-2 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-100 dark:hover:bg-blue-800">Encomendas</button>
                                     <button type="button" id="nb-panel-finance-btn" class="hidden px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Lançar Financeiro do Dia</button>
                                 </div>
                             </div>
@@ -2346,6 +2347,167 @@ body {
             </div>
         </div>
     </div>
+    <div id="nb-encomendas-modal" class="fixed inset-0 z-[80] items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
+        <div class="w-full max-w-7xl p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate max-h-[92vh] flex flex-col">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Encomendas</h2>
+                    <p id="nb-encomendas-modal-subtitle" class="text-sm text-gray-500 dark:text-gray-400 mt-1">Selecione uma encomenda ou crie uma nova.</p>
+                </div>
+                <button type="button" id="close-nb-encomendas-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <div class="grid grid-cols-1 xl:grid-cols-[24rem_minmax(0,1fr)] gap-4 flex-1 min-h-0 overflow-hidden">
+                <div class="flex flex-col gap-3 min-h-0">
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="nb-encomenda-search" placeholder="Pesquisar por cliente, telefone ou status..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <button type="button" id="nb-encomenda-new-btn" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark shrink-0">Nova</button>
+                    </div>
+                    <div id="nb-encomenda-list" class="space-y-3 overflow-y-auto pr-1 flex-1"></div>
+                </div>
+                <div class="flex flex-col gap-4 min-h-0 overflow-hidden">
+                    <form id="nb-encomenda-form" class="flex flex-col gap-4 flex-1 min-h-0 overflow-hidden">
+                        <input type="hidden" id="nb-encomenda-id">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="nb-encomenda-client-name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
+                                <input type="text" id="nb-encomenda-client-name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                            </div>
+                            <div>
+                                <label for="nb-encomenda-phone" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Telefone</label>
+                                <input type="tel" id="nb-encomenda-phone" placeholder="(00) 00000-0000" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                            </div>
+                            <div>
+                                <label for="nb-encomenda-data-pedido" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data do Pedido</label>
+                                <input type="date" id="nb-encomenda-data-pedido" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                            </div>
+                            <div>
+                                <label for="nb-encomenda-data-prevista" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Entrega Prevista</label>
+                                <input type="date" id="nb-encomenda-data-prevista" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                            </div>
+                            <div>
+                                <label for="nb-encomenda-data-real" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Entrega Real</label>
+                                <input type="date" id="nb-encomenda-data-real" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div>
+                                <label for="nb-encomenda-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
+                                <select id="nb-encomenda-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                    <option value="Aberta">Aberta</option>
+                                    <option value="Finalizada">Finalizada</option>
+                                    <option value="Cancelada">Cancelada</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="nb-encomenda-acrescimo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Acréscimo</label>
+                                <input type="number" min="0" step="0.01" id="nb-encomenda-acrescimo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label for="nb-encomenda-observacoes" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observações</label>
+                                <textarea id="nb-encomenda-observacoes" rows="2" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                            </div>
+                        </div>
+                        <div class="rounded-2xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/40">
+                            <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+                                    <div>
+                                        <label for="nb-encomenda-product" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Produto ativo</label>
+                                        <select id="nb-encomenda-product" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white"></select>
+                                    </div>
+                                    <div>
+                                        <label for="nb-encomenda-quantity" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Quantidade</label>
+                                        <input type="number" min="1" step="1" id="nb-encomenda-quantity" value="1" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                    </div>
+                                    <div class="flex items-end">
+                                        <button type="button" id="nb-encomenda-add-item-btn" class="w-full px-4 py-2 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-100 dark:hover:bg-blue-800">Adicionar Item</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Itens da encomenda</h3>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">Produtos ativos com quantidade</span>
+                                </div>
+                                <div id="nb-encomenda-items-list" class="space-y-3"></div>
+                            </div>
+                        </div>
+                        <div class="rounded-2xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/40">
+                            <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 flex-1">
+                                    <div>
+                                        <label for="nb-encomenda-payment-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data do Pagamento</label>
+                                        <input type="date" id="nb-encomenda-payment-date" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                    </div>
+                                    <div>
+                                        <label for="nb-encomenda-payment-form" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Forma</label>
+                                        <select id="nb-encomenda-payment-form" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                            <option value="Dinheiro">Dinheiro</option>
+                                            <option value="PIX">PIX</option>
+                                            <option value="Maquineta">Maquineta</option>
+                                            <option value="App">App</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="nb-encomenda-payment-type" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo</label>
+                                        <select id="nb-encomenda-payment-type" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                            <option value="Entrada">Entrada</option>
+                                            <option value="Parcial">Parcial</option>
+                                            <option value="Saldo Final">Saldo Final</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="nb-encomenda-payment-value" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor</label>
+                                        <input type="number" min="0" step="0.01" id="nb-encomenda-payment-value" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                    </div>
+                                    <div>
+                                        <label for="nb-encomenda-payment-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label>
+                                        <input type="text" id="nb-encomenda-payment-obs" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                    </div>
+                                </div>
+                                <div class="flex items-end">
+                                    <button type="button" id="nb-encomenda-add-payment-btn" class="w-full px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Adicionar Pagamento</button>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Pagamentos da encomenda</h3>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">Cada pagamento entra no dia correspondente</span>
+                                </div>
+                                <div id="nb-encomenda-payments-list" class="space-y-3"></div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/40 p-4">
+                                <span class="text-xs text-gray-500 dark:text-gray-400">Total dos itens</span>
+                                <div id="nb-encomenda-total-products" class="text-lg font-bold text-gray-800 dark:text-white">R$ 0,00</div>
+                            </div>
+                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/40 p-4">
+                                <span class="text-xs text-gray-500 dark:text-gray-400">Total geral</span>
+                                <div id="nb-encomenda-total-general" class="text-lg font-bold text-gray-800 dark:text-white">R$ 0,00</div>
+                            </div>
+                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/40 p-4">
+                                <span class="text-xs text-gray-500 dark:text-gray-400">Total pago</span>
+                                <div id="nb-encomenda-total-paid" class="text-lg font-bold text-gray-800 dark:text-white">R$ 0,00</div>
+                            </div>
+                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/40 p-4">
+                                <span class="text-xs text-gray-500 dark:text-gray-400">Saldo pendente</span>
+                                <div id="nb-encomenda-balance" class="text-lg font-bold text-gray-800 dark:text-white">R$ 0,00</div>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center gap-2">
+                                <a id="nb-encomenda-whatsapp-btn" href="#" target="_blank" rel="noopener noreferrer" class="hidden px-4 py-2 rounded-lg bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900 dark:text-green-100 dark:hover:bg-green-800">Abrir WhatsApp</a>
+                                <span id="nb-encomenda-selected-info" class="text-sm text-gray-500 dark:text-gray-400"></span>
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                                <button type="button" id="nb-encomenda-delete-btn" class="hidden px-4 py-2 rounded-lg bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-800">Apagar Encomenda</button>
+                                <button type="button" id="nb-encomenda-cancel-btn" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Limpar</button>
+                                <button type="submit" id="nb-encomenda-save-btn" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Salvar Encomenda</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
         // --- Modal de Confirmação Customizado ---
@@ -2428,11 +2590,18 @@ document.addEventListener('DOMContentLoaded', function() {
     let nbFinanceiroData = [];
     let nbDespesasValesData = [];
     let nbDiarioBordoData = [];
+    let nbEncomendasData = [];
+    let nbEncomendaItensData = [];
+    let nbEncomendaPagamentosData = [];
     let nbCurrentWeekStart = null;
     let nbSelectedDate = null;
     let nbLastPanelSync = null;
     let nbModuleRefreshTimer = null;
     let nbModuleRefreshInProgress = false;
+    let nbSelectedEncomendaId = null;
+    let nbEncomendaDraftHeader = null;
+    let nbEncomendaDraftItems = [];
+    let nbEncomendaDraftPayments = [];
     let nbTopProductsGestaoLimit = 5;
     let nbAnalyticsPreset = 'day';
     const NB_PANEL_CATEGORY_SELECTION_KEY = 'nb-panel-selected-category-ids';
@@ -2477,7 +2646,10 @@ const dataLoaded = {
         NB_Apontamentos: 'mdjo4wyk3j0dhjy',
         NB_Financeiro: 'mfijp0pgnmb0k0i',
         NB_Despesas_Vales: 'm8tfdl64d9oid1g',
-        NB_Diario_Bordo: 'm1oll188c2vikdw'
+        NB_Diario_Bordo: 'm1oll188c2vikdw',
+        NB_Encomendas: 'miewjqtz8lyulw5',
+        NB_Encomendas_Itens: 'mk1yo9qtq6uf6lp',
+        NB_Encomendas_Pagamentos: 'mj1lkyq9y1n7dfy'
     };
 
      const GLOBAL_LABEL_MAP = {
@@ -3252,6 +3424,10 @@ function normalizeNBNumber(value) {
     const parsed = parseInt(value, 10);
     return Number.isNaN(parsed) ? 0 : parsed;
 }
+function normalizeNBDecimal(value) {
+    const parsed = Number(String(value ?? '').replace(',', '.'));
+    return Number.isNaN(parsed) ? 0 : parsed;
+}
 function computeNBVenda(record = {}) {
     return normalizeNBNumber(record.Qtd_Sobra_Anterior) + normalizeNBNumber(record.Qtd_Producao) - normalizeNBNumber(record.Qtd_Perda) - normalizeNBNumber(record.Qtd_Sobra_Atual);
 }
@@ -3334,6 +3510,46 @@ function getNBExpensePeriodTotals(startDate, endDate) {
     const vales = records.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     return { despesas, vales, total: despesas + vales, records };
 }
+function getNBLinkedEncomendaId(record) {
+    if (!record) return null;
+    return record.Encomenda?.Id || record.Encomenda_id || null;
+}
+function getNBEncomendaPaymentDateValue(record) {
+    if (!record) return null;
+    if (record.Data_Pagamento) return record.Data_Pagamento;
+    if (record.Controle_Dia && typeof record.Controle_Dia === 'object') return record.Controle_Dia.Data || null;
+    return getNBLinkedDateValue(record);
+}
+function getNBEncomendaPaymentControlDayId(record) {
+    if (!record) return null;
+    return record.Controle_Dia?.Id || record.Controle_Dia_id || null;
+}
+function getNBEncomendaPaymentsForDate(dateString) {
+    return nbEncomendaPagamentosData.filter(item => getNBEncomendaPaymentDateValue(item) === dateString);
+}
+function getNBEncomendaPaymentsTotalsForDate(dateString) {
+    const records = getNBEncomendaPaymentsForDate(dateString);
+    const totalsByForm = records.reduce((acc, item) => {
+        const form = item.Forma_Pagamento || '';
+        const value = Number(item.Valor || 0);
+        if (form === 'Dinheiro') acc.dinheiro += value;
+        else if (form === 'PIX') acc.pix += value;
+        else if (form === 'Maquineta') acc.maquineta += value;
+        else if (form === 'App') acc.app += value;
+        else acc.outro += value;
+        return acc;
+    }, { dinheiro: 0, pix: 0, maquineta: 0, app: 0, outro: 0 });
+    return {
+        records,
+        dinheiro: totalsByForm.dinheiro,
+        pix: totalsByForm.pix,
+        maquineta: totalsByForm.maquineta,
+        app: totalsByForm.app,
+        outro: totalsByForm.outro,
+        total: totalsByForm.dinheiro + totalsByForm.pix + totalsByForm.maquineta + totalsByForm.app + totalsByForm.outro,
+        electronicTotal: totalsByForm.pix + totalsByForm.maquineta + totalsByForm.app
+    };
+}
 function getNBControlDayFinancialSnapshot(dateString) {
     const productMap = new Map(nbProdutosData.map(product => [product.Id, product]));
     const apontamentos = nbApontamentosData.filter(item => getNBLinkedDateValue(item) === dateString);
@@ -3353,9 +3569,10 @@ function getNBControlDayFinancialSnapshot(dateString) {
     const despesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const totalExpenses = despesas + vales;
-    const entradas = getNBFinanceEntryTotal(financeRecord);
+    const encomendaTotals = getNBEncomendaPaymentsTotalsForDate(dateString);
+    const entradas = getNBFinanceEntryTotal(financeRecord) + encomendaTotals.electronicTotal;
     const faturamentoDinheiro = (Number(financeRecord.Caixa_Final || 0) + Number(financeRecord.Sangria || 0) + totalExpenses) - Number(financeRecord.Caixa_Inicial || 0);
-    const faturamentoTotal = faturamentoDinheiro + Number(financeRecord.Entrada_PIX || 0) + Number(financeRecord.Entrada_App || 0) + Number(financeRecord.Entrada_Maquineta || 0);
+    const faturamentoTotal = faturamentoDinheiro + Number(financeRecord.Entrada_PIX || 0) + Number(financeRecord.Entrada_App || 0) + Number(financeRecord.Entrada_Maquineta || 0) + encomendaTotals.electronicTotal;
     const saidas = totalExpenses + Number(financeRecord.Sangria || 0);
     return {
         dateString,
@@ -3366,6 +3583,8 @@ function getNBControlDayFinancialSnapshot(dateString) {
         vales,
         totalExpenses,
         entradas,
+        encomendaPaymentsTotal: encomendaTotals.total,
+        encomendaPaymentsElectronicTotal: encomendaTotals.electronicTotal,
         saidas,
         faturamentoDinheiro,
         faturamentoTotal,
@@ -3382,13 +3601,14 @@ function isNBOperatorRole() {
 function getNBFinanceDaySummary(dateString) {
     const financeRecord = getNBFinanceRecord(dateString) || {};
     const expenseRecords = getNBExpenseRecords(dateString);
+    const encomendaTotals = getNBEncomendaPaymentsTotalsForDate(dateString);
     const caixaInicial = Number(financeRecord.Caixa_Inicial || 0);
     const caixaFinal = Number(financeRecord.Caixa_Final || 0);
     const sangria = Number(financeRecord.Sangria || 0);
     const entradasDinheiro = Number(financeRecord.Entrada_Dinheiro || 0);
-    const entradasPix = Number(financeRecord.Entrada_PIX || 0);
-    const entradasApp = Number(financeRecord.Entrada_App || 0);
-    const entradasMaquineta = Number(financeRecord.Entrada_Maquineta || 0);
+    const entradasPix = Number(financeRecord.Entrada_PIX || 0) + encomendaTotals.pix;
+    const entradasApp = Number(financeRecord.Entrada_App || 0) + encomendaTotals.app;
+    const entradasMaquineta = Number(financeRecord.Entrada_Maquineta || 0) + encomendaTotals.maquineta;
     const despesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const faturamentoDinheiro = (caixaFinal + sangria + despesas + vales) - caixaInicial;
@@ -3405,6 +3625,8 @@ function getNBFinanceDaySummary(dateString) {
         entradasMaquineta,
         despesas,
         vales,
+        encomendaPaymentsTotal: encomendaTotals.total,
+        encomendaPaymentsElectronicTotal: encomendaTotals.electronicTotal,
         faturamentoDinheiro,
         faturamentoTotal,
         faturamentoFinal,
@@ -3414,6 +3636,7 @@ function getNBFinanceDaySummary(dateString) {
 function getNBFinanceDraftSummary(dateString, prefix) {
     const financeRecord = getNBFinanceRecord(dateString) || {};
     const expenseRecords = getNBExpenseRecords(dateString);
+    const encomendaTotals = getNBEncomendaPaymentsTotalsForDate(dateString);
     const readDraftValue = (suffix, recordValue = 0) => {
         const input = document.getElementById(`${prefix}${suffix}`);
         return input ? normalizeNBNumber(input.value) : Number(recordValue || 0);
@@ -3421,9 +3644,9 @@ function getNBFinanceDraftSummary(dateString, prefix) {
     const caixaInicial = readDraftValue('caixa-inicial', financeRecord.Caixa_Inicial);
     const caixaFinal = readDraftValue('caixa-final', financeRecord.Caixa_Final);
     const sangria = readDraftValue('sangria', financeRecord.Sangria);
-    const entradasPix = readDraftValue('entrada-pix', financeRecord.Entrada_PIX);
-    const entradasApp = readDraftValue('entrada-app', financeRecord.Entrada_App);
-    const entradasMaquineta = readDraftValue('entrada-maquineta', financeRecord.Entrada_Maquineta);
+    const entradasPix = readDraftValue('entrada-pix', financeRecord.Entrada_PIX) + encomendaTotals.pix;
+    const entradasApp = readDraftValue('entrada-app', financeRecord.Entrada_App) + encomendaTotals.app;
+    const entradasMaquineta = readDraftValue('entrada-maquineta', financeRecord.Entrada_Maquineta) + encomendaTotals.maquineta;
     const despesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const faturamentoDinheiro = (caixaFinal + sangria + despesas + vales) - caixaInicial;
@@ -3438,6 +3661,8 @@ function getNBFinanceDraftSummary(dateString, prefix) {
         entradasMaquineta,
         despesas,
         vales,
+        encomendaPaymentsTotal: encomendaTotals.total,
+        encomendaPaymentsElectronicTotal: encomendaTotals.electronicTotal,
         faturamentoDinheiro,
         faturamentoTotal,
         faturamentoFinal,
@@ -3551,6 +3776,459 @@ async function fetchNBDiarioBordo() {
     const result = await nocoFetch(`${TABLE_IDS.NB_Diario_Bordo}?nested[all]=true`);
     nbDiarioBordoData = result?.list ? result.list.sort((a, b) => new Date(b.Data_Hora || b.CreatedAt || 0) - new Date(a.Data_Hora || a.CreatedAt || 0)) : [];
 }
+async function fetchNBEncomendas() {
+    const result = await nocoFetch(`${TABLE_IDS.NB_Encomendas}?nested[all]=true`);
+    nbEncomendasData = result?.list ? result.list.sort((a, b) => {
+        const left = a.Data_Pedido || a.CreatedAt || '';
+        const right = b.Data_Pedido || b.CreatedAt || '';
+        return String(right).localeCompare(String(left));
+    }) : [];
+}
+async function fetchNBEncomendaItens() {
+    const result = await nocoFetch(`${TABLE_IDS.NB_Encomendas_Itens}?nested[all]=true`);
+    nbEncomendaItensData = result?.list ? result.list : [];
+}
+async function fetchNBEncomendaPagamentos() {
+    const result = await nocoFetch(`${TABLE_IDS.NB_Encomendas_Pagamentos}?nested[all]=true`);
+    nbEncomendaPagamentosData = result?.list ? result.list : [];
+}
+function escapeNBHtml(value = '') {
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+function normalizeNBPhoneDigits(value) {
+    return String(value || '').replace(/\D/g, '').slice(0, 11);
+}
+function formatNBPhoneBR(value) {
+    const digits = normalizeNBPhoneDigits(value);
+    if (!digits) return '';
+    if (digits.length <= 10) {
+        return digits.replace(/^(\d{2})(\d{0,4})(\d{0,4})$/, (_, ddd, first, last) => {
+            const firstPart = first ? ` ${first}` : '';
+            const lastPart = last ? `-${last}` : '';
+            return `(${ddd})${firstPart}${lastPart}`;
+        });
+    }
+    return digits.replace(/^(\d{2})(\d{0,5})(\d{0,4})$/, (_, ddd, first, last) => {
+        const firstPart = first ? ` ${first}` : '';
+        const lastPart = last ? `-${last}` : '';
+        return `(${ddd})${firstPart}${lastPart}`;
+    });
+}
+function getNBEncomendaById(id) {
+    return nbEncomendasData.find(item => String(item.Id) === String(id)) || null;
+}
+function getNBEncomendaItemsByOrderId(encomendaId) {
+    return nbEncomendaItensData.filter(item => String(getNBLinkedEncomendaId(item)) === String(encomendaId));
+}
+function getNBEncomendaPaymentsByOrderId(encomendaId) {
+    return nbEncomendaPagamentosData.filter(item => String(getNBLinkedEncomendaId(item)) === String(encomendaId));
+}
+function getNBEncomendaDraftHeader() {
+    return nbEncomendaDraftHeader || {
+        Cliente_Nome: '',
+        Telefone: '',
+        Observacoes: '',
+        Data_Pedido: toDateInputValue(new Date()),
+        Data_Entrega_Prevista: toDateInputValue(new Date()),
+        Data_Entrega_Real: '',
+        Acrescimo_Valor: 0,
+        Status: 'Aberta'
+    };
+}
+function getNBEncomendaDraftTotals(header = getNBEncomendaDraftHeader(), items = nbEncomendaDraftItems, payments = nbEncomendaDraftPayments) {
+    const totalProdutos = items.reduce((sum, item) => sum + Number(item.Subtotal || 0), 0);
+    const acrescimo = Number(header?.Acrescimo_Valor || 0);
+    const totalGeral = totalProdutos + acrescimo;
+    const totalPago = payments.reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    return {
+        totalProdutos,
+        totalGeral,
+        totalPago,
+        saldoPendente: totalGeral - totalPago
+    };
+}
+function syncNBEncomendaProductOptions() {
+    const select = document.getElementById('nb-encomenda-product');
+    if (!select) return;
+    const current = select.value;
+    const options = nbProdutosData
+        .filter(product => product && product.Ativo !== false)
+        .sort((a, b) => (a.Nome || '').localeCompare(b.Nome || ''))
+        .map(product => `<option value="${product.Id}">${escapeNBHtml(product.Nome || '')}${product.Categoria?.Nome ? ` - ${escapeNBHtml(product.Categoria.Nome)}` : ''} (${formatCurrencyBR(product.Preco_Venda || 0)})</option>`)
+        .join('');
+    select.innerHTML = options || '<option value="">Nenhum produto ativo</option>';
+    if (current) select.value = current;
+}
+function setNBEncomendaDraftFromRecord(record = null) {
+    if (!record) {
+        nbSelectedEncomendaId = null;
+        nbEncomendaDraftHeader = getNBEncomendaDraftHeader();
+        nbEncomendaDraftItems = [];
+        nbEncomendaDraftPayments = [];
+        return;
+    }
+    nbSelectedEncomendaId = record.Id;
+    nbEncomendaDraftHeader = {
+        Cliente_Nome: record.Cliente_Nome || '',
+        Telefone: formatNBPhoneBR(record.Telefone || ''),
+        Observacoes: record.Observacoes || '',
+        Data_Pedido: record.Data_Pedido || toDateInputValue(new Date()),
+        Data_Entrega_Prevista: record.Data_Entrega_Prevista || toDateInputValue(new Date()),
+        Data_Entrega_Real: record.Data_Entrega_Real || '',
+        Acrescimo_Valor: Number(record.Acrescimo_Valor || 0),
+        Status: record.Status || 'Aberta'
+    };
+    nbEncomendaDraftItems = getNBEncomendaItemsByOrderId(record.Id).map(item => ({
+        tempId: item.Id,
+        Id: item.Id,
+        Produto: item.Produto || null,
+        Quantidade: Number(item.Quantidade || 0),
+        Preco_Unitario: Number(item.Preco_Unitario || 0),
+        Subtotal: Number(item.Subtotal || 0),
+        Observacao_Item: item.Observacao_Item || ''
+    }));
+    nbEncomendaDraftPayments = getNBEncomendaPaymentsByOrderId(record.Id).map(payment => ({
+        tempId: payment.Id,
+        Id: payment.Id,
+        Data_Pagamento: getNBEncomendaPaymentDateValue(payment) || toDateInputValue(new Date()),
+        Forma_Pagamento: payment.Forma_Pagamento || 'Dinheiro',
+        Tipo: payment.Tipo || 'Entrada',
+        Valor: Number(payment.Valor || 0),
+        Observacao: payment.Observacao || ''
+    }));
+}
+function syncNBEncomendaHeaderFromForm() {
+    nbEncomendaDraftHeader = {
+        Cliente_Nome: document.getElementById('nb-encomenda-client-name')?.value || '',
+        Telefone: document.getElementById('nb-encomenda-phone')?.value || '',
+        Observacoes: document.getElementById('nb-encomenda-observacoes')?.value || '',
+        Data_Pedido: document.getElementById('nb-encomenda-data-pedido')?.value || toDateInputValue(new Date()),
+        Data_Entrega_Prevista: document.getElementById('nb-encomenda-data-prevista')?.value || toDateInputValue(new Date()),
+        Data_Entrega_Real: document.getElementById('nb-encomenda-data-real')?.value || '',
+        Acrescimo_Valor: Number(document.getElementById('nb-encomenda-acrescimo')?.value || 0),
+        Status: document.getElementById('nb-encomenda-status')?.value || 'Aberta'
+    };
+}
+function renderNBEncomendasModal() {
+    const modal = document.getElementById('nb-encomendas-modal');
+    if (!modal) return;
+    syncNBEncomendaProductOptions();
+    const selectedRecord = nbSelectedEncomendaId ? getNBEncomendaById(nbSelectedEncomendaId) : null;
+    const header = nbEncomendaDraftHeader || (selectedRecord ? {
+        Cliente_Nome: selectedRecord.Cliente_Nome || '',
+        Telefone: selectedRecord.Telefone || '',
+        Observacoes: selectedRecord.Observacoes || '',
+        Data_Pedido: selectedRecord.Data_Pedido || toDateInputValue(new Date()),
+        Data_Entrega_Prevista: selectedRecord.Data_Entrega_Prevista || toDateInputValue(new Date()),
+        Data_Entrega_Real: selectedRecord.Data_Entrega_Real || '',
+        Acrescimo_Valor: Number(selectedRecord.Acrescimo_Valor || 0),
+        Status: selectedRecord.Status || 'Aberta'
+    } : getNBEncomendaDraftHeader());
+    nbEncomendaDraftHeader = { ...header };
+    const search = (document.getElementById('nb-encomenda-search')?.value || '').trim().toLowerCase();
+    const list = document.getElementById('nb-encomenda-list');
+    const subtitle = document.getElementById('nb-encomendas-modal-subtitle');
+    const form = document.getElementById('nb-encomenda-form');
+    if (subtitle) {
+        subtitle.textContent = selectedRecord ? `Editando encomenda de ${selectedRecord.Cliente_Nome || 'cliente'}`
+            : 'Crie uma nova encomenda ou selecione uma existente.';
+    }
+    if (list) {
+        const filtered = nbEncomendasData.filter(order => {
+            const client = (order.Cliente_Nome || '').toLowerCase();
+            const phone = (order.Telefone || '').toLowerCase();
+            const status = (order.Status || '').toLowerCase();
+            return !search || client.includes(search) || phone.includes(search) || status.includes(search);
+        });
+        list.innerHTML = filtered.map(order => {
+            const totals = {
+                totalProdutos: Number(order.Total_Produtos || 0),
+                totalGeral: Number(order.Total_Geral || 0),
+                totalPago: Number(order.Total_Pago || 0),
+                saldoPendente: Number(order.Saldo_Pendente || 0)
+            };
+            const badgeClass = order.Status === 'Finalizada'
+                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
+                : order.Status === 'Cancelada'
+                    ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
+                    : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
+            const isSelected = String(order.Id) === String(nbSelectedEncomendaId);
+            const whatsappDigits = normalizeNBPhoneDigits(order.Telefone);
+            const whatsappUrl = whatsappDigits ? `https://wa.me/55${whatsappDigits}` : '#';
+            return `
+                <div class="rounded-2xl border ${isSelected ? 'border-brand-gold ring-2 ring-brand-gold/40' : 'border-gray-200 dark:border-gray-700'} bg-white dark:bg-gray-800 px-4 py-3 shadow-sm">
+                    <button type="button" class="nb-encomenda-select-btn w-full text-left" data-id="${order.Id}">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="font-semibold text-gray-900 dark:text-white truncate">${escapeNBHtml(order.Cliente_Nome || 'Sem cliente')}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">${formatNBPhoneBR(order.Telefone || '') || 'Sem telefone'}</div>
+                        </div>
+                        <span class="inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${badgeClass}">${escapeNBHtml(order.Status || 'Aberta')}</span>
+                    </div>
+                    <div class="mt-3 grid grid-cols-2 gap-2 text-xs">
+                        <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
+                            <span class="block text-gray-500 dark:text-gray-300">Total</span>
+                            <strong class="text-gray-800 dark:text-white">${formatCurrencyBR(totals.totalGeral)}</strong>
+                        </div>
+                        <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
+                            <span class="block text-gray-500 dark:text-gray-300">Saldo</span>
+                            <strong class="text-gray-800 dark:text-white">${formatCurrencyBR(totals.saldoPendente)}</strong>
+                        </div>
+                    </div>
+                    </button>
+                    <div class="mt-3 flex items-center justify-between gap-2 text-xs">
+                        <span class="text-gray-500 dark:text-gray-400">Entrega: ${order.Data_Entrega_Prevista ? parseDateOnly(order.Data_Entrega_Prevista).toLocaleDateString('pt-BR') : '-'}</span>
+                        ${whatsappDigits ? `<a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="text-green-700 hover:text-green-800 dark:text-green-300 dark:hover:text-green-200 font-semibold">WhatsApp</a>` : '<span class="text-gray-400">Sem WhatsApp</span>'}
+                    </div>
+                </div>
+            `;
+        }).join('') || '<div class="rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500 dark:text-gray-400">Nenhuma encomenda encontrada.</div>';
+    }
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value ?? '';
+    };
+    setValue('nb-encomenda-id', selectedRecord?.Id || '');
+    setValue('nb-encomenda-client-name', header.Cliente_Nome || '');
+    setValue('nb-encomenda-phone', header.Telefone || '');
+    setValue('nb-encomenda-data-pedido', header.Data_Pedido || toDateInputValue(new Date()));
+    setValue('nb-encomenda-data-prevista', header.Data_Entrega_Prevista || toDateInputValue(new Date()));
+    setValue('nb-encomenda-data-real', header.Data_Entrega_Real || '');
+    setValue('nb-encomenda-status', header.Status || 'Aberta');
+    setValue('nb-encomenda-observacoes', header.Observacoes || '');
+    setValue('nb-encomenda-acrescimo', Number(header.Acrescimo_Valor || 0));
+    const totals = getNBEncomendaDraftTotals(header);
+    const totalProductsEl = document.getElementById('nb-encomenda-total-products');
+    const totalGeneralEl = document.getElementById('nb-encomenda-total-general');
+    const totalPaidEl = document.getElementById('nb-encomenda-total-paid');
+    const balanceEl = document.getElementById('nb-encomenda-balance');
+    if (totalProductsEl) totalProductsEl.textContent = formatCurrencyBR(totals.totalProdutos);
+    if (totalGeneralEl) totalGeneralEl.textContent = formatCurrencyBR(totals.totalGeral);
+    if (totalPaidEl) totalPaidEl.textContent = formatCurrencyBR(totals.totalPago);
+    if (balanceEl) balanceEl.textContent = formatCurrencyBR(totals.saldoPendente);
+    const selectedInfo = document.getElementById('nb-encomenda-selected-info');
+    if (selectedInfo) {
+        selectedInfo.textContent = selectedRecord ? `Encomenda #${selectedRecord.Id}` : 'Nova encomenda';
+    }
+    const deleteBtn = document.getElementById('nb-encomenda-delete-btn');
+    if (deleteBtn) deleteBtn.classList.toggle('hidden', !selectedRecord);
+    const whatsappBtn = document.getElementById('nb-encomenda-whatsapp-btn');
+    const phoneDigits = normalizeNBPhoneDigits(header.Telefone || '');
+    if (whatsappBtn) {
+        whatsappBtn.classList.toggle('hidden', !phoneDigits);
+        whatsappBtn.href = phoneDigits ? `https://wa.me/55${phoneDigits}` : '#';
+    }
+    const itemsList = document.getElementById('nb-encomenda-items-list');
+    if (itemsList) {
+        itemsList.innerHTML = nbEncomendaDraftItems.map(item => {
+            const productName = item.Produto?.Nome || nbProdutosData.find(product => String(product.Id) === String(item.Produto?.Id))?.Nome || 'Produto';
+            return `
+                <article class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="font-semibold text-gray-900 dark:text-white truncate">${escapeNBHtml(productName)}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">${formatCurrencyBR(item.Preco_Unitario)} x ${normalizeNBNumber(item.Quantidade)}</div>
+                        </div>
+                        <button type="button" class="nb-encomenda-item-delete-btn text-red-600 hover:text-red-700 dark:text-red-300 dark:hover:text-red-200" data-id="${item.tempId}"><i class="fas fa-trash"></i></button>
+                    </div>
+                    <div class="mt-2 text-sm font-semibold text-gray-800 dark:text-white">Subtotal: ${formatCurrencyBR(item.Subtotal)}</div>
+                </article>
+            `;
+        }).join('') || '<div class="rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500 dark:text-gray-400">Nenhum item adicionado.</div>';
+    }
+    const paymentsList = document.getElementById('nb-encomenda-payments-list');
+    if (paymentsList) {
+        paymentsList.innerHTML = nbEncomendaDraftPayments.map(payment => `
+            <article class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <div class="font-semibold text-gray-900 dark:text-white">${escapeNBHtml(payment.Tipo || 'Pagamento')}</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">${payment.Data_Pagamento ? parseDateOnly(payment.Data_Pagamento).toLocaleDateString('pt-BR') : '-'}</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400">${escapeNBHtml(payment.Forma_Pagamento || '')}${payment.Observacao ? ` • ${escapeNBHtml(payment.Observacao)}` : ''}</div>
+                    </div>
+                    <button type="button" class="nb-encomenda-payment-delete-btn text-red-600 hover:text-red-700 dark:text-red-300 dark:hover:text-red-200" data-id="${payment.tempId}"><i class="fas fa-trash"></i></button>
+                </div>
+                <div class="mt-2 text-sm font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(payment.Valor)}</div>
+            </article>
+        `).join('') || '<div class="rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500 dark:text-gray-400">Nenhum pagamento adicionado.</div>';
+    }
+}
+function openNBEncomendasModal() {
+    if (!canAccessNB()) return;
+    if (!nbEncomendaDraftHeader && !nbSelectedEncomendaId) setNBEncomendaDraftFromRecord(null);
+    renderNBEncomendasModal();
+    showModal(document.getElementById('nb-encomendas-modal'));
+}
+function closeNBEncomendasModal() {
+    hideModal(document.getElementById('nb-encomendas-modal'));
+}
+function syncNBEncomendaSelection(selectedId) {
+    const numericId = selectedId == null ? null : Number(selectedId);
+    if (!numericId) {
+        setNBEncomendaDraftFromRecord(null);
+    } else {
+        const record = getNBEncomendaById(numericId);
+        if (record) setNBEncomendaDraftFromRecord(record);
+    }
+    renderNBEncomendasModal();
+}
+function addNBEncomendaDraftItem() {
+    syncNBEncomendaHeaderFromForm();
+    const productId = Number(document.getElementById('nb-encomenda-product')?.value || 0);
+    const quantity = Number(document.getElementById('nb-encomenda-quantity')?.value || 0);
+    const product = nbProdutosData.find(item => Number(item.Id) === productId && item.Ativo !== false);
+    if (!product || quantity <= 0) {
+        showNBToast('Escolha um produto ativo e uma quantidade válida.', 'warning');
+        return;
+    }
+    nbEncomendaDraftItems.push({
+        tempId: `item_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+        Produto: { Id: product.Id, Nome: product.Nome, Preco_Venda: Number(product.Preco_Venda || 0) },
+        Quantidade: quantity,
+        Preco_Unitario: Number(product.Preco_Venda || 0),
+        Subtotal: quantity * Number(product.Preco_Venda || 0),
+        Observacao_Item: ''
+    });
+    renderNBEncomendasModal();
+}
+function addNBEncomendaDraftPayment() {
+    syncNBEncomendaHeaderFromForm();
+    const value = normalizeNBDecimal(document.getElementById('nb-encomenda-payment-value')?.value);
+    if (value <= 0) {
+        showNBToast('Informe um valor de pagamento válido.', 'warning');
+        return;
+    }
+    nbEncomendaDraftPayments.push({
+        tempId: `pay_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+        Data_Pagamento: document.getElementById('nb-encomenda-payment-date')?.value || toDateInputValue(new Date()),
+        Forma_Pagamento: document.getElementById('nb-encomenda-payment-form')?.value || 'Dinheiro',
+        Tipo: document.getElementById('nb-encomenda-payment-type')?.value || 'Entrada',
+        Valor: value,
+        Observacao: document.getElementById('nb-encomenda-payment-obs')?.value || ''
+    });
+    document.getElementById('nb-encomenda-payment-value').value = '';
+    document.getElementById('nb-encomenda-payment-obs').value = '';
+    renderNBEncomendasModal();
+}
+function deleteNBEncomendaDraftItem(tempId) {
+    syncNBEncomendaHeaderFromForm();
+    nbEncomendaDraftItems = nbEncomendaDraftItems.filter(item => String(item.tempId) !== String(tempId));
+    renderNBEncomendasModal();
+}
+function deleteNBEncomendaDraftPayment(tempId) {
+    syncNBEncomendaHeaderFromForm();
+    nbEncomendaDraftPayments = nbEncomendaDraftPayments.filter(item => String(item.tempId) !== String(tempId));
+    renderNBEncomendasModal();
+}
+function getNBEncomendaHeaderPayload() {
+    syncNBEncomendaHeaderFromForm();
+    const header = getNBEncomendaDraftHeader();
+    const totals = getNBEncomendaDraftTotals(header);
+    return {
+        Cliente_Nome: header.Cliente_Nome,
+        Telefone: header.Telefone,
+        Observacoes: header.Observacoes,
+        Data_Pedido: header.Data_Pedido,
+        Data_Entrega_Prevista: header.Data_Entrega_Prevista,
+        Data_Entrega_Real: header.Data_Entrega_Real || null,
+        Acrescimo_Valor: Number(header.Acrescimo_Valor || 0),
+        Total_Produtos: totals.totalProdutos,
+        Total_Geral: totals.totalGeral,
+        Total_Pago: totals.totalPago,
+        Saldo_Pendente: totals.saldoPendente,
+        Status: header.Status || 'Aberta'
+    };
+}
+async function persistNBEncomendaChildren(encomendaId) {
+    const currentItems = getNBEncomendaItemsByOrderId(encomendaId);
+    await Promise.all(currentItems.map(item => nocoFetch(`${TABLE_IDS.NB_Encomendas_Itens}/${item.Id}`, { method: 'DELETE' })));
+    await Promise.all(nbEncomendaDraftItems.map(item => {
+        const body = {
+            Quantidade: Number(item.Quantidade || 0),
+            Preco_Unitario: Number(item.Preco_Unitario || 0),
+            Subtotal: Number(item.Subtotal || 0),
+            Observacao_Item: item.Observacao_Item || '',
+            Encomenda: { Id: encomendaId },
+            Produto: { Id: Number(item.Produto?.Id || 0) }
+        };
+        return nocoFetch(TABLE_IDS.NB_Encomendas_Itens, { method: 'POST', body: JSON.stringify(body) });
+    }));
+
+    const currentPayments = getNBEncomendaPaymentsByOrderId(encomendaId);
+    await Promise.all(currentPayments.map(payment => nocoFetch(`${TABLE_IDS.NB_Encomendas_Pagamentos}/${payment.Id}`, { method: 'DELETE' })));
+    await Promise.all(nbEncomendaDraftPayments.map(async payment => {
+        const controlDay = await ensureNBControlDay(payment.Data_Pagamento || toDateInputValue(new Date()));
+        if (!controlDay) return null;
+        const body = {
+            Data_Pagamento: payment.Data_Pagamento || toDateInputValue(new Date()),
+            Forma_Pagamento: payment.Forma_Pagamento || 'Dinheiro',
+            Tipo: payment.Tipo || 'Entrada',
+            Observacao: payment.Observacao || '',
+            Valor: Number(payment.Valor || 0),
+            Encomenda: { Id: encomendaId },
+            Controle_Dia: { Id: controlDay.Id }
+        };
+        return nocoFetch(TABLE_IDS.NB_Encomendas_Pagamentos, { method: 'POST', body: JSON.stringify(body) });
+    }));
+}
+async function handleNBEncomendaSubmit(e) {
+    e.preventDefault();
+    if (!canAccessNB()) return;
+    syncNBEncomendaHeaderFromForm();
+    if (!nbEncomendaDraftItems.length) {
+        showNBToast('Adicione pelo menos um item à encomenda.', 'warning');
+        return;
+    }
+    const payload = getNBEncomendaHeaderPayload();
+    const id = Number(document.getElementById('nb-encomenda-id')?.value || nbSelectedEncomendaId || 0);
+    const result = await nocoFetch(id ? `${TABLE_IDS.NB_Encomendas}/${id}` : TABLE_IDS.NB_Encomendas, {
+        method: id ? 'PATCH' : 'POST',
+        body: JSON.stringify(payload)
+    });
+    if (!result) return;
+    const encomendaId = result.Id || id;
+    nbSelectedEncomendaId = encomendaId;
+    await persistNBEncomendaChildren(encomendaId);
+    await Promise.all([
+        fetchNBEncomendas(),
+        fetchNBEncomendaItens(),
+        fetchNBEncomendaPagamentos(),
+        fetchNBFinanceiro(),
+        fetchNBControleDias(),
+        fetchNBDespesasVales()
+    ]);
+    setNBEncomendaDraftFromRecord(getNBEncomendaById(encomendaId));
+    renderNBModule();
+    showNBToast('Encomenda salva com sucesso.');
+}
+async function deleteNBEncomendaCurrent() {
+    if (!nbSelectedEncomendaId) return;
+    const confirmed = await showConfirmModal('Tem certeza que deseja apagar esta encomenda?');
+    if (!confirmed) return;
+    const encomendaId = nbSelectedEncomendaId;
+    const currentItems = getNBEncomendaItemsByOrderId(encomendaId);
+    const currentPayments = getNBEncomendaPaymentsByOrderId(encomendaId);
+    await Promise.all(currentItems.map(item => nocoFetch(`${TABLE_IDS.NB_Encomendas_Itens}/${item.Id}`, { method: 'DELETE' })));
+    await Promise.all(currentPayments.map(payment => nocoFetch(`${TABLE_IDS.NB_Encomendas_Pagamentos}/${payment.Id}`, { method: 'DELETE' })));
+    const result = await nocoFetch(`${TABLE_IDS.NB_Encomendas}/${encomendaId}`, { method: 'DELETE' });
+    if (result) {
+        await Promise.all([
+            fetchNBEncomendas(),
+            fetchNBEncomendaItens(),
+            fetchNBEncomendaPagamentos(),
+            fetchNBFinanceiro(),
+            fetchNBControleDias()
+        ]);
+        setNBEncomendaDraftFromRecord(null);
+        renderNBModule();
+        showNBToast('Encomenda apagada com sucesso.');
+    }
+}
 function setNBSelectedDate(dateString) {
     nbSelectedDate = dateString;
     const label = document.getElementById('nb-financial-date-label');
@@ -3586,7 +4264,7 @@ function isNBModuleInputFocused() {
     const active = document.activeElement;
     if (!active) return false;
     if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(active.tagName) && !active.isContentEditable) return false;
-    return Boolean(active.closest('#nb-painel-content, #nb-gestao-content, #nb-panel-finance-modal, #nb-panel-category-modal'));
+    return Boolean(active.closest('#nb-painel-content, #nb-gestao-content, #nb-panel-finance-modal, #nb-panel-category-modal, #nb-encomendas-modal'));
 }
 function startNBModuleAutoRefresh() {
     if (nbModuleRefreshTimer) return;
@@ -3601,6 +4279,7 @@ function stopNBModuleAutoRefresh() {
 }
 async function refreshNBModuleSilently() {
     if (!canAccessNB() || !dataLoaded['nosso-bolo'] || nbModuleRefreshInProgress) return;
+    if (!document.getElementById('nb-encomendas-modal')?.classList.contains('hidden')) return;
     if (document.hidden || isNBModuleInputFocused()) return;
     nbModuleRefreshInProgress = true;
     try {
@@ -3611,7 +4290,10 @@ async function refreshNBModuleSilently() {
             fetchNBApontamentos(),
             fetchNBFinanceiro(),
             fetchNBDespesasVales(),
-            fetchNBDiarioBordo()
+            fetchNBDiarioBordo(),
+            fetchNBEncomendas(),
+            fetchNBEncomendaItens(),
+            fetchNBEncomendaPagamentos()
         ]);
         if (nbCurrentWeekStart == null) nbCurrentWeekStart = getStartOfWeek();
         renderNBModule();
@@ -4563,21 +5245,18 @@ function syncNBPanelDayMarkers() {
                 dayCard.classList.add('ring-2', 'border-amber-300', 'shadow-md');
             }
             let badge = dayCard.querySelector('[data-nb-day-marker]');
-            if (!badge) {
-                badge = document.createElement('span');
-                badge.dataset.nbDayMarker = 'true';
-                badge.className = 'absolute top-3 right-3 text-[11px] font-semibold px-2 py-1 rounded-full';
-                dayCard.appendChild(badge);
+            if (!isToday) {
+                if (badge) badge.remove();
+            } else {
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.dataset.nbDayMarker = 'true';
+                    badge.className = 'absolute top-3 right-3 text-[11px] font-semibold px-2 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100';
+                    dayCard.appendChild(badge);
+                }
+                badge.textContent = 'Hoje';
+                badge.style.display = 'inline-flex';
             }
-            badge.className = `absolute top-3 right-3 text-[11px] font-semibold px-2 py-1 rounded-full ${
-                isSelected
-                    ? 'bg-brand-gold text-white'
-                    : isToday
-                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100'
-                        : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-200'
-            }`;
-            badge.textContent = isSelected ? (isToday ? 'Hoje' : 'Editando') : isToday ? 'Hoje' : '';
-            badge.style.display = badge.textContent ? 'inline-flex' : 'none';
         }
         document.querySelectorAll(`[data-nb-cell][data-date="${dateString}"]`).forEach(cell => {
             const isSelected = dateString === selectedDate;
@@ -4928,7 +5607,7 @@ async function loadNBModuleData(force = false) {
         return;
     }
     showLoadingOverlay('Carregando Nosso Bolo...');
-    await Promise.all([fetchNBCategorias(), fetchNBProdutos(), fetchNBControleDias(), fetchNBApontamentos(), fetchNBFinanceiro(), fetchNBDespesasVales(), fetchNBDiarioBordo()]);
+    await Promise.all([fetchNBCategorias(), fetchNBProdutos(), fetchNBControleDias(), fetchNBApontamentos(), fetchNBFinanceiro(), fetchNBDespesasVales(), fetchNBDiarioBordo(), fetchNBEncomendas(), fetchNBEncomendaItens(), fetchNBEncomendaPagamentos()]);
     if (!nbCurrentWeekStart) nbCurrentWeekStart = getStartOfWeek();
     const today = toDateInputValue(new Date());
     if (!nbSelectedDate) setNBSelectedDate(today);
@@ -5328,7 +6007,10 @@ async function loadInitialData() {
             fetchNBApontamentos(),
             fetchNBFinanceiro(),
             fetchNBDespesasVales(),
-            fetchNBDiarioBordo()
+            fetchNBDiarioBordo(),
+            fetchNBEncomendas(),
+            fetchNBEncomendaItens(),
+            fetchNBEncomendaPagamentos()
         ]);
         if (!nbCurrentWeekStart) nbCurrentWeekStart = getStartOfWeek();
         const today = toDateInputValue(new Date());
@@ -9908,6 +10590,7 @@ function initializeApp() {
         document.getElementById('nb-finance-form')?.addEventListener('submit', handleNBFinanceSubmit);
         document.getElementById('nb-panel-finance-btn')?.addEventListener('click', openNBPanelFinanceModal);
         document.getElementById('nb-panel-category-btn')?.addEventListener('click', openNBPanelCategoryModal);
+        document.getElementById('nb-panel-encomendas-btn')?.addEventListener('click', openNBEncomendasModal);
         document.getElementById('nb-panel-finance-form')?.addEventListener('submit', handleNBPanelFinanceSubmit);
         [
             'nb-fin-caixa-inicial',
@@ -9940,6 +10623,28 @@ function initializeApp() {
             document.querySelectorAll('.nb-panel-category-checkbox').forEach(input => { input.checked = false; });
             updateNBPanelCategoryModalCount();
         });
+        document.getElementById('close-nb-encomendas-modal')?.addEventListener('click', closeNBEncomendasModal);
+        document.getElementById('nb-encomenda-new-btn')?.addEventListener('click', () => {
+            setNBEncomendaDraftFromRecord(null);
+            renderNBEncomendasModal();
+        });
+        document.getElementById('nb-encomenda-search')?.addEventListener('input', renderNBEncomendasModal);
+        document.getElementById('nb-encomenda-add-item-btn')?.addEventListener('click', addNBEncomendaDraftItem);
+        document.getElementById('nb-encomenda-add-payment-btn')?.addEventListener('click', addNBEncomendaDraftPayment);
+        document.getElementById('nb-encomenda-cancel-btn')?.addEventListener('click', () => {
+            if (nbSelectedEncomendaId) {
+                const record = getNBEncomendaById(nbSelectedEncomendaId);
+                setNBEncomendaDraftFromRecord(record);
+            } else {
+                setNBEncomendaDraftFromRecord(null);
+            }
+            renderNBEncomendasModal();
+        });
+        document.getElementById('nb-encomenda-phone')?.addEventListener('input', e => {
+            e.target.value = formatNBPhoneBR(normalizeNBPhoneDigits(e.target.value));
+        });
+        document.getElementById('nb-encomenda-form')?.addEventListener('submit', handleNBEncomendaSubmit);
+        document.getElementById('nb-encomenda-form')?.addEventListener('input', syncNBEncomendaHeaderFromForm);
         document.getElementById('nb-panel-expense-save-btn')?.addEventListener('click', handleNBPanelExpenseSubmit);
         document.getElementById('nb-panel-expense-cancel-btn')?.addEventListener('click', resetNBPanelExpenseForm);
         document.getElementById('nb-panel-expense-toggle')?.addEventListener('click', () => {
@@ -10118,8 +10823,23 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
                     }
                 });
             }
+            if (e.target.closest('.nb-encomenda-select-btn')) {
+                const id = e.target.closest('.nb-encomenda-select-btn').dataset.id;
+                if (id) syncNBEncomendaSelection(id);
+            }
+            if (e.target.closest('.nb-encomenda-item-delete-btn')) {
+                const id = e.target.closest('.nb-encomenda-item-delete-btn').dataset.id;
+                deleteNBEncomendaDraftItem(id);
+            }
+            if (e.target.closest('.nb-encomenda-payment-delete-btn')) {
+                const id = e.target.closest('.nb-encomenda-payment-delete-btn').dataset.id;
+                deleteNBEncomendaDraftPayment(id);
+            }
+            if (e.target.closest('#nb-encomenda-delete-btn')) {
+                deleteNBEncomendaCurrent();
+            }
         });
-        const customHandledForms = new Set(['nb-finance-form', 'nb-panel-finance-form', 'nb-expense-form', 'nb-diary-form', 'nb-category-form', 'nb-product-form']);
+        const customHandledForms = new Set(['nb-finance-form', 'nb-panel-finance-form', 'nb-encomenda-form', 'nb-expense-form', 'nb-diary-form', 'nb-category-form', 'nb-product-form']);
         document.querySelectorAll('form').forEach(form => { 
             if (form.id === 'report-form') { form.addEventListener('submit', generatePdfReport); } 
             else if (form.id !== 'login-form' && !customHandledForms.has(form.id)) { form.addEventListener('submit', handleFormSubmit); }
