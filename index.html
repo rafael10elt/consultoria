@@ -2352,15 +2352,31 @@ body {
             <div class="flex items-start justify-between gap-4 mb-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900 dark:text-white">Encomendas</h2>
-                    <p id="nb-encomendas-modal-subtitle" class="text-sm text-gray-500 dark:text-gray-400 mt-1">Selecione uma encomenda ou crie uma nova.</p>
+                    <p id="nb-encomendas-modal-subtitle" class="text-sm text-gray-500 dark:text-gray-400 mt-1">Crie uma nova encomenda ou edite um registro da lista.</p>
                 </div>
                 <button type="button" id="close-nb-encomendas-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-3xl leading-none">&times;</button>
             </div>
             <div class="grid grid-cols-1 xl:grid-cols-[24rem_minmax(0,1fr)] gap-4 flex-1 min-h-0 overflow-hidden">
                 <div class="flex flex-col gap-3 min-h-0">
-                    <div class="flex items-center gap-2">
-                        <input type="text" id="nb-encomenda-search" placeholder="Pesquisar por cliente, telefone ou status..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <button type="button" id="nb-encomenda-new-btn" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark shrink-0">Nova</button>
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Encomendas em aberto</p>
+                                <div id="nb-encomenda-open-count" class="mt-1 text-3xl font-bold text-gray-900 dark:text-white">0</div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Use o botão Editar para carregar um registro no formulário.</p>
+                            </div>
+                            <button type="button" id="nb-encomenda-new-btn" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark shrink-0">Nova</button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_12rem] gap-2">
+                        <input type="text" id="nb-encomenda-search" placeholder="Pesquisar por cliente, telefone ou observações..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <select id="nb-encomenda-status-filter" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="Aberta">Aberta</option>
+                            <option value="Parcial">Parcial</option>
+                            <option value="Finalizada">Finalizada</option>
+                            <option value="Cancelada">Cancelada</option>
+                            <option value="Todas">Todas</option>
+                        </select>
                     </div>
                     <div id="nb-encomenda-list" class="space-y-3 overflow-y-auto pr-1 flex-1"></div>
                 </div>
@@ -2424,7 +2440,7 @@ body {
                                     </div>
                                     <div>
                                         <label for="nb-encomenda-quantity" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Quantidade</label>
-                                        <input type="number" min="1" step="1" id="nb-encomenda-quantity" value="1" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                <input type="number" min="1" step="1" id="nb-encomenda-quantity" placeholder="1" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                                     </div>
                                     <div class="flex items-end">
                                         <button type="button" id="nb-encomenda-add-item-btn" class="w-full px-4 py-2 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-100 dark:hover:bg-blue-800">Adicionar Item</button>
@@ -2434,7 +2450,7 @@ body {
                             <div class="mt-4">
                                 <div class="flex items-center justify-between mb-3">
                                     <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Itens da encomenda</h3>
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">Produtos ativos com quantidade</span>
+                                    <span class="text-xs text-gray-500 dark:text-gray-400">Duplicidade vira quantidade somada</span>
                                 </div>
                                 <div id="nb-encomenda-items-list" class="space-y-3"></div>
                             </div>
@@ -2456,20 +2472,17 @@ body {
                                         </select>
                                     </div>
                                     <div>
-                                        <label for="nb-encomenda-payment-type" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo</label>
-                                        <select id="nb-encomenda-payment-type" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
-                                            <option value="Entrada">Entrada</option>
-                                            <option value="Parcial">Parcial</option>
-                                            <option value="Saldo Final">Saldo Final</option>
-                                        </select>
-                                    </div>
-                                    <div>
                                         <label for="nb-encomenda-payment-value" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor</label>
                                         <input type="number" min="0" step="0.01" id="nb-encomenda-payment-value" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                                     </div>
                                     <div>
                                         <label for="nb-encomenda-payment-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label>
                                         <input type="text" id="nb-encomenda-payment-obs" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                    </div>
+                                    <div class="md:col-span-5">
+                                        <div class="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-3 text-xs text-gray-500 dark:text-gray-400">
+                                            O tipo do pagamento será calculado automaticamente com base no saldo restante.
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="flex items-end">
@@ -2613,6 +2626,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let nbEncomendaDraftPayments = [];
     let nbEncomendaProductCategoryFilter = 'all';
     let nbEncomendaProductSearchFilter = '';
+    let nbEncomendaStatusFilter = 'Aberta';
     let nbTopProductsGestaoLimit = 5;
     let nbAnalyticsPreset = 'day';
     const NB_PANEL_CATEGORY_SELECTION_KEY = 'nb-panel-selected-category-ids';
@@ -3563,6 +3577,36 @@ function getNBEncomendaPaymentsTotalsForDate(dateString) {
         electronicTotal: totalsByForm.pix + totalsByForm.maquineta + totalsByForm.app
     };
 }
+function normalizeNBEncomendaDraftItems(items = []) {
+    const grouped = new Map();
+    items.forEach(item => {
+        const productId = Number(item?.Produto?.Id || item?.NB_Produtos?.Id || 0);
+        if (!productId) return;
+        const quantity = Math.max(1, normalizeNBNumber(item.Quantidade || 0));
+        const unitPrice = Number(item.Preco_Unitario ?? item.Produto?.Preco_Venda ?? item.NB_Produtos?.Preco_Venda ?? 0);
+        const current = grouped.get(productId);
+        if (current) {
+            current.Quantidade += quantity;
+            current.Subtotal = current.Quantidade * current.Preco_Unitario;
+            if (!current.Observacao_Item && item.Observacao_Item) current.Observacao_Item = item.Observacao_Item;
+            return;
+        }
+        grouped.set(productId, {
+            tempId: item.tempId || item.Id || `item_${productId}_${Date.now()}`,
+            Id: item.Id || null,
+            Produto: {
+                Id: productId,
+                Nome: item.Produto?.Nome || item.NB_Produtos?.Nome || item.Nome || 'Produto',
+                Preco_Venda: unitPrice
+            },
+            Quantidade: quantity,
+            Preco_Unitario: unitPrice,
+            Subtotal: quantity * unitPrice,
+            Observacao_Item: item.Observacao_Item || ''
+        });
+    });
+    return [...grouped.values()];
+}
 function getNBControlDayFinancialSnapshot(dateString) {
     const productMap = new Map(nbProdutosData.map(product => [product.Id, product]));
     const apontamentos = nbApontamentosData.filter(item => getNBLinkedDateValue(item) === dateString);
@@ -3839,6 +3883,14 @@ function formatNBPhoneBR(value) {
 function getNBEncomendaById(id) {
     return nbEncomendasData.find(item => String(item.Id) === String(id)) || null;
 }
+function getNBEncomendaOpenCount() {
+    return nbEncomendasData.filter(order => {
+        const orderItems = getNBEncomendaItemsByOrderId(order.Id);
+        const orderPayments = getNBEncomendaPaymentsByOrderId(order.Id);
+        const totals = getNBEncomendaDraftTotals(order, orderItems, orderPayments);
+        return getNBEncomendaDisplayStatus(order, totals) === 'Aberta';
+    }).length;
+}
 function getNBEncomendaItemsByOrderId(encomendaId) {
     return nbEncomendaItensData.filter(item => String(getNBLinkedEncomendaId(item)) === String(encomendaId));
 }
@@ -3850,8 +3902,8 @@ function getNBEncomendaDraftHeader() {
         Cliente_Nome: '',
         Telefone: '',
         Observacoes: '',
-        Data_Pedido: toDateInputValue(new Date()),
-        Data_Entrega_Prevista: toDateInputValue(new Date()),
+        Data_Pedido: '',
+        Data_Entrega_Prevista: '',
         Data_Entrega_Real: '',
         Acrescimo_Valor: 0,
         Status: 'Aberta'
@@ -3866,8 +3918,16 @@ function getNBEncomendaDraftTotals(header = getNBEncomendaDraftHeader(), items =
         totalProdutos,
         totalGeral,
         totalPago,
-        saldoPendente: totalGeral - totalPago
+        saldoPendente: Math.max(0, totalGeral - totalPago)
     };
+}
+function getNBEncomendaResolvedStatus(header = getNBEncomendaDraftHeader(), totals = getNBEncomendaDraftTotals(header)) {
+    const currentStatus = header?.Status || 'Aberta';
+    if (currentStatus === 'Cancelada') return 'Cancelada';
+    if (currentStatus === 'Finalizada') return 'Finalizada';
+    if (totals.totalGeral > 0 && totals.saldoPendente === 0) return 'Finalizada';
+    if (totals.totalPago > 0) return 'Parcial';
+    return 'Aberta';
 }
 function getNBEncomendaProductFilterCategoryId() {
     const value = document.getElementById('nb-encomenda-product-category')?.value || 'all';
@@ -3893,8 +3953,9 @@ function getNBEncomendaDisplayStatus(order, totalsOverride = null) {
         totalPago: Number(order?.Total_Pago || 0),
         saldoPendente: Number(order?.Saldo_Pendente || 0)
     };
-    if ((order?.Status || '') === 'Finalizada') return 'Finalizada';
     if ((order?.Status || '') === 'Cancelada') return 'Cancelada';
+    if ((order?.Status || '') === 'Finalizada') return 'Finalizada';
+    if (totals.saldoPendente <= 0 && totals.totalPago > 0) return 'Finalizada';
     if (totals.totalPago > 0 && totals.saldoPendente > 0) return 'Parcial';
     return 'Aberta';
 }
@@ -3919,8 +3980,11 @@ function syncNBEncomendaProductOptions() {
         .sort((a, b) => (a.Nome || '').localeCompare(b.Nome || ''))
         .map(product => `<option value="${product.Id}">${escapeNBHtml(product.Nome || '')}${product.Categoria?.Nome ? ` - ${escapeNBHtml(product.Categoria.Nome)}` : ''} (${formatCurrencyBR(product.Preco_Venda || 0)})</option>`)
         .join('');
-    select.innerHTML = options || '<option value="">Nenhum produto ativo</option>';
+    select.innerHTML = options
+        ? `<option value="">Selecione um produto</option>${options}`
+        : '<option value="">Nenhum produto ativo</option>';
     if (current) select.value = current;
+    else select.value = '';
 }
 function setNBEncomendaDraftFromRecord(record = null) {
     if (!record) {
@@ -3935,13 +3999,13 @@ function setNBEncomendaDraftFromRecord(record = null) {
         Cliente_Nome: record.Cliente_Nome || '',
         Telefone: formatNBPhoneBR(record.Telefone || ''),
         Observacoes: record.Observacoes || '',
-        Data_Pedido: record.Data_Pedido || toDateInputValue(new Date()),
-        Data_Entrega_Prevista: record.Data_Entrega_Prevista || toDateInputValue(new Date()),
+        Data_Pedido: record.Data_Pedido || '',
+        Data_Entrega_Prevista: record.Data_Entrega_Prevista || '',
         Data_Entrega_Real: record.Data_Entrega_Real || '',
         Acrescimo_Valor: Number(record.Acrescimo_Valor || 0),
         Status: record.Status || 'Aberta'
     };
-    nbEncomendaDraftItems = getNBEncomendaItemsByOrderId(record.Id).map(item => ({
+    nbEncomendaDraftItems = normalizeNBEncomendaDraftItems(getNBEncomendaItemsByOrderId(record.Id).map(item => ({
         tempId: item.Id,
         Id: item.Id,
         Produto: item.NB_Produtos || item.Produto || null,
@@ -3949,7 +4013,7 @@ function setNBEncomendaDraftFromRecord(record = null) {
         Preco_Unitario: Number(item.Preco_Unitario || 0),
         Subtotal: Number(item.Subtotal || 0),
         Observacao_Item: item.Observacao_Item || ''
-    }));
+    })));
     nbEncomendaDraftPayments = getNBEncomendaPaymentsByOrderId(record.Id).map(payment => ({
         tempId: payment.Id,
         Id: payment.Id,
@@ -3965,8 +4029,8 @@ function syncNBEncomendaHeaderFromForm() {
         Cliente_Nome: document.getElementById('nb-encomenda-client-name')?.value || '',
         Telefone: document.getElementById('nb-encomenda-phone')?.value || '',
         Observacoes: document.getElementById('nb-encomenda-observacoes')?.value || '',
-        Data_Pedido: document.getElementById('nb-encomenda-data-pedido')?.value || toDateInputValue(new Date()),
-        Data_Entrega_Prevista: document.getElementById('nb-encomenda-data-prevista')?.value || toDateInputValue(new Date()),
+        Data_Pedido: document.getElementById('nb-encomenda-data-pedido')?.value || '',
+        Data_Entrega_Prevista: document.getElementById('nb-encomenda-data-prevista')?.value || '',
         Data_Entrega_Real: document.getElementById('nb-encomenda-data-real')?.value || '',
         Acrescimo_Valor: Number(document.getElementById('nb-encomenda-acrescimo')?.value || 0),
         Status: document.getElementById('nb-encomenda-status')?.value || 'Aberta'
@@ -3982,28 +4046,42 @@ function renderNBEncomendasModal() {
         Cliente_Nome: selectedRecord.Cliente_Nome || '',
         Telefone: selectedRecord.Telefone || '',
         Observacoes: selectedRecord.Observacoes || '',
-        Data_Pedido: selectedRecord.Data_Pedido || toDateInputValue(new Date()),
-        Data_Entrega_Prevista: selectedRecord.Data_Entrega_Prevista || toDateInputValue(new Date()),
+        Data_Pedido: selectedRecord.Data_Pedido || '',
+        Data_Entrega_Prevista: selectedRecord.Data_Entrega_Prevista || '',
         Data_Entrega_Real: selectedRecord.Data_Entrega_Real || '',
         Acrescimo_Valor: Number(selectedRecord.Acrescimo_Valor || 0),
         Status: selectedRecord.Status || 'Aberta'
     } : getNBEncomendaDraftHeader());
     nbEncomendaDraftHeader = { ...header };
-    const search = (document.getElementById('nb-encomenda-search')?.value || '').trim().toLowerCase();
+    const totals = getNBEncomendaDraftTotals(header);
+    const resolvedStatus = getNBEncomendaResolvedStatus(header, totals);
+    const statusFilter = document.getElementById('nb-encomenda-status-filter')?.value || nbEncomendaStatusFilter || 'Aberta';
+    nbEncomendaStatusFilter = statusFilter;
     const list = document.getElementById('nb-encomenda-list');
     const subtitle = document.getElementById('nb-encomendas-modal-subtitle');
     const form = document.getElementById('nb-encomenda-form');
+    const openCountEl = document.getElementById('nb-encomenda-open-count');
+    const statusFilterEl = document.getElementById('nb-encomenda-status-filter');
+    if (statusFilterEl && statusFilterEl.value !== statusFilter) statusFilterEl.value = statusFilter;
+    if (openCountEl) openCountEl.textContent = String(getNBEncomendaOpenCount());
+    const search = (document.getElementById('nb-encomenda-search')?.value || '').trim().toLowerCase();
     if (subtitle) {
         subtitle.textContent = selectedRecord
-            ? `Editando encomenda de ${selectedRecord.Cliente_Nome || 'cliente'}`
-            : 'Crie uma nova encomenda ou selecione uma existente.';
+            ? `Editando encomenda #${selectedRecord.Id} de ${selectedRecord.Cliente_Nome || 'cliente'}`
+            : 'Crie uma nova encomenda ou edite um registro da lista.';
     }
     if (list) {
         const filtered = nbEncomendasData.filter(order => {
+            const orderItems = getNBEncomendaItemsByOrderId(order.Id);
+            const orderPayments = getNBEncomendaPaymentsByOrderId(order.Id);
+            const totals = getNBEncomendaDraftTotals(order, orderItems, orderPayments);
+            const displayStatus = getNBEncomendaDisplayStatus(order, totals);
             const client = (order.Cliente_Nome || '').toLowerCase();
             const phone = (order.Telefone || '').toLowerCase();
-            const status = (order.Status || '').toLowerCase();
-            return !search || client.includes(search) || phone.includes(search) || status.includes(search);
+            const notes = (order.Observacoes || '').toLowerCase();
+            const matchesSearch = !search || client.includes(search) || phone.includes(search) || notes.includes(search) || displayStatus.toLowerCase().includes(search);
+            const matchesStatus = statusFilter === 'Todas' || displayStatus === statusFilter;
+            return matchesSearch && matchesStatus;
         });
         list.innerHTML = filtered.map(order => {
             const orderItems = getNBEncomendaItemsByOrderId(order.Id);
@@ -4018,10 +4096,8 @@ function renderNBEncomendasModal() {
                         ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100'
                     : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
             const isSelected = String(order.Id) === String(nbSelectedEncomendaId);
-            const whatsappDigits = normalizeNBPhoneDigits(order.Telefone);
             return `
                 <div class="rounded-2xl border ${isSelected ? 'border-brand-gold ring-2 ring-brand-gold/40' : 'border-gray-200 dark:border-gray-700'} bg-white dark:bg-gray-800 px-4 py-3 shadow-sm">
-                    <button type="button" class="nb-encomenda-select-btn w-full text-left" data-id="${order.Id}">
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
                             <div class="font-semibold text-gray-900 dark:text-white truncate">${escapeNBHtml(order.Cliente_Nome || 'Sem cliente')}</div>
@@ -4067,9 +4143,13 @@ function renderNBEncomendasModal() {
                             <strong class="text-gray-800 dark:text-white line-clamp-2">${escapeNBHtml(order.Observacoes || 'Sem observações')}</strong>
                         </div>
                     </div>
-                    </button>
-                    <div class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                        Entrega: ${order.Data_Entrega_Prevista ? parseDateOnly(order.Data_Entrega_Prevista).toLocaleDateString('pt-BR') : '-'}
+                    <div class="mt-3 flex items-center justify-between gap-3">
+                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                            Entrega: ${order.Data_Entrega_Prevista ? parseDateOnly(order.Data_Entrega_Prevista).toLocaleDateString('pt-BR') : '-'}
+                        </div>
+                        <button type="button" class="nb-encomenda-edit-btn inline-flex items-center gap-2 rounded-lg bg-brand-gold px-3 py-2 text-xs font-semibold text-white hover:bg-brand-gold-dark" data-id="${order.Id}">
+                            <i class="fas fa-pen"></i> Editar
+                        </button>
                     </div>
                 </div>
             `;
@@ -4082,13 +4162,12 @@ function renderNBEncomendasModal() {
     setValue('nb-encomenda-id', selectedRecord?.Id || '');
     setValue('nb-encomenda-client-name', header.Cliente_Nome || '');
     setValue('nb-encomenda-phone', header.Telefone || '');
-    setValue('nb-encomenda-data-pedido', header.Data_Pedido || toDateInputValue(new Date()));
-    setValue('nb-encomenda-data-prevista', header.Data_Entrega_Prevista || toDateInputValue(new Date()));
+    setValue('nb-encomenda-data-pedido', header.Data_Pedido || '');
+    setValue('nb-encomenda-data-prevista', header.Data_Entrega_Prevista || '');
     setValue('nb-encomenda-data-real', header.Data_Entrega_Real || '');
     setValue('nb-encomenda-status', header.Status || 'Aberta');
     setValue('nb-encomenda-observacoes', header.Observacoes || '');
-    setValue('nb-encomenda-acrescimo', Number(header.Acrescimo_Valor || 0));
-    const totals = getNBEncomendaDraftTotals(header);
+    setValue('nb-encomenda-acrescimo', selectedRecord ? Number(header.Acrescimo_Valor || 0) : '');
     const totalProductsEl = document.getElementById('nb-encomenda-total-products');
     const totalGeneralEl = document.getElementById('nb-encomenda-total-general');
     const totalPaidEl = document.getElementById('nb-encomenda-total-paid');
@@ -4099,7 +4178,7 @@ function renderNBEncomendasModal() {
     if (balanceEl) balanceEl.textContent = formatCurrencyBR(totals.saldoPendente);
     const selectedInfo = document.getElementById('nb-encomenda-selected-info');
     if (selectedInfo) {
-        selectedInfo.textContent = selectedRecord ? `Encomenda #${selectedRecord.Id}` : 'Nova encomenda';
+        selectedInfo.textContent = selectedRecord ? `Encomenda #${selectedRecord.Id} • ${resolvedStatus}` : 'Nova encomenda';
     }
     const deleteBtn = document.getElementById('nb-encomenda-delete-btn');
     if (deleteBtn) deleteBtn.classList.toggle('hidden', !selectedRecord);
@@ -4123,11 +4202,15 @@ function renderNBEncomendasModal() {
     }
     const paymentsList = document.getElementById('nb-encomenda-payments-list');
     if (paymentsList) {
-        paymentsList.innerHTML = nbEncomendaDraftPayments.map(payment => `
+        paymentsList.innerHTML = nbEncomendaDraftPayments.map((payment, index) => {
+            const paidBefore = nbEncomendaDraftPayments.slice(0, index).reduce((sum, entry) => sum + Number(entry.Valor || 0), 0);
+            const remainingAfter = Math.max(0, totals.totalGeral - paidBefore - Number(payment.Valor || 0));
+            const paymentType = payment.Tipo || (remainingAfter === 0 ? 'Saldo Final' : paidBefore === 0 ? 'Entrada' : 'Parcial');
+            return `
             <article class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
-                        <div class="font-semibold text-gray-900 dark:text-white">${escapeNBHtml(payment.Tipo || 'Pagamento')}</div>
+                        <div class="font-semibold text-gray-900 dark:text-white">${escapeNBHtml(paymentType)}</div>
                         <div class="text-xs text-gray-500 dark:text-gray-400">${payment.Data_Pagamento ? parseDateOnly(payment.Data_Pagamento).toLocaleDateString('pt-BR') : '-'}</div>
                         <div class="text-xs text-gray-500 dark:text-gray-400">${escapeNBHtml(payment.Forma_Pagamento || '')}${payment.Observacao ? ` • ${escapeNBHtml(payment.Observacao)}` : ''}</div>
                     </div>
@@ -4135,12 +4218,14 @@ function renderNBEncomendasModal() {
                 </div>
                         <div class="mt-2 text-sm font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(payment.Valor)}</div>
                     </article>
-                `).join('') || '<div class="rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500 dark:text-gray-400">Nenhum pagamento adicionado.</div>';
+                `;
+        }).join('') || '<div class="rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500 dark:text-gray-400">Nenhum pagamento adicionado.</div>';
     }
 }
 function openNBEncomendasModal() {
     if (!canAccessNB()) return;
-    if (!nbEncomendaDraftHeader && !nbSelectedEncomendaId) setNBEncomendaDraftFromRecord(null);
+    nbEncomendaStatusFilter = 'Aberta';
+    setNBEncomendaDraftFromRecord(null);
     renderNBEncomendasModal();
     showModal(document.getElementById('nb-encomendas-modal'));
 }
@@ -4157,6 +4242,11 @@ function syncNBEncomendaSelection(selectedId) {
     }
     renderNBEncomendasModal();
 }
+function getNBEncomendaPaymentTypeForDraft(value, totalsBefore) {
+    if (value <= 0 || totalsBefore.totalGeral <= 0) return 'Entrada';
+    if (value >= totalsBefore.saldoPendente && totalsBefore.saldoPendente > 0) return 'Saldo Final';
+    return nbEncomendaDraftPayments.length === 0 ? 'Entrada' : 'Parcial';
+}
 function addNBEncomendaDraftItem() {
     syncNBEncomendaHeaderFromForm();
     const productId = Number(document.getElementById('nb-encomenda-product')?.value || 0);
@@ -4166,28 +4256,54 @@ function addNBEncomendaDraftItem() {
         showNBToast('Escolha um produto ativo e uma quantidade válida.', 'warning');
         return;
     }
-    nbEncomendaDraftItems.push({
-        tempId: `item_${Date.now()}_${Math.random().toString(16).slice(2)}`,
-        Produto: { Id: product.Id, Nome: product.Nome, Preco_Venda: Number(product.Preco_Venda || 0) },
-        Quantidade: quantity,
-        Preco_Unitario: Number(product.Preco_Venda || 0),
-        Subtotal: quantity * Number(product.Preco_Venda || 0),
-        Observacao_Item: ''
-    });
+    const existingIndex = nbEncomendaDraftItems.findIndex(item => String(item.Produto?.Id) === String(product.Id));
+    if (existingIndex >= 0) {
+        const current = nbEncomendaDraftItems[existingIndex];
+        const nextQuantity = normalizeNBNumber(current.Quantidade) + quantity;
+        nbEncomendaDraftItems[existingIndex] = {
+            ...current,
+            Produto: { Id: product.Id, Nome: product.Nome, Preco_Venda: Number(product.Preco_Venda || 0) },
+            Quantidade: nextQuantity,
+            Preco_Unitario: Number(product.Preco_Venda || 0),
+            Subtotal: nextQuantity * Number(product.Preco_Venda || 0)
+        };
+        showNBToast('O produto já estava na encomenda. A quantidade foi somada.', 'warning');
+    } else {
+        nbEncomendaDraftItems.push({
+            tempId: `item_${Date.now()}_${Math.random().toString(16).slice(2)}`,
+            Produto: { Id: product.Id, Nome: product.Nome, Preco_Venda: Number(product.Preco_Venda || 0) },
+            Quantidade: quantity,
+            Preco_Unitario: Number(product.Preco_Venda || 0),
+            Subtotal: quantity * Number(product.Preco_Venda || 0),
+            Observacao_Item: ''
+        });
+    }
+    nbEncomendaDraftItems = normalizeNBEncomendaDraftItems(nbEncomendaDraftItems);
+    const quantityInput = document.getElementById('nb-encomenda-quantity');
+    if (quantityInput) quantityInput.value = '';
     renderNBEncomendasModal();
 }
 function addNBEncomendaDraftPayment() {
     syncNBEncomendaHeaderFromForm();
     const value = normalizeNBDecimal(document.getElementById('nb-encomenda-payment-value')?.value);
+    const totalsBefore = getNBEncomendaDraftTotals();
     if (value <= 0) {
         showNBToast('Informe um valor de pagamento válido.', 'warning');
+        return;
+    }
+    if (totalsBefore.totalGeral <= 0) {
+        showNBToast('Adicione itens antes de lançar pagamentos.', 'warning');
+        return;
+    }
+    if (value > totalsBefore.saldoPendente) {
+        showNBToast(`O valor do pagamento não pode ser maior que o saldo pendente de ${formatCurrencyBR(totalsBefore.saldoPendente)}.`, 'warning');
         return;
     }
     nbEncomendaDraftPayments.push({
         tempId: `pay_${Date.now()}_${Math.random().toString(16).slice(2)}`,
         Data_Pagamento: document.getElementById('nb-encomenda-payment-date')?.value || toDateInputValue(new Date()),
         Forma_Pagamento: document.getElementById('nb-encomenda-payment-form')?.value || 'Dinheiro',
-        Tipo: document.getElementById('nb-encomenda-payment-type')?.value || 'Entrada',
+        Tipo: getNBEncomendaPaymentTypeForDraft(value, totalsBefore),
         Valor: value,
         Observacao: document.getElementById('nb-encomenda-payment-obs')?.value || ''
     });
@@ -4208,6 +4324,7 @@ function deleteNBEncomendaDraftPayment(tempId) {
 function getNBEncomendaHeaderPayload() {
     syncNBEncomendaHeaderFromForm();
     const header = getNBEncomendaDraftHeader();
+    const totals = getNBEncomendaDraftTotals(header);
     return {
         Cliente_Nome: header.Cliente_Nome,
         Telefone: header.Telefone,
@@ -4216,22 +4333,44 @@ function getNBEncomendaHeaderPayload() {
         Data_Entrega_Prevista: header.Data_Entrega_Prevista,
         Data_Entrega_Real: header.Data_Entrega_Real || null,
         Acrescimo_Valor: Number(header.Acrescimo_Valor || 0),
-        Status: header.Status || 'Aberta'
+        Status: getNBEncomendaResolvedStatus(header, totals)
     };
+}
+async function postNBEncomendaRecordWithFallback(tableId, payloads = []) {
+    let lastError = null;
+    for (const payload of payloads) {
+        try {
+            const result = await nocoFetch(tableId, { method: 'POST', body: JSON.stringify(payload) });
+            if (result) return result;
+        } catch (error) {
+            lastError = error;
+        }
+    }
+    if (lastError) throw lastError;
+    return null;
 }
 async function persistNBEncomendaChildren(encomendaId) {
     const currentItems = getNBEncomendaItemsByOrderId(encomendaId);
     await Promise.all(currentItems.map(item => nocoFetch(`${TABLE_IDS.NB_Encomendas_Itens}/${item.Id}`, { method: 'DELETE' })));
     await Promise.all(nbEncomendaDraftItems.map(item => {
-        const body = {
+        const baseBody = {
             Quantidade: Number(item.Quantidade || 0),
             Preco_Unitario: Number(item.Preco_Unitario || 0),
-            Subtotal: Number(item.Subtotal || 0),
-            Observacao_Item: item.Observacao_Item || '',
-            NB_Encomendas: { Id: encomendaId },
-            NB_Produtos: { Id: Number(item.Produto?.Id || 0) }
+            Observacao_Item: item.Observacao_Item || ''
         };
-        return nocoFetch(TABLE_IDS.NB_Encomendas_Itens, { method: 'POST', body: JSON.stringify(body) });
+        const payloads = [
+            {
+                ...baseBody,
+                NB_Encomendas: { Id: encomendaId },
+                NB_Produtos: { Id: Number(item.Produto?.Id || 0) }
+            },
+            {
+                ...baseBody,
+                Encomenda: { Id: encomendaId },
+                Produto: { Id: Number(item.Produto?.Id || 0) }
+            }
+        ];
+        return postNBEncomendaRecordWithFallback(TABLE_IDS.NB_Encomendas_Itens, payloads);
     }));
 
     const currentPayments = getNBEncomendaPaymentsByOrderId(encomendaId);
@@ -4239,17 +4378,25 @@ async function persistNBEncomendaChildren(encomendaId) {
     await Promise.all(nbEncomendaDraftPayments.map(async payment => {
         const controlDay = await ensureNBControlDay(payment.Data_Pagamento || toDateInputValue(new Date()));
         if (!controlDay) return null;
-        const body = {
+        const baseBody = {
             Data_Pagamento: payment.Data_Pagamento || toDateInputValue(new Date()),
             Forma_Pagamento: payment.Forma_Pagamento || 'Dinheiro',
             Tipo: payment.Tipo || 'Entrada',
             Observacao: payment.Observacao || '',
-            Valor: Number(payment.Valor || 0),
-            NB_Encomendas: { Id: encomendaId },
-            NB_Controle_Dias: { Id: controlDay.Id },
-            NB_Controlle_Dias: { Id: controlDay.Id }
+            Valor: Number(payment.Valor || 0)
         };
-        return nocoFetch(TABLE_IDS.NB_Encomendas_Pagamentos, { method: 'POST', body: JSON.stringify(body) });
+        return postNBEncomendaRecordWithFallback(TABLE_IDS.NB_Encomendas_Pagamentos, [
+            {
+                ...baseBody,
+                NB_Encomendas: { Id: encomendaId },
+                NB_Controle_Dias: { Id: controlDay.Id }
+            },
+            {
+                ...baseBody,
+                Encomenda: { Id: encomendaId },
+                Controle_Dia: { Id: controlDay.Id }
+            }
+        ]);
     }));
 }
 async function handleNBEncomendaSubmit(e) {
@@ -4260,27 +4407,44 @@ async function handleNBEncomendaSubmit(e) {
         showNBToast('Adicione pelo menos um item à encomenda.', 'warning');
         return;
     }
+    const totals = getNBEncomendaDraftTotals();
+    if (totals.saldoPendente < 0) {
+        showNBToast('O saldo pendente não pode ficar negativo.', 'warning');
+        return;
+    }
     const payload = getNBEncomendaHeaderPayload();
     const id = Number(document.getElementById('nb-encomenda-id')?.value || nbSelectedEncomendaId || 0);
-    const result = await nocoFetch(id ? `${TABLE_IDS.NB_Encomendas}/${id}` : TABLE_IDS.NB_Encomendas, {
-        method: id ? 'PATCH' : 'POST',
-        body: JSON.stringify(payload)
-    });
-    if (!result) return;
-    const encomendaId = result.Id || id;
-    nbSelectedEncomendaId = encomendaId;
-    await persistNBEncomendaChildren(encomendaId);
-    await Promise.all([
-        fetchNBEncomendas(),
-        fetchNBEncomendaItens(),
-        fetchNBEncomendaPagamentos(),
-        fetchNBFinanceiro(),
-        fetchNBControleDias(),
-        fetchNBDespesasVales()
-    ]);
-    setNBEncomendaDraftFromRecord(getNBEncomendaById(encomendaId));
-    renderNBModule();
-    showNBToast('Encomenda salva com sucesso.');
+    try {
+        showLoadingOverlay('Salvando encomenda...');
+        const result = await nocoFetch(id ? `${TABLE_IDS.NB_Encomendas}/${id}` : TABLE_IDS.NB_Encomendas, {
+            method: id ? 'PATCH' : 'POST',
+            body: JSON.stringify(payload)
+        });
+        if (!result) {
+            showNBToast('O servidor não confirmou o salvamento da encomenda.', 'error');
+            return;
+        }
+        const encomendaId = result.Id || id;
+        nbSelectedEncomendaId = encomendaId;
+        await persistNBEncomendaChildren(encomendaId);
+        await Promise.all([
+            fetchNBEncomendas(),
+            fetchNBEncomendaItens(),
+            fetchNBEncomendaPagamentos(),
+            fetchNBFinanceiro(),
+            fetchNBControleDias(),
+            fetchNBDespesasVales()
+        ]);
+        setNBEncomendaDraftFromRecord(getNBEncomendaById(encomendaId));
+        renderNBEncomendasModal();
+        renderNBModule();
+        showNBToast('Encomenda salva com sucesso.');
+    } catch (error) {
+        console.error('Erro ao salvar encomenda:', error);
+        showNBToast('Não foi possível salvar a encomenda. Verifique os itens e tente novamente.', 'error');
+    } finally {
+        hideLoadingOverlay();
+    }
 }
 async function deleteNBEncomendaCurrent() {
     if (!nbSelectedEncomendaId) return;
@@ -10711,6 +10875,10 @@ function initializeApp() {
             renderNBEncomendasModal();
         });
         document.getElementById('nb-encomenda-search')?.addEventListener('input', renderNBEncomendasModal);
+        document.getElementById('nb-encomenda-status-filter')?.addEventListener('change', () => {
+            nbEncomendaStatusFilter = document.getElementById('nb-encomenda-status-filter')?.value || 'Aberta';
+            renderNBEncomendasModal();
+        });
         document.getElementById('nb-encomenda-product-category')?.addEventListener('change', () => {
             nbEncomendaProductCategoryFilter = getNBEncomendaProductFilterCategoryId();
             renderNBEncomendasModal();
@@ -10722,16 +10890,19 @@ function initializeApp() {
         document.getElementById('nb-encomenda-add-item-btn')?.addEventListener('click', addNBEncomendaDraftItem);
         document.getElementById('nb-encomenda-add-payment-btn')?.addEventListener('click', addNBEncomendaDraftPayment);
         document.getElementById('nb-encomenda-cancel-btn')?.addEventListener('click', () => {
-            if (nbSelectedEncomendaId) {
-                const record = getNBEncomendaById(nbSelectedEncomendaId);
-                setNBEncomendaDraftFromRecord(record);
-            } else {
-                setNBEncomendaDraftFromRecord(null);
-            }
+            setNBEncomendaDraftFromRecord(null);
             renderNBEncomendasModal();
         });
         document.getElementById('nb-encomenda-phone')?.addEventListener('input', e => {
             e.target.value = formatNBPhoneBR(normalizeNBPhoneDigits(e.target.value));
+        });
+        document.getElementById('nb-encomenda-acrescimo')?.addEventListener('input', () => {
+            syncNBEncomendaHeaderFromForm();
+            renderNBEncomendasModal();
+        });
+        document.getElementById('nb-encomenda-status')?.addEventListener('change', () => {
+            syncNBEncomendaHeaderFromForm();
+            renderNBEncomendasModal();
         });
         document.getElementById('nb-encomenda-form')?.addEventListener('submit', handleNBEncomendaSubmit);
         document.getElementById('nb-encomenda-form')?.addEventListener('input', syncNBEncomendaHeaderFromForm);
@@ -10913,10 +11084,6 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
                     }
                 });
             }
-            if (e.target.closest('.nb-encomenda-select-btn')) {
-                const id = e.target.closest('.nb-encomenda-select-btn').dataset.id;
-                if (id) syncNBEncomendaSelection(id);
-            }
             if (e.target.closest('.nb-encomenda-item-delete-btn')) {
                 const id = e.target.closest('.nb-encomenda-item-delete-btn').dataset.id;
                 deleteNBEncomendaDraftItem(id);
@@ -10924,6 +11091,10 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
             if (e.target.closest('.nb-encomenda-payment-delete-btn')) {
                 const id = e.target.closest('.nb-encomenda-payment-delete-btn').dataset.id;
                 deleteNBEncomendaDraftPayment(id);
+            }
+            if (e.target.closest('.nb-encomenda-edit-btn')) {
+                const id = e.target.closest('.nb-encomenda-edit-btn').dataset.id;
+                syncNBEncomendaSelection(id);
             }
             if (e.target.closest('#nb-encomenda-delete-btn')) {
                 deleteNBEncomendaCurrent();
