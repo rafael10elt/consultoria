@@ -2352,7 +2352,7 @@ body {
             <div class="flex items-start justify-between gap-4 mb-4">
                 <div>
                     <h2 class="text-xl font-bold text-gray-900 dark:text-white">Encomendas</h2>
-                    <p id="nb-encomendas-modal-subtitle" class="text-sm text-gray-500 dark:text-gray-400 mt-1">Crie uma nova encomenda ou edite um registro da lista.</p>
+                    <p id="nb-encomendas-modal-subtitle" class="text-sm text-gray-500 dark:text-gray-400 mt-1">Crie uma nova encomenda ou selecione um registro para ver os detalhes.</p>
                 </div>
                 <button type="button" id="close-nb-encomendas-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-3xl leading-none">&times;</button>
             </div>
@@ -2363,7 +2363,7 @@ body {
                             <div>
                                 <p class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Encomendas em aberto</p>
                                 <div id="nb-encomenda-open-count" class="mt-1 text-3xl font-bold text-gray-900 dark:text-white">0</div>
-                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Use o botão Editar para carregar um registro no formulário.</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Clique em uma encomenda para ver os detalhes.</p>
                             </div>
                             <button type="button" id="nb-encomenda-new-btn" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark shrink-0">Nova</button>
                         </div>
@@ -2381,153 +2381,164 @@ body {
                     <div id="nb-encomenda-list" class="space-y-3 overflow-y-auto pr-1 flex-1"></div>
                 </div>
                 <div class="flex flex-col gap-4 min-h-0 overflow-hidden">
-                    <form id="nb-encomenda-form" class="flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto pr-2 pb-2">
-                        <input type="hidden" id="nb-encomenda-id">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div id="nb-encomenda-selected-card" class="flex-1 min-h-0 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="nb-encomenda-form-modal" class="fixed inset-0 z-[90] items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
+        <div class="w-full max-w-6xl p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate max-h-[92vh] overflow-hidden flex flex-col">
+            <div class="flex items-start justify-between gap-4 mb-4">
+                <div>
+                    <h2 id="nb-encomenda-form-modal-title" class="text-xl font-bold text-gray-900 dark:text-white">Nova Encomenda</h2>
+                    <p id="nb-encomenda-form-modal-subtitle" class="text-sm text-gray-500 dark:text-gray-400 mt-1">Preencha os campos e salve para atualizar a lista.</p>
+                </div>
+                <button type="button" id="close-nb-encomenda-form-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-3xl leading-none">&times;</button>
+            </div>
+            <form id="nb-encomenda-form" class="flex flex-col gap-4 flex-1 min-h-0 overflow-y-auto pr-2 pb-2">
+                <input type="hidden" id="nb-encomenda-id">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="nb-encomenda-client-name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
+                        <input type="text" id="nb-encomenda-client-name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                    </div>
+                    <div>
+                        <label for="nb-encomenda-phone" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Telefone</label>
+                        <input type="tel" id="nb-encomenda-phone" placeholder="(00) 00000-0000" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                    </div>
+                    <div>
+                        <label for="nb-encomenda-data-pedido" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data do Pedido</label>
+                        <input type="date" id="nb-encomenda-data-pedido" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                    </div>
+                    <div>
+                        <label for="nb-encomenda-data-prevista" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Entrega Prevista</label>
+                        <input type="date" id="nb-encomenda-data-prevista" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                    </div>
+                    <div>
+                        <label for="nb-encomenda-data-real" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Entrega Real</label>
+                        <input type="date" id="nb-encomenda-data-real" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    <div>
+                        <label for="nb-encomenda-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
+                        <select id="nb-encomenda-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="Aberta">Aberta</option>
+                            <option value="Finalizada">Finalizada</option>
+                            <option value="Cancelada">Cancelada</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="nb-encomenda-acrescimo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Acréscimo</label>
+                        <input type="number" min="0" step="0.01" id="nb-encomenda-acrescimo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="nb-encomenda-observacoes" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observações</label>
+                        <textarea id="nb-encomenda-observacoes" rows="2" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                    </div>
+                </div>
+                <div class="rounded-2xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/40">
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
                             <div>
-                                <label for="nb-encomenda-client-name" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cliente</label>
-                                <input type="text" id="nb-encomenda-client-name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
-                            </div>
-                            <div>
-                                <label for="nb-encomenda-phone" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Telefone</label>
-                                <input type="tel" id="nb-encomenda-phone" placeholder="(00) 00000-0000" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
-                            </div>
-                            <div>
-                                <label for="nb-encomenda-data-pedido" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data do Pedido</label>
-                                <input type="date" id="nb-encomenda-data-pedido" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
-                            </div>
-                            <div>
-                                <label for="nb-encomenda-data-prevista" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Entrega Prevista</label>
-                                <input type="date" id="nb-encomenda-data-prevista" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
-                            </div>
-                            <div>
-                                <label for="nb-encomenda-data-real" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Entrega Real</label>
-                                <input type="date" id="nb-encomenda-data-real" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                            </div>
-                            <div>
-                                <label for="nb-encomenda-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label>
-                                <select id="nb-encomenda-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                                    <option value="Aberta">Aberta</option>
-                                    <option value="Finalizada">Finalizada</option>
-                                    <option value="Cancelada">Cancelada</option>
+                                <label for="nb-encomenda-product-category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Categoria</label>
+                                <select id="nb-encomenda-product-category" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                    <option value="all">Todas</option>
                                 </select>
                             </div>
                             <div>
-                                <label for="nb-encomenda-acrescimo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Acréscimo</label>
-                                <input type="number" min="0" step="0.01" id="nb-encomenda-acrescimo" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                <label for="nb-encomenda-product-search" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pesquisar produto</label>
+                                <input type="text" id="nb-encomenda-product-search" placeholder="Digite o nome do produto..." class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
                             </div>
-                            <div class="md:col-span-2">
-                                <label for="nb-encomenda-observacoes" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observações</label>
-                                <textarea id="nb-encomenda-observacoes" rows="2" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                            <div>
+                                <label for="nb-encomenda-product" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Produto ativo</label>
+                                <select id="nb-encomenda-product" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white"></select>
                             </div>
-                        </div>
-                        <div class="rounded-2xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/40">
-                            <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 flex-1">
-                                    <div>
-                                        <label for="nb-encomenda-product-category" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Categoria</label>
-                                        <select id="nb-encomenda-product-category" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
-                                            <option value="all">Todas</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label for="nb-encomenda-product-search" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Pesquisar produto</label>
-                                        <input type="text" id="nb-encomenda-product-search" placeholder="Digite o nome do produto..." class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
-                                    </div>
-                                    <div>
-                                        <label for="nb-encomenda-product" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Produto ativo</label>
-                                        <select id="nb-encomenda-product" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white"></select>
-                                    </div>
-                                    <div>
-                                        <label for="nb-encomenda-quantity" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Quantidade</label>
+                            <div>
+                                <label for="nb-encomenda-quantity" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Quantidade</label>
                                 <input type="number" min="1" step="1" id="nb-encomenda-quantity" placeholder="1" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
-                                    </div>
-                                    <div class="flex items-end">
-                                        <button type="button" id="nb-encomenda-add-item-btn" class="w-full px-4 py-2 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-100 dark:hover:bg-blue-800">Adicionar Item</button>
-                                    </div>
-                                </div>
                             </div>
-                            <div class="mt-4">
-                                <div class="flex items-center justify-between mb-3">
-                                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Itens da encomenda</h3>
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">Duplicidade vira quantidade somada</span>
-                                </div>
-                                <div id="nb-encomenda-items-list" class="space-y-3"></div>
+                            <div class="flex items-end">
+                                <button type="button" id="nb-encomenda-add-item-btn" class="w-full px-4 py-2 rounded-lg bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-100 dark:hover:bg-blue-800">Adicionar Item</button>
                             </div>
                         </div>
-                        <div class="rounded-2xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/40">
-                            <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 flex-1">
-                                    <div>
-                                        <label for="nb-encomenda-payment-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data do Pagamento</label>
-                                        <input type="date" id="nb-encomenda-payment-date" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
-                                    </div>
-                                    <div>
-                                        <label for="nb-encomenda-payment-form" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Forma</label>
-                                        <select id="nb-encomenda-payment-form" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
-                                            <option value="Dinheiro">Dinheiro</option>
-                                            <option value="PIX">PIX</option>
-                                            <option value="Maquineta">Maquineta</option>
-                                            <option value="App">App</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label for="nb-encomenda-payment-value" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor</label>
-                                        <input type="number" min="0" step="0.01" id="nb-encomenda-payment-value" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
-                                    </div>
-                                    <div>
-                                        <label for="nb-encomenda-payment-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label>
-                                        <input type="text" id="nb-encomenda-payment-obs" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
-                                    </div>
-                                    <div class="md:col-span-5">
-                                        <div class="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-3 text-xs text-gray-500 dark:text-gray-400">
-                                            O tipo do pagamento será calculado automaticamente com base no saldo restante.
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex items-end">
-                                    <button type="button" id="nb-encomenda-add-payment-btn" class="w-full px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Adicionar Pagamento</button>
-                                </div>
-                            </div>
-                            <div class="mt-4">
-                                <div class="flex items-center justify-between mb-3">
-                                    <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Pagamentos da encomenda</h3>
-                                    <span class="text-xs text-gray-500 dark:text-gray-400">Cada pagamento entra no dia correspondente</span>
-                                </div>
-                                <div id="nb-encomenda-payments-list" class="space-y-3"></div>
-                            </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Itens da encomenda</h3>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Duplicidade vira quantidade somada</span>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/40 p-4">
-                                <span class="text-xs text-gray-500 dark:text-gray-400">Total dos itens</span>
-                                <div id="nb-encomenda-total-products" class="text-lg font-bold text-gray-800 dark:text-white">R$ 0,00</div>
-                            </div>
-                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/40 p-4">
-                                <span class="text-xs text-gray-500 dark:text-gray-400">Total geral</span>
-                                <div id="nb-encomenda-total-general" class="text-lg font-bold text-gray-800 dark:text-white">R$ 0,00</div>
-                            </div>
-                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/40 p-4">
-                                <span class="text-xs text-gray-500 dark:text-gray-400">Total pago</span>
-                                <div id="nb-encomenda-total-paid" class="text-lg font-bold text-gray-800 dark:text-white">R$ 0,00</div>
-                            </div>
-                            <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/40 p-4">
-                                <span class="text-xs text-gray-500 dark:text-gray-400">Saldo pendente</span>
-                                <div id="nb-encomenda-balance" class="text-lg font-bold text-gray-800 dark:text-white">R$ 0,00</div>
-                            </div>
-                        </div>
-                        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between pt-3 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm">
-                        <div class="flex items-center gap-2">
-                                <span id="nb-encomenda-selected-info" class="text-sm text-gray-500 dark:text-gray-400"></span>
-                        </div>
-                        <div class="flex flex-wrap gap-3">
-                                <button type="button" id="nb-encomenda-delete-btn" class="hidden px-4 py-2 rounded-lg bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-800">Apagar Encomenda</button>
-                                <button type="button" id="nb-encomenda-cancel-btn" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Limpar</button>
-                                <button type="submit" id="nb-encomenda-save-btn" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Salvar Encomenda</button>
-                        </div>
-                        </div>
-                    </form>
+                        <div id="nb-encomenda-items-list" class="space-y-3"></div>
+                    </div>
                 </div>
-            </div>
+                <div class="rounded-2xl border border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/40">
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 flex-1">
+                            <div>
+                                <label for="nb-encomenda-payment-date" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data do Pagamento</label>
+                                <input type="date" id="nb-encomenda-payment-date" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div>
+                                <label for="nb-encomenda-payment-form" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Forma</label>
+                                <select id="nb-encomenda-payment-form" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                    <option value="Dinheiro">Dinheiro</option>
+                                    <option value="PIX">PIX</option>
+                                    <option value="Maquineta">Maquineta</option>
+                                    <option value="App">App</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="nb-encomenda-payment-value" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor</label>
+                                <input type="number" min="0" step="0.01" id="nb-encomenda-payment-value" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div>
+                                <label for="nb-encomenda-payment-obs" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Observação</label>
+                                <input type="text" id="nb-encomenda-payment-obs" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                            </div>
+                            <div class="md:col-span-5">
+                                <div class="rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 p-3 text-xs text-gray-500 dark:text-gray-400">
+                                    O tipo do pagamento será calculado automaticamente com base no saldo restante.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-end">
+                            <button type="button" id="nb-encomenda-add-payment-btn" class="w-full px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Adicionar Pagamento</button>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Pagamentos da encomenda</h3>
+                            <span class="text-xs text-gray-500 dark:text-gray-400">Cada pagamento entra no dia correspondente</span>
+                        </div>
+                        <div id="nb-encomenda-payments-list" class="space-y-3"></div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/40 p-4">
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Total dos itens</span>
+                        <div id="nb-encomenda-total-products" class="text-lg font-bold text-gray-800 dark:text-white">R$ 0,00</div>
+                    </div>
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/40 p-4">
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Total geral</span>
+                        <div id="nb-encomenda-total-general" class="text-lg font-bold text-gray-800 dark:text-white">R$ 0,00</div>
+                    </div>
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/40 p-4">
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Total pago</span>
+                        <div id="nb-encomenda-total-paid" class="text-lg font-bold text-gray-800 dark:text-white">R$ 0,00</div>
+                    </div>
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/40 p-4">
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Saldo pendente</span>
+                        <div id="nb-encomenda-balance" class="text-lg font-bold text-gray-800 dark:text-white">R$ 0,00</div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between pt-3 border-t border-gray-200 dark:border-gray-700 sticky bottom-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm">
+                    <div class="flex items-center gap-2">
+                        <span id="nb-encomenda-selected-info" class="text-sm text-gray-500 dark:text-gray-400"></span>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        <button type="button" id="nb-encomenda-cancel-btn" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Limpar</button>
+                        <button type="submit" id="nb-encomenda-save-btn" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Salvar Encomenda</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 <script>
@@ -3948,6 +3959,115 @@ function renderNBEncomendaCategoryOptions() {
         .join('');
     select.value = current;
 }
+function renderNBEncomendaSelectedCard(order = null) {
+    const target = document.getElementById('nb-encomenda-selected-card');
+    if (!target) return;
+    if (!order) {
+        target.innerHTML = `
+            <div class="h-full rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 p-6 flex items-center justify-center text-center text-gray-500 dark:text-gray-400">
+                Selecione uma encomenda na lista para ver os detalhes.
+            </div>
+        `;
+        return;
+    }
+    const orderItems = getNBEncomendaItemsByOrderId(order.Id);
+    const orderPayments = getNBEncomendaPaymentsByOrderId(order.Id);
+    const totals = getNBEncomendaDraftTotals(order, orderItems, orderPayments);
+    const displayStatus = getNBEncomendaDisplayStatus(order, totals);
+    const badgeClass = displayStatus === 'Finalizada'
+        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'
+        : displayStatus === 'Cancelada'
+            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
+            : displayStatus === 'Parcial'
+                ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100'
+                : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
+    target.innerHTML = `
+        <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm flex flex-col gap-5 h-full">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Encomenda selecionada</div>
+                    <h3 class="mt-1 text-2xl font-bold text-gray-900 dark:text-white">${escapeNBHtml(order.Cliente_Nome || 'Sem cliente')}</h3>
+                    <div class="mt-1 text-sm text-gray-500 dark:text-gray-400">${formatNBPhoneBR(order.Telefone || '') || 'Sem telefone'}</div>
+                </div>
+                <span class="inline-flex shrink-0 items-center rounded-full px-3 py-1.5 text-xs font-semibold ${badgeClass}">${escapeNBHtml(displayStatus)}</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div class="rounded-xl bg-gray-50 dark:bg-gray-700/60 p-3">
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Total geral</div>
+                    <div class="mt-1 text-base font-semibold text-gray-900 dark:text-white">${formatCurrencyBR(totals.totalGeral)}</div>
+                </div>
+                <div class="rounded-xl bg-gray-50 dark:bg-gray-700/60 p-3">
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Total pago</div>
+                    <div class="mt-1 text-base font-semibold text-gray-900 dark:text-white">${formatCurrencyBR(totals.totalPago)}</div>
+                </div>
+                <div class="rounded-xl bg-gray-50 dark:bg-gray-700/60 p-3">
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Saldo pendente</div>
+                    <div class="mt-1 text-base font-semibold text-gray-900 dark:text-white">${formatCurrencyBR(totals.saldoPendente)}</div>
+                </div>
+                <div class="rounded-xl bg-gray-50 dark:bg-gray-700/60 p-3">
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Itens</div>
+                    <div class="mt-1 text-base font-semibold text-gray-900 dark:text-white">${orderItems.length}</div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                    <div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Pedido</div>
+                    <div class="mt-1 font-medium text-gray-900 dark:text-white">${order.Data_Pedido ? parseDateOnly(order.Data_Pedido).toLocaleDateString('pt-BR') : '-'}</div>
+                </div>
+                <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                    <div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Entrega prevista</div>
+                    <div class="mt-1 font-medium text-gray-900 dark:text-white">${order.Data_Entrega_Prevista ? parseDateOnly(order.Data_Entrega_Prevista).toLocaleDateString('pt-BR') : '-'}</div>
+                </div>
+                <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                    <div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Entrega real</div>
+                    <div class="mt-1 font-medium text-gray-900 dark:text-white">${order.Data_Entrega_Real ? parseDateOnly(order.Data_Entrega_Real).toLocaleDateString('pt-BR') : '-'}</div>
+                </div>
+            </div>
+            <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                <div class="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Observações</div>
+                <div class="mt-2 text-sm text-gray-700 dark:text-gray-200 whitespace-pre-wrap">${escapeNBHtml(order.Observacoes || 'Sem observações')}</div>
+            </div>
+            <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Itens</h4>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">Duplicidade vira quantidade somada</span>
+                </div>
+                <div class="space-y-2">
+                    ${orderItems.map(item => `
+                        <div class="flex items-center justify-between gap-3 rounded-lg bg-gray-50 dark:bg-gray-700/60 px-3 py-2">
+                            <div class="min-w-0">
+                                <div class="font-medium text-gray-900 dark:text-white truncate">${escapeNBHtml(item.NB_Produtos?.Nome || item.Produto?.Nome || 'Produto')}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">${normalizeNBNumber(item.Quantidade)} x ${formatCurrencyBR(item.Preco_Unitario || 0)}</div>
+                            </div>
+                            <div class="font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(item.Subtotal || 0)}</div>
+                        </div>
+                    `).join('') || '<div class="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500 dark:text-gray-400">Nenhum item adicionado.</div>'}
+                </div>
+            </div>
+            <div class="rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Pagamentos</h4>
+                    <span class="text-xs text-gray-500 dark:text-gray-400">${orderPayments.length} lançamento(s)</span>
+                </div>
+                <div class="space-y-2">
+                    ${orderPayments.map(payment => `
+                        <div class="flex items-center justify-between gap-3 rounded-lg bg-gray-50 dark:bg-gray-700/60 px-3 py-2">
+                            <div class="min-w-0">
+                                <div class="font-medium text-gray-900 dark:text-white">${escapeNBHtml(payment.Tipo || 'Pagamento')}</div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">${payment.Data_Pagamento ? parseDateOnly(payment.Data_Pagamento).toLocaleDateString('pt-BR') : '-'} • ${escapeNBHtml(payment.Forma_Pagamento || '')}</div>
+                            </div>
+                            <div class="font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(payment.Valor || 0)}</div>
+                        </div>
+                    `).join('') || '<div class="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500 dark:text-gray-400">Nenhum pagamento adicionado.</div>'}
+                </div>
+            </div>
+            <div class="flex flex-wrap justify-end gap-3 pt-2 border-t border-gray-200 dark:border-gray-700">
+                <button type="button" class="nb-encomenda-soft-delete-btn px-4 py-2 rounded-lg bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-800" data-id="${order.Id}">Apagar</button>
+                <button type="button" class="nb-encomenda-edit-btn px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark" data-id="${order.Id}">Editar</button>
+            </div>
+        </div>
+    `;
+}
 function getNBEncomendaDisplayStatus(order, totalsOverride = null) {
     const totals = totalsOverride || {
         totalPago: Number(order?.Total_Pago || 0),
@@ -4059,7 +4179,6 @@ function renderNBEncomendasModal() {
     nbEncomendaStatusFilter = statusFilter;
     const list = document.getElementById('nb-encomenda-list');
     const subtitle = document.getElementById('nb-encomendas-modal-subtitle');
-    const form = document.getElementById('nb-encomenda-form');
     const openCountEl = document.getElementById('nb-encomenda-open-count');
     const statusFilterEl = document.getElementById('nb-encomenda-status-filter');
     if (statusFilterEl && statusFilterEl.value !== statusFilter) statusFilterEl.value = statusFilter;
@@ -4067,8 +4186,8 @@ function renderNBEncomendasModal() {
     const search = (document.getElementById('nb-encomenda-search')?.value || '').trim().toLowerCase();
     if (subtitle) {
         subtitle.textContent = selectedRecord
-            ? `Editando encomenda #${selectedRecord.Id} de ${selectedRecord.Cliente_Nome || 'cliente'}`
-            : 'Crie uma nova encomenda ou edite um registro da lista.';
+            ? `Visualizando encomenda #${selectedRecord.Id} de ${selectedRecord.Cliente_Nome || 'cliente'}`
+            : 'Crie uma nova encomenda ou selecione um registro da lista.';
     }
     if (list) {
         const filtered = nbEncomendasData.filter(order => {
@@ -4097,7 +4216,7 @@ function renderNBEncomendasModal() {
                     : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
             const isSelected = String(order.Id) === String(nbSelectedEncomendaId);
             return `
-                <div class="rounded-2xl border ${isSelected ? 'border-brand-gold ring-2 ring-brand-gold/40' : 'border-gray-200 dark:border-gray-700'} bg-white dark:bg-gray-800 px-4 py-3 shadow-sm">
+                <button type="button" class="nb-encomenda-select-btn w-full text-left rounded-2xl border ${isSelected ? 'border-brand-gold ring-2 ring-brand-gold/40' : 'border-gray-200 dark:border-gray-700'} bg-white dark:bg-gray-800 px-4 py-3 shadow-sm hover:border-brand-gold/60 transition-colors" data-id="${order.Id}">
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
                             <div class="font-semibold text-gray-900 dark:text-white truncate">${escapeNBHtml(order.Cliente_Nome || 'Sem cliente')}</div>
@@ -4115,46 +4234,22 @@ function renderNBEncomendasModal() {
                             <strong class="text-gray-800 dark:text-white">${formatCurrencyBR(totals.saldoPendente)}</strong>
                         </div>
                         <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
-                            <span class="block text-gray-500 dark:text-gray-300">Total pago</span>
-                            <strong class="text-gray-800 dark:text-white">${formatCurrencyBR(totals.totalPago)}</strong>
-                        </div>
-                        <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
                             <span class="block text-gray-500 dark:text-gray-300">Pedido</span>
                             <strong class="text-gray-800 dark:text-white">${order.Data_Pedido ? parseDateOnly(order.Data_Pedido).toLocaleDateString('pt-BR') : '-'}</strong>
-                        </div>
-                        <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
-                            <span class="block text-gray-500 dark:text-gray-300">Prevista</span>
-                            <strong class="text-gray-800 dark:text-white">${order.Data_Entrega_Prevista ? parseDateOnly(order.Data_Entrega_Prevista).toLocaleDateString('pt-BR') : '-'}</strong>
                         </div>
                         <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
                             <span class="block text-gray-500 dark:text-gray-300">Itens</span>
                             <strong class="text-gray-800 dark:text-white">${orderItems.length}</strong>
                         </div>
-                        <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
-                            <span class="block text-gray-500 dark:text-gray-300">Pagamentos</span>
-                            <strong class="text-gray-800 dark:text-white">${orderPayments.length}</strong>
-                        </div>
-                        <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2">
-                            <span class="block text-gray-500 dark:text-gray-300">Realizada</span>
-                            <strong class="text-gray-800 dark:text-white">${order.Data_Entrega_Real ? parseDateOnly(order.Data_Entrega_Real).toLocaleDateString('pt-BR') : '-'}</strong>
-                        </div>
-                        <div class="rounded-lg bg-gray-50 dark:bg-gray-700 p-2 col-span-2">
-                            <span class="block text-gray-500 dark:text-gray-300">Observações</span>
-                            <strong class="text-gray-800 dark:text-white line-clamp-2">${escapeNBHtml(order.Observacoes || 'Sem observações')}</strong>
-                        </div>
                     </div>
-                    <div class="mt-3 flex items-center justify-between gap-3">
-                        <div class="text-xs text-gray-500 dark:text-gray-400">
-                            Entrega: ${order.Data_Entrega_Prevista ? parseDateOnly(order.Data_Entrega_Prevista).toLocaleDateString('pt-BR') : '-'}
-                        </div>
-                        <button type="button" class="nb-encomenda-edit-btn inline-flex items-center gap-2 rounded-lg bg-brand-gold px-3 py-2 text-xs font-semibold text-white hover:bg-brand-gold-dark" data-id="${order.Id}">
-                            <i class="fas fa-pen"></i> Editar
-                        </button>
+                    <div class="mt-3 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+                        ${escapeNBHtml(order.Observacoes || 'Sem observações')}
                     </div>
-                </div>
+                </button>
             `;
         }).join('') || '<div class="rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500 dark:text-gray-400">Nenhuma encomenda encontrada.</div>';
     }
+    renderNBEncomendaSelectedCard(selectedRecord);
     const setValue = (id, value) => {
         const el = document.getElementById(id);
         if (el) el.value = value ?? '';
@@ -4180,57 +4275,31 @@ function renderNBEncomendasModal() {
     if (selectedInfo) {
         selectedInfo.textContent = selectedRecord ? `Encomenda #${selectedRecord.Id} • ${resolvedStatus}` : 'Nova encomenda';
     }
-    const deleteBtn = document.getElementById('nb-encomenda-delete-btn');
-    if (deleteBtn) deleteBtn.classList.toggle('hidden', !selectedRecord);
-    const itemsList = document.getElementById('nb-encomenda-items-list');
-    if (itemsList) {
-        itemsList.innerHTML = nbEncomendaDraftItems.map(item => {
-            const productName = item.Produto?.Nome || nbProdutosData.find(product => String(product.Id) === String(item.Produto?.Id))?.Nome || 'Produto';
-            return `
-                <article class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
-                            <div class="font-semibold text-gray-900 dark:text-white truncate">${escapeNBHtml(productName)}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">${formatCurrencyBR(item.Preco_Unitario)} x ${normalizeNBNumber(item.Quantidade)}</div>
-                        </div>
-                        <button type="button" class="nb-encomenda-item-delete-btn text-red-600 hover:text-red-700 dark:text-red-300 dark:hover:text-red-200" data-id="${item.tempId}"><i class="fas fa-trash"></i></button>
-                    </div>
-                    <div class="mt-2 text-sm font-semibold text-gray-800 dark:text-white">Subtotal: ${formatCurrencyBR(item.Subtotal)}</div>
-                </article>
-            `;
-        }).join('') || '<div class="rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500 dark:text-gray-400">Nenhum item adicionado.</div>';
-    }
-    const paymentsList = document.getElementById('nb-encomenda-payments-list');
-    if (paymentsList) {
-        paymentsList.innerHTML = nbEncomendaDraftPayments.map((payment, index) => {
-            const paidBefore = nbEncomendaDraftPayments.slice(0, index).reduce((sum, entry) => sum + Number(entry.Valor || 0), 0);
-            const remainingAfter = Math.max(0, totals.totalGeral - paidBefore - Number(payment.Valor || 0));
-            const paymentType = payment.Tipo || (remainingAfter === 0 ? 'Saldo Final' : paidBefore === 0 ? 'Entrada' : 'Parcial');
-            return `
-            <article class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-3">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <div class="font-semibold text-gray-900 dark:text-white">${escapeNBHtml(paymentType)}</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">${payment.Data_Pagamento ? parseDateOnly(payment.Data_Pagamento).toLocaleDateString('pt-BR') : '-'}</div>
-                        <div class="text-xs text-gray-500 dark:text-gray-400">${escapeNBHtml(payment.Forma_Pagamento || '')}${payment.Observacao ? ` • ${escapeNBHtml(payment.Observacao)}` : ''}</div>
-                    </div>
-                    <button type="button" class="nb-encomenda-payment-delete-btn text-red-600 hover:text-red-700 dark:text-red-300 dark:hover:text-red-200" data-id="${payment.tempId}"><i class="fas fa-trash"></i></button>
-                </div>
-                        <div class="mt-2 text-sm font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(payment.Valor)}</div>
-                    </article>
-                `;
-        }).join('') || '<div class="rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-500 dark:text-gray-400">Nenhum pagamento adicionado.</div>';
-    }
+    const formModalTitle = document.getElementById('nb-encomenda-form-modal-title');
+    const formModalSubtitle = document.getElementById('nb-encomenda-form-modal-subtitle');
+    if (formModalTitle) formModalTitle.textContent = selectedRecord ? `Editar encomenda #${selectedRecord.Id}` : 'Nova Encomenda';
+    if (formModalSubtitle) formModalSubtitle.textContent = selectedRecord ? `Atualizando ${selectedRecord.Cliente_Nome || 'cliente'}` : 'Preencha os dados e salve para criar um novo registro.';
 }
 function openNBEncomendasModal() {
     if (!canAccessNB()) return;
-    nbEncomendaStatusFilter = 'Aberta';
+    nbEncomendaStatusFilter = 'Todas';
     setNBEncomendaDraftFromRecord(null);
     renderNBEncomendasModal();
+    closeNBEncomendaFormModal();
     showModal(document.getElementById('nb-encomendas-modal'));
 }
 function closeNBEncomendasModal() {
     hideModal(document.getElementById('nb-encomendas-modal'));
+    hideModal(document.getElementById('nb-encomenda-form-modal'));
+}
+function openNBEncomendaFormModal(record = null) {
+    if (!canAccessNB()) return;
+    setNBEncomendaDraftFromRecord(record);
+    renderNBEncomendasModal();
+    showModal(document.getElementById('nb-encomenda-form-modal'));
+}
+function closeNBEncomendaFormModal() {
+    hideModal(document.getElementById('nb-encomenda-form-modal'));
 }
 function syncNBEncomendaSelection(selectedId) {
     const numericId = selectedId == null ? null : Number(selectedId);
@@ -4436,6 +4505,7 @@ async function handleNBEncomendaSubmit(e) {
             fetchNBDespesasVales()
         ]);
         setNBEncomendaDraftFromRecord(getNBEncomendaById(encomendaId));
+        closeNBEncomendaFormModal();
         renderNBEncomendasModal();
         renderNBModule();
         showNBToast('Encomenda salva com sucesso.');
@@ -4448,14 +4518,11 @@ async function handleNBEncomendaSubmit(e) {
 }
 async function deleteNBEncomendaCurrent() {
     if (!nbSelectedEncomendaId) return;
-    const confirmed = await showConfirmModal('Tem certeza que deseja apagar esta encomenda?');
+    const confirmed = await showConfirmModal('Tem certeza que deseja cancelar esta encomenda?');
     if (!confirmed) return;
     const encomendaId = nbSelectedEncomendaId;
-    const currentItems = getNBEncomendaItemsByOrderId(encomendaId);
-    const currentPayments = getNBEncomendaPaymentsByOrderId(encomendaId);
-    await Promise.all(currentItems.map(item => nocoFetch(`${TABLE_IDS.NB_Encomendas_Itens}/${item.Id}`, { method: 'DELETE' })));
-    await Promise.all(currentPayments.map(payment => nocoFetch(`${TABLE_IDS.NB_Encomendas_Pagamentos}/${payment.Id}`, { method: 'DELETE' })));
-    const result = await nocoFetch(`${TABLE_IDS.NB_Encomendas}/${encomendaId}`, { method: 'DELETE' });
+    closeNBEncomendaFormModal();
+    const result = await nocoFetch(`${TABLE_IDS.NB_Encomendas}/${encomendaId}`, { method: 'PATCH', body: JSON.stringify({ Status: 'Cancelada' }) });
     if (result) {
         await Promise.all([
             fetchNBEncomendas(),
@@ -4464,9 +4531,11 @@ async function deleteNBEncomendaCurrent() {
             fetchNBFinanceiro(),
             fetchNBControleDias()
         ]);
-        setNBEncomendaDraftFromRecord(null);
+        const updatedRecord = getNBEncomendaById(encomendaId);
+        setNBEncomendaDraftFromRecord(updatedRecord);
         renderNBModule();
-        showNBToast('Encomenda apagada com sucesso.');
+        renderNBEncomendasModal();
+        showNBToast('Encomenda cancelada com sucesso.');
     }
 }
 function setNBSelectedDate(dateString) {
@@ -10871,9 +10940,9 @@ function initializeApp() {
         });
         document.getElementById('close-nb-encomendas-modal')?.addEventListener('click', closeNBEncomendasModal);
         document.getElementById('nb-encomenda-new-btn')?.addEventListener('click', () => {
-            setNBEncomendaDraftFromRecord(null);
-            renderNBEncomendasModal();
+            openNBEncomendaFormModal(null);
         });
+        document.getElementById('close-nb-encomenda-form-modal')?.addEventListener('click', closeNBEncomendaFormModal);
         document.getElementById('nb-encomenda-search')?.addEventListener('input', renderNBEncomendasModal);
         document.getElementById('nb-encomenda-status-filter')?.addEventListener('change', () => {
             nbEncomendaStatusFilter = document.getElementById('nb-encomenda-status-filter')?.value || 'Aberta';
@@ -10892,6 +10961,7 @@ function initializeApp() {
         document.getElementById('nb-encomenda-cancel-btn')?.addEventListener('click', () => {
             setNBEncomendaDraftFromRecord(null);
             renderNBEncomendasModal();
+            renderNBEncomendaSelectedCard(null);
         });
         document.getElementById('nb-encomenda-phone')?.addEventListener('input', e => {
             e.target.value = formatNBPhoneBR(normalizeNBPhoneDigits(e.target.value));
@@ -11092,9 +11162,19 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
                 const id = e.target.closest('.nb-encomenda-payment-delete-btn').dataset.id;
                 deleteNBEncomendaDraftPayment(id);
             }
+            if (e.target.closest('.nb-encomenda-select-btn')) {
+                const id = e.target.closest('.nb-encomenda-select-btn').dataset.id;
+                if (id) syncNBEncomendaSelection(id);
+            }
             if (e.target.closest('.nb-encomenda-edit-btn')) {
                 const id = e.target.closest('.nb-encomenda-edit-btn').dataset.id;
-                syncNBEncomendaSelection(id);
+                const record = getNBEncomendaById(id);
+                openNBEncomendaFormModal(record);
+            }
+            if (e.target.closest('.nb-encomenda-soft-delete-btn')) {
+                const id = e.target.closest('.nb-encomenda-soft-delete-btn').dataset.id;
+                if (id) syncNBEncomendaSelection(id);
+                deleteNBEncomendaCurrent();
             }
             if (e.target.closest('#nb-encomenda-delete-btn')) {
                 deleteNBEncomendaCurrent();
