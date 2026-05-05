@@ -2370,17 +2370,17 @@ body {
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_12rem_10rem_10rem] gap-2">
                         <input type="text" id="nb-encomenda-search" placeholder="Pesquisar por nome, telefone ou descrição..." class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                        <select id="nb-encomenda-status-filter" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-                            <option value="Todas">Todas</option>
-                            <option value="Aberta">Aberta</option>
-                            <option value="Parcial">Parcial</option>
-                            <option value="Cancelada">Cancelada</option>
-                            <option value="Finalizada">Finalizada</option>
-                        </select>
                         <input type="date" id="nb-encomenda-date-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" title="Data inicial">
                         <input type="date" id="nb-encomenda-date-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" title="Data final">
                     </div>
-                    <div id="nb-encomenda-list" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-3 overflow-y-auto pr-1 flex-1"></div>
+                    <div id="nb-encomenda-status-buttons" class="flex flex-wrap items-center gap-2">
+                        <button type="button" class="nb-encomenda-status-btn px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-200" data-status="Todas">Todas</button>
+                        <button type="button" class="nb-encomenda-status-btn px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-200" data-status="Aberta">Abertas</button>
+                        <button type="button" class="nb-encomenda-status-btn px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-200" data-status="Parcial">Parciais</button>
+                        <button type="button" class="nb-encomenda-status-btn px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-200" data-status="Finalizada">Finalizadas</button>
+                        <button type="button" class="nb-encomenda-status-btn px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-200" data-status="Cancelada">Canceladas</button>
+                    </div>
+                    <div id="nb-encomenda-list" class="grid grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3 gap-3 overflow-y-auto pr-1 flex-1 min-h-0 max-h-[calc(100vh-22rem)] content-start items-stretch"></div>
                 </div>
             </div>
         </div>
@@ -4025,6 +4025,44 @@ function getNBEncomendasPendingCount() {
         return ['Aberta', 'Parcial'].includes(getNBEncomendaDisplayStatus(order, totals));
     }).length;
 }
+function setNBEncomendaStatusFilter(status = 'Todas') {
+    nbEncomendaStatusFilter = ['Todas', 'Aberta', 'Parcial', 'Finalizada', 'Cancelada'].includes(status) ? status : 'Todas';
+    renderNBEncomendasModal();
+}
+function syncNBEncomendaStatusButtons() {
+    const current = nbEncomendaStatusFilter || 'Todas';
+    document.querySelectorAll('.nb-encomenda-status-btn').forEach(btn => {
+        const isActive = btn.dataset.status === current;
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        btn.classList.toggle('border-brand-gold', isActive);
+        btn.classList.toggle('bg-brand-gold', isActive);
+        btn.classList.toggle('text-white', isActive);
+        btn.classList.toggle('shadow-sm', isActive);
+        btn.classList.toggle('dark:border-brand-gold', isActive);
+        btn.classList.toggle('dark:bg-brand-gold', isActive);
+        btn.classList.toggle('dark:text-white', isActive);
+        btn.classList.toggle('border-gray-300', !isActive);
+        btn.classList.toggle('dark:border-gray-600', !isActive);
+        btn.classList.toggle('bg-white', !isActive);
+        btn.classList.toggle('dark:bg-gray-700', !isActive);
+        btn.classList.toggle('text-gray-700', !isActive);
+        btn.classList.toggle('dark:text-gray-200', !isActive);
+    });
+}
+function syncNBEncomendaDateFilterBounds(changedId = '') {
+    const startEl = document.getElementById('nb-encomenda-date-start');
+    const endEl = document.getElementById('nb-encomenda-date-end');
+    if (!startEl || !endEl) return;
+    const start = startEl.value || '';
+    const end = endEl.value || '';
+    if (!start || !end || start <= end) return;
+    if (changedId === 'nb-encomenda-date-start') {
+        endEl.value = start;
+    } else {
+        startEl.value = end;
+    }
+    showNBToast('A data final não pode ser menor que a data inicial.', 'warning');
+}
 function syncNBEncomendaProductOptions() {
     return;
 }
@@ -4097,17 +4135,15 @@ function renderNBEncomendasModal() {
         : totals.statusPagamento === 'Parcial'
             ? 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100'
             : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100';
-    const statusFilter = document.getElementById('nb-encomenda-status-filter')?.value || nbEncomendaStatusFilter || 'Todas';
-    nbEncomendaStatusFilter = statusFilter;
+    const statusFilter = nbEncomendaStatusFilter || 'Todas';
     const list = document.getElementById('nb-encomenda-list');
     const subtitle = document.getElementById('nb-encomendas-modal-subtitle');
     const openCountEl = document.getElementById('nb-encomenda-open-count');
-    const statusFilterEl = document.getElementById('nb-encomenda-status-filter');
-    if (statusFilterEl && statusFilterEl.value !== statusFilter) statusFilterEl.value = statusFilter;
     if (openCountEl) openCountEl.textContent = String(getNBEncomendaOpenCount());
     const search = (document.getElementById('nb-encomenda-search')?.value || '').trim().toLowerCase();
     const dateStart = document.getElementById('nb-encomenda-date-start')?.value || '';
     const dateEnd = document.getElementById('nb-encomenda-date-end')?.value || '';
+    syncNBEncomendaStatusButtons();
     if (subtitle) {
         subtitle.textContent = selectedRecord
             ? `Visualizando encomenda #${selectedRecord.Id} de ${getNBEncomendaCustomerName(selectedRecord) || 'cliente'}`
@@ -4158,12 +4194,18 @@ function renderNBEncomendasModal() {
             const whatsappText = encodeURIComponent(`Olá, ${customerName}. Estamos acompanhando sua encomenda #${order.Id}.`);
             const whatsappUrl = whatsappDigits ? `https://wa.me/55${whatsappDigits}?text=${whatsappText}` : '#';
             return `
-                <div class="relative rounded-2xl border ${isSelected ? 'border-brand-gold ring-2 ring-brand-gold/40' : 'border-gray-200 dark:border-gray-700'} bg-white dark:bg-gray-800 px-4 py-4 shadow-sm overflow-hidden">
-                    <div class="absolute top-3 right-3 flex flex-col items-end gap-1">
-                        <span class="inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${badgeClass}">${escapeNBHtml(displayStatus)}</span>
-                        <span class="inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${paymentBadgeClass}">${escapeNBHtml(totals.statusPagamento)}</span>
+                <div class="relative h-full min-h-[18rem] rounded-2xl border ${isSelected ? 'border-brand-gold ring-2 ring-brand-gold/40' : 'border-gray-200 dark:border-gray-700'} bg-white dark:bg-gray-800 px-4 py-4 shadow-sm overflow-hidden flex flex-col">
+                    <div class="absolute top-3 right-3 flex flex-col items-end gap-2">
+                        <div class="flex flex-col items-end gap-1">
+                            <span class="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Encomenda</span>
+                            <span class="inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${badgeClass}">${escapeNBHtml(displayStatus)}</span>
+                        </div>
+                        <div class="flex flex-col items-end gap-1">
+                            <span class="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Pagamento</span>
+                            <span class="inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${paymentBadgeClass}">${escapeNBHtml(totals.statusPagamento)}</span>
+                        </div>
                     </div>
-                    <div class="pr-24">
+                    <div class="pr-28">
                         <div class="font-semibold text-gray-900 dark:text-white truncate">${escapeNBHtml(customerName)}</div>
                         <div class="text-xs text-gray-500 dark:text-gray-400">${escapeNBHtml(phone)}</div>
                         <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">${order.Data_Pedido ? parseDateOnly(order.Data_Pedido).toLocaleDateString('pt-BR') : '-'} • ${orderPayments.length} pagamento(s)</div>
@@ -4186,13 +4228,13 @@ function renderNBEncomendasModal() {
                             <strong class="text-gray-800 dark:text-white">${getNBEncomendaExpectedDate(order) ? parseDateOnly(getNBEncomendaExpectedDate(order)).toLocaleDateString('pt-BR') : '-'}</strong>
                         </div>
                     </div>
-                <div class="mt-3 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+                    <div class="mt-3 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
                         ${escapeNBHtml(getNBEncomendaDescription(order) || 'Sem descrição')}
                     </div>
-                    <div class="mt-3 flex flex-wrap gap-2">
+                    <div class="mt-auto pt-4 flex flex-wrap gap-2">
                         <a href="${whatsappUrl}" target="_blank" rel="noreferrer" aria-label="Abrir WhatsApp" title="WhatsApp" class="nb-encomenda-wpp-btn inline-flex items-center justify-center px-3 py-2 rounded-lg bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900 dark:text-green-100 dark:hover:bg-green-800 ${whatsappDigits ? '' : 'pointer-events-none opacity-50'}" data-id="${order.Id}"><i class="fab fa-whatsapp text-base"></i></a>
                         <button type="button" class="nb-encomenda-edit-btn px-3 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark" data-id="${order.Id}">Editar</button>
-                        <button type="button" class="nb-encomenda-soft-delete-btn px-3 py-2 rounded-lg bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-800" data-id="${order.Id}">Apagar</button>
+                        ${displayStatus === 'Cancelada' ? '' : `<button type="button" class="nb-encomenda-soft-delete-btn px-3 py-2 rounded-lg bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-800" data-id="${order.Id}">Apagar</button>`}
                     </div>
                 </div>
             `;
@@ -10824,9 +10866,26 @@ function initializeApp() {
         });
         document.getElementById('close-nb-encomenda-form-modal')?.addEventListener('click', closeNBEncomendaFormModal);
         document.getElementById('nb-encomenda-search')?.addEventListener('input', renderNBEncomendasModal);
-        document.getElementById('nb-encomenda-status-filter')?.addEventListener('change', () => {
-            nbEncomendaStatusFilter = document.getElementById('nb-encomenda-status-filter')?.value || 'Todas';
+        document.getElementById('nb-encomenda-date-start')?.addEventListener('input', e => {
+            syncNBEncomendaDateFilterBounds(e.target.id);
             renderNBEncomendasModal();
+        });
+        document.getElementById('nb-encomenda-date-start')?.addEventListener('change', e => {
+            syncNBEncomendaDateFilterBounds(e.target.id);
+            renderNBEncomendasModal();
+        });
+        document.getElementById('nb-encomenda-date-end')?.addEventListener('input', e => {
+            syncNBEncomendaDateFilterBounds(e.target.id);
+            renderNBEncomendasModal();
+        });
+        document.getElementById('nb-encomenda-date-end')?.addEventListener('change', e => {
+            syncNBEncomendaDateFilterBounds(e.target.id);
+            renderNBEncomendasModal();
+        });
+        document.getElementById('nb-encomenda-status-buttons')?.addEventListener('click', e => {
+            const btn = e.target.closest('.nb-encomenda-status-btn');
+            if (!btn) return;
+            setNBEncomendaStatusFilter(btn.dataset.status || 'Todas');
         });
         document.getElementById('nb-encomenda-add-payment-btn')?.addEventListener('click', addNBEncomendaDraftPayment);
         document.getElementById('nb-encomenda-cancel-btn')?.addEventListener('click', () => {
