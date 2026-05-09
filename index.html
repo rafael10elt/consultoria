@@ -2471,7 +2471,7 @@ body {
                         <div id="nb-encomenda-total-general" class="text-lg font-bold text-gray-800 dark:text-white">R$ 0,00</div>
                     </div>
                     <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/40 p-4">
-                        <span class="text-xs text-gray-500 dark:text-gray-400">Total pago</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Total Pago</span>
                         <div id="nb-encomenda-total-paid" class="text-lg font-bold text-gray-800 dark:text-white">R$ 0,00</div>
                     </div>
                     <div class="rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/40 p-4">
@@ -3864,7 +3864,7 @@ function normalizeNBEncomendaStatusPagamento(value) {
 }
 function getNBEncomendaStatusPagamentoPayloadValue(value) {
     const normalized = String(value || '').trim().toLowerCase();
-    if (normalized === 'pago') return 'pago';
+    if (normalized === 'pago') return 'Pago';
     if (normalized === 'parcial') return 'Parcial';
     return 'Pendente';
 }
@@ -3968,7 +3968,7 @@ function renderNBEncomendaSelectedCard(order = null) {
                     <div class="mt-1 text-base font-semibold text-gray-900 dark:text-white">${formatCurrencyBR(totals.totalGeral)}</div>
                 </div>
                 <div class="rounded-xl bg-gray-50 dark:bg-gray-700/60 p-3">
-                    <div class="text-xs text-gray-500 dark:text-gray-400">Total pago</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">Total Pago</div>
                     <div class="mt-1 text-base font-semibold text-gray-900 dark:text-white">${formatCurrencyBR(totals.totalPago)}</div>
                 </div>
                 <div class="rounded-xl bg-gray-50 dark:bg-gray-700/60 p-3">
