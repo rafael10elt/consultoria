@@ -2589,6 +2589,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let nbTopProductsGestaoLimit = 5;
     let nbAnalyticsPreset = 'day';
     const NB_PANEL_CATEGORY_SELECTION_KEY = 'nb-panel-selected-category-ids';
+    const NB_PANEL_CATEGORY_OPEN_KEY = 'nb-panel-open-category-id';
 
     // --- NOVO: Controle de Carregamento ---
 const dataLoaded = {
@@ -4571,6 +4572,18 @@ function syncNBPanelCategorySelection() {
         localStorage.setItem(NB_PANEL_CATEGORY_SELECTION_KEY, JSON.stringify(getNBPanelSelectedCategoryIds()));
     }
 }
+function readNBPanelOpenCategoryId() {
+    const raw = localStorage.getItem(NB_PANEL_CATEGORY_OPEN_KEY);
+    return raw ? String(raw) : '';
+}
+function setNBPanelOpenCategoryId(categoryId = '') {
+    const normalized = String(categoryId || '').trim();
+    if (normalized) {
+        localStorage.setItem(NB_PANEL_CATEGORY_OPEN_KEY, normalized);
+    } else {
+        localStorage.removeItem(NB_PANEL_CATEGORY_OPEN_KEY);
+    }
+}
 function setNBPanelSelectedCategoryIds(ids, render = true) {
     const activeIds = new Set(getNBPanelActiveCategoryIds());
     const normalized = [...new Set((ids || []).map(id => Number(id)).filter(id => activeIds.has(id)))];
@@ -4630,7 +4643,12 @@ function syncNBPanelCategoryAccordion() {
         if (details.dataset.accordionBound === '1') return;
         details.dataset.accordionBound = '1';
         details.addEventListener('toggle', () => {
-            if (!details.open) return;
+            const categoryId = String(details.dataset.categoryId || '');
+            if (!details.open) {
+                if (readNBPanelOpenCategoryId() === categoryId) setNBPanelOpenCategoryId('');
+                return;
+            }
+            setNBPanelOpenCategoryId(categoryId);
             items.forEach(other => {
                 if (other !== details) other.open = false;
             });
@@ -4747,6 +4765,7 @@ function renderNBPanel() {
         encomendasBtn.classList.toggle('hidden', !canAccessNB());
         encomendasBtn.textContent = `Encomendas (${pendingCount})`;
     }
+    const openCategoryId = readNBPanelOpenCategoryId();
     cardsContainer.innerHTML = `
         <div class="grid gap-4 xl:grid-cols-6 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1">
             ${weekDates.map(dateString => `
@@ -4802,7 +4821,7 @@ function renderNBPanel() {
         return;
     }
     container.innerHTML = groups.map(group => `
-        <details class="nb-panel-category-details bg-white dark:bg-gray-800 rounded-2xl shadow overflow-hidden" ${searchTerm ? 'open' : ''}>
+        <details class="nb-panel-category-details bg-white dark:bg-gray-800 rounded-2xl shadow overflow-hidden" data-category-id="${group.id}" ${searchTerm || String(group.id) === openCategoryId ? 'open' : ''}>
             <summary class="cursor-pointer list-none px-4 py-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
                 <div class="flex items-center justify-between gap-4">
                     <div class="min-w-0">
@@ -5975,6 +5994,7 @@ async function saveNBPanelCell(dateString, productId, cell) {
         renderNBPanel();
         return;
     }
+    const preservedOpenCategoryId = readNBPanelOpenCategoryId();
     const controlDay = await ensureNBControlDay(dateString);
     if (!controlDay) return;
     const values = {
@@ -5992,7 +6012,9 @@ async function saveNBPanelCell(dateString, productId, cell) {
     if (result) Object.assign(existing, result);
     await syncNBSobraCarryForwardFrom(dateString, Number(productId));
     await fetchNBApontamentos();
-    renderNBModule();
+    if (preservedOpenCategoryId) setNBPanelOpenCategoryId(preservedOpenCategoryId);
+    renderNBPanelTotals();
+    syncNBPanelCategoryAccordion();
     showNBToast('Apontamento salvo com sucesso.');
 }
 async function handleNBFinanceSubmit(e) {
