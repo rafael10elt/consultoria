@@ -3856,6 +3856,18 @@ function getNBEncomendaDraftHeader() {
         Status_Pagamento: 'Pendente'
     };
 }
+function normalizeNBEncomendaStatusPagamento(value) {
+    const normalized = String(value || '').trim().toLowerCase();
+    if (normalized === 'pago') return 'Pago';
+    if (normalized === 'parcial') return 'Parcial';
+    return 'Pendente';
+}
+function getNBEncomendaStatusPagamentoPayloadValue(value) {
+    const normalized = String(value || '').trim().toLowerCase();
+    if (normalized === 'pago') return 'pago';
+    if (normalized === 'parcial') return 'Parcial';
+    return 'Pendente';
+}
 function getNBEncomendaDraftTotals(header = getNBEncomendaDraftHeader(), payments = nbEncomendaDraftPayments) {
     const totalGeral = Number(header?.Valor_Total || 0);
     const totalPago = payments.reduce((sum, item) => sum + getNBEncomendaPaymentAmount(item), 0);
@@ -4011,7 +4023,7 @@ function getNBEncomendaDisplayStatus(order, totalsOverride = null) {
     const totals = totalsOverride || {
         totalPago: Number(order?.Total_Pago || 0),
         saldoPendente: Number(order?.Saldo_Pendente || 0),
-        statusPagamento: order?.Status_Pagamento || 'Pendente'
+        statusPagamento: normalizeNBEncomendaStatusPagamento(order?.Status_Pagamento)
     };
     const status = order?.Status_Encomenda || 'Aberta';
     if (status === 'Cancelada') return 'Cancelada';
@@ -4091,7 +4103,7 @@ function setNBEncomendaDraftFromRecord(record = null) {
         Data_Pedido: record.Data_Pedido || '',
         Previsao_Entrega: getNBEncomendaExpectedDate(record) || '',
         Status_Encomenda: record.Status_Encomenda || record.Status || 'Aberta',
-        Status_Pagamento: record.Status_Pagamento || 'Pendente'
+        Status_Pagamento: normalizeNBEncomendaStatusPagamento(record.Status_Pagamento)
     };
     nbEncomendaDraftPayments = getNBEncomendaPaymentsByOrderId(record.Id).map(payment => ({
         tempId: payment.Id,
@@ -4110,7 +4122,7 @@ function syncNBEncomendaHeaderFromForm() {
         Data_Pedido: document.getElementById('nb-encomenda-data-pedido')?.value || '',
         Previsao_Entrega: document.getElementById('nb-encomenda-data-prevista')?.value || '',
         Status_Encomenda: nbEncomendaDraftHeader?.Status_Encomenda || 'Aberta',
-        Status_Pagamento: nbEncomendaDraftHeader?.Status_Pagamento || 'Pendente'
+        Status_Pagamento: normalizeNBEncomendaStatusPagamento(nbEncomendaDraftHeader?.Status_Pagamento)
     };
 }
 function renderNBEncomendasModal() {
@@ -4125,7 +4137,7 @@ function renderNBEncomendasModal() {
         Data_Pedido: selectedRecord.Data_Pedido || '',
         Previsao_Entrega: getNBEncomendaExpectedDate(selectedRecord) || '',
         Status_Encomenda: selectedRecord.Status_Encomenda || selectedRecord.Status || 'Aberta',
-        Status_Pagamento: selectedRecord.Status_Pagamento || 'Pendente'
+        Status_Pagamento: normalizeNBEncomendaStatusPagamento(selectedRecord.Status_Pagamento)
     } : getNBEncomendaDraftHeader());
     nbEncomendaDraftHeader = { ...header };
     const totals = getNBEncomendaDraftTotals(header);
@@ -4350,7 +4362,7 @@ function getNBEncomendaHeaderPayload() {
         Data_Pedido: header.Data_Pedido,
         Previsao_Entrega: header.Previsao_Entrega,
         Status_Encomenda: resolvedStatus,
-        Status_Pagamento: totals.statusPagamento
+        Status_Pagamento: getNBEncomendaStatusPagamentoPayloadValue(totals.statusPagamento)
     };
 }
 async function postNBEncomendaRecordWithFallback(tableId, payloads = []) {
@@ -9701,10 +9713,13 @@ function clearFilters(){
     applyFilters();
     }
     function renderAllVisits(d=visitsData){renderKanbanBoard(d.filter(v=>v.Status!=='Remarcada')); renderVisitsList(d); renderCalendarEvents(d);}
-    function renderKanbanBoard(d){ 
+function renderKanbanBoard(d){ 
     const c={'agendada':[],'em-andamento':[],'concluida':[]}; 
     d.forEach(v=>{ 
-        const sK = v.Status.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(' ','-'); 
+        const rawStatus = String(v.Status || '').trim();
+        const sK = rawStatus
+            ? rawStatus.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-')
+            : '';
         if(c[sK]) { 
             c[sK].push(createKanbanCard(v)); 
         } 
