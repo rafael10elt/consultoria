@@ -2592,6 +2592,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const NB_PANEL_CATEGORY_OPEN_KEY = 'nb-panel-open-category-id';
     let nbPanelRefreshBlockedUntil = 0;
     let nbSuppressFetchAlerts = false;
+    let nbCarryForwardPropagationPendingCount = 0;
+    let nbCarryForwardPropagationQueue = Promise.resolve();
 
     // --- NOVO: Controle de Carregamento ---
 const dataLoaded = {
@@ -4525,6 +4527,7 @@ async function refreshNBModuleSilently() {
     if (!document.getElementById('nb-encomendas-modal')?.classList.contains('hidden')) return;
     if (document.hidden || isNBModuleInputFocused()) return;
     if (Date.now() < nbPanelRefreshBlockedUntil) return;
+    if (nbCarryForwardPropagationPendingCount > 0) return;
     nbModuleRefreshInProgress = true;
     try {
         nbSuppressFetchAlerts = true;
@@ -4602,6 +4605,29 @@ function setNBPanelSelectedCategoryIds(ids, render = true) {
 }
 function blockNBPanelAutoRefresh(ms = 45000) {
     nbPanelRefreshBlockedUntil = Math.max(nbPanelRefreshBlockedUntil || 0, Date.now() + Math.max(0, ms));
+}
+function queueNBSobraCarryForwardPropagation(dateString, productId, preservedOpenCategoryId = '') {
+    nbCarryForwardPropagationPendingCount += 1;
+    nbCarryForwardPropagationQueue = nbCarryForwardPropagationQueue
+        .catch(() => {})
+        .then(async () => {
+            const previousSuppressFetchAlerts = nbSuppressFetchAlerts;
+            nbSuppressFetchAlerts = true;
+            try {
+                await syncNBSobraCarryForwardFrom(dateString, productId);
+                if (preservedOpenCategoryId) {
+                    setNBPanelOpenCategoryId(preservedOpenCategoryId);
+                }
+                renderNBPanelTotals();
+                syncNBPanelCategoryAccordion();
+            } catch (error) {
+                console.warn('Propagação de sobra em segundo plano falhou:', error);
+            } finally {
+                nbSuppressFetchAlerts = previousSuppressFetchAlerts;
+                nbCarryForwardPropagationPendingCount = Math.max(0, nbCarryForwardPropagationPendingCount - 1);
+            }
+        });
+    return nbCarryForwardPropagationQueue;
 }
 function renderNBPanelCategoryModal() {
     const list = document.getElementById('nb-panel-category-list');
@@ -6016,12 +6042,14 @@ async function saveNBPanelCell(dateString, productId, cell) {
     const method = existing.Id ? 'PATCH' : 'POST';
     const body = existing.Id ? values : { ...values, Data: { Id: controlDay.Id }, Produto: { Id: Number(productId) } };
     const result = await nocoFetch(endpoint, { method, body: JSON.stringify(body) });
-    if (result) Object.assign(existing, result);
-    await syncNBSobraCarryForwardFrom(dateString, Number(productId));
+    if (!result) {
+        throw new Error('Não foi possível persistir o apontamento atual.');
+    }
+    Object.assign(existing, result);
     if (preservedOpenCategoryId) setNBPanelOpenCategoryId(preservedOpenCategoryId);
     renderNBPanelTotals();
-    syncNBPanelCategoryAccordion();
     showNBToast('Apontamento salvo com sucesso.');
+    void queueNBSobraCarryForwardPropagation(dateString, Number(productId), preservedOpenCategoryId);
 }
 async function handleNBFinanceSubmit(e) {
     e.preventDefault();
@@ -10995,6 +11023,9 @@ function initializeApp() {
             try {
                 blockNBPanelAutoRefresh(45000);
                 await saveNBPanelCell(dateString, productId, cell);
+            } catch (error) {
+                console.warn('Falha ao salvar apontamento:', error);
+                showNBToast('Não foi possível salvar o apontamento. Tente novamente.', 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = originalText;
