@@ -6061,34 +6061,11 @@ async function normalizeNBCarryForwardAll() {
         .filter(Boolean)
         .sort((a, b) => a.localeCompare(b));
     for (const product of activeProducts) {
-        let previousCarry = 0;
-        for (const dateString of controlDates) {
-            const record = getNBApontamento(dateString, product.Id);
-            if (!record) continue;
-            const desiredPrevious = previousCarry;
-            if (normalizeNBNumber(record.Qtd_Sobra_Anterior) !== desiredPrevious) {
-                const payload = {
-                    Qtd_Sobra_Anterior: desiredPrevious,
-                    Qtd_Venda: computeNBVenda({ ...record, Qtd_Sobra_Anterior: desiredPrevious })
-                };
-                const result = await persistNBApontamentoRecord({
-                    dateString,
-                    productId: product.Id,
-                    controlDayId: getNBControlDayByDate(dateString)?.Id || getNBControlDayByDate(dateString)?.id || null,
-                    values: payload,
-                    recordId: record.Id
-                });
-                if (result) {
-                    Object.assign(record, result);
-                    const normalizedId = normalizeNBRecordId(result);
-                    if (normalizedId && !record.Id) record.Id = normalizedId;
-                    if (normalizedId && !record.id) record.id = normalizedId;
-                } else {
-                    Object.assign(record, payload);
-                }
-            }
-            previousCarry = normalizeNBNumber(record.Qtd_Sobra_Atual);
-        }
+        const firstDateWithRecord = controlDates.find(dateString => Boolean(getNBApontamento(dateString, product.Id)));
+        if (!firstDateWithRecord) continue;
+        // Propaga apenas os dias seguintes a partir do primeiro registro encontrado.
+        // O dia de origem mantém exatamente o que foi salvo pelo usuário.
+        await syncNBSobraCarryForwardFrom(firstDateWithRecord, product.Id);
     }
 }
 function upsertLocalNBApontamento(dateString, productId, values) {
