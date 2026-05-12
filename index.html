@@ -6070,16 +6070,19 @@ function normalizeNBRecordId(record) {
 function buildNBApontamentoPayloadVariants(values, controlDayId, productId) {
     const productRef = Number(productId);
     return [
+        { ...values, NB_Controle_Dias: { Id: controlDayId }, NB_Produtos: { Id: productRef } },
         { ...values, Data: { Id: controlDayId }, Produto: { Id: productRef } },
-        { ...values, NB_Controle_Dias: { Id: controlDayId }, Produto: { Id: productRef } },
         { ...values, Controle_Dia: { Id: controlDayId }, Produto: { Id: productRef } },
+        { fields: { ...values, NB_Controle_Dias: controlDayId, NB_Produtos: productRef } },
         { fields: { ...values, Data: controlDayId, Produto: productRef } },
-        { fields: { ...values, NB_Controle_Dias: controlDayId, Produto: productRef } },
         { fields: { ...values, Controle_Dia: controlDayId, Produto: productRef } },
-        { fields: { ...values, NB_Controle_Dias_id: controlDayId, Produto_id: productRef } },
+        { fields: { ...values, NB_Controle_Dias_id: controlDayId, NB_Produtos_id: productRef } },
         { fields: { ...values, Controle_Dia_id: controlDayId, Produto_id: productRef } },
-        [{ fields: { ...values, NB_Controle_Dias: controlDayId, Produto: productRef } }],
     ];
+}
+async function fetchNBApontamentoRecordById(recordId) {
+    if (!recordId) return null;
+    return await nocoFetch(`${TABLE_IDS.NB_Apontamentos}/${recordId}?nested[all]=true`);
 }
 async function postNBRecordWithFallback(tableId, payloads = []) {
     let lastError = null;
@@ -6152,24 +6155,32 @@ async function saveNBPanelCell(dateString, productId, cell) {
     const normalizedResultId = normalizeNBRecordId(result);
     if (normalizedResultId && !existing.Id) existing.Id = normalizedResultId;
     if (normalizedResultId && !existing.id) existing.id = normalizedResultId;
-    const previousSuppressFetchAlerts = nbSuppressFetchAlerts;
-    nbSuppressFetchAlerts = true;
-    try {
-        await fetchNBApontamentos();
-    } finally {
-        nbSuppressFetchAlerts = previousSuppressFetchAlerts;
+    let persistedRecord = null;
+    if (normalizedResultId) {
+        const previousSuppressFetchAlerts = nbSuppressFetchAlerts;
+        nbSuppressFetchAlerts = true;
+        try {
+            persistedRecord = await fetchNBApontamentoRecordById(normalizedResultId);
+        } finally {
+            nbSuppressFetchAlerts = previousSuppressFetchAlerts;
+        }
     }
-    let persistedRecord = getNBApontamento(dateString, productId);
     if (!persistedRecord) {
-        console.warn('Apontamento salvo, mas ainda não apareceu na recarga do banco. Mantendo o retorno da API como fonte de verdade.', {
-            dateString,
-            productId,
-            recordId: normalizedResultId || recordId || null
-        });
-        persistedRecord = upsertLocalNBApontamento(dateString, productId, result);
-        if (normalizedResultId && !persistedRecord.Id) persistedRecord.Id = normalizedResultId;
-        if (normalizedResultId && !persistedRecord.id) persistedRecord.id = normalizedResultId;
+        const previousSuppressFetchAlerts = nbSuppressFetchAlerts;
+        nbSuppressFetchAlerts = true;
+        try {
+            await fetchNBApontamentos();
+        } finally {
+            nbSuppressFetchAlerts = previousSuppressFetchAlerts;
+        }
+        persistedRecord = getNBApontamento(dateString, productId);
     }
+    if (!persistedRecord) {
+        throw new Error('O registro não foi confirmado no banco após o salvamento.');
+    }
+    Object.assign(existing, persistedRecord);
+    if (normalizedResultId && !existing.Id) existing.Id = normalizedResultId;
+    if (normalizedResultId && !existing.id) existing.id = normalizedResultId;
     if (preservedOpenCategoryId) setNBPanelOpenCategoryId(preservedOpenCategoryId);
     renderNBPanelTotals();
     showNBToast('Apontamento salvo com sucesso.');
