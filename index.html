@@ -4862,6 +4862,11 @@ function renderNBPanel() {
                                     <div class="rounded-lg bg-slate-100 dark:bg-slate-700 px-3 py-2 min-h-[4.5rem] flex flex-col justify-between"><div class="text-[10px] leading-tight text-gray-500 dark:text-gray-300">Disponível</div><div class="font-bold text-gray-800 dark:text-white" data-nb-available>${totalDisponivel}</div></div>
                                     <div class="rounded-lg bg-green-100 dark:bg-green-900 px-3 py-2 min-h-[4.5rem] flex flex-col justify-between"><div class="text-[10px] leading-tight text-green-700 dark:text-green-200">Venda</div><div class="font-bold text-green-800 dark:text-green-100" data-nb-venda>${venda}</div></div>
                                 </div>
+                                ${editable ? `
+                                    <div class="mt-3 flex justify-end">
+                                        <button type="button" class="nb-panel-save-btn inline-flex items-center justify-center rounded-lg bg-brand-gold px-3 py-2 text-sm font-semibold text-white hover:bg-brand-gold-dark" data-date="${dateString}" data-product-id="${product.Id}">Salvar</button>
+                                    </div>
+                                ` : ''}
                                         </div>
                                     `;
                                 }).join('')}
@@ -10975,13 +10980,22 @@ function initializeApp() {
             updateNBCellDom(cell);
             renderNBPanelTotals();
         });
-        document.getElementById('nb-panel-grid')?.addEventListener('change', async e => {
-            if (!e.target.classList.contains('nb-panel-input')) return;
-            const cell = e.target.closest('[data-nb-cell]');
-            const dateString = cell?.dataset.date;
-            const productId = cell?.dataset.productId;
+        document.getElementById('nb-panel-grid')?.addEventListener('click', async e => {
+            const btn = e.target.closest('.nb-panel-save-btn');
+            if (!btn) return;
+            const cell = btn.closest('[data-nb-cell]');
+            const dateString = btn.dataset.date || cell?.dataset.date;
+            const productId = btn.dataset.productId || cell?.dataset.productId;
             if (!cell || !dateString || !productId) return;
-            await saveNBPanelCell(dateString, productId, cell);
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.textContent = 'Salvando...';
+            try {
+                await saveNBPanelCell(dateString, productId, cell);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
         });
         ['filter-servico-start-date', 'filter-servico-end-date', 'filter-servico-status'].forEach(id => {
         document.getElementById(id)?.addEventListener('change', applyAndRenderServicos);
