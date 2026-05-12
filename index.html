@@ -5977,24 +5977,39 @@ async function syncNBSobraCarryForwardFrom(dateString, productId) {
                 Qtd_Sobra_Anterior: carryValue,
                 Qtd_Venda: computeNBVenda({ ...nextRecord, Qtd_Sobra_Anterior: carryValue })
             };
-            const result = await nocoFetch(`${TABLE_IDS.NB_Apontamentos}/${nextRecord.Id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+            const result = await persistNBApontamentoRecord({
+                dateString: nextDate,
+                productId,
+                controlDayId: nextControlDay.Id,
+                values: payload,
+                recordId: nextRecord.Id
+            });
             if (result) {
                 Object.assign(nextRecord, result);
+                const normalizedId = normalizeNBRecordId(result);
+                if (normalizedId && !nextRecord.Id) nextRecord.Id = normalizedId;
+                if (normalizedId && !nextRecord.id) nextRecord.id = normalizedId;
             } else {
                 Object.assign(nextRecord, payload);
             }
         } else {
             const payload = {
-                Data: { Id: nextControlDay.Id },
-                Produto: { Id: Number(productId) },
                 Qtd_Sobra_Anterior: carryValue,
                 Qtd_Producao: 0,
                 Qtd_Perda: 0,
                 Qtd_Sobra_Atual: 0,
                 Qtd_Venda: carryValue
             };
-            const result = await nocoFetch(TABLE_IDS.NB_Apontamentos, { method: 'POST', body: JSON.stringify(payload) });
+            const result = await persistNBApontamentoRecord({
+                dateString: nextDate,
+                productId,
+                controlDayId: nextControlDay.Id,
+                values: payload
+            });
             if (result) {
+                const normalizedId = normalizeNBRecordId(result);
+                if (normalizedId && !result.Id) result.Id = normalizedId;
+                if (normalizedId && !result.id) result.id = normalizedId;
                 nbApontamentosData.push(result);
             }
         }
@@ -6019,9 +6034,18 @@ async function normalizeNBCarryForwardAll() {
                     Qtd_Sobra_Anterior: desiredPrevious,
                     Qtd_Venda: computeNBVenda({ ...record, Qtd_Sobra_Anterior: desiredPrevious })
                 };
-                const result = await nocoFetch(`${TABLE_IDS.NB_Apontamentos}/${record.Id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+                const result = await persistNBApontamentoRecord({
+                    dateString,
+                    productId: product.Id,
+                    controlDayId: getNBControlDayByDate(dateString)?.Id || getNBControlDayByDate(dateString)?.id || null,
+                    values: payload,
+                    recordId: record.Id
+                });
                 if (result) {
                     Object.assign(record, result);
+                    const normalizedId = normalizeNBRecordId(result);
+                    if (normalizedId && !record.Id) record.Id = normalizedId;
+                    if (normalizedId && !record.id) record.id = normalizedId;
                 } else {
                     Object.assign(record, payload);
                 }
@@ -6040,6 +6064,56 @@ function upsertLocalNBApontamento(dateString, productId, values) {
     record.Qtd_Venda = computeNBVenda(record);
     return record;
 }
+function normalizeNBRecordId(record) {
+    return record?.Id ?? record?.id ?? null;
+}
+function buildNBApontamentoPayloadVariants(values, controlDayId, productId) {
+    const productRef = Number(productId);
+    return [
+        { ...values, Data: { Id: controlDayId }, Produto: { Id: productRef } },
+        { ...values, NB_Controle_Dias: { Id: controlDayId }, Produto: { Id: productRef } },
+        { ...values, Controle_Dia: { Id: controlDayId }, Produto: { Id: productRef } },
+        { fields: { ...values, Data: controlDayId, Produto: productRef } },
+        { fields: { ...values, NB_Controle_Dias: controlDayId, Produto: productRef } },
+        { fields: { ...values, Controle_Dia: controlDayId, Produto: productRef } },
+        { fields: { ...values, NB_Controle_Dias_id: controlDayId, Produto_id: productRef } },
+        { fields: { ...values, Controle_Dia_id: controlDayId, Produto_id: productRef } },
+        [{ fields: { ...values, NB_Controle_Dias: controlDayId, Produto: productRef } }],
+    ];
+}
+async function postNBRecordWithFallback(tableId, payloads = []) {
+    let lastError = null;
+    for (const payload of payloads) {
+        try {
+            const result = await nocoFetch(tableId, { method: 'POST', body: JSON.stringify(payload) });
+            if (result) return result;
+        } catch (error) {
+            lastError = error;
+        }
+    }
+    if (lastError) throw lastError;
+    return null;
+}
+async function patchNBRecordWithFallback(tableId, recordId, payloads = []) {
+    let lastError = null;
+    for (const payload of payloads) {
+        try {
+            const result = await nocoFetch(`${tableId}/${recordId}`, { method: 'PATCH', body: JSON.stringify(payload) });
+            if (result) return result;
+        } catch (error) {
+            lastError = error;
+        }
+    }
+    if (lastError) throw lastError;
+    return null;
+}
+async function persistNBApontamentoRecord({ dateString, productId, controlDayId, values, recordId = null }) {
+    const payloadVariants = buildNBApontamentoPayloadVariants(values, controlDayId, productId);
+    if (recordId) {
+        return await patchNBRecordWithFallback(TABLE_IDS.NB_Apontamentos, recordId, payloadVariants);
+    }
+    return await postNBRecordWithFallback(TABLE_IDS.NB_Apontamentos, payloadVariants);
+}
 async function saveNBPanelCell(dateString, productId, cell) {
     if (!isNBPanelEditable(dateString)) {
         renderNBPanel();
@@ -6056,35 +6130,39 @@ async function saveNBPanelCell(dateString, productId, cell) {
     };
     values.Qtd_Venda = computeNBVenda(values);
     const existing = upsertLocalNBApontamento(dateString, productId, values);
-    const endpoint = existing.Id ? `${TABLE_IDS.NB_Apontamentos}/${existing.Id}` : TABLE_IDS.NB_Apontamentos;
-    const method = existing.Id ? 'PATCH' : 'POST';
-    const body = existing.Id
-        ? values
-        : { ...values, Data: { Id: controlDay.Id }, Produto: { Id: Number(productId) } };
-    console.debug('saveNBPanelCell payload', { endpoint, method, body });
-    const result = existing.Id
-        ? await nocoFetch(endpoint, { method, body: JSON.stringify(body) })
-        : await postNBEncomendaRecordWithFallback(TABLE_IDS.NB_Apontamentos, [
-            {
-                ...values,
-                Data: { Id: controlDay.Id },
-                Produto: { Id: Number(productId) }
-            },
-            {
-                ...values,
-                NB_Controle_Dias: { Id: controlDay.Id },
-                Produto: { Id: Number(productId) }
-            },
-            {
-                ...values,
-                Controle_Dia: { Id: controlDay.Id },
-                Produto: { Id: Number(productId) }
-            }
-        ]);
+    const recordId = normalizeNBRecordId(existing);
+    console.debug('saveNBPanelCell payload', {
+        recordId,
+        dateString,
+        productId,
+        controlDayId: controlDay.Id,
+        values
+    });
+    const result = await persistNBApontamentoRecord({
+        dateString,
+        productId,
+        controlDayId: controlDay.Id,
+        values,
+        recordId
+    });
     if (!result) {
         throw new Error('Não foi possível persistir o apontamento atual.');
     }
     Object.assign(existing, result);
+    const normalizedResultId = normalizeNBRecordId(result);
+    if (normalizedResultId && !existing.Id) existing.Id = normalizedResultId;
+    if (normalizedResultId && !existing.id) existing.id = normalizedResultId;
+    const previousSuppressFetchAlerts = nbSuppressFetchAlerts;
+    nbSuppressFetchAlerts = true;
+    try {
+        await fetchNBApontamentos();
+    } finally {
+        nbSuppressFetchAlerts = previousSuppressFetchAlerts;
+    }
+    const persistedRecord = getNBApontamento(dateString, productId);
+    if (!persistedRecord) {
+        throw new Error('O registro não foi confirmado no banco após o salvamento.');
+    }
     if (preservedOpenCategoryId) setNBPanelOpenCategoryId(preservedOpenCategoryId);
     renderNBPanelTotals();
     showNBToast('Apontamento salvo com sucesso.');
