@@ -3420,6 +3420,7 @@ function normalizeNBDecimal(value) {
 }
 function getNBRelationId(value) {
     if (value == null) return null;
+    if (Array.isArray(value)) return getNBRelationId(value[0]);
     if (typeof value === 'object') return value.Id ?? value.id ?? null;
     const numeric = Number(value);
     return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
@@ -3429,10 +3430,14 @@ function computeNBVenda(record = {}) {
 }
 function getNBLinkedDateValue(record) {
     if (!record) return null;
+    if (Array.isArray(record.Data)) return getNBLinkedDateValue({ Data: record.Data[0] });
     if (record.Data && typeof record.Data === 'object') return record.Data.Data || null;
     if (typeof record.Data === 'string') return record.Data;
+    if (Array.isArray(record.NB_Controle_Dias)) return getNBLinkedDateValue({ NB_Controle_Dias: record.NB_Controle_Dias[0] });
     if (record.NB_Controle_Dias && typeof record.NB_Controle_Dias === 'object') return record.NB_Controle_Dias.Data || null;
+    if (Array.isArray(record.NB_Controlle_Dias)) return getNBLinkedDateValue({ NB_Controlle_Dias: record.NB_Controlle_Dias[0] });
     if (record.NB_Controlle_Dias && typeof record.NB_Controlle_Dias === 'object') return record.NB_Controlle_Dias.Data || null;
+    if (Array.isArray(record.Controle_Dia)) return getNBLinkedDateValue({ Controle_Dia: record.Controle_Dia[0] });
     if (record.Controle_Dia && typeof record.Controle_Dia === 'object') return record.Controle_Dia.Data || null;
     const controlDayId = record.NB_Controle_Dias?.Id || record.NB_Controle_Dias_id || record.NB_Controlle_Dias?.Id || record.NB_Controlle_Dias_id || record.Controle_Dia?.Id || record.Controle_Dia_id || null;
     if (controlDayId) {
@@ -3522,13 +3527,17 @@ function getNBLinkedEncomendaId(record) {
 function getNBEncomendaPaymentDateValue(record) {
     if (!record) return null;
     if (record.Data_Pagamento) return record.Data_Pagamento;
+    if (Array.isArray(record.NB_Controle_Dias)) return record.NB_Controle_Dias[0]?.Data || null;
     if (record.NB_Controle_Dias && typeof record.NB_Controle_Dias === 'object') return record.NB_Controle_Dias.Data || null;
+    if (Array.isArray(record.NB_Controlle_Dias)) return record.NB_Controlle_Dias[0]?.Data || null;
     if (record.NB_Controlle_Dias && typeof record.NB_Controlle_Dias === 'object') return record.NB_Controlle_Dias.Data || null;
+    if (Array.isArray(record.Controle_Dia)) return record.Controle_Dia[0]?.Data || null;
     if (record.Controle_Dia && typeof record.Controle_Dia === 'object') return record.Controle_Dia.Data || null;
     return getNBLinkedDateValue(record);
 }
 function getNBEncomendaPaymentControlDayId(record) {
     if (!record) return null;
+    if (Array.isArray(record.NB_Controle_Dias)) return record.NB_Controle_Dias[0]?.Id || null;
     return record.NB_Controle_Dias?.Id || record.NB_Controle_Dias_id || record.NB_Controlle_Dias?.Id || record.NB_Controlle_Dias_id || record.Controle_Dia?.Id || record.Controle_Dia_id || null;
 }
 function getNBEncomendaCustomerName(record = {}) {
@@ -6049,8 +6058,29 @@ async function saveNBPanelCell(dateString, productId, cell) {
     const existing = upsertLocalNBApontamento(dateString, productId, values);
     const endpoint = existing.Id ? `${TABLE_IDS.NB_Apontamentos}/${existing.Id}` : TABLE_IDS.NB_Apontamentos;
     const method = existing.Id ? 'PATCH' : 'POST';
-    const body = existing.Id ? values : { ...values, Data: { Id: controlDay.Id }, Produto: { Id: Number(productId) } };
-    const result = await nocoFetch(endpoint, { method, body: JSON.stringify(body) });
+    const body = existing.Id
+        ? values
+        : { ...values, Data: { Id: controlDay.Id }, Produto: { Id: Number(productId) } };
+    console.debug('saveNBPanelCell payload', { endpoint, method, body });
+    const result = existing.Id
+        ? await nocoFetch(endpoint, { method, body: JSON.stringify(body) })
+        : await postNBEncomendaRecordWithFallback(TABLE_IDS.NB_Apontamentos, [
+            {
+                ...values,
+                Data: { Id: controlDay.Id },
+                Produto: { Id: Number(productId) }
+            },
+            {
+                ...values,
+                NB_Controle_Dias: { Id: controlDay.Id },
+                Produto: { Id: Number(productId) }
+            },
+            {
+                ...values,
+                Controle_Dia: { Id: controlDay.Id },
+                Produto: { Id: Number(productId) }
+            }
+        ]);
     if (!result) {
         throw new Error('Não foi possível persistir o apontamento atual.');
     }
