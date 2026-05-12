@@ -3823,8 +3823,21 @@ async function fetchNBControleDias() {
     nbControleDiasData = result?.list ? result.list.sort((a, b) => (a.Data || '').localeCompare(b.Data || '')) : [];
 }
 async function fetchNBApontamentos() {
-    const result = await nocoFetch(`${TABLE_IDS.NB_Apontamentos}?nested[all]=true&t=${Date.now()}`, { cache: 'no-store' });
-    nbApontamentosData = result?.list ? result.list : [];
+    const allRecords = [];
+    const pageSize = 1000;
+    let offset = 0;
+    while (true) {
+        const result = await nocoFetch(`${TABLE_IDS.NB_Apontamentos}?nested[all]=true&t=${Date.now()}&offset=${offset}`, { cache: 'no-store' });
+        const page = result?.list ? result.list : [];
+        allRecords.push(...page);
+        if (page.length < pageSize) break;
+        offset += pageSize;
+        if (offset > 20000) {
+            console.warn('Interrompendo paginação de NB_Apontamentos por segurança.', { offset });
+            break;
+        }
+    }
+    nbApontamentosData = allRecords;
 }
 async function fetchNBFinanceiro() {
     const result = await nocoFetch(`${TABLE_IDS.NB_Financeiro}?nested[all]=true`);
@@ -6147,22 +6160,31 @@ async function saveNBPanelCell(dateString, productId, cell) {
     if (normalizedResultId && !existing.Id) existing.Id = normalizedResultId;
     if (normalizedResultId && !existing.id) existing.id = normalizedResultId;
     let persistedRecord = null;
-    const previousSuppressFetchAlerts = nbSuppressFetchAlerts;
-    nbSuppressFetchAlerts = true;
-    try {
-        if (normalizedResultId) {
+    if (normalizedResultId) {
+        const previousSuppressFetchAlerts = nbSuppressFetchAlerts;
+        nbSuppressFetchAlerts = true;
+        try {
             persistedRecord = await fetchNBApontamentoRecordById(normalizedResultId);
+        } finally {
+            nbSuppressFetchAlerts = previousSuppressFetchAlerts;
         }
-        if (!persistedRecord) {
+    }
+    if (!persistedRecord) {
+        const previousSuppressFetchAlerts = nbSuppressFetchAlerts;
+        nbSuppressFetchAlerts = true;
+        try {
             await fetchNBApontamentos();
-            persistedRecord = getNBApontamento(dateString, productId);
+        } finally {
+            nbSuppressFetchAlerts = previousSuppressFetchAlerts;
         }
-    } finally {
-        nbSuppressFetchAlerts = previousSuppressFetchAlerts;
+        persistedRecord = getNBApontamento(dateString, productId);
     }
     if (!persistedRecord) {
         throw new Error('O registro não foi confirmado no banco após o salvamento.');
     }
+    Object.assign(existing, persistedRecord);
+    if (normalizedResultId && !existing.Id) existing.Id = normalizedResultId;
+    if (normalizedResultId && !existing.id) existing.id = normalizedResultId;
     if (preservedOpenCategoryId) setNBPanelOpenCategoryId(preservedOpenCategoryId);
     renderNBPanelTotals();
     showNBToast('Apontamento salvo com sucesso.');
