@@ -6159,9 +6159,16 @@ async function saveNBPanelCell(dateString, productId, cell) {
     } finally {
         nbSuppressFetchAlerts = previousSuppressFetchAlerts;
     }
-    const persistedRecord = getNBApontamento(dateString, productId);
+    let persistedRecord = getNBApontamento(dateString, productId);
     if (!persistedRecord) {
-        throw new Error('O registro não foi confirmado no banco após o salvamento.');
+        console.warn('Apontamento salvo, mas ainda não apareceu na recarga do banco. Mantendo o retorno da API como fonte de verdade.', {
+            dateString,
+            productId,
+            recordId: normalizedResultId || recordId || null
+        });
+        persistedRecord = upsertLocalNBApontamento(dateString, productId, result);
+        if (normalizedResultId && !persistedRecord.Id) persistedRecord.Id = normalizedResultId;
+        if (normalizedResultId && !persistedRecord.id) persistedRecord.id = normalizedResultId;
     }
     if (preservedOpenCategoryId) setNBPanelOpenCategoryId(preservedOpenCategoryId);
     renderNBPanelTotals();
