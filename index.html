@@ -4652,14 +4652,6 @@ function syncNBPanelCategoryAccordion() {
             items.forEach(other => {
                 if (other !== details) other.open = false;
             });
-            const target = details.querySelector('[data-nb-category-products]');
-            if (target) {
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        target.scrollIntoView({ block: 'start', behavior: 'smooth' });
-                    });
-                });
-            }
         });
     });
 }
@@ -6016,7 +6008,6 @@ async function saveNBPanelCell(dateString, productId, cell) {
     const result = await nocoFetch(endpoint, { method, body: JSON.stringify(body) });
     if (result) Object.assign(existing, result);
     await syncNBSobraCarryForwardFrom(dateString, Number(productId));
-    await fetchNBApontamentos();
     if (preservedOpenCategoryId) setNBPanelOpenCategoryId(preservedOpenCategoryId);
     renderNBPanelTotals();
     syncNBPanelCategoryAccordion();
