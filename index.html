@@ -6067,55 +6067,18 @@ function upsertLocalNBApontamento(dateString, productId, values) {
 function normalizeNBRecordId(record) {
     return record?.Id ?? record?.id ?? null;
 }
-function buildNBApontamentoPayloadVariants(values, controlDayId, productId) {
-    const productRef = Number(productId);
-    return [
-        { ...values, NB_Controle_Dias: { Id: controlDayId }, NB_Produtos: { Id: productRef } },
-        { ...values, Data: { Id: controlDayId }, Produto: { Id: productRef } },
-        { ...values, Controle_Dia: { Id: controlDayId }, Produto: { Id: productRef } },
-        { fields: { ...values, NB_Controle_Dias: controlDayId, NB_Produtos: productRef } },
-        { fields: { ...values, Data: controlDayId, Produto: productRef } },
-        { fields: { ...values, Controle_Dia: controlDayId, Produto: productRef } },
-        { fields: { ...values, NB_Controle_Dias_id: controlDayId, NB_Produtos_id: productRef } },
-        { fields: { ...values, Controle_Dia_id: controlDayId, Produto_id: productRef } },
-    ];
-}
-async function fetchNBApontamentoRecordById(recordId) {
-    if (!recordId) return null;
-    return await nocoFetch(`${TABLE_IDS.NB_Apontamentos}/${recordId}?nested[all]=true`);
-}
-async function postNBRecordWithFallback(tableId, payloads = []) {
-    let lastError = null;
-    for (const payload of payloads) {
-        try {
-            const result = await nocoFetch(tableId, { method: 'POST', body: JSON.stringify(payload) });
-            if (result) return result;
-        } catch (error) {
-            lastError = error;
-        }
-    }
-    if (lastError) throw lastError;
-    return null;
-}
-async function patchNBRecordWithFallback(tableId, recordId, payloads = []) {
-    let lastError = null;
-    for (const payload of payloads) {
-        try {
-            const result = await nocoFetch(`${tableId}/${recordId}`, { method: 'PATCH', body: JSON.stringify(payload) });
-            if (result) return result;
-        } catch (error) {
-            lastError = error;
-        }
-    }
-    if (lastError) throw lastError;
-    return null;
+function buildNBApontamentoPayload(values, controlDayId, productId) {
+    return {
+        ...values,
+        Data: { Id: controlDayId },
+        Produto: { Id: Number(productId) }
+    };
 }
 async function persistNBApontamentoRecord({ dateString, productId, controlDayId, values, recordId = null }) {
-    const payloadVariants = buildNBApontamentoPayloadVariants(values, controlDayId, productId);
-    if (recordId) {
-        return await patchNBRecordWithFallback(TABLE_IDS.NB_Apontamentos, recordId, payloadVariants);
-    }
-    return await postNBRecordWithFallback(TABLE_IDS.NB_Apontamentos, payloadVariants);
+    const endpoint = recordId ? `${TABLE_IDS.NB_Apontamentos}/${recordId}` : TABLE_IDS.NB_Apontamentos;
+    const method = recordId ? 'PATCH' : 'POST';
+    const body = recordId ? values : buildNBApontamentoPayload(values, controlDayId, productId);
+    return await nocoFetch(endpoint, { method, body: JSON.stringify(body) });
 }
 async function saveNBPanelCell(dateString, productId, cell) {
     if (!isNBPanelEditable(dateString)) {
@@ -6155,32 +6118,17 @@ async function saveNBPanelCell(dateString, productId, cell) {
     const normalizedResultId = normalizeNBRecordId(result);
     if (normalizedResultId && !existing.Id) existing.Id = normalizedResultId;
     if (normalizedResultId && !existing.id) existing.id = normalizedResultId;
-    let persistedRecord = null;
-    if (normalizedResultId) {
-        const previousSuppressFetchAlerts = nbSuppressFetchAlerts;
-        nbSuppressFetchAlerts = true;
-        try {
-            persistedRecord = await fetchNBApontamentoRecordById(normalizedResultId);
-        } finally {
-            nbSuppressFetchAlerts = previousSuppressFetchAlerts;
-        }
+    const previousSuppressFetchAlerts = nbSuppressFetchAlerts;
+    nbSuppressFetchAlerts = true;
+    try {
+        await fetchNBApontamentos();
+    } finally {
+        nbSuppressFetchAlerts = previousSuppressFetchAlerts;
     }
-    if (!persistedRecord) {
-        const previousSuppressFetchAlerts = nbSuppressFetchAlerts;
-        nbSuppressFetchAlerts = true;
-        try {
-            await fetchNBApontamentos();
-        } finally {
-            nbSuppressFetchAlerts = previousSuppressFetchAlerts;
-        }
-        persistedRecord = getNBApontamento(dateString, productId);
-    }
+    const persistedRecord = getNBApontamento(dateString, productId);
     if (!persistedRecord) {
         throw new Error('O registro não foi confirmado no banco após o salvamento.');
     }
-    Object.assign(existing, persistedRecord);
-    if (normalizedResultId && !existing.Id) existing.Id = normalizedResultId;
-    if (normalizedResultId && !existing.id) existing.id = normalizedResultId;
     if (preservedOpenCategoryId) setNBPanelOpenCategoryId(preservedOpenCategoryId);
     renderNBPanelTotals();
     showNBToast('Apontamento salvo com sucesso.');
