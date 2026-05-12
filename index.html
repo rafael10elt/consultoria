@@ -2590,6 +2590,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let nbAnalyticsPreset = 'day';
     const NB_PANEL_CATEGORY_SELECTION_KEY = 'nb-panel-selected-category-ids';
     const NB_PANEL_CATEGORY_OPEN_KEY = 'nb-panel-open-category-id';
+    let nbPanelRefreshBlockedUntil = 0;
+    let nbSuppressFetchAlerts = false;
 
     // --- NOVO: Controle de Carregamento ---
 const dataLoaded = {
@@ -2753,7 +2755,9 @@ const dataLoaded = {
         } catch (error) {
             const details = `Endpoint: ${options.method || 'GET'} /${endpoint}\nErro: ${error.message}`;
             console.error(`Falha no fetch para ${endpoint}:`, error);
-            alert(`Ocorreu um erro de comunicação com o servidor. Por favor, tente novamente.\n\nDetalhes:\n${details}`);
+            if (!nbSuppressFetchAlerts) {
+                alert(`Ocorreu um erro de comunicação com o servidor. Por favor, tente novamente.\n\nDetalhes:\n${details}`);
+            }
             return null;
         }
     }
@@ -4520,8 +4524,10 @@ async function refreshNBModuleSilently() {
     if (!canAccessNB() || !dataLoaded['nosso-bolo'] || nbModuleRefreshInProgress) return;
     if (!document.getElementById('nb-encomendas-modal')?.classList.contains('hidden')) return;
     if (document.hidden || isNBModuleInputFocused()) return;
+    if (Date.now() < nbPanelRefreshBlockedUntil) return;
     nbModuleRefreshInProgress = true;
     try {
+        nbSuppressFetchAlerts = true;
         await Promise.all([
             fetchNBCategorias(),
             fetchNBProdutos(),
@@ -4538,6 +4544,7 @@ async function refreshNBModuleSilently() {
     } catch (error) {
         console.warn('NB auto-refresh falhou:', error);
     } finally {
+        nbSuppressFetchAlerts = false;
         nbModuleRefreshInProgress = false;
     }
 }
@@ -4592,6 +4599,9 @@ function setNBPanelSelectedCategoryIds(ids, render = true) {
         renderNBPanel();
         renderNBPanelTotals();
     }
+}
+function blockNBPanelAutoRefresh(ms = 45000) {
+    nbPanelRefreshBlockedUntil = Math.max(nbPanelRefreshBlockedUntil || 0, Date.now() + Math.max(0, ms));
 }
 function renderNBPanelCategoryModal() {
     const list = document.getElementById('nb-panel-category-list');
@@ -10957,6 +10967,7 @@ function initializeApp() {
         ['nb-analytics-start', 'nb-analytics-end'].forEach(id => document.getElementById(id)?.addEventListener('change', () => renderNBManagement()));
         document.getElementById('nb-panel-grid')?.addEventListener('input', e => {
             if (!e.target.classList.contains('nb-panel-input')) return;
+            blockNBPanelAutoRefresh(45000);
             const cell = e.target.closest('[data-nb-cell]');
             const dateString = cell?.dataset.date;
             const productId = cell?.dataset.productId;
@@ -10982,6 +10993,7 @@ function initializeApp() {
             const originalText = btn.textContent;
             btn.textContent = 'Salvando...';
             try {
+                blockNBPanelAutoRefresh(45000);
                 await saveNBPanelCell(dateString, productId, cell);
             } finally {
                 btn.disabled = false;
