@@ -3430,7 +3430,16 @@ function computeNBVenda(record = {}) {
 function getNBLinkedDateValue(record) {
     if (!record) return null;
     if (record.Data && typeof record.Data === 'object') return record.Data.Data || null;
-    return typeof record.Data === 'string' ? record.Data : null;
+    if (typeof record.Data === 'string') return record.Data;
+    if (record.NB_Controle_Dias && typeof record.NB_Controle_Dias === 'object') return record.NB_Controle_Dias.Data || null;
+    if (record.NB_Controlle_Dias && typeof record.NB_Controlle_Dias === 'object') return record.NB_Controlle_Dias.Data || null;
+    if (record.Controle_Dia && typeof record.Controle_Dia === 'object') return record.Controle_Dia.Data || null;
+    const controlDayId = record.NB_Controle_Dias?.Id || record.NB_Controle_Dias_id || record.NB_Controlle_Dias?.Id || record.NB_Controlle_Dias_id || record.Controle_Dia?.Id || record.Controle_Dia_id || null;
+    if (controlDayId) {
+        const controlDay = nbControleDiasData.find(day => String(day.Id) === String(controlDayId));
+        if (controlDay?.Data) return controlDay.Data;
+    }
+    return null;
 }
 function getNBLinkedProductId(record) {
     if (!record) return null;
