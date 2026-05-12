@@ -3425,6 +3425,22 @@ function getNBRelationId(value) {
     const numeric = Number(value);
     return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
 }
+function getNBRelationCandidate(value) {
+    if (value == null) return null;
+    if (Array.isArray(value)) return getNBRelationCandidate(value[0]);
+    return typeof value === 'object' ? value : null;
+}
+function isNBDateLike(value) {
+    return typeof value === 'string' && (/^\d{4}-\d{2}-\d{2}$/.test(value) || /^\d{2}-\d{2}-\d{4}$/.test(value));
+}
+function findNBLinkedRecord(record, predicate) {
+    if (!record || typeof record !== 'object') return null;
+    for (const value of Object.values(record)) {
+        const candidate = getNBRelationCandidate(value);
+        if (candidate && predicate(candidate)) return candidate;
+    }
+    return null;
+}
 function computeNBVenda(record = {}) {
     return normalizeNBNumber(record.Qtd_Sobra_Anterior) + normalizeNBNumber(record.Qtd_Producao) - normalizeNBNumber(record.Qtd_Perda) - normalizeNBNumber(record.Qtd_Sobra_Atual);
 }
@@ -3444,11 +3460,19 @@ function getNBLinkedDateValue(record) {
         const controlDay = nbControleDiasData.find(day => String(day.Id) === String(controlDayId));
         if (controlDay?.Data) return controlDay.Data;
     }
+    const linkedControlDay = findNBLinkedRecord(record, candidate => {
+        const linkedDate = candidate.Data || candidate.data || candidate.value || candidate.Value || null;
+        return typeof linkedDate === 'string' && (isNBDateLike(linkedDate) || linkedDate.includes('-'));
+    });
+    if (linkedControlDay) return linkedControlDay.Data || linkedControlDay.data || linkedControlDay.value || linkedControlDay.Value || null;
     return null;
 }
 function getNBLinkedProductId(record) {
     if (!record) return null;
-    return getNBRelationId(record.Produto) || record.Produto_id || getNBRelationId(record.NB_Produtos) || record.NB_Produtos_id || null;
+    const directProductId = getNBRelationId(record.Produto) || record.Produto_id || getNBRelationId(record.NB_Produtos) || record.NB_Produtos_id || null;
+    if (directProductId) return directProductId;
+    const linkedProduct = findNBLinkedRecord(record, candidate => candidate.Nome || candidate.nome || candidate.Preco_Venda != null || candidate.Preco_Custo != null || candidate.Ativo != null);
+    return getNBRelationId(linkedProduct) || null;
 }
 function getNBProductCategoryId(product) {
     return product?.Categoria?.Id || product?.NB_Categorias_id || product?.Categoria_id || null;
