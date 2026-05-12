@@ -3799,7 +3799,7 @@ async function fetchNBControleDias() {
     nbControleDiasData = result?.list ? result.list.sort((a, b) => (a.Data || '').localeCompare(b.Data || '')) : [];
 }
 async function fetchNBApontamentos() {
-    const result = await nocoFetch(`${TABLE_IDS.NB_Apontamentos}?nested[all]=true`);
+    const result = await nocoFetch(`${TABLE_IDS.NB_Apontamentos}?nested[all]=true&t=${Date.now()}`, { cache: 'no-store' });
     nbApontamentosData = result?.list ? result.list : [];
 }
 async function fetchNBFinanceiro() {
@@ -6080,6 +6080,10 @@ async function persistNBApontamentoRecord({ dateString, productId, controlDayId,
     const body = recordId ? values : buildNBApontamentoPayload(values, controlDayId, productId);
     return await nocoFetch(endpoint, { method, body: JSON.stringify(body) });
 }
+async function fetchNBApontamentoRecordById(recordId) {
+    if (!recordId) return null;
+    return await nocoFetch(`${TABLE_IDS.NB_Apontamentos}/${recordId}?nested[all]=true&t=${Date.now()}`, { cache: 'no-store' });
+}
 async function saveNBPanelCell(dateString, productId, cell) {
     if (!isNBPanelEditable(dateString)) {
         renderNBPanel();
@@ -6118,14 +6122,20 @@ async function saveNBPanelCell(dateString, productId, cell) {
     const normalizedResultId = normalizeNBRecordId(result);
     if (normalizedResultId && !existing.Id) existing.Id = normalizedResultId;
     if (normalizedResultId && !existing.id) existing.id = normalizedResultId;
+    let persistedRecord = null;
     const previousSuppressFetchAlerts = nbSuppressFetchAlerts;
     nbSuppressFetchAlerts = true;
     try {
-        await fetchNBApontamentos();
+        if (normalizedResultId) {
+            persistedRecord = await fetchNBApontamentoRecordById(normalizedResultId);
+        }
+        if (!persistedRecord) {
+            await fetchNBApontamentos();
+            persistedRecord = getNBApontamento(dateString, productId);
+        }
     } finally {
         nbSuppressFetchAlerts = previousSuppressFetchAlerts;
     }
-    const persistedRecord = getNBApontamento(dateString, productId);
     if (!persistedRecord) {
         throw new Error('O registro não foi confirmado no banco após o salvamento.');
     }
