@@ -3724,15 +3724,22 @@ function getNBPanelDayTotals(dateString, groups = getVisibleNBPanelGroups()) {
     const products = groups.flatMap(group => group.products || []);
     const productMap = new Map(products.map(product => [product.Id, product]));
     const records = products.map(product => getNBApontamento(dateString, product.Id)).filter(Boolean);
-    const producao = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Producao), 0);
-    const venda = records.reduce((sum, record) => sum + computeNBVenda(record), 0);
-    const sobraAnterior = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Anterior), 0);
-    const perda = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Perda), 0);
-    const sobraAtual = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Atual), 0);
+    const displayRecords = records.map(record => ({
+        ...record,
+        Qtd_Sobra_Atual: getNBPanelDefaultSobraAtual(record)
+    }));
+    const producao = displayRecords.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Producao), 0);
+    const venda = displayRecords.reduce((sum, record) => sum + computeNBVenda(record), 0);
+    const sobraAnterior = displayRecords.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Anterior), 0);
+    const perda = displayRecords.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Perda), 0);
+    const sobraAtual = displayRecords.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Atual), 0);
     const disponivel = sobraAnterior + producao;
     const revenueProducts = nbProdutosData.filter(product => product && product.Ativo !== false);
     const revenueProductMap = new Map(revenueProducts.map(product => [product.Id, product]));
-    const revenueRecords = revenueProducts.map(product => getNBApontamento(dateString, product.Id)).filter(Boolean);
+    const revenueRecords = revenueProducts.map(product => getNBApontamento(dateString, product.Id)).filter(Boolean).map(record => ({
+        ...record,
+        Qtd_Sobra_Atual: getNBPanelDefaultSobraAtual(record)
+    }));
     const faturamentoProdutos = revenueRecords.reduce((sum, record) => {
         const product = revenueProductMap.get(getNBLinkedProductId(record));
         if (!product) return sum;
@@ -4823,6 +4830,15 @@ function renderNBPanelTotals() {
         setText('current', totals.sobraAtual);
     });
 }
+function getNBPanelDefaultSobraAtual(record = {}) {
+    const sobraAnterior = normalizeNBNumber(record.Qtd_Sobra_Anterior);
+    const sobraAtual = normalizeNBNumber(record.Qtd_Sobra_Atual);
+    const producao = normalizeNBNumber(record.Qtd_Producao);
+    const perda = normalizeNBNumber(record.Qtd_Perda);
+    const hasMovement = producao !== 0 || perda !== 0;
+    if (!hasMovement && sobraAtual === 0) return sobraAnterior;
+    return sobraAtual;
+}
 function renderNBPanel() {
     const container = document.getElementById('nb-panel-grid');
     const cardsContainer = document.getElementById('nb-week-day-cards');
@@ -4931,15 +4947,17 @@ function renderNBPanel() {
                                 ${weekDates.map(dateString => {
                                     const record = getNBApontamento(dateString, product.Id) || {};
                                     const editable = isNBPanelEditable(dateString);
-                                    const venda = computeNBVenda(record);
-                                    const totalDisponivel = normalizeNBNumber(record.Qtd_Sobra_Anterior) + normalizeNBNumber(record.Qtd_Producao);
+                                    const sobraAnterior = normalizeNBNumber(record.Qtd_Sobra_Anterior);
+                                    const sobraAtual = getNBPanelDefaultSobraAtual(record);
+                                    const venda = sobraAnterior + normalizeNBNumber(record.Qtd_Producao) - normalizeNBNumber(record.Qtd_Perda) - sobraAtual;
+                                    const totalDisponivel = sobraAnterior + normalizeNBNumber(record.Qtd_Producao);
                                     return `
                                         <div class="rounded-2xl border dark:border-gray-700 p-3 bg-white/80 dark:bg-gray-800/80" data-nb-cell data-date="${dateString}" data-product-id="${product.Id}">
                                             <div class="grid grid-cols-2 gap-2 text-sm">
-                                                <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">Sobra Ant.</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Anterior)}" data-field="Qtd_Sobra_Anterior" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
+                                                <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">Sobra Ant.</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${sobraAnterior}" data-field="Qtd_Sobra_Anterior" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
                                                 <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">Produção</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Producao)}" data-field="Qtd_Producao" class="nb-panel-input w-full p-2 rounded-lg bg-blue-100 text-gray-900 border border-blue-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
                                                 <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">Perda</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Perda)}" data-field="Qtd_Perda" class="nb-panel-input w-full p-2 rounded-lg bg-red-100 text-gray-900 border border-red-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
-                                                <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">Sobra Atual</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Atual)}" data-field="Qtd_Sobra_Atual" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
+                                                <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">Sobra Atual</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${sobraAtual}" data-field="Qtd_Sobra_Atual" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
                                             </div>
                                 <div class="mt-3 grid grid-cols-2 gap-2">
                                     <div class="rounded-lg bg-slate-100 dark:bg-slate-700 px-3 py-2 min-h-[4.5rem] flex flex-col justify-between"><div class="text-[10px] leading-tight text-gray-500 dark:text-gray-300">Disponível</div><div class="font-bold text-gray-800 dark:text-white" data-nb-available>${totalDisponivel}</div></div>
@@ -6009,9 +6027,15 @@ async function syncNBSobraCarryForwardFrom(dateString, productId) {
         if (!nextControlDay) break;
         const nextRecord = getNBApontamento(nextDate, productId);
         if (nextRecord?.Id) {
+            const nextSobraAnterior = carryValue;
+            const nextProducao = normalizeNBNumber(nextRecord.Qtd_Producao);
+            const nextPerda = normalizeNBNumber(nextRecord.Qtd_Perda);
+            const nextSobraAtual = getNBPanelDefaultSobraAtual(nextRecord);
+            const desiredSobraAtual = (nextProducao === 0 && nextPerda === 0 && nextSobraAtual === 0) ? carryValue : nextSobraAtual;
             const payload = {
-                Qtd_Sobra_Anterior: carryValue,
-                Qtd_Venda: computeNBVenda({ ...nextRecord, Qtd_Sobra_Anterior: carryValue })
+                Qtd_Sobra_Anterior: nextSobraAnterior,
+                Qtd_Sobra_Atual: desiredSobraAtual,
+                Qtd_Venda: computeNBVenda({ ...nextRecord, Qtd_Sobra_Anterior: nextSobraAnterior, Qtd_Sobra_Atual: desiredSobraAtual })
             };
             const result = await persistNBApontamentoRecord({
                 dateString: nextDate,
@@ -6033,7 +6057,7 @@ async function syncNBSobraCarryForwardFrom(dateString, productId) {
                 Qtd_Sobra_Anterior: carryValue,
                 Qtd_Producao: 0,
                 Qtd_Perda: 0,
-                Qtd_Sobra_Atual: 0,
+                Qtd_Sobra_Atual: carryValue,
                 Qtd_Venda: carryValue
             };
             const result = await persistNBApontamentoRecord({
