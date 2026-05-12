@@ -5969,7 +5969,6 @@ async function loadNBModuleData(force = false) {
     const today = toDateInputValue(new Date());
     if (!nbSelectedDate) setNBSelectedDate(today);
     await ensureNBControlDay(today);
-    await normalizeNBCarryForwardAll();
     await fetchNBApontamentos();
     dataLoaded['nosso-bolo'] = true;
     renderNBModule();
@@ -6410,7 +6409,7 @@ function renderNBProductsList() {
     container.style.paddingRight = needsScroll ? '0.5rem' : '';
 }
 async function handleNBCloseDay() {
-    await normalizeNBCarryForwardAll();
+    void normalizeNBCarryForwardAll();
     await fetchNBApontamentos();
     renderNBModule();
 }
@@ -6437,7 +6436,6 @@ async function loadInitialData() {
         const today = toDateInputValue(new Date());
         if (!nbSelectedDate) setNBSelectedDate(today);
         await ensureNBControlDay(today);
-        await normalizeNBCarryForwardAll();
         await fetchNBApontamentos();
         dataLoaded['nosso-bolo'] = true;
         renderNBModule();
