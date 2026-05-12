@@ -3724,22 +3724,15 @@ function getNBPanelDayTotals(dateString, groups = getVisibleNBPanelGroups()) {
     const products = groups.flatMap(group => group.products || []);
     const productMap = new Map(products.map(product => [product.Id, product]));
     const records = products.map(product => getNBApontamento(dateString, product.Id)).filter(Boolean);
-    const displayRecords = records.map(record => ({
-        ...record,
-        Qtd_Sobra_Atual: getNBPanelDefaultSobraAtual(record)
-    }));
-    const producao = displayRecords.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Producao), 0);
-    const venda = displayRecords.reduce((sum, record) => sum + computeNBVenda(record), 0);
-    const sobraAnterior = displayRecords.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Anterior), 0);
-    const perda = displayRecords.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Perda), 0);
-    const sobraAtual = displayRecords.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Atual), 0);
+    const producao = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Producao), 0);
+    const venda = records.reduce((sum, record) => sum + computeNBVenda(record), 0);
+    const sobraAnterior = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Anterior), 0);
+    const perda = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Perda), 0);
+    const sobraAtual = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Atual), 0);
     const disponivel = sobraAnterior + producao;
     const revenueProducts = nbProdutosData.filter(product => product && product.Ativo !== false);
     const revenueProductMap = new Map(revenueProducts.map(product => [product.Id, product]));
-    const revenueRecords = revenueProducts.map(product => getNBApontamento(dateString, product.Id)).filter(Boolean).map(record => ({
-        ...record,
-        Qtd_Sobra_Atual: getNBPanelDefaultSobraAtual(record)
-    }));
+    const revenueRecords = revenueProducts.map(product => getNBApontamento(dateString, product.Id)).filter(Boolean);
     const faturamentoProdutos = revenueRecords.reduce((sum, record) => {
         const product = revenueProductMap.get(getNBLinkedProductId(record));
         if (!product) return sum;
@@ -4948,7 +4941,7 @@ function renderNBPanel() {
                                     const record = getNBApontamento(dateString, product.Id) || {};
                                     const editable = isNBPanelEditable(dateString);
                                     const sobraAnterior = normalizeNBNumber(record.Qtd_Sobra_Anterior);
-                                    const sobraAtual = getNBPanelDefaultSobraAtual(record);
+                                    const sobraAtual = normalizeNBNumber(record.Qtd_Sobra_Atual);
                                     const venda = sobraAnterior + normalizeNBNumber(record.Qtd_Producao) - normalizeNBNumber(record.Qtd_Perda) - sobraAtual;
                                     const totalDisponivel = sobraAnterior + normalizeNBNumber(record.Qtd_Producao);
                                     return `
@@ -6018,63 +6011,55 @@ async function syncNBSobraCarryForwardFrom(dateString, productId) {
     if (!currentRecord) return;
     let carryValue = normalizeNBNumber(currentRecord.Qtd_Sobra_Atual);
     let nextDate = getNextNBOperationalDate(dateString);
-    const visited = new Set();
-    const latestControlDate = nbControleDiasData.length ? parseDateOnly(nbControleDiasData[nbControleDiasData.length - 1].Data) : null;
-    const propagationLimit = latestControlDate ? addDays(latestControlDate, 7) : addDays(parseDateOnly(dateString), 7);
-    while (!visited.has(nextDate) && parseDateOnly(nextDate) <= propagationLimit) {
-        visited.add(nextDate);
-        const nextControlDay = await ensureNBControlDay(nextDate);
-        if (!nextControlDay) break;
-        const nextRecord = getNBApontamento(nextDate, productId);
-        if (nextRecord?.Id) {
-            const nextSobraAnterior = carryValue;
-            const nextProducao = normalizeNBNumber(nextRecord.Qtd_Producao);
-            const nextPerda = normalizeNBNumber(nextRecord.Qtd_Perda);
-            const nextSobraAtual = getNBPanelDefaultSobraAtual(nextRecord);
-            const desiredSobraAtual = (nextProducao === 0 && nextPerda === 0 && nextSobraAtual === 0) ? carryValue : nextSobraAtual;
-            const payload = {
-                Qtd_Sobra_Anterior: nextSobraAnterior,
-                Qtd_Sobra_Atual: desiredSobraAtual,
-                Qtd_Venda: computeNBVenda({ ...nextRecord, Qtd_Sobra_Anterior: nextSobraAnterior, Qtd_Sobra_Atual: desiredSobraAtual })
-            };
-            const result = await persistNBApontamentoRecord({
-                dateString: nextDate,
-                productId,
-                controlDayId: nextControlDay.Id,
-                values: payload,
-                recordId: nextRecord.Id
-            });
-            if (result) {
-                Object.assign(nextRecord, result);
-                const normalizedId = normalizeNBRecordId(result);
-                if (normalizedId && !nextRecord.Id) nextRecord.Id = normalizedId;
-                if (normalizedId && !nextRecord.id) nextRecord.id = normalizedId;
-            } else {
-                Object.assign(nextRecord, payload);
-            }
+    const nextControlDay = await ensureNBControlDay(nextDate);
+    if (!nextControlDay) return;
+    const nextRecord = getNBApontamento(nextDate, productId);
+    if (nextRecord?.Id) {
+        const nextProducao = normalizeNBNumber(nextRecord.Qtd_Producao);
+        const nextPerda = normalizeNBNumber(nextRecord.Qtd_Perda);
+        const desiredSobraAtual = (nextProducao === 0 && nextPerda === 0 && normalizeNBNumber(nextRecord.Qtd_Sobra_Atual) === 0)
+            ? carryValue
+            : normalizeNBNumber(nextRecord.Qtd_Sobra_Atual);
+        const payload = {
+            Qtd_Sobra_Anterior: carryValue,
+            Qtd_Sobra_Atual: desiredSobraAtual,
+            Qtd_Venda: computeNBVenda({ ...nextRecord, Qtd_Sobra_Anterior: carryValue, Qtd_Sobra_Atual: desiredSobraAtual })
+        };
+        const result = await persistNBApontamentoRecord({
+            dateString: nextDate,
+            productId,
+            controlDayId: nextControlDay.Id,
+            values: payload,
+            recordId: nextRecord.Id
+        });
+        if (result) {
+            Object.assign(nextRecord, result);
+            const normalizedId = normalizeNBRecordId(result);
+            if (normalizedId && !nextRecord.Id) nextRecord.Id = normalizedId;
+            if (normalizedId && !nextRecord.id) nextRecord.id = normalizedId;
         } else {
-            const payload = {
-                Qtd_Sobra_Anterior: carryValue,
-                Qtd_Producao: 0,
-                Qtd_Perda: 0,
-                Qtd_Sobra_Atual: carryValue,
-                Qtd_Venda: carryValue
-            };
-            const result = await persistNBApontamentoRecord({
-                dateString: nextDate,
-                productId,
-                controlDayId: nextControlDay.Id,
-                values: payload
-            });
-            if (result) {
-                const normalizedId = normalizeNBRecordId(result);
-                if (normalizedId && !result.Id) result.Id = normalizedId;
-                if (normalizedId && !result.id) result.id = normalizedId;
-                nbApontamentosData.push(result);
-            }
+            Object.assign(nextRecord, payload);
         }
-        carryValue = normalizeNBNumber(getNBApontamento(nextDate, productId)?.Qtd_Sobra_Atual);
-        nextDate = getNextNBOperationalDate(nextDate);
+    } else {
+        const payload = {
+            Qtd_Sobra_Anterior: carryValue,
+            Qtd_Producao: 0,
+            Qtd_Perda: 0,
+            Qtd_Sobra_Atual: carryValue,
+            Qtd_Venda: carryValue
+        };
+        const result = await persistNBApontamentoRecord({
+            dateString: nextDate,
+            productId,
+            controlDayId: nextControlDay.Id,
+            values: payload
+        });
+        if (result) {
+            const normalizedId = normalizeNBRecordId(result);
+            if (normalizedId && !result.Id) result.Id = normalizedId;
+            if (normalizedId && !result.id) result.id = normalizedId;
+            nbApontamentosData.push(result);
+        }
     }
 }
 async function normalizeNBCarryForwardAll() {
