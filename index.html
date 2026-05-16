@@ -528,7 +528,7 @@ body {
                                 </div>
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                                     <div class="flex items-center justify-between gap-3 mb-4">
-                                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Fluxo Financeiro do Período</h3>
+                                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Fluxo de Despesas do Período</h3>
                                     </div>
                                     <div class="h-64 md:h-72">
                                         <canvas id="nb-chart-finance-period" class="w-full h-full"></canvas>
@@ -3768,9 +3768,17 @@ function getNBFinanceFieldMap(prefix) {
         [`${prefix}entrada-maquineta`]: 'Entrada_Maquineta'
     };
 }
-function buildNBFinancePayload(prefix, dateString, statusOverride = null) {
+function getNBFinanceDraftFieldValues(prefix, dateString) {
+    const record = getNBFinanceRecord(dateString) || {};
     const fieldMap = getNBFinanceFieldMap(prefix);
-    const body = Object.fromEntries(Object.entries(fieldMap).map(([id, key]) => [key, Number(document.getElementById(id)?.value || 0)]));
+    return Object.fromEntries(Object.entries(fieldMap).map(([id, key]) => {
+        const input = document.getElementById(id);
+        const rawValue = input?.value;
+        return [key, rawValue === '' || rawValue == null ? Number(record[key] || 0) : Number(rawValue)];
+    }));
+}
+function buildNBFinancePayload(prefix, dateString, statusOverride = null) {
+    const body = getNBFinanceDraftFieldValues(prefix, dateString);
     const despesas = getNBExpenseRecords(dateString).filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = getNBExpenseRecords(dateString).filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     body.Entrada_Dinheiro = (Number(body.Caixa_Final || 0) + Number(body.Sangria || 0) + despesas + vales) - Number(body.Caixa_Inicial || 0);
@@ -5494,19 +5502,13 @@ function renderNBCharts() {
     };
     const financeLabels = periodSnapshots.map(item => item.label);
     const financeTooltips = periodSnapshots.map(item => item.tooltip);
-    const financeCaixaInicial = periodSnapshots.map(item => item.caixaInicial);
-    const financeCaixaFinal = periodSnapshots.map(item => item.caixaFinal);
-    const financeEntradas = periodSnapshots.map(item => item.entradasTotal);
-    const financeSaidas = periodSnapshots.map(item => item.totalExpenses + Number(item.sangria || 0));
-    const financeResultado = periodSnapshots.map(item => item.resultadoFinanceiro);
+    const expenseFlowDespesa = periodSnapshots.map(item => item.despesas);
+    const expenseFlowVale = periodSnapshots.map(item => item.vales);
     const financePeriodData = {
         labels: financeLabels,
         datasets: [
-            { label: 'Caixa Inicial', data: financeCaixaInicial, borderColor: '#6b7280', backgroundColor: 'rgba(107, 114, 128, 0.18)', pointBackgroundColor: '#6b7280', tension: 0.3, fill: false },
-            { label: 'Caixa Final', data: financeCaixaFinal, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.18)', pointBackgroundColor: '#3b82f6', tension: 0.3, fill: false },
-            { label: 'Entradas', data: financeEntradas, borderColor: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.18)', pointBackgroundColor: '#22c55e', tension: 0.3, fill: false },
-            { label: 'Saídas', data: financeSaidas, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.18)', pointBackgroundColor: '#ef4444', tension: 0.3, fill: false },
-            { label: 'Resultado', data: financeResultado, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.18)', pointBackgroundColor: '#f59e0b', tension: 0.3, fill: false }
+            { label: 'Despesa', data: expenseFlowDespesa, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.18)', pointBackgroundColor: '#ef4444', tension: 0.25, fill: false },
+            { label: 'Vale', data: expenseFlowVale, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.18)', pointBackgroundColor: '#f59e0b', tension: 0.25, fill: false }
         ]
     };
     const chart1Ctx = document.getElementById('nb-chart-category-share')?.getContext('2d');
@@ -5595,7 +5597,7 @@ function renderNBCharts() {
     if (nbTimelineChart) { nbTimelineChart.data = timelineData; nbTimelineChart.options = timelineOptions; nbTimelineChart.update(); } else { nbTimelineChart = new Chart(chart2Ctx, { type: 'bar', data: timelineData, options: timelineOptions }); }
     if (nbProfitStackChart) { nbProfitStackChart.data = grossProfitData; nbProfitStackChart.options = grossProfitOptions; nbProfitStackChart.update(); } else { nbProfitStackChart = new Chart(chart3Ctx, { type: 'line', data: grossProfitData, options: grossProfitOptions }); }
     if (nbRevenueExpensesChart) { nbRevenueExpensesChart.data = revenueExpensesData; nbRevenueExpensesChart.options = revenueExpensesOptions; nbRevenueExpensesChart.update(); } else { nbRevenueExpensesChart = new Chart(chart4Ctx, { type: 'line', data: revenueExpensesData, options: revenueExpensesOptions }); }
-    if (nbFinancePeriodChart) { nbFinancePeriodChart.data = financePeriodData; nbFinancePeriodChart.options = financePeriodOptions; nbFinancePeriodChart.update(); } else { nbFinancePeriodChart = new Chart(chart5Ctx, { type: 'line', data: financePeriodData, options: financePeriodOptions }); }
+    if (nbFinancePeriodChart) { nbFinancePeriodChart.data = financePeriodData; nbFinancePeriodChart.options = financePeriodOptions; nbFinancePeriodChart.update(); } else { nbFinancePeriodChart = new Chart(chart5Ctx, { type: 'bar', data: financePeriodData, options: financePeriodOptions }); }
 }
 function syncNBPanelDayMarkers() {
     const todayString = toDateInputValue(new Date());
@@ -5639,11 +5641,11 @@ function syncNBPanelDayMarkers() {
     });
 }
 function renderNBFinanceForm() {
-    const record = getNBFinanceRecord(nbSelectedDate) || {};
     const fieldMap = getNBFinanceFieldMap('nb-fin-');
+    const draftValues = getNBFinanceDraftFieldValues('nb-fin-', nbSelectedDate);
     Object.entries(fieldMap).forEach(([id, key]) => {
         const input = document.getElementById(id);
-        if (input) input.value = Number(record[key] || 0);
+        if (input && input !== document.activeElement) input.value = Number(draftValues[key] ?? 0);
     });
     const status = getNBFinanceDayStatus(nbSelectedDate);
     const statusPill = document.getElementById('nb-fin-status-pill');
@@ -5698,11 +5700,11 @@ function renderNBPanelFinanceModal() {
     const statusText = document.getElementById('nb-panel-expense-status');
     const toggleBtn = document.getElementById('nb-panel-expense-toggle');
     const expenseSection = document.getElementById('nb-panel-expense-section');
-    const record = getNBFinanceRecord(today) || {};
     const fieldMap = getNBFinanceFieldMap('nb-panel-fin-');
+    const draftValues = getNBFinanceDraftFieldValues('nb-panel-fin-', today);
     Object.entries(fieldMap).forEach(([id, key]) => {
         const input = document.getElementById(id);
-        if (input) input.value = Number(record[key] || 0);
+        if (input && input !== document.activeElement) input.value = Number(draftValues[key] ?? 0);
     });
     if (label) label.textContent = `Registro do dia ${parseDateOnly(today).toLocaleDateString('pt-BR')}`;
     const totals = getNBFinanceDraftSummary(today, 'nb-panel-fin-');
