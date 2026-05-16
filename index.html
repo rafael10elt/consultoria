@@ -5737,7 +5737,7 @@ function renderNBPanelFinanceModal() {
 }
 async function handleNBPanelFinanceSubmit(e) {
     e.preventDefault();
-    if (!canAccessNB() || canAccessNBManagement()) return;
+    if (!canAccessNB()) return;
     const today = toDateInputValue(new Date());
     if (!isNBFinanceDayOpen(today)) return;
     const controlDay = await ensureNBControlDay(today);
