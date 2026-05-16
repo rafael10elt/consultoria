@@ -5853,7 +5853,7 @@ function renderNBExpensesTable() {
     if (periodList) {
         const periodRecords = getNBExpenseRecordsInPeriod().sort((a, b) => (getNBLinkedDateValue(b) || '').localeCompare(getNBLinkedDateValue(a) || '') || (b.Tipo || '').localeCompare(a.Tipo || '') || (b.Descricao || '').localeCompare(a.Descricao || ''));
         const shouldScroll = periodRecords.length > 6;
-        periodList.style.maxHeight = shouldScroll ? '420px' : '';
+        periodList.style.maxHeight = shouldScroll ? '520px' : '';
         periodList.style.overflowY = shouldScroll ? 'auto' : '';
         periodList.style.paddingRight = shouldScroll ? '0.5rem' : '';
         periodList.innerHTML = periodRecords.map(item => `
