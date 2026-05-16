@@ -3493,8 +3493,37 @@ function getNBControlDayByDate(dateString) {
 function getNBStatusForDate(dateString) {
     return getNBFinanceRecord(dateString)?.Status || getNBControlDayByDate(dateString)?.Status || 'Aberto';
 }
+function getNBRecordTimestamp(record) {
+    const candidates = [record?.UpdatedAt, record?.updatedAt, record?.CreatedAt, record?.createdAt, record?.__createdAt, record?.__updatedAt];
+    for (const value of candidates) {
+        if (value) {
+            const time = new Date(value).getTime();
+            if (!Number.isNaN(time)) return time;
+        }
+    }
+    const numericId = Number(record?.Id ?? record?.id ?? 0);
+    return Number.isFinite(numericId) ? numericId : 0;
+}
+function pickLatestNBRecord(records = []) {
+    return [...records].sort((a, b) => getNBRecordTimestamp(b) - getNBRecordTimestamp(a))[0] || null;
+}
+function dedupeNBApontamentos(records = []) {
+    const grouped = new Map();
+    records.forEach(record => {
+        const dateString = getNBLinkedDateValue(record);
+        const productId = getNBLinkedProductId(record);
+        if (!dateString || !productId) return;
+        const key = `${dateString}::${productId}`;
+        const current = grouped.get(key);
+        if (!current || getNBRecordTimestamp(record) > getNBRecordTimestamp(current)) {
+            grouped.set(key, record);
+        }
+    });
+    return [...grouped.values()];
+}
 function getNBApontamento(dateString, productId) {
-    return nbApontamentosData.find(item => getNBLinkedDateValue(item) === dateString && getNBLinkedProductId(item) == productId) || null;
+    const matches = nbApontamentosData.filter(item => getNBLinkedDateValue(item) === dateString && getNBLinkedProductId(item) == productId);
+    return pickLatestNBRecord(matches);
 }
 function getNBFinanceRecord(dateString) {
     return nbFinanceiroData.find(item => getNBLinkedDateValue(item) === dateString) || null;
@@ -3845,7 +3874,7 @@ async function fetchNBApontamentos() {
             break;
         }
     }
-    nbApontamentosData = allRecords;
+    nbApontamentosData = dedupeNBApontamentos(allRecords);
 }
 async function fetchNBFinanceiro() {
     const result = await nocoFetch(`${TABLE_IDS.NB_Financeiro}?nested[all]=true`);
