@@ -739,7 +739,7 @@ body {
                                 </div>
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                                     <div class="flex items-center justify-between gap-3 mb-4">
-                                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Fluxo Financeiro do Período</h3>
+                                        <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Fluxo de Despesas do Período</h3>
                                     </div>
                                     <div class="h-64 md:h-72">
                                         <canvas id="nb-chart-finance-period" class="w-full h-full"></canvas>
@@ -3631,30 +3631,59 @@ function normalizeNBDecimal(value) {
 }
 function getNBRelationId(value) {
     if (value == null) return null;
+    if (Array.isArray(value)) return getNBRelationId(value[0]);
     if (typeof value === 'object') return value.Id ?? value.id ?? null;
     const numeric = Number(value);
     return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
+}
+function getNBRelationCandidate(value) {
+    if (value == null) return null;
+    if (Array.isArray(value)) return getNBRelationCandidate(value[0]);
+    return typeof value === 'object' ? value : null;
+}
+function isNBDateLike(value) {
+    return typeof value === 'string' && (/^\d{4}-\d{2}-\d{2}$/.test(value) || /^\d{2}-\d{2}-\d{4}$/.test(value));
+}
+function findNBLinkedRecord(record, predicate) {
+    if (!record || typeof record !== 'object') return null;
+    for (const value of Object.values(record)) {
+        const candidate = getNBRelationCandidate(value);
+        if (candidate && predicate(candidate)) return candidate;
+    }
+    return null;
 }
 function computeNBVenda(record = {}) {
     return normalizeNBNumber(record.Qtd_Sobra_Anterior) + normalizeNBNumber(record.Qtd_Producao) - normalizeNBNumber(record.Qtd_Perda) - normalizeNBNumber(record.Qtd_Sobra_Atual);
 }
 function getNBLinkedDateValue(record) {
     if (!record) return null;
+    if (Array.isArray(record.Data)) return getNBLinkedDateValue({ Data: record.Data[0] });
     if (record.Data && typeof record.Data === 'object') return record.Data.Data || null;
     if (typeof record.Data === 'string') return record.Data;
+    if (Array.isArray(record.NB_Controle_Dias)) return getNBLinkedDateValue({ NB_Controle_Dias: record.NB_Controle_Dias[0] });
     if (record.NB_Controle_Dias && typeof record.NB_Controle_Dias === 'object') return record.NB_Controle_Dias.Data || null;
+    if (Array.isArray(record.NB_Controlle_Dias)) return getNBLinkedDateValue({ NB_Controlle_Dias: record.NB_Controlle_Dias[0] });
     if (record.NB_Controlle_Dias && typeof record.NB_Controlle_Dias === 'object') return record.NB_Controlle_Dias.Data || null;
+    if (Array.isArray(record.Controle_Dia)) return getNBLinkedDateValue({ Controle_Dia: record.Controle_Dia[0] });
     if (record.Controle_Dia && typeof record.Controle_Dia === 'object') return record.Controle_Dia.Data || null;
     const controlDayId = record.NB_Controle_Dias?.Id || record.NB_Controle_Dias_id || record.NB_Controlle_Dias?.Id || record.NB_Controlle_Dias_id || record.Controle_Dia?.Id || record.Controle_Dia_id || null;
     if (controlDayId) {
         const controlDay = nbControleDiasData.find(day => String(day.Id) === String(controlDayId));
         if (controlDay?.Data) return controlDay.Data;
     }
+    const linkedControlDay = findNBLinkedRecord(record, candidate => {
+        const linkedDate = candidate.Data || candidate.data || candidate.value || candidate.Value || null;
+        return typeof linkedDate === 'string' && (isNBDateLike(linkedDate) || linkedDate.includes('-'));
+    });
+    if (linkedControlDay) return linkedControlDay.Data || linkedControlDay.data || linkedControlDay.value || linkedControlDay.Value || null;
     return null;
 }
 function getNBLinkedProductId(record) {
     if (!record) return null;
-    return getNBRelationId(record.Produto) || record.Produto_id || getNBRelationId(record.NB_Produtos) || record.NB_Produtos_id || null;
+    const directProductId = getNBRelationId(record.Produto) || record.Produto_id || getNBRelationId(record.NB_Produtos) || record.NB_Produtos_id || null;
+    if (directProductId) return directProductId;
+    const linkedProduct = findNBLinkedRecord(record, candidate => candidate.Nome || candidate.nome || candidate.Preco_Venda != null || candidate.Preco_Custo != null || candidate.Ativo != null);
+    return getNBRelationId(linkedProduct) || null;
 }
 function getNBProductCategoryId(product) {
     return product?.Categoria?.Id || product?.NB_Categorias_id || product?.Categoria_id || null;
@@ -3675,8 +3704,37 @@ function getNBControlDayByDate(dateString) {
 function getNBStatusForDate(dateString) {
     return getNBFinanceRecord(dateString)?.Status || getNBControlDayByDate(dateString)?.Status || 'Aberto';
 }
+function getNBRecordTimestamp(record) {
+    const candidates = [record?.UpdatedAt, record?.updatedAt, record?.CreatedAt, record?.createdAt, record?.__createdAt, record?.__updatedAt];
+    for (const value of candidates) {
+        if (value) {
+            const time = new Date(value).getTime();
+            if (!Number.isNaN(time)) return time;
+        }
+    }
+    const numericId = Number(record?.Id ?? record?.id ?? 0);
+    return Number.isFinite(numericId) ? numericId : 0;
+}
+function pickLatestNBRecord(records = []) {
+    return [...records].sort((a, b) => getNBRecordTimestamp(b) - getNBRecordTimestamp(a))[0] || null;
+}
+function dedupeNBApontamentos(records = []) {
+    const grouped = new Map();
+    records.forEach(record => {
+        const dateString = getNBLinkedDateValue(record);
+        const productId = getNBLinkedProductId(record);
+        if (!dateString || !productId) return;
+        const key = `${dateString}::${productId}`;
+        const current = grouped.get(key);
+        if (!current || getNBRecordTimestamp(record) > getNBRecordTimestamp(current)) {
+            grouped.set(key, record);
+        }
+    });
+    return [...grouped.values()];
+}
 function getNBApontamento(dateString, productId) {
-    return nbApontamentosData.find(item => getNBLinkedDateValue(item) === dateString && getNBLinkedProductId(item) == productId) || null;
+    const matches = nbApontamentosData.filter(item => getNBLinkedDateValue(item) === dateString && getNBLinkedProductId(item) == productId);
+    return pickLatestNBRecord(matches);
 }
 function getNBFinanceRecord(dateString) {
     return nbFinanceiroData.find(item => getNBLinkedDateValue(item) === dateString) || null;
@@ -3733,13 +3791,17 @@ function getNBLinkedEncomendaId(record) {
 function getNBEncomendaPaymentDateValue(record) {
     if (!record) return null;
     if (record.Data_Pagamento) return record.Data_Pagamento;
+    if (Array.isArray(record.NB_Controle_Dias)) return record.NB_Controle_Dias[0]?.Data || null;
     if (record.NB_Controle_Dias && typeof record.NB_Controle_Dias === 'object') return record.NB_Controle_Dias.Data || null;
+    if (Array.isArray(record.NB_Controlle_Dias)) return record.NB_Controlle_Dias[0]?.Data || null;
     if (record.NB_Controlle_Dias && typeof record.NB_Controlle_Dias === 'object') return record.NB_Controlle_Dias.Data || null;
+    if (Array.isArray(record.Controle_Dia)) return record.Controle_Dia[0]?.Data || null;
     if (record.Controle_Dia && typeof record.Controle_Dia === 'object') return record.Controle_Dia.Data || null;
     return getNBLinkedDateValue(record);
 }
 function getNBEncomendaPaymentControlDayId(record) {
     if (!record) return null;
+    if (Array.isArray(record.NB_Controle_Dias)) return record.NB_Controle_Dias[0]?.Id || null;
     return record.NB_Controle_Dias?.Id || record.NB_Controle_Dias_id || record.NB_Controlle_Dias?.Id || record.NB_Controlle_Dias_id || record.Controle_Dia?.Id || record.Controle_Dia_id || null;
 }
 function getNBEncomendaCustomerName(record = {}) {
@@ -3946,9 +4008,17 @@ function getNBFinanceFieldMap(prefix) {
         [`${prefix}entrada-maquineta`]: 'Entrada_Maquineta'
     };
 }
-function buildNBFinancePayload(prefix, dateString, statusOverride = null) {
+function getNBFinanceDraftFieldValues(prefix, dateString) {
+    const record = getNBFinanceRecord(dateString) || {};
     const fieldMap = getNBFinanceFieldMap(prefix);
-    const body = Object.fromEntries(Object.entries(fieldMap).map(([id, key]) => [key, Number(document.getElementById(id)?.value || 0)]));
+    return Object.fromEntries(Object.entries(fieldMap).map(([id, key]) => {
+        const input = document.getElementById(id);
+        const rawValue = input?.value;
+        return [key, rawValue === '' || rawValue == null ? Number(record[key] || 0) : Number(rawValue)];
+    }));
+}
+function buildNBFinancePayload(prefix, dateString, statusOverride = null) {
+    const body = getNBFinanceDraftFieldValues(prefix, dateString);
     const despesas = getNBExpenseRecords(dateString).filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = getNBExpenseRecords(dateString).filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     body.Entrada_Dinheiro = (Number(body.Caixa_Final || 0) + Number(body.Sangria || 0) + despesas + vales) - Number(body.Caixa_Inicial || 0);
@@ -4001,8 +4071,21 @@ async function fetchNBControleDias() {
     nbControleDiasData = result?.list ? result.list.sort((a, b) => (a.Data || '').localeCompare(b.Data || '')) : [];
 }
 async function fetchNBApontamentos() {
-    const result = await nocoFetch(`${TABLE_IDS.NB_Apontamentos}?nested[all]=true`);
-    nbApontamentosData = result?.list ? result.list : [];
+    const allRecords = [];
+    const pageSize = 1000;
+    let offset = 0;
+    while (true) {
+        const result = await nocoFetch(`${TABLE_IDS.NB_Apontamentos}?nested[all]=true&t=${Date.now()}&offset=${offset}`, { cache: 'no-store' });
+        const page = result?.list ? result.list : [];
+        allRecords.push(...page);
+        if (page.length < pageSize) break;
+        offset += pageSize;
+        if (offset > 20000) {
+            console.warn('Interrompendo paginação de NB_Apontamentos por segurança.', { offset });
+            break;
+        }
+    }
+    nbApontamentosData = dedupeNBApontamentos(allRecords);
 }
 async function fetchNBFinanceiro() {
     const result = await nocoFetch(`${TABLE_IDS.NB_Financeiro}?nested[all]=true`);
@@ -4988,6 +5071,15 @@ function renderNBPanelTotals() {
         setText('current', totals.sobraAtual);
     });
 }
+function getNBPanelDefaultSobraAtual(record = {}) {
+    const sobraAnterior = normalizeNBNumber(record.Qtd_Sobra_Anterior);
+    const sobraAtual = normalizeNBNumber(record.Qtd_Sobra_Atual);
+    const producao = normalizeNBNumber(record.Qtd_Producao);
+    const perda = normalizeNBNumber(record.Qtd_Perda);
+    const hasMovement = producao !== 0 || perda !== 0;
+    if (!hasMovement && sobraAtual === 0) return sobraAnterior;
+    return sobraAtual;
+}
 function renderNBPanel() {
     const container = document.getElementById('nb-panel-grid');
     const cardsContainer = document.getElementById('nb-week-day-cards');
@@ -5096,15 +5188,17 @@ function renderNBPanel() {
                                 ${weekDates.map(dateString => {
                                     const record = getNBApontamento(dateString, product.Id) || {};
                                     const editable = isNBPanelEditable(dateString);
-                                    const venda = computeNBVenda(record);
-                                    const totalDisponivel = normalizeNBNumber(record.Qtd_Sobra_Anterior) + normalizeNBNumber(record.Qtd_Producao);
+                                    const sobraAnterior = normalizeNBNumber(record.Qtd_Sobra_Anterior);
+                                    const sobraAtual = normalizeNBNumber(record.Qtd_Sobra_Atual);
+                                    const venda = sobraAnterior + normalizeNBNumber(record.Qtd_Producao) - normalizeNBNumber(record.Qtd_Perda) - sobraAtual;
+                                    const totalDisponivel = sobraAnterior + normalizeNBNumber(record.Qtd_Producao);
                                     return `
                                         <div class="rounded-2xl border dark:border-gray-700 p-3 bg-white/80 dark:bg-gray-800/80" data-nb-cell data-date="${dateString}" data-product-id="${product.Id}">
                                             <div class="grid grid-cols-2 gap-2 text-sm">
-                                                <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">Sobra Ant.</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Anterior)}" data-field="Qtd_Sobra_Anterior" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
+                                                <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">Sobra Ant.</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${sobraAnterior}" data-field="Qtd_Sobra_Anterior" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
                                                 <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">Produção</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Producao)}" data-field="Qtd_Producao" class="nb-panel-input w-full p-2 rounded-lg bg-blue-100 text-gray-900 border border-blue-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
                                                 <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">Perda</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Perda)}" data-field="Qtd_Perda" class="nb-panel-input w-full p-2 rounded-lg bg-red-100 text-gray-900 border border-red-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
-                                                <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">Sobra Atual</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${normalizeNBNumber(record.Qtd_Sobra_Atual)}" data-field="Qtd_Sobra_Atual" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
+                                                <label class="block"><span class="block text-[11px] mb-1 text-gray-500 dark:text-gray-400">Sobra Atual</span><input ${editable ? '' : 'disabled'} type="number" min="0" value="${sobraAtual}" data-field="Qtd_Sobra_Atual" class="nb-panel-input w-full p-2 rounded-lg bg-yellow-100 text-gray-900 border border-yellow-200 focus:ring-brand-gold focus:border-brand-gold disabled:opacity-70"></label>
                                             </div>
                                 <div class="mt-3 grid grid-cols-2 gap-2">
                                     <div class="rounded-lg bg-slate-100 dark:bg-slate-700 px-3 py-2 min-h-[4.5rem] flex flex-col justify-between"><div class="text-[10px] leading-tight text-gray-500 dark:text-gray-300">Disponível</div><div class="font-bold text-gray-800 dark:text-white" data-nb-available>${totalDisponivel}</div></div>
@@ -5524,6 +5618,7 @@ function renderNBCharts() {
     const granularity = document.getElementById('nb-analytics-granularity')?.value || 'day';
     const { records, revenue, loss, costOfGoods, categoryRevenue, productMap } = getNBMetrics(startDate, endDate);
     const periodDays = getNBControleDaysInPeriod();
+    const uniquePeriodDays = [...new Map(periodDays.map(day => [day.Data, day])).values()];
     const buildPeriodMeta = (dateString) => {
         const parsed = parseDateOnly(dateString);
         if (granularity === 'year') {
@@ -5551,7 +5646,7 @@ function renderNBCharts() {
             tooltip: parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
         };
     };
-    const periodSnapshots = periodDays.map(day => {
+    const periodSnapshots = uniquePeriodDays.map(day => {
         const controlSnapshot = getNBControlDayFinancialSnapshot(day.Data);
         const financeSnapshot = getNBFinanceDaySummary(day.Data);
         const parsed = parseDateOnly(day.Data);
@@ -5648,19 +5743,13 @@ function renderNBCharts() {
     };
     const financeLabels = periodSnapshots.map(item => item.label);
     const financeTooltips = periodSnapshots.map(item => item.tooltip);
-    const financeCaixaInicial = periodSnapshots.map(item => item.caixaInicial);
-    const financeCaixaFinal = periodSnapshots.map(item => item.caixaFinal);
-    const financeEntradas = periodSnapshots.map(item => item.entradasTotal);
-    const financeSaidas = periodSnapshots.map(item => item.totalExpenses + Number(item.sangria || 0));
-    const financeResultado = periodSnapshots.map(item => item.resultadoFinanceiro);
+    const expenseFlowDespesa = periodSnapshots.map(item => item.despesas);
+    const expenseFlowVale = periodSnapshots.map(item => item.vales);
     const financePeriodData = {
         labels: financeLabels,
         datasets: [
-            { label: 'Caixa Inicial', data: financeCaixaInicial, borderColor: '#6b7280', backgroundColor: 'rgba(107, 114, 128, 0.18)', pointBackgroundColor: '#6b7280', tension: 0.3, fill: false },
-            { label: 'Caixa Final', data: financeCaixaFinal, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.18)', pointBackgroundColor: '#3b82f6', tension: 0.3, fill: false },
-            { label: 'Entradas', data: financeEntradas, borderColor: '#22c55e', backgroundColor: 'rgba(34, 197, 94, 0.18)', pointBackgroundColor: '#22c55e', tension: 0.3, fill: false },
-            { label: 'Saídas', data: financeSaidas, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.18)', pointBackgroundColor: '#ef4444', tension: 0.3, fill: false },
-            { label: 'Resultado', data: financeResultado, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.18)', pointBackgroundColor: '#f59e0b', tension: 0.3, fill: false }
+            { label: 'Despesa', data: expenseFlowDespesa, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.18)', pointBackgroundColor: '#ef4444', tension: 0.25, fill: false },
+            { label: 'Vale', data: expenseFlowVale, borderColor: '#f59e0b', backgroundColor: 'rgba(245, 158, 11, 0.18)', pointBackgroundColor: '#f59e0b', tension: 0.25, fill: false }
         ]
     };
     const chart1Ctx = document.getElementById('nb-chart-category-share')?.getContext('2d');
@@ -5749,7 +5838,7 @@ function renderNBCharts() {
     if (nbTimelineChart) { nbTimelineChart.data = timelineData; nbTimelineChart.options = timelineOptions; nbTimelineChart.update(); } else { nbTimelineChart = new Chart(chart2Ctx, { type: 'bar', data: timelineData, options: timelineOptions }); }
     if (nbProfitStackChart) { nbProfitStackChart.data = grossProfitData; nbProfitStackChart.options = grossProfitOptions; nbProfitStackChart.update(); } else { nbProfitStackChart = new Chart(chart3Ctx, { type: 'line', data: grossProfitData, options: grossProfitOptions }); }
     if (nbRevenueExpensesChart) { nbRevenueExpensesChart.data = revenueExpensesData; nbRevenueExpensesChart.options = revenueExpensesOptions; nbRevenueExpensesChart.update(); } else { nbRevenueExpensesChart = new Chart(chart4Ctx, { type: 'line', data: revenueExpensesData, options: revenueExpensesOptions }); }
-    if (nbFinancePeriodChart) { nbFinancePeriodChart.data = financePeriodData; nbFinancePeriodChart.options = financePeriodOptions; nbFinancePeriodChart.update(); } else { nbFinancePeriodChart = new Chart(chart5Ctx, { type: 'line', data: financePeriodData, options: financePeriodOptions }); }
+    if (nbFinancePeriodChart) { nbFinancePeriodChart.data = financePeriodData; nbFinancePeriodChart.options = financePeriodOptions; nbFinancePeriodChart.update(); } else { nbFinancePeriodChart = new Chart(chart5Ctx, { type: 'bar', data: financePeriodData, options: financePeriodOptions }); }
 }
 function syncNBPanelDayMarkers() {
     const todayString = toDateInputValue(new Date());
@@ -5793,11 +5882,11 @@ function syncNBPanelDayMarkers() {
     });
 }
 function renderNBFinanceForm() {
-    const record = getNBFinanceRecord(nbSelectedDate) || {};
     const fieldMap = getNBFinanceFieldMap('nb-fin-');
+    const draftValues = getNBFinanceDraftFieldValues('nb-fin-', nbSelectedDate);
     Object.entries(fieldMap).forEach(([id, key]) => {
         const input = document.getElementById(id);
-        if (input) input.value = Number(record[key] || 0);
+        if (input && input !== document.activeElement) input.value = Number(draftValues[key] ?? 0);
     });
     const status = getNBFinanceDayStatus(nbSelectedDate);
     const statusPill = document.getElementById('nb-fin-status-pill');
@@ -5852,11 +5941,11 @@ function renderNBPanelFinanceModal() {
     const statusText = document.getElementById('nb-panel-expense-status');
     const toggleBtn = document.getElementById('nb-panel-expense-toggle');
     const expenseSection = document.getElementById('nb-panel-expense-section');
-    const record = getNBFinanceRecord(today) || {};
     const fieldMap = getNBFinanceFieldMap('nb-panel-fin-');
+    const draftValues = getNBFinanceDraftFieldValues('nb-panel-fin-', today);
     Object.entries(fieldMap).forEach(([id, key]) => {
         const input = document.getElementById(id);
-        if (input) input.value = Number(record[key] || 0);
+        if (input && input !== document.activeElement) input.value = Number(draftValues[key] ?? 0);
     });
     if (label) label.textContent = `Registro do dia ${parseDateOnly(today).toLocaleDateString('pt-BR')}`;
     const totals = getNBFinanceDraftSummary(today, 'nb-panel-fin-');
@@ -5888,7 +5977,7 @@ function renderNBPanelFinanceModal() {
 }
 async function handleNBPanelFinanceSubmit(e) {
     e.preventDefault();
-    if (!canAccessNB() || canAccessNBManagement() || !isNBOperatorRole()) return;
+    if (!canAccessNB()) return;
     const today = toDateInputValue(new Date());
     if (!isNBFinanceDayOpen(today)) return;
     const controlDay = await ensureNBControlDay(today);
@@ -6002,7 +6091,11 @@ function renderNBExpensesTable() {
     tbody.innerHTML = rows.map(item => `<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700"><td class="px-4 py-3">${item.Tipo}</td><td class="px-4 py-3">${item.Descricao || '-'}</td><td class="px-4 py-3">${formatCurrencyBR(item.Valor)}</td><td class="px-4 py-3 space-x-2">${canManage ? `<button type="button" class="nb-expense-edit-btn text-blue-500 hover:text-blue-700" data-id="${item.Id}" title="Editar"><i class="fas fa-edit"></i></button><button type="button" class="nb-expense-delete-btn text-red-500 hover:text-red-700" data-id="${item.Id}" title="Apagar"><i class="fas fa-trash"></i></button>` : '<span class="text-xs text-gray-400">Somente leitura</span>'}</td></tr>`).join('') || '<tr><td colspan="4" class="px-4 py-4 text-center text-gray-500">Nenhum lançamento para a data selecionada.</td></tr>';
     const periodList = document.getElementById('nb-expense-period-list');
     if (periodList) {
-        const periodRecords = getNBExpenseRecordsInPeriod().sort((a, b) => (getNBLinkedDateValue(a) || '').localeCompare(getNBLinkedDateValue(b) || '') || (a.Tipo || '').localeCompare(b.Tipo || '') || (a.Descricao || '').localeCompare(b.Descricao || ''));
+        const periodRecords = getNBExpenseRecordsInPeriod().sort((a, b) => (getNBLinkedDateValue(b) || '').localeCompare(getNBLinkedDateValue(a) || '') || (b.Tipo || '').localeCompare(a.Tipo || '') || (b.Descricao || '').localeCompare(a.Descricao || ''));
+        const shouldScroll = periodRecords.length > 6;
+        periodList.style.maxHeight = shouldScroll ? '520px' : '';
+        periodList.style.overflowY = shouldScroll ? 'auto' : '';
+        periodList.style.paddingRight = shouldScroll ? '0.5rem' : '';
         periodList.innerHTML = periodRecords.map(item => `
             <article class="rounded-lg border dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30 flex flex-col gap-2">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -6134,7 +6227,6 @@ async function loadNBModuleData(force = false) {
     const today = toDateInputValue(new Date());
     if (!nbSelectedDate) setNBSelectedDate(today);
     await ensureNBControlDay(today);
-    await normalizeNBCarryForwardAll();
     await fetchNBApontamentos();
     dataLoaded['nosso-bolo'] = true;
     renderNBModule();
@@ -6166,42 +6258,55 @@ async function syncNBSobraCarryForwardFrom(dateString, productId) {
     if (!currentRecord) return;
     let carryValue = normalizeNBNumber(currentRecord.Qtd_Sobra_Atual);
     let nextDate = getNextNBOperationalDate(dateString);
-    const visited = new Set();
-    const latestControlDate = nbControleDiasData.length ? parseDateOnly(nbControleDiasData[nbControleDiasData.length - 1].Data) : null;
-    const propagationLimit = latestControlDate ? addDays(latestControlDate, 7) : addDays(parseDateOnly(dateString), 7);
-    while (!visited.has(nextDate) && parseDateOnly(nextDate) <= propagationLimit) {
-        visited.add(nextDate);
-        const nextControlDay = await ensureNBControlDay(nextDate);
-        if (!nextControlDay) break;
-        const nextRecord = getNBApontamento(nextDate, productId);
-        if (nextRecord?.Id) {
-            const payload = {
-                Qtd_Sobra_Anterior: carryValue,
-                Qtd_Venda: computeNBVenda({ ...nextRecord, Qtd_Sobra_Anterior: carryValue })
-            };
-            const result = await nocoFetch(`${TABLE_IDS.NB_Apontamentos}/${nextRecord.Id}`, { method: 'PATCH', body: JSON.stringify(payload) });
-            if (result) {
-                Object.assign(nextRecord, result);
-            } else {
-                Object.assign(nextRecord, payload);
-            }
+    const nextControlDay = await ensureNBControlDay(nextDate);
+    if (!nextControlDay) return;
+    const nextRecord = getNBApontamento(nextDate, productId);
+    if (nextRecord?.Id) {
+        const nextProducao = normalizeNBNumber(nextRecord.Qtd_Producao);
+        const nextPerda = normalizeNBNumber(nextRecord.Qtd_Perda);
+        const desiredSobraAtual = (nextProducao === 0 && nextPerda === 0 && normalizeNBNumber(nextRecord.Qtd_Sobra_Atual) === 0)
+            ? carryValue
+            : normalizeNBNumber(nextRecord.Qtd_Sobra_Atual);
+        const payload = {
+            Qtd_Sobra_Anterior: carryValue,
+            Qtd_Sobra_Atual: desiredSobraAtual,
+            Qtd_Venda: computeNBVenda({ ...nextRecord, Qtd_Sobra_Anterior: carryValue, Qtd_Sobra_Atual: desiredSobraAtual })
+        };
+        const result = await persistNBApontamentoRecord({
+            dateString: nextDate,
+            productId,
+            controlDayId: nextControlDay.Id,
+            values: payload,
+            recordId: nextRecord.Id
+        });
+        if (result) {
+            Object.assign(nextRecord, result);
+            const normalizedId = normalizeNBRecordId(result);
+            if (normalizedId && !nextRecord.Id) nextRecord.Id = normalizedId;
+            if (normalizedId && !nextRecord.id) nextRecord.id = normalizedId;
         } else {
-            const payload = {
-                Data: { Id: nextControlDay.Id },
-                Produto: { Id: Number(productId) },
-                Qtd_Sobra_Anterior: carryValue,
-                Qtd_Producao: 0,
-                Qtd_Perda: 0,
-                Qtd_Sobra_Atual: 0,
-                Qtd_Venda: carryValue
-            };
-            const result = await nocoFetch(TABLE_IDS.NB_Apontamentos, { method: 'POST', body: JSON.stringify(payload) });
-            if (result) {
-                nbApontamentosData.push(result);
-            }
+            Object.assign(nextRecord, payload);
         }
-        carryValue = normalizeNBNumber(getNBApontamento(nextDate, productId)?.Qtd_Sobra_Atual);
-        nextDate = getNextNBOperationalDate(nextDate);
+    } else {
+        const payload = {
+            Qtd_Sobra_Anterior: carryValue,
+            Qtd_Producao: 0,
+            Qtd_Perda: 0,
+            Qtd_Sobra_Atual: carryValue,
+            Qtd_Venda: carryValue
+        };
+        const result = await persistNBApontamentoRecord({
+            dateString: nextDate,
+            productId,
+            controlDayId: nextControlDay.Id,
+            values: payload
+        });
+        if (result) {
+            const normalizedId = normalizeNBRecordId(result);
+            if (normalizedId && !result.Id) result.Id = normalizedId;
+            if (normalizedId && !result.id) result.id = normalizedId;
+            nbApontamentosData.push(result);
+        }
     }
 }
 async function normalizeNBCarryForwardAll() {
@@ -6211,25 +6316,11 @@ async function normalizeNBCarryForwardAll() {
         .filter(Boolean)
         .sort((a, b) => a.localeCompare(b));
     for (const product of activeProducts) {
-        let previousCarry = 0;
-        for (const dateString of controlDates) {
-            const record = getNBApontamento(dateString, product.Id);
-            if (!record) continue;
-            const desiredPrevious = previousCarry;
-            if (normalizeNBNumber(record.Qtd_Sobra_Anterior) !== desiredPrevious) {
-                const payload = {
-                    Qtd_Sobra_Anterior: desiredPrevious,
-                    Qtd_Venda: computeNBVenda({ ...record, Qtd_Sobra_Anterior: desiredPrevious })
-                };
-                const result = await nocoFetch(`${TABLE_IDS.NB_Apontamentos}/${record.Id}`, { method: 'PATCH', body: JSON.stringify(payload) });
-                if (result) {
-                    Object.assign(record, result);
-                } else {
-                    Object.assign(record, payload);
-                }
-            }
-            previousCarry = normalizeNBNumber(record.Qtd_Sobra_Atual);
-        }
+        const firstDateWithRecord = controlDates.find(dateString => Boolean(getNBApontamento(dateString, product.Id)));
+        if (!firstDateWithRecord) continue;
+        // Propaga apenas os dias seguintes a partir do primeiro registro encontrado.
+        // O dia de origem mantém exatamente o que foi salvo pelo usuário.
+        await syncNBSobraCarryForwardFrom(firstDateWithRecord, product.Id);
     }
 }
 function upsertLocalNBApontamento(dateString, productId, values) {
@@ -6241,6 +6332,26 @@ function upsertLocalNBApontamento(dateString, productId, values) {
     Object.assign(record, values);
     record.Qtd_Venda = computeNBVenda(record);
     return record;
+}
+function normalizeNBRecordId(record) {
+    return record?.Id ?? record?.id ?? null;
+}
+function buildNBApontamentoPayload(values, controlDayId, productId) {
+    return {
+        ...values,
+        Data: { Id: controlDayId },
+        Produto: { Id: Number(productId) }
+    };
+}
+async function persistNBApontamentoRecord({ dateString, productId, controlDayId, values, recordId = null }) {
+    const endpoint = recordId ? `${TABLE_IDS.NB_Apontamentos}/${recordId}` : TABLE_IDS.NB_Apontamentos;
+    const method = recordId ? 'PATCH' : 'POST';
+    const body = recordId ? values : buildNBApontamentoPayload(values, controlDayId, productId);
+    return await nocoFetch(endpoint, { method, body: JSON.stringify(body) });
+}
+async function fetchNBApontamentoRecordById(recordId) {
+    if (!recordId) return null;
+    return await nocoFetch(`${TABLE_IDS.NB_Apontamentos}/${recordId}?nested[all]=true&t=${Date.now()}`, { cache: 'no-store' });
 }
 async function saveNBPanelCell(dateString, productId, cell) {
     if (!isNBPanelEditable(dateString)) {
@@ -6258,14 +6369,54 @@ async function saveNBPanelCell(dateString, productId, cell) {
     };
     values.Qtd_Venda = computeNBVenda(values);
     const existing = upsertLocalNBApontamento(dateString, productId, values);
-    const endpoint = existing.Id ? `${TABLE_IDS.NB_Apontamentos}/${existing.Id}` : TABLE_IDS.NB_Apontamentos;
-    const method = existing.Id ? 'PATCH' : 'POST';
-    const body = existing.Id ? values : { ...values, Data: { Id: controlDay.Id }, Produto: { Id: Number(productId) } };
-    const result = await nocoFetch(endpoint, { method, body: JSON.stringify(body) });
+    const recordId = normalizeNBRecordId(existing);
+    console.debug('saveNBPanelCell payload', {
+        recordId,
+        dateString,
+        productId,
+        controlDayId: controlDay.Id,
+        values
+    });
+    const result = await persistNBApontamentoRecord({
+        dateString,
+        productId,
+        controlDayId: controlDay.Id,
+        values,
+        recordId
+    });
     if (!result) {
         throw new Error('Não foi possível persistir o apontamento atual.');
     }
     Object.assign(existing, result);
+    const normalizedResultId = normalizeNBRecordId(result);
+    if (normalizedResultId && !existing.Id) existing.Id = normalizedResultId;
+    if (normalizedResultId && !existing.id) existing.id = normalizedResultId;
+    let persistedRecord = null;
+    if (normalizedResultId) {
+        const previousSuppressFetchAlerts = nbSuppressFetchAlerts;
+        nbSuppressFetchAlerts = true;
+        try {
+            persistedRecord = await fetchNBApontamentoRecordById(normalizedResultId);
+        } finally {
+            nbSuppressFetchAlerts = previousSuppressFetchAlerts;
+        }
+    }
+    if (!persistedRecord) {
+        const previousSuppressFetchAlerts = nbSuppressFetchAlerts;
+        nbSuppressFetchAlerts = true;
+        try {
+            await fetchNBApontamentos();
+        } finally {
+            nbSuppressFetchAlerts = previousSuppressFetchAlerts;
+        }
+        persistedRecord = getNBApontamento(dateString, productId);
+    }
+    if (!persistedRecord) {
+        throw new Error('O registro não foi confirmado no banco após o salvamento.');
+    }
+    Object.assign(existing, persistedRecord);
+    if (normalizedResultId && !existing.Id) existing.Id = normalizedResultId;
+    if (normalizedResultId && !existing.id) existing.id = normalizedResultId;
     if (preservedOpenCategoryId) setNBPanelOpenCategoryId(preservedOpenCategoryId);
     renderNBPanelTotals();
     showNBToast('Apontamento salvo com sucesso.');
@@ -6514,7 +6665,7 @@ function renderNBProductsList() {
     container.style.paddingRight = needsScroll ? '0.5rem' : '';
 }
 async function handleNBCloseDay() {
-    await normalizeNBCarryForwardAll();
+    void normalizeNBCarryForwardAll();
     await fetchNBApontamentos();
     renderNBModule();
 }
@@ -6541,7 +6692,6 @@ async function loadInitialData() {
         const today = toDateInputValue(new Date());
         if (!nbSelectedDate) setNBSelectedDate(today);
         await ensureNBControlDay(today);
-        await normalizeNBCarryForwardAll();
         await fetchNBApontamentos();
         dataLoaded['nosso-bolo'] = true;
         renderNBModule();
