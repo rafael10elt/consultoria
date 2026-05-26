@@ -3301,19 +3301,21 @@ function canAccessNB() {
     return isAdminRole() || isNBOnlyRole();
 }
 function getAllowedNavPagesForRole(role) {
-    if (role === 'Admin') {
+    const normalizedRole = String(role || '').trim();
+    if (normalizedRole === 'Admin') {
         return ['dashboard', 'nosso-bolo', 'visitas', 'requisicao', 'financeiro', 'clientes', 'rh', 'reembolsos', 'validades', 'servicos', 'chamados'];
     }
-    if (role === 'Gestor B' || role === 'Operador') {
+    if (normalizedRole === 'Gestor B' || normalizedRole === 'Operador') {
         return ['nosso-bolo'];
     }
-    if (role === 'Comercial') {
+    if (normalizedRole === 'Comercial') {
         return ['visitas', 'chamados'];
     }
     return ['visitas', 'requisicao', 'clientes', 'reembolsos', 'validades'];
 }
 function getDefaultPageForRole(role) {
-    if (role === 'Admin') return 'dashboard';
+    const normalizedRole = String(role || '').trim();
+    if (normalizedRole === 'Admin') return 'dashboard';
     if (canAccessNB()) return 'nosso-bolo';
     return 'visitas';
 }
@@ -6770,6 +6772,7 @@ async function fetchRequisicoesItens() {
 async function initializeUserSession(user) {
     // 1. PRIMEIRO: Define quem é o usuário logado globalmente
     loggedInUser = user;
+    loggedInUser.Role = String(loggedInUser.Role || '').trim();
 
     // Atualiza nome e função na interface
     document.getElementById('logged-user-name').textContent = loggedInUser.Login;
