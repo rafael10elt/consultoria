@@ -3949,23 +3949,51 @@ function escapeNBHtml(value = '') {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 }
+function normalizeBrazilianPhoneDigits(value, maxDigits = 11) {
+    return String(value || '').replace(/\D/g, '').slice(0, maxDigits);
+}
+function formatBrazilianPhoneBR(value) {
+    const digits = normalizeBrazilianPhoneDigits(value);
+    if (!digits) return '';
+
+    const ddd = digits.slice(0, 2);
+    const remaining = digits.slice(2);
+    const isMobile = remaining.startsWith('9');
+    const firstBlockLength = isMobile ? 5 : 4;
+    const firstBlock = remaining.slice(0, firstBlockLength);
+    const secondBlock = remaining.slice(firstBlockLength, firstBlockLength + 4);
+
+    if (digits.length <= 2) return `(${ddd}`;
+    if (remaining.length <= firstBlockLength) return `(${ddd}) ${remaining}`;
+    return `(${ddd}) ${firstBlock}${secondBlock ? `-${secondBlock}` : ''}`;
+}
 function normalizeNBPhoneDigits(value) {
-    return String(value || '').replace(/\D/g, '').slice(0, 11);
+    return normalizeBrazilianPhoneDigits(value);
 }
 function formatNBPhoneBR(value) {
-    const digits = normalizeNBPhoneDigits(value);
-    if (!digits) return '';
-    if (digits.length <= 10) {
-        return digits.replace(/^(\d{2})(\d{0,4})(\d{0,4})$/, (_, ddd, first, last) => {
-            const firstPart = first ? ` ${first}` : '';
-            const lastPart = last ? `-${last}` : '';
-            return `(${ddd})${firstPart}${lastPart}`;
+    return formatBrazilianPhoneBR(value);
+}
+function applyBrazilianPhoneMask(input) {
+    if (!input) return;
+    input.setAttribute('inputmode', 'numeric');
+    input.setAttribute('autocomplete', 'tel');
+    if (!input.placeholder) input.placeholder = '(00) 00000-0000';
+    input.value = formatBrazilianPhoneBR(input.value);
+}
+function normalizeBrazilianPhoneInputs(form) {
+    if (!form) return;
+    form.querySelectorAll('input[type="tel"]').forEach(input => {
+        input.value = normalizeBrazilianPhoneDigits(input.value);
+    });
+}
+function setupBrazilianPhoneInputs(root = document) {
+    root.querySelectorAll('input[type="tel"]').forEach(input => {
+        applyBrazilianPhoneMask(input);
+        if (input.dataset.phoneMaskBound === 'true') return;
+        input.dataset.phoneMaskBound = 'true';
+        input.addEventListener('input', e => {
+            e.target.value = formatBrazilianPhoneBR(e.target.value);
         });
-    }
-    return digits.replace(/^(\d{2})(\d{0,5})(\d{0,4})$/, (_, ddd, first, last) => {
-        const firstPart = first ? ` ${first}` : '';
-        const lastPart = last ? `-${last}` : '';
-        return `(${ddd})${firstPart}${lastPart}`;
     });
 }
 function getNBEncomendaById(id) {
@@ -4252,7 +4280,7 @@ function setNBEncomendaDraftFromRecord(record = null) {
 function syncNBEncomendaHeaderFromForm() {
     nbEncomendaDraftHeader = {
         Nome_Cliente: document.getElementById('nb-encomenda-client-name')?.value || '',
-        Telefone: document.getElementById('nb-encomenda-phone')?.value || '',
+        Telefone: normalizeNBPhoneDigits(document.getElementById('nb-encomenda-phone')?.value || ''),
         Descricao_Encomenda: document.getElementById('nb-encomenda-descricao')?.value || '',
         Valor_Total: Number(document.getElementById('nb-encomenda-valor-total')?.value || 0),
         Data_Pedido: document.getElementById('nb-encomenda-data-pedido')?.value || '',
@@ -4401,7 +4429,7 @@ function renderNBEncomendasModal() {
     };
     setValue('nb-encomenda-id', selectedRecord?.Id || '');
     setValue('nb-encomenda-client-name', header.Nome_Cliente || '');
-    setValue('nb-encomenda-phone', header.Telefone || '');
+    setValue('nb-encomenda-phone', formatNBPhoneBR(header.Telefone || ''));
     setValue('nb-encomenda-descricao', header.Descricao_Encomenda || '');
     setValue('nb-encomenda-valor-total', Number(header.Valor_Total || 0) || '');
     setValue('nb-encomenda-data-pedido', header.Data_Pedido || '');
@@ -7071,7 +7099,7 @@ function createConsultorCard(c) {
     const statusClass = c.Status === 'Ativo' ? 'bg-green-500' : 'bg-red-500';
 
     let actionIconsHTML = `
-        <a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600" title="WhatsApp">
+        <a href="https://wa.me/${normalizeBrazilianPhoneDigits(c.Telefone || '')}" target="_blank" class="text-green-500 hover:text-green-600" title="WhatsApp">
             <i class="fab fa-whatsapp fa-lg"></i>
         </a>
     `;
@@ -7128,7 +7156,7 @@ function createConsultorCard(c) {
         categoryIconHTML = getCategoryIcon(c.Categoria);
     }
     let actionIconsHTML = `
-        <a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600" title="WhatsApp">
+        <a href="https://wa.me/${normalizeBrazilianPhoneDigits(c.Telefone || '')}" target="_blank" class="text-green-500 hover:text-green-600" title="WhatsApp">
             <i class="fab fa-whatsapp fa-lg"></i>
         </a> 
         <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.Endereco || '')}" target="_blank" class="text-blue-500 hover:text-blue-600" title="Ver no Mapa">
@@ -7578,7 +7606,7 @@ function applyAndRenderValidades() {
     }
 }
     // --- Lógica de Submissão de Formulários (CRUD) ---
-    async function handleFormSubmit(e) {
+async function handleFormSubmit(e) {
     e.preventDefault();
     const form = e.target;
     let id = form.dataset.id || (form.querySelector('input[type="hidden"]') ? form.querySelector('input[type="hidden"]').value : null);
@@ -7590,6 +7618,7 @@ function applyAndRenderValidades() {
     showLoadingOverlay('Salvando...');
 
     try {
+        normalizeBrazilianPhoneInputs(form);
         // --- PREPARAÇÃO DOS DADOS (dentro do switch) ---
         switch (form.id) {
             case 'validade-form': {
@@ -7648,7 +7677,7 @@ function applyAndRenderValidades() {
                     Cnpj: form.querySelector('#servico-cnpj').value,
                     Datacontratacao: form.querySelector('#servico-datacontratacao').value,
                     DataEntrega: form.querySelector('#servico-dataentrega').value || null,
-                    Contato: form.querySelector('#servico-contato').value,
+                    Contato: normalizeBrazilianPhoneDigits(form.querySelector('#servico-contato').value),
                     Valor: parseFloat(form.querySelector('#servico-valor').value) || 0,
                     Descricao: form.querySelector('#servico-descricao').value,
                     Observacao: form.querySelector('#servico-observacao').value,
@@ -7662,13 +7691,13 @@ function applyAndRenderValidades() {
                 callback = async () => { await fetchServicos(); applyAndRenderServicos(); hideSubFormToggle('servicos-history-container', 'servico-form-container'); };
                 break;
             }
-            case 'chamado-form':
+    case 'chamado-form':
     id = form.dataset.id;
     endpoint = id ? `${TABLE_IDS.Chamados}/${id}` : TABLE_IDS.Chamados;
     body = {
         Codigo: form.querySelector('#chamado-codigo').value,
         Nome: form.querySelector('#chamado-nome').value,
-        Contato: form.querySelector('#chamado-contato').value,
+        Contato: normalizeBrazilianPhoneDigits(form.querySelector('#chamado-contato').value),
         Segmento: form.querySelector('#chamado-segmento').value,
         Demanda: form.querySelector('#chamado-demanda').value,
         Observacao: form.querySelector('#chamado-observacao').value,
@@ -7696,7 +7725,7 @@ function applyAndRenderValidades() {
             case 'rh-form': {
                 const table = TABLE_IDS.Consultores;
                 endpoint = id ? `${table}/${id}` : table;
-                body = { Nome: form.querySelector('#rh-nome').value, DataNascimento: form.querySelector('#rh-nasc').value || null, Telefone: form.querySelector('#rh-tel').value, Email: form.querySelector('#rh-email').value, Login: form.querySelector('#rh-login').value, InicioVinculo: form.querySelector('#rh-inicio').value || null, FimVinculo: form.querySelector('#rh-fim').value || null, CNPJ: form.querySelector('#rh-cnpj').value, RazaoSocial: form.querySelector('#rh-razao').value, ValorHora: parseFloat(form.querySelector('#rh-valor').value) || 0, Status: form.querySelector('#rh-status').value, Role: form.querySelector('#rh-role').value, Endereco: form.querySelector('#rh-endereco').value, Observacao: form.querySelector('#rh-obs').value };
+                body = { Nome: form.querySelector('#rh-nome').value, DataNascimento: form.querySelector('#rh-nasc').value || null, Telefone: normalizeBrazilianPhoneDigits(form.querySelector('#rh-tel').value), Email: form.querySelector('#rh-email').value, Login: form.querySelector('#rh-login').value, InicioVinculo: form.querySelector('#rh-inicio').value || null, FimVinculo: form.querySelector('#rh-fim').value || null, CNPJ: form.querySelector('#rh-cnpj').value, RazaoSocial: form.querySelector('#rh-razao').value, ValorHora: parseFloat(form.querySelector('#rh-valor').value) || 0, Status: form.querySelector('#rh-status').value, Role: form.querySelector('#rh-role').value, Endereco: form.querySelector('#rh-endereco').value, Observacao: form.querySelector('#rh-obs').value };
                 const senha = form.querySelector('#rh-senha').value; if (senha) body.Senha = senha;
                 const fileInput = form.querySelector('input[type="file"]');
                 if (fileInput && fileInput.files[0]) {
@@ -7709,7 +7738,7 @@ function applyAndRenderValidades() {
             case 'cliente-form': {
                 const table = TABLE_IDS.Clientes;
                 endpoint = id ? `${table}/${id}` : table;
-                body = { Nome: form.querySelector('#cliente-nome').value, RazaoSocial: form.querySelector('#cliente-razao').value, CNPJ: form.querySelector('#cliente-cnpj').value, Telefone: form.querySelector('#cliente-tel').value, Email: form.querySelector('#cliente-email').value, HorasContratadas: parseInt(form.querySelector('#cliente-horas').value) || 0, Valor: parseFloat(form.querySelector('#cliente-valor').value) || 0, Status: form.querySelector('#cliente-status').value, Categoria: form.querySelector('#cliente-categoria').value, Responsavel: form.querySelector('#cliente-responsavel').value, CPFResponsavel: form.querySelector('#cliente-cpf').value, IPTU: form.querySelector('#cliente-iptu').value, SenhaPortal: form.querySelector('#cliente-senha-portal').value, Endereco: form.querySelector('#cliente-endereco').value, Observacao: form.querySelector('#cliente-obs').value };
+                body = { Nome: form.querySelector('#cliente-nome').value, RazaoSocial: form.querySelector('#cliente-razao').value, CNPJ: form.querySelector('#cliente-cnpj').value, Telefone: normalizeBrazilianPhoneDigits(form.querySelector('#cliente-tel').value), Email: form.querySelector('#cliente-email').value, HorasContratadas: parseInt(form.querySelector('#cliente-horas').value) || 0, Valor: parseFloat(form.querySelector('#cliente-valor').value) || 0, Status: form.querySelector('#cliente-status').value, Categoria: form.querySelector('#cliente-categoria').value, Responsavel: form.querySelector('#cliente-responsavel').value, CPFResponsavel: form.querySelector('#cliente-cpf').value, IPTU: form.querySelector('#cliente-iptu').value, SenhaPortal: form.querySelector('#cliente-senha-portal').value, Endereco: form.querySelector('#cliente-endereco').value, Observacao: form.querySelector('#cliente-obs').value };
                 const fileInput = form.querySelector('input[type="file"]');
                 if (fileInput && fileInput.files[0]) {
                     const fileData = await uploadFile(table, 'Foto', fileInput.files[0]);
@@ -8970,7 +8999,7 @@ function handleTableEdit(btn) {
     } 
     break; 
 }
-case 'chamado': { 
+        case 'chamado': { 
     const c = chamadosData.find(d => d.Id === id); 
     if (c) { 
         const form = document.getElementById('chamado-form');
@@ -8978,7 +9007,7 @@ case 'chamado': {
         document.getElementById('chamado-modal-title').textContent = "Editar Comercial";
         form.querySelector('#chamado-codigo').value = c.Codigo || '';
         form.querySelector('#chamado-nome').value = c.Nome;
-        form.querySelector('#chamado-contato').value = c.Contato || '';
+        form.querySelector('#chamado-contato').value = formatBrazilianPhoneBR(c.Contato || '');
         form.querySelector('#chamado-segmento').value = c.Segmento || ''; 
         form.querySelector('#chamado-demanda').value = c.Demanda || ''; 
         form.querySelector('#chamado-observacao').value = c.Observacao || '';
@@ -9020,7 +9049,7 @@ case 'chamado': {
                 f.querySelector('#servico-cnpj').value = s.Cnpj || '';
                 f.querySelector('#servico-datacontratacao').value = s.Datacontratacao;
                 f.querySelector('#servico-dataentrega').value = s.DataEntrega || '';
-                f.querySelector('#servico-contato').value = s.Contato || '';
+                f.querySelector('#servico-contato').value = formatBrazilianPhoneBR(s.Contato || '');
                 f.querySelector('#servico-valor').value = s.Valor || '';
                 f.querySelector('#servico-descricao').value = s.Descricao || '';
                 f.querySelector('#servico-observacao').value = s.Observacao || '';
@@ -9047,10 +9076,10 @@ case 'chamado': {
 }
     }
 }
-    function handleCardEdit() { if (!activeCard) return; hideModal(allElements.detailsModal); const isConsultor = activeCard.classList.contains('rh-card'); const formContainerId = isConsultor ? 'rh-form-container' : 'cliente-form-container'; const cardsContainerId = isConsultor ? 'rh-cards-container' : 'cliente-cards-container'; const form = document.getElementById(formContainerId).querySelector('form'); const data = activeCard.dataset; form.reset(); let hiddenIdInput = form.querySelector('input[type="hidden"]'); if (!hiddenIdInput) { hiddenIdInput = document.createElement('input'); hiddenIdInput.type = 'hidden'; hiddenIdInput.id = isConsultor ? 'rh-id' : 'cliente-id'; form.prepend(hiddenIdInput); } hiddenIdInput.value = data.id;  const fieldMapping = isConsultor 
+function handleCardEdit() { if (!activeCard) return; hideModal(allElements.detailsModal); const isConsultor = activeCard.classList.contains('rh-card'); const formContainerId = isConsultor ? 'rh-form-container' : 'cliente-form-container'; const cardsContainerId = isConsultor ? 'rh-cards-container' : 'cliente-cards-container'; const form = document.getElementById(formContainerId).querySelector('form'); const data = activeCard.dataset; form.reset(); let hiddenIdInput = form.querySelector('input[type="hidden"]'); if (!hiddenIdInput) { hiddenIdInput = document.createElement('input'); hiddenIdInput.type = 'hidden'; hiddenIdInput.id = isConsultor ? 'rh-id' : 'cliente-id'; form.prepend(hiddenIdInput); } hiddenIdInput.value = data.id;  const fieldMapping = isConsultor 
         ? {'rh-nome':'nome', 'rh-nasc':'datanascimento', 'rh-tel':'telefone', 'rh-email':'email', 'rh-login':'login', 'rh-inicio':'iniciovinculo', 'rh-fim':'fimvinculo', 'rh-cnpj':'cnpj', 'rh-razao':'razaosocial', 'rh-valor':'valorhora', 'rh-status':'status', 'rh-role':'role', 'rh-endereco':'endereco', 'rh-obs':'observacao'} 
          : {'cliente-nome':'nome', 'cliente-razao':'razaosocial', 'cliente-cnpj':'cnpj', 'cliente-tel':'telefone', 'cliente-email':'email', 'cliente-horas':'horascontratadas', 'cliente-valor':'valor', 'cliente-status':'status', 'cliente-responsavel':'responsavel', 'cliente-cpf':'cpfresponsavel', 'cliente-iptu':'iptu', 'cliente-senha-portal':'senhaportal', 'cliente-endereco':'endereco', 'cliente-obs':'observacao'};for (const [fieldId, dataKey] of Object.entries(fieldMapping)) { const input = form.querySelector(`#${fieldId}`); if (input) { if (dataKey === 'role' && !data[dataKey]) {
-        input.value = 'Consultor'; } else { input.value = data[dataKey] || ''; } } } if (!isConsultor) {
+        input.value = 'Consultor'; } else { input.value = input.type === 'tel' ? formatBrazilianPhoneBR(data[dataKey] || '') : (data[dataKey] || ''); } } } if (!isConsultor) {
         const valorWrapper = document.getElementById('cliente-valor-wrapper');
         if (loggedInUser && loggedInUser.Role === 'Admin') {
             valorWrapper.classList.remove('hidden');
@@ -10197,7 +10226,7 @@ function renderChamadosList(data) {
     data.forEach(c => {
         const codChamado = c.Codigo || `PONTES-${c.Id.toString().padStart(6, '0')}`;
         const actionsHTML = `
-            <a href="https://wa.me/${c.Contato || ''}" target="_blank" class="text-green-500 hover:text-green-600" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+            <a href="https://wa.me/${normalizeBrazilianPhoneDigits(c.Contato || '')}" target="_blank" class="text-green-500 hover:text-green-600" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
             <button class="table-details-btn text-gray-500" data-type="chamado" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
             <button class="table-edit-btn text-blue-500" data-type="chamado" title="Editar"><i class="fas fa-edit"></i></button>
             <button class="table-delete-btn text-red-500" data-type="chamado" title="Apagar"><i class="fas fa-trash"></i></button>
@@ -10310,7 +10339,7 @@ function createChamadoKanbanCard(c) {
     const statusClass = c.Status === 'Respondido' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800';
     const codChamado = c.Codigo || `PONTES-${c.Id.toString().padStart(6, '0')}`;
     const actionsHTML = `
-        <a href="https://wa.me/${c.Contato || ''}" target="_blank" class="text-green-500 hover:text-green-600" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+        <a href="https://wa.me/${normalizeBrazilianPhoneDigits(c.Contato || '')}" target="_blank" class="text-green-500 hover:text-green-600" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
         <button class="table-details-btn text-gray-500" data-type="chamado" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
         <button class="table-edit-btn text-blue-500" data-type="chamado" title="Editar"><i class="fas fa-edit"></i></button>
         <button class="table-delete-btn text-red-500" data-type="chamado" title="Apagar"><i class="fas fa-trash"></i></button>
@@ -11095,6 +11124,7 @@ function renderReembolsos(data = reembolsosData) {
 
   // --- Inicialização ---
 function initializeApp() {
+        setupBrazilianPhoneInputs();
         document.getElementById('nb-finance-form')?.addEventListener('submit', handleNBFinanceSubmit);
         document.getElementById('nb-panel-finance-btn')?.addEventListener('click', openNBPanelFinanceModal);
         document.getElementById('nb-panel-category-btn')?.addEventListener('click', openNBPanelCategoryModal);
