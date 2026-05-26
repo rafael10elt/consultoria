@@ -179,7 +179,7 @@ body {
                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="reembolsos" title="Reembolsos"><i class="fas fa-receipt"></i></a>
                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="validades" title="Validades"><i class="fas fa-shield-alt"></i></a>
                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="servicos" title="Serviços"><i class="fas fa-cogs"></i></a>
-                    <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="chamados" title="Chamados"><i class="fas fa-headset"></i></a>
+                    <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="chamados" title="Comercial"><i class="fas fa-headset"></i></a>
                 </nav>
         </aside>
             <!-- Overlay for mobile sidebar -->
@@ -754,6 +754,7 @@ body {
         <option value="Gestor">Gestor</option>
         <option value="Gestor B">Gestor B</option>
         <option value="Operador">Operador</option>
+        <option value="Comercial">Comercial</option>
         <option value="Admin">Admin</option>
     </select>
 </div>
@@ -1717,15 +1718,15 @@ body {
 <div id="chamados" class="page hidden">
     <div class="flex flex-col md:flex-row justify-between md:items-center mb-4">
         <div>
-            <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Chamados</h2>
-            <p class="text-gray-600 dark:text-gray-300">Gerenciamento de chamados e atendimento ao cliente.</p>
+            <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Comercial</h2>
+            <p class="text-gray-600 dark:text-gray-300">Gerenciamento comercial e atendimento ao cliente.</p>
         </div>
         <div class="flex items-center space-x-2 mt-4 md:mt-0">
             <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-lg">
                 <button class="chamado-view-toggle-btn bg-white dark:bg-gray-800 px-3 py-1 rounded-md shadow-sm" data-view="chamados-list-view"><i class="fas fa-list"></i></button>
                 <button class="chamado-view-toggle-btn px-3 py-1 rounded-md" data-view="chamados-kanban-view"><i class="fas fa-columns"></i></button>
             </div>
-            <button id="show-chamado-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Chamado</button>
+            <button id="show-chamado-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Comercial</button>
         </div>
     </div>
     
@@ -1786,7 +1787,7 @@ body {
             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-300">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
-                        <th scope="col" class="px-6 py-3">Cód. Chamado</th>
+                        <th scope="col" class="px-6 py-3">Cód. Comercial</th>
         <th scope="col" class="px-6 py-3">Data Abertura</th>
         <th scope="col" class="px-6 py-3">Cliente</th>
         <th scope="col" class="px-6 py-3">Segmento</th>
@@ -1819,11 +1820,11 @@ body {
 <!-- Formulário Modal -->
 <div id="chamado-form-modal" class="fixed inset-0 z-40 items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
     <div class="w-full max-w-lg p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
-        <h2 id="chamado-modal-title" class="text-xl font-bold text-gray-900 dark:text-white mb-4">Novo Chamado</h2>
+        <h2 id="chamado-modal-title" class="text-xl font-bold text-gray-900 dark:text-white mb-4">Novo Comercial</h2>
         <form id="chamado-form">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <div>
-                    <label for="chamado-codigo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cód. Chamado</label>
+                    <label for="chamado-codigo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cód. Comercial</label>
                     <input type="text" id="chamado-codigo" class="bg-gray-200 border border-gray-300 text-gray-700 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-300" readonly>
                 </div>
                 <div>
@@ -2664,7 +2665,7 @@ const dataLoaded = {
         visitasdocliente: 'Visitas do Cliente',
         receitasdocliente: 'Receitas do Cliente',
         valor: 'Valor',
-        codigo: 'Cód. Chamado',
+        codigo: 'Cód. Comercial',
         segmento: 'Segmento',
         demanda: 'Demanda',
 
@@ -3298,6 +3299,23 @@ function isNBOnlyRole() {
 }
 function canAccessNB() {
     return isAdminRole() || isNBOnlyRole();
+}
+function getAllowedNavPagesForRole(role) {
+    if (role === 'Admin') {
+        return ['dashboard', 'nosso-bolo', 'visitas', 'requisicao', 'financeiro', 'clientes', 'rh', 'reembolsos', 'validades', 'servicos', 'chamados'];
+    }
+    if (role === 'Gestor B' || role === 'Operador') {
+        return ['nosso-bolo'];
+    }
+    if (role === 'Comercial') {
+        return ['visitas', 'chamados'];
+    }
+    return ['visitas', 'requisicao', 'clientes', 'reembolsos', 'validades'];
+}
+function getDefaultPageForRole(role) {
+    if (role === 'Admin') return 'dashboard';
+    if (canAccessNB()) return 'nosso-bolo';
+    return 'visitas';
 }
 function canAccessNBManagement() {
     return isAdminRole() || loggedInUser?.Role === 'Gestor B';
@@ -6770,7 +6788,7 @@ async function initializeUserSession(user) {
     const clienteFilterWrapper = document.getElementById('dash-visit-cliente-wrapper');
     
     if (consultorFilterWrapper && clienteFilterWrapper) {
-        if (loggedInUser && (loggedInUser.Role === 'Admin' || loggedInUser.Role === 'Gestor')) {
+        if (loggedInUser && (loggedInUser.Role === 'Admin' || loggedInUser.Role === 'Gestor' || loggedInUser.Role === 'Comercial')) {
             consultorFilterWrapper.classList.remove('hidden');
             clienteFilterWrapper.classList.remove('hidden');
         } else {
@@ -6851,7 +6869,7 @@ async function initializeUserSession(user) {
             sessionStorage.setItem('activeSubTab_nosso-bolo', 'nb-painel-content');
         }
     } else {
-        const allowedPages = ['visitas', 'requisicao', 'clientes', 'reembolsos', 'validades'];
+        const allowedPages = getAllowedNavPagesForRole(loggedInUser.Role);
         document.querySelectorAll('.nav-link').forEach(link => {
             const target = link.dataset.target;
             link.style.display = allowedPages.includes(target) ? 'flex' : 'none';
@@ -6866,8 +6884,11 @@ async function initializeUserSession(user) {
     // --- CORREÇÃO DO F5 E CARREGAMENTO DE PÁGINA ---
     let savedPage = sessionStorage.getItem('currentPage');
     
-    // Define página padrão se não houver salva
-    savedPage = savedPage || (loggedInUser.Role === 'Admin' ? 'dashboard' : (canAccessNB() ? 'nosso-bolo' : 'visitas'));
+    // Define página padrão se não houver salva ou se a página salva não estiver liberada para o perfil
+    const allowedPages = getAllowedNavPagesForRole(loggedInUser.Role);
+    const defaultPage = getDefaultPageForRole(loggedInUser.Role);
+    savedPage = allowedPages.includes(savedPage) ? savedPage : defaultPage;
+    sessionStorage.setItem('currentPage', savedPage);
 
     // Importante: Chama o loadPageData para a página que vai abrir.
     // Isso garante que se for 'requisicao', ele baixe os dados e aplique a data padrão de 45 dias
@@ -8456,7 +8477,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
             const form = document.getElementById('chamado-form');
             form.reset();
             delete form.dataset.id;
-            document.getElementById('chamado-modal-title').textContent = "Novo Chamado";
+            document.getElementById('chamado-modal-title').textContent = "Novo Comercial";
             document.getElementById('chamado-status-wrapper').classList.add('hidden');
             document.getElementById('chamado-codigo').value = generateRandomCode();
             showModal(document.getElementById('chamado-form-modal'));
@@ -8951,7 +8972,7 @@ case 'chamado': {
     if (c) { 
         const form = document.getElementById('chamado-form');
         form.dataset.id = c.Id;
-        document.getElementById('chamado-modal-title').textContent = "Editar Chamado";
+        document.getElementById('chamado-modal-title').textContent = "Editar Comercial";
         form.querySelector('#chamado-codigo').value = c.Codigo || '';
         form.querySelector('#chamado-nome').value = c.Nome;
         form.querySelector('#chamado-contato').value = c.Contato || '';
@@ -9143,7 +9164,7 @@ const openDetailsModal = (card) => {
         case 'requisicao': dataArray = requisicoesData; title = 'Detalhes da Requisição'; break;
         case 'reembolso': dataArray = reembolsosData; title = 'Detalhes do Reembolso'; break;
         case 'servico': dataArray = servicosData; title = 'Detalhes do Serviço'; break;
-        case 'chamado': dataArray = chamadosData; title = 'Detalhes do Chamado'; break;
+        case 'chamado': dataArray = chamadosData; title = 'Detalhes do Comercial'; break;
         default: return;
     }
 
@@ -9256,7 +9277,7 @@ const openDetailsModal = (card) => {
         if (type === 'chamado') {
              // --- CORREÇÃO AQUI: Troque 'chamado' por 'data' ---
              contentHTML = `
-                <p><strong>Cód. Chamado:</strong> ${data.Codigo || 'N/A'}</p>
+                <p><strong>Cód. Comercial:</strong> ${data.Codigo || 'N/A'}</p>
                 <p><strong>Status:</strong> ${data.Status || 'N/A'}</p>
                 <p><strong>Data Abertura:</strong> ${formatDateTime(data.Data)}</p>
                 <p><strong>Nome:</strong> ${data.Nome || 'N/A'}</p>
@@ -9892,8 +9913,8 @@ function applyFilters() {
         (!st || v.Status === st)
     );
 
-    // Lógica para Gestor/Consultor ver mês atual e o próximo (independente do status)
-    if (loggedInUser && (loggedInUser.Role === 'Gestor' || loggedInUser.Role === 'Consultor')) {
+    // Lógica para Gestor/Comercial ver mês atual e o próximo (independente do status)
+    if (loggedInUser && (loggedInUser.Role === 'Gestor' || loggedInUser.Role === 'Comercial')) {
         const today = new Date();
         const currentYear = today.getFullYear();
         const currentMonth = today.getMonth();
@@ -9975,9 +9996,9 @@ function renderKanbanBoard(d){
 function createKanbanCard(v){
     const{color,label}=sConf[v.Status] || {color: 'gray', label: v.Status}; 
     const dF=new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR'); 
-     const isAdmin = loggedInUser.Role === 'Admin';
-    const isGestor = loggedInUser.Role === 'Gestor';
-    const isConsultorOwner = loggedInUser.Role === 'Consultor' && v.Consultores?.Id == loggedInUser.Id;
+    const isAdmin = loggedInUser.Role === 'Admin';
+    const isGestor = loggedInUser.Role === 'Gestor' || loggedInUser.Role === 'Comercial';
+    const isConsultorOwner = (loggedInUser.Role === 'Consultor' || loggedInUser.Role === 'Comercial') && v.Consultores?.Id == loggedInUser.Id;
     const isAgendada = v.Status === 'Agendada';
     const canModify = isAdmin || (isGestor && isAgendada) || (isConsultorOwner && isAgendada);
 
@@ -10059,8 +10080,8 @@ function createKanbanCard(v){
         
         // --- INÍCIO DA ALTERAÇÃO ---
         const isAdmin = loggedInUser.Role === 'Admin';
-        const isGestor = loggedInUser.Role === 'Gestor';
-        const isConsultorOwner = loggedInUser.Role === 'Consultor' && v.Consultores?.Id == loggedInUser.Id;
+    const isGestor = loggedInUser.Role === 'Gestor' || loggedInUser.Role === 'Comercial';
+    const isConsultorOwner = (loggedInUser.Role === 'Consultor' || loggedInUser.Role === 'Comercial') && v.Consultores?.Id == loggedInUser.Id;
         const isAgendada = v.Status === 'Agendada';
 
         // Regra de permissão para modificar (editar/apagar)
@@ -11438,7 +11459,7 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
         const form = document.getElementById('chamado-form');
         form.reset();
         delete form.dataset.id;
-        document.getElementById('chamado-modal-title').textContent = "Novo Chamado";
+        document.getElementById('chamado-modal-title').textContent = "Novo Comercial";
         document.getElementById('chamado-status-wrapper').classList.add('hidden');
         document.getElementById('chamado-codigo').value = generateRandomCode();
         showModal(document.getElementById('chamado-form-modal'));
