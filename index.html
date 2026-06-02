@@ -3790,16 +3790,17 @@ function getNBFinanceDraftSummary(dateString, prefix) {
 }
 function getNBPanelDayTotals(dateString, groups = getVisibleNBPanelGroups()) {
     const products = groups.flatMap(group => group.products || []);
-    const productMap = new Map(products.map(product => [product.Id, product]));
     const records = products.map(product => getNBApontamento(dateString, product.Id)).filter(Boolean);
+    const allProductsMap = new Map(nbProdutosData.map(product => [product.Id, product]));
+    const allDayRecords = nbApontamentosData.filter(record => getNBLinkedDateValue(record) === dateString);
     const producao = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Producao), 0);
     const venda = records.reduce((sum, record) => sum + computeNBVenda(record), 0);
     const sobraAnterior = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Anterior), 0);
     const perda = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Perda), 0);
     const sobraAtual = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Atual), 0);
     const disponivel = sobraAnterior + producao;
-    const faturamentoProdutos = records.reduce((sum, record) => {
-        const product = productMap.get(getNBLinkedProductId(record));
+    const faturamentoProdutos = allDayRecords.reduce((sum, record) => {
+        const product = allProductsMap.get(getNBLinkedProductId(record));
         if (!product) return sum;
         return sum + (computeNBVenda(record) * Number(product.Preco_Venda || 0));
     }, 0);
