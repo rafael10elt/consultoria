@@ -494,9 +494,10 @@ body {
                                             <button type="button" data-nb-top-limit="5" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-brand-gold text-white">5</button>
                                             <button type="button" data-nb-top-limit="10" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200">10</button>
                                             <button type="button" data-nb-top-limit="20" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200">20</button>
+                                            <button type="button" data-nb-top-limit="all" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200 whitespace-nowrap">Tudo</button>
                                         </div>
                                     </div>
-                                    <ul id="nb-top-products-gestao-list" class="space-y-2"></ul>
+                                    <ul id="nb-top-products-gestao-list" class="space-y-2 h-[18rem] overflow-y-auto pr-2"></ul>
                                 </div>
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                                     <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Faturamento por Categoria</h3>
@@ -2587,14 +2588,12 @@ document.addEventListener('DOMContentLoaded', function() {
     let nbEncomendaProductCategoryFilter = 'all';
     let nbEncomendaProductSearchFilter = '';
     let nbEncomendaStatusFilter = 'Todas';
-    let nbTopProductsGestaoLimit = 5;
+    let nbTopProductsGestaoLimit = '5';
     let nbAnalyticsPreset = 'day';
     const NB_PANEL_CATEGORY_SELECTION_KEY = 'nb-panel-selected-category-ids';
     const NB_PANEL_CATEGORY_OPEN_KEY = 'nb-panel-open-category-id';
     let nbPanelRefreshBlockedUntil = 0;
     let nbSuppressFetchAlerts = false;
-    let nbCarryForwardPropagationPendingCount = 0;
-    let nbCarryForwardPropagationQueue = Promise.resolve();
 
     // --- NOVO: Controle de Carregamento ---
 const dataLoaded = {
@@ -3366,7 +3365,7 @@ function syncNBAnalyticsPresetButtons() {
 }
 function syncNBTopProductsLimitButtons() {
     document.querySelectorAll('[data-nb-top-limit]').forEach(btn => {
-        const active = Number(btn.dataset.nbTopLimit) === Number(nbTopProductsGestaoLimit);
+        const active = String(btn.dataset.nbTopLimit || '') === String(nbTopProductsGestaoLimit);
         btn.classList.toggle('bg-brand-gold', active);
         btn.classList.toggle('text-white', active);
         btn.classList.toggle('bg-white', !active);
@@ -3388,7 +3387,7 @@ function applyNBAnalyticsPreset(preset, render = true) {
     if (render) renderNBManagement();
 }
 function applyNBTopProductsLimit(limit, render = true) {
-    nbTopProductsGestaoLimit = Number(limit) || 5;
+    nbTopProductsGestaoLimit = String(limit || '5');
     syncNBTopProductsLimitButtons();
     if (render) renderNBTopProductsGestao();
 }
@@ -4684,7 +4683,6 @@ async function refreshNBModuleSilently() {
     if (!document.getElementById('nb-encomendas-modal')?.classList.contains('hidden')) return;
     if (document.hidden || isNBModuleInputFocused()) return;
     if (Date.now() < nbPanelRefreshBlockedUntil) return;
-    if (nbCarryForwardPropagationPendingCount > 0) return;
     nbModuleRefreshInProgress = true;
     try {
         nbSuppressFetchAlerts = true;
@@ -4762,29 +4760,6 @@ function setNBPanelSelectedCategoryIds(ids, render = true) {
 }
 function blockNBPanelAutoRefresh(ms = 45000) {
     nbPanelRefreshBlockedUntil = Math.max(nbPanelRefreshBlockedUntil || 0, Date.now() + Math.max(0, ms));
-}
-function queueNBSobraCarryForwardPropagation(dateString, productId, preservedOpenCategoryId = '') {
-    nbCarryForwardPropagationPendingCount += 1;
-    nbCarryForwardPropagationQueue = nbCarryForwardPropagationQueue
-        .catch(() => {})
-        .then(async () => {
-            const previousSuppressFetchAlerts = nbSuppressFetchAlerts;
-            nbSuppressFetchAlerts = true;
-            try {
-                await syncNBSobraCarryForwardFrom(dateString, productId);
-                if (preservedOpenCategoryId) {
-                    setNBPanelOpenCategoryId(preservedOpenCategoryId);
-                }
-                renderNBPanelTotals();
-                syncNBPanelCategoryAccordion();
-            } catch (error) {
-                console.warn('Propagação de sobra em segundo plano falhou:', error);
-            } finally {
-                nbSuppressFetchAlerts = previousSuppressFetchAlerts;
-                nbCarryForwardPropagationPendingCount = Math.max(0, nbCarryForwardPropagationPendingCount - 1);
-            }
-        });
-    return nbCarryForwardPropagationQueue;
 }
 function renderNBPanelCategoryModal() {
     const list = document.getElementById('nb-panel-category-list');
@@ -6031,7 +6006,7 @@ function renderNBManagement() {
     renderNBCategoriesList();
     renderNBProductsList();
 }
-// Ranking dos 10 produtos mais vendidos na Gestão (período customizado)
+// Ranking dos produtos mais vendidos na Gestão (período customizado)
 function renderNBTopProductsGestao() {
     const list = document.getElementById('nb-top-products-gestao-list');
     if (!list) return;
@@ -6050,15 +6025,16 @@ function renderNBTopProductsGestao() {
             }
         }
     });
+    const visibleLimit = nbTopProductsGestaoLimit === 'all' ? Infinity : (Number(nbTopProductsGestaoLimit) || 5);
     const sorted = Object.entries(salesByProduct)
         .filter(([, v]) => v.total > 0)
         .sort((a, b) => b[1].total - a[1].total)
-        .slice(0, nbTopProductsGestaoLimit);
-    if (sorted.length === 0) {
+    const visibleItems = visibleLimit === Infinity ? sorted : sorted.slice(0, visibleLimit);
+    if (visibleItems.length === 0) {
         list.innerHTML = '<li class="text-gray-500 dark:text-gray-400">Nenhuma venda registrada no período.</li>';
         return;
     }
-    list.innerHTML = sorted.map(([_, v], idx) =>
+    list.innerHTML = visibleItems.map(([_, v], idx) =>
         `<li class="flex items-center gap-3"><span class="font-bold text-lg w-6 text-right">${idx + 1}.</span> <span class="flex-1">${v.nome}</span> <span class="font-mono bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded px-2 py-1">${v.total}</span></li>`
     ).join('');
 }
@@ -6106,76 +6082,6 @@ function getNextNBOperationalDate(dateString) {
         nextDate = addDays(nextDate, 1);
     }
     return toDateInputValue(nextDate);
-}
-async function syncNBSobraCarryForwardFrom(dateString, productId) {
-    const currentRecord = getNBApontamento(dateString, productId);
-    if (!currentRecord) return;
-    let carryValue = normalizeNBNumber(currentRecord.Qtd_Sobra_Atual);
-    let nextDate = getNextNBOperationalDate(dateString);
-    const nextControlDay = await ensureNBControlDay(nextDate);
-    if (!nextControlDay) return;
-    const nextRecord = getNBApontamento(nextDate, productId);
-    if (nextRecord?.Id) {
-        const nextProducao = normalizeNBNumber(nextRecord.Qtd_Producao);
-        const nextPerda = normalizeNBNumber(nextRecord.Qtd_Perda);
-        const desiredSobraAtual = (nextProducao === 0 && nextPerda === 0 && normalizeNBNumber(nextRecord.Qtd_Sobra_Atual) === 0)
-            ? carryValue
-            : normalizeNBNumber(nextRecord.Qtd_Sobra_Atual);
-        const payload = {
-            Qtd_Sobra_Anterior: carryValue,
-            Qtd_Sobra_Atual: desiredSobraAtual,
-            Qtd_Venda: computeNBVenda({ ...nextRecord, Qtd_Sobra_Anterior: carryValue, Qtd_Sobra_Atual: desiredSobraAtual })
-        };
-        const result = await persistNBApontamentoRecord({
-            dateString: nextDate,
-            productId,
-            controlDayId: nextControlDay.Id,
-            values: payload,
-            recordId: nextRecord.Id
-        });
-        if (result) {
-            Object.assign(nextRecord, result);
-            const normalizedId = normalizeNBRecordId(result);
-            if (normalizedId && !nextRecord.Id) nextRecord.Id = normalizedId;
-            if (normalizedId && !nextRecord.id) nextRecord.id = normalizedId;
-        } else {
-            Object.assign(nextRecord, payload);
-        }
-    } else {
-        const payload = {
-            Qtd_Sobra_Anterior: carryValue,
-            Qtd_Producao: 0,
-            Qtd_Perda: 0,
-            Qtd_Sobra_Atual: carryValue,
-            Qtd_Venda: carryValue
-        };
-        const result = await persistNBApontamentoRecord({
-            dateString: nextDate,
-            productId,
-            controlDayId: nextControlDay.Id,
-            values: payload
-        });
-        if (result) {
-            const normalizedId = normalizeNBRecordId(result);
-            if (normalizedId && !result.Id) result.Id = normalizedId;
-            if (normalizedId && !result.id) result.id = normalizedId;
-            nbApontamentosData.push(result);
-        }
-    }
-}
-async function normalizeNBCarryForwardAll() {
-    const activeProducts = nbProdutosData.filter(product => isNBRecordActive(product.Ativo));
-    const controlDates = nbControleDiasData
-        .map(day => day.Data)
-        .filter(Boolean)
-        .sort((a, b) => a.localeCompare(b));
-    for (const product of activeProducts) {
-        const firstDateWithRecord = controlDates.find(dateString => Boolean(getNBApontamento(dateString, product.Id)));
-        if (!firstDateWithRecord) continue;
-        // Propaga apenas os dias seguintes a partir do primeiro registro encontrado.
-        // O dia de origem mantém exatamente o que foi salvo pelo usuário.
-        await syncNBSobraCarryForwardFrom(firstDateWithRecord, product.Id);
-    }
 }
 function upsertLocalNBApontamento(dateString, productId, values) {
     let record = getNBApontamento(dateString, productId);
@@ -6274,7 +6180,6 @@ async function saveNBPanelCell(dateString, productId, cell) {
     if (preservedOpenCategoryId) setNBPanelOpenCategoryId(preservedOpenCategoryId);
     renderNBPanelTotals();
     showNBToast('Apontamento salvo com sucesso.');
-    void queueNBSobraCarryForwardPropagation(dateString, Number(productId), preservedOpenCategoryId);
 }
 async function handleNBFinanceSubmit(e) {
     e.preventDefault();
@@ -6517,11 +6422,6 @@ function renderNBProductsList() {
     container.style.maxHeight = needsScroll ? '300px' : '';
     container.style.overflowY = needsScroll ? 'auto' : '';
     container.style.paddingRight = needsScroll ? '0.5rem' : '';
-}
-async function handleNBCloseDay() {
-    void normalizeNBCarryForwardAll();
-    await fetchNBApontamentos();
-    renderNBModule();
 }
     // --- Funções de Carregamento de Dados (Fetch) ---
 // --- CARREGAMENTO OTIMIZADO ---
