@@ -3805,6 +3805,7 @@ function getNBPanelDayTotals(dateString, groups = getVisibleNBPanelGroups()) {
         return sum + (computeNBVenda(record) * Number(product.Preco_Venda || 0));
     }, 0);
     const encomendaTotals = getNBEncomendaRevenueTotalsForDate(dateString);
+    const faturamentoEncomendas = encomendaTotals.total;
     return {
         disponivel,
         producao,
@@ -3813,8 +3814,8 @@ function getNBPanelDayTotals(dateString, groups = getVisibleNBPanelGroups()) {
         perda,
         sobraAtual,
         faturamentoProdutos,
-        faturamentoEncomendas: encomendaTotals.total,
-        faturamentoTotal: faturamentoProdutos + encomendaTotals.total
+        faturamentoEncomendas,
+        faturamentoTotal: faturamentoProdutos + faturamentoEncomendas
     };
 }
 function getNBPanelCalculationGroups() {
