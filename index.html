@@ -179,7 +179,7 @@ body {
                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="reembolsos" title="Reembolsos"><i class="fas fa-receipt"></i></a>
                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="validades" title="Validades"><i class="fas fa-shield-alt"></i></a>
                     <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="servicos" title="Serviços"><i class="fas fa-cogs"></i></a>
-                    <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="chamados" title="Comercial"><i class="fas fa-headset"></i></a>
+                    <a href="#" class="nav-link flex items-center justify-center w-12 h-12 mb-4 rounded-lg text-gray-400 hover:bg-brand-gold hover:text-white" data-target="chamados" title="Chamados"><i class="fas fa-headset"></i></a>
                 </nav>
         </aside>
             <!-- Overlay for mobile sidebar -->
@@ -494,10 +494,9 @@ body {
                                             <button type="button" data-nb-top-limit="5" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-brand-gold text-white">5</button>
                                             <button type="button" data-nb-top-limit="10" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200">10</button>
                                             <button type="button" data-nb-top-limit="20" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200">20</button>
-                                            <button type="button" data-nb-top-limit="all" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200 whitespace-nowrap">Tudo</button>
                                         </div>
                                     </div>
-                                    <ul id="nb-top-products-gestao-list" class="space-y-2 h-[18rem] overflow-y-auto pr-2"></ul>
+                                    <ul id="nb-top-products-gestao-list" class="space-y-2"></ul>
                                 </div>
                                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
                                     <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Faturamento por Categoria</h3>
@@ -755,7 +754,6 @@ body {
         <option value="Gestor">Gestor</option>
         <option value="Gestor B">Gestor B</option>
         <option value="Operador">Operador</option>
-        <option value="Comercial">Comercial</option>
         <option value="Admin">Admin</option>
     </select>
 </div>
@@ -1720,14 +1718,14 @@ body {
     <div class="flex flex-col md:flex-row justify-between md:items-center mb-4">
         <div>
             <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Comercial</h2>
-            <p class="text-gray-600 dark:text-gray-300">Gerenciamento comercial e atendimento ao cliente.</p>
+            <p class="text-gray-600 dark:text-gray-300">Gestão de Leads.</p>
         </div>
         <div class="flex items-center space-x-2 mt-4 md:mt-0">
             <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-lg">
                 <button class="chamado-view-toggle-btn bg-white dark:bg-gray-800 px-3 py-1 rounded-md shadow-sm" data-view="chamados-list-view"><i class="fas fa-list"></i></button>
                 <button class="chamado-view-toggle-btn px-3 py-1 rounded-md" data-view="chamados-kanban-view"><i class="fas fa-columns"></i></button>
             </div>
-            <button id="show-chamado-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Comercial</button>
+            <button id="show-chamado-form" class="bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors">Novo Chamado</button>
         </div>
     </div>
     
@@ -1788,7 +1786,7 @@ body {
             <table class="w-full text-sm text-left text-gray-500 dark:text-gray-300">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                     <tr>
-                        <th scope="col" class="px-6 py-3">Cód. Comercial</th>
+                        <th scope="col" class="px-6 py-3">Cód. Chamado</th>
         <th scope="col" class="px-6 py-3">Data Abertura</th>
         <th scope="col" class="px-6 py-3">Cliente</th>
         <th scope="col" class="px-6 py-3">Segmento</th>
@@ -1821,11 +1819,11 @@ body {
 <!-- Formulário Modal -->
 <div id="chamado-form-modal" class="fixed inset-0 z-40 items-center justify-center hidden bg-black bg-opacity-60 modal-bg-animate">
     <div class="w-full max-w-lg p-6 mx-4 bg-white rounded-lg shadow-lg dark:bg-gray-800 modal-content-animate">
-        <h2 id="chamado-modal-title" class="text-xl font-bold text-gray-900 dark:text-white mb-4">Novo Comercial</h2>
+        <h2 id="chamado-modal-title" class="text-xl font-bold text-gray-900 dark:text-white mb-4">Novo Chamado</h2>
         <form id="chamado-form">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <div>
-                    <label for="chamado-codigo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cód. Comercial</label>
+                    <label for="chamado-codigo" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Cód. Chamado</label>
                     <input type="text" id="chamado-codigo" class="bg-gray-200 border border-gray-300 text-gray-700 text-sm rounded-lg block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-300" readonly>
                 </div>
                 <div>
@@ -2588,12 +2586,14 @@ document.addEventListener('DOMContentLoaded', function() {
     let nbEncomendaProductCategoryFilter = 'all';
     let nbEncomendaProductSearchFilter = '';
     let nbEncomendaStatusFilter = 'Todas';
-    let nbTopProductsGestaoLimit = '5';
+    let nbTopProductsGestaoLimit = 5;
     let nbAnalyticsPreset = 'day';
     const NB_PANEL_CATEGORY_SELECTION_KEY = 'nb-panel-selected-category-ids';
     const NB_PANEL_CATEGORY_OPEN_KEY = 'nb-panel-open-category-id';
     let nbPanelRefreshBlockedUntil = 0;
     let nbSuppressFetchAlerts = false;
+    let nbCarryForwardPropagationPendingCount = 0;
+    let nbCarryForwardPropagationQueue = Promise.resolve();
 
     // --- NOVO: Controle de Carregamento ---
 const dataLoaded = {
@@ -2664,7 +2664,7 @@ const dataLoaded = {
         visitasdocliente: 'Visitas do Cliente',
         receitasdocliente: 'Receitas do Cliente',
         valor: 'Valor',
-        codigo: 'Cód. Comercial',
+        codigo: 'Cód. Chamado',
         segmento: 'Segmento',
         demanda: 'Demanda',
 
@@ -3299,25 +3299,6 @@ function isNBOnlyRole() {
 function canAccessNB() {
     return isAdminRole() || isNBOnlyRole();
 }
-function getAllowedNavPagesForRole(role) {
-    const normalizedRole = String(role || '').trim();
-    if (normalizedRole === 'Admin') {
-        return ['dashboard', 'nosso-bolo', 'visitas', 'requisicao', 'financeiro', 'clientes', 'rh', 'reembolsos', 'validades', 'servicos', 'chamados'];
-    }
-    if (normalizedRole === 'Gestor B' || normalizedRole === 'Operador') {
-        return ['nosso-bolo'];
-    }
-    if (normalizedRole === 'Comercial') {
-        return ['visitas', 'chamados'];
-    }
-    return ['visitas', 'requisicao', 'clientes', 'reembolsos', 'validades'];
-}
-function getDefaultPageForRole(role) {
-    const normalizedRole = String(role || '').trim();
-    if (normalizedRole === 'Admin') return 'dashboard';
-    if (canAccessNB()) return 'nosso-bolo';
-    return 'visitas';
-}
 function canAccessNBManagement() {
     return isAdminRole() || loggedInUser?.Role === 'Gestor B';
 }
@@ -3365,7 +3346,7 @@ function syncNBAnalyticsPresetButtons() {
 }
 function syncNBTopProductsLimitButtons() {
     document.querySelectorAll('[data-nb-top-limit]').forEach(btn => {
-        const active = String(btn.dataset.nbTopLimit || '') === String(nbTopProductsGestaoLimit);
+        const active = Number(btn.dataset.nbTopLimit) === Number(nbTopProductsGestaoLimit);
         btn.classList.toggle('bg-brand-gold', active);
         btn.classList.toggle('text-white', active);
         btn.classList.toggle('bg-white', !active);
@@ -3387,7 +3368,7 @@ function applyNBAnalyticsPreset(preset, render = true) {
     if (render) renderNBManagement();
 }
 function applyNBTopProductsLimit(limit, render = true) {
-    nbTopProductsGestaoLimit = String(limit || '5');
+    nbTopProductsGestaoLimit = Number(limit) || 5;
     syncNBTopProductsLimitButtons();
     if (render) renderNBTopProductsGestao();
 }
@@ -3790,22 +3771,20 @@ function getNBFinanceDraftSummary(dateString, prefix) {
 }
 function getNBPanelDayTotals(dateString, groups = getVisibleNBPanelGroups()) {
     const products = groups.flatMap(group => group.products || []);
+    const productMap = new Map(products.map(product => [product.Id, product]));
     const records = products.map(product => getNBApontamento(dateString, product.Id)).filter(Boolean);
-    const allProductsMap = new Map(nbProdutosData.map(product => [product.Id, product]));
-    const allDayRecords = nbApontamentosData.filter(record => getNBLinkedDateValue(record) === dateString);
     const producao = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Producao), 0);
     const venda = records.reduce((sum, record) => sum + computeNBVenda(record), 0);
     const sobraAnterior = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Anterior), 0);
     const perda = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Perda), 0);
     const sobraAtual = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Atual), 0);
     const disponivel = sobraAnterior + producao;
-    const faturamentoProdutos = allDayRecords.reduce((sum, record) => {
-        const product = allProductsMap.get(getNBLinkedProductId(record));
+    const faturamentoProdutos = records.reduce((sum, record) => {
+        const product = productMap.get(getNBLinkedProductId(record));
         if (!product) return sum;
         return sum + (computeNBVenda(record) * Number(product.Preco_Venda || 0));
     }, 0);
     const encomendaTotals = getNBEncomendaRevenueTotalsForDate(dateString);
-    const faturamentoEncomendas = encomendaTotals.total;
     return {
         disponivel,
         producao,
@@ -3814,8 +3793,8 @@ function getNBPanelDayTotals(dateString, groups = getVisibleNBPanelGroups()) {
         perda,
         sobraAtual,
         faturamentoProdutos,
-        faturamentoEncomendas,
-        faturamentoTotal: faturamentoProdutos + faturamentoEncomendas
+        faturamentoEncomendas: encomendaTotals.total,
+        faturamentoTotal: faturamentoProdutos + encomendaTotals.total
     };
 }
 function getNBPanelCalculationGroups() {
@@ -3950,51 +3929,23 @@ function escapeNBHtml(value = '') {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 }
-function normalizeBrazilianPhoneDigits(value, maxDigits = 11) {
-    return String(value || '').replace(/\D/g, '').slice(0, maxDigits);
-}
-function formatBrazilianPhoneBR(value) {
-    const digits = normalizeBrazilianPhoneDigits(value);
-    if (!digits) return '';
-
-    const ddd = digits.slice(0, 2);
-    const remaining = digits.slice(2);
-    const isMobile = remaining.startsWith('9');
-    const firstBlockLength = isMobile ? 5 : 4;
-    const firstBlock = remaining.slice(0, firstBlockLength);
-    const secondBlock = remaining.slice(firstBlockLength, firstBlockLength + 4);
-
-    if (digits.length <= 2) return `(${ddd}`;
-    if (remaining.length <= firstBlockLength) return `(${ddd}) ${remaining}`;
-    return `(${ddd}) ${firstBlock}${secondBlock ? `-${secondBlock}` : ''}`;
-}
 function normalizeNBPhoneDigits(value) {
-    return normalizeBrazilianPhoneDigits(value);
+    return String(value || '').replace(/\D/g, '').slice(0, 11);
 }
 function formatNBPhoneBR(value) {
-    return formatBrazilianPhoneBR(value);
-}
-function applyBrazilianPhoneMask(input) {
-    if (!input) return;
-    input.setAttribute('inputmode', 'numeric');
-    input.setAttribute('autocomplete', 'tel');
-    if (!input.placeholder) input.placeholder = '(00) 00000-0000';
-    input.value = formatBrazilianPhoneBR(input.value);
-}
-function normalizeBrazilianPhoneInputs(form) {
-    if (!form) return;
-    form.querySelectorAll('input[type="tel"]').forEach(input => {
-        input.value = normalizeBrazilianPhoneDigits(input.value);
-    });
-}
-function setupBrazilianPhoneInputs(root = document) {
-    root.querySelectorAll('input[type="tel"]').forEach(input => {
-        applyBrazilianPhoneMask(input);
-        if (input.dataset.phoneMaskBound === 'true') return;
-        input.dataset.phoneMaskBound = 'true';
-        input.addEventListener('input', e => {
-            e.target.value = formatBrazilianPhoneBR(e.target.value);
+    const digits = normalizeNBPhoneDigits(value);
+    if (!digits) return '';
+    if (digits.length <= 10) {
+        return digits.replace(/^(\d{2})(\d{0,4})(\d{0,4})$/, (_, ddd, first, last) => {
+            const firstPart = first ? ` ${first}` : '';
+            const lastPart = last ? `-${last}` : '';
+            return `(${ddd})${firstPart}${lastPart}`;
         });
+    }
+    return digits.replace(/^(\d{2})(\d{0,5})(\d{0,4})$/, (_, ddd, first, last) => {
+        const firstPart = first ? ` ${first}` : '';
+        const lastPart = last ? `-${last}` : '';
+        return `(${ddd})${firstPart}${lastPart}`;
     });
 }
 function getNBEncomendaById(id) {
@@ -4281,7 +4232,7 @@ function setNBEncomendaDraftFromRecord(record = null) {
 function syncNBEncomendaHeaderFromForm() {
     nbEncomendaDraftHeader = {
         Nome_Cliente: document.getElementById('nb-encomenda-client-name')?.value || '',
-        Telefone: normalizeNBPhoneDigits(document.getElementById('nb-encomenda-phone')?.value || ''),
+        Telefone: document.getElementById('nb-encomenda-phone')?.value || '',
         Descricao_Encomenda: document.getElementById('nb-encomenda-descricao')?.value || '',
         Valor_Total: Number(document.getElementById('nb-encomenda-valor-total')?.value || 0),
         Data_Pedido: document.getElementById('nb-encomenda-data-pedido')?.value || '',
@@ -4430,7 +4381,7 @@ function renderNBEncomendasModal() {
     };
     setValue('nb-encomenda-id', selectedRecord?.Id || '');
     setValue('nb-encomenda-client-name', header.Nome_Cliente || '');
-    setValue('nb-encomenda-phone', formatNBPhoneBR(header.Telefone || ''));
+    setValue('nb-encomenda-phone', header.Telefone || '');
     setValue('nb-encomenda-descricao', header.Descricao_Encomenda || '');
     setValue('nb-encomenda-valor-total', Number(header.Valor_Total || 0) || '');
     setValue('nb-encomenda-data-pedido', header.Data_Pedido || '');
@@ -4685,6 +4636,7 @@ async function refreshNBModuleSilently() {
     if (!document.getElementById('nb-encomendas-modal')?.classList.contains('hidden')) return;
     if (document.hidden || isNBModuleInputFocused()) return;
     if (Date.now() < nbPanelRefreshBlockedUntil) return;
+    if (nbCarryForwardPropagationPendingCount > 0) return;
     nbModuleRefreshInProgress = true;
     try {
         nbSuppressFetchAlerts = true;
@@ -4762,6 +4714,29 @@ function setNBPanelSelectedCategoryIds(ids, render = true) {
 }
 function blockNBPanelAutoRefresh(ms = 45000) {
     nbPanelRefreshBlockedUntil = Math.max(nbPanelRefreshBlockedUntil || 0, Date.now() + Math.max(0, ms));
+}
+function queueNBSobraCarryForwardPropagation(dateString, productId, preservedOpenCategoryId = '') {
+    nbCarryForwardPropagationPendingCount += 1;
+    nbCarryForwardPropagationQueue = nbCarryForwardPropagationQueue
+        .catch(() => {})
+        .then(async () => {
+            const previousSuppressFetchAlerts = nbSuppressFetchAlerts;
+            nbSuppressFetchAlerts = true;
+            try {
+                await syncNBSobraCarryForwardFrom(dateString, productId);
+                if (preservedOpenCategoryId) {
+                    setNBPanelOpenCategoryId(preservedOpenCategoryId);
+                }
+                renderNBPanelTotals();
+                syncNBPanelCategoryAccordion();
+            } catch (error) {
+                console.warn('Propagação de sobra em segundo plano falhou:', error);
+            } finally {
+                nbSuppressFetchAlerts = previousSuppressFetchAlerts;
+                nbCarryForwardPropagationPendingCount = Math.max(0, nbCarryForwardPropagationPendingCount - 1);
+            }
+        });
+    return nbCarryForwardPropagationQueue;
 }
 function renderNBPanelCategoryModal() {
     const list = document.getElementById('nb-panel-category-list');
@@ -6008,7 +5983,7 @@ function renderNBManagement() {
     renderNBCategoriesList();
     renderNBProductsList();
 }
-// Ranking dos produtos mais vendidos na Gestão (período customizado)
+// Ranking dos 10 produtos mais vendidos na Gestão (período customizado)
 function renderNBTopProductsGestao() {
     const list = document.getElementById('nb-top-products-gestao-list');
     if (!list) return;
@@ -6027,16 +6002,15 @@ function renderNBTopProductsGestao() {
             }
         }
     });
-    const visibleLimit = nbTopProductsGestaoLimit === 'all' ? Infinity : (Number(nbTopProductsGestaoLimit) || 5);
     const sorted = Object.entries(salesByProduct)
         .filter(([, v]) => v.total > 0)
         .sort((a, b) => b[1].total - a[1].total)
-    const visibleItems = visibleLimit === Infinity ? sorted : sorted.slice(0, visibleLimit);
-    if (visibleItems.length === 0) {
+        .slice(0, nbTopProductsGestaoLimit);
+    if (sorted.length === 0) {
         list.innerHTML = '<li class="text-gray-500 dark:text-gray-400">Nenhuma venda registrada no período.</li>';
         return;
     }
-    list.innerHTML = visibleItems.map(([_, v], idx) =>
+    list.innerHTML = sorted.map(([_, v], idx) =>
         `<li class="flex items-center gap-3"><span class="font-bold text-lg w-6 text-right">${idx + 1}.</span> <span class="flex-1">${v.nome}</span> <span class="font-mono bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 rounded px-2 py-1">${v.total}</span></li>`
     ).join('');
 }
@@ -6084,6 +6058,76 @@ function getNextNBOperationalDate(dateString) {
         nextDate = addDays(nextDate, 1);
     }
     return toDateInputValue(nextDate);
+}
+async function syncNBSobraCarryForwardFrom(dateString, productId) {
+    const currentRecord = getNBApontamento(dateString, productId);
+    if (!currentRecord) return;
+    let carryValue = normalizeNBNumber(currentRecord.Qtd_Sobra_Atual);
+    let nextDate = getNextNBOperationalDate(dateString);
+    const nextControlDay = await ensureNBControlDay(nextDate);
+    if (!nextControlDay) return;
+    const nextRecord = getNBApontamento(nextDate, productId);
+    if (nextRecord?.Id) {
+        const nextProducao = normalizeNBNumber(nextRecord.Qtd_Producao);
+        const nextPerda = normalizeNBNumber(nextRecord.Qtd_Perda);
+        const desiredSobraAtual = (nextProducao === 0 && nextPerda === 0 && normalizeNBNumber(nextRecord.Qtd_Sobra_Atual) === 0)
+            ? carryValue
+            : normalizeNBNumber(nextRecord.Qtd_Sobra_Atual);
+        const payload = {
+            Qtd_Sobra_Anterior: carryValue,
+            Qtd_Sobra_Atual: desiredSobraAtual,
+            Qtd_Venda: computeNBVenda({ ...nextRecord, Qtd_Sobra_Anterior: carryValue, Qtd_Sobra_Atual: desiredSobraAtual })
+        };
+        const result = await persistNBApontamentoRecord({
+            dateString: nextDate,
+            productId,
+            controlDayId: nextControlDay.Id,
+            values: payload,
+            recordId: nextRecord.Id
+        });
+        if (result) {
+            Object.assign(nextRecord, result);
+            const normalizedId = normalizeNBRecordId(result);
+            if (normalizedId && !nextRecord.Id) nextRecord.Id = normalizedId;
+            if (normalizedId && !nextRecord.id) nextRecord.id = normalizedId;
+        } else {
+            Object.assign(nextRecord, payload);
+        }
+    } else {
+        const payload = {
+            Qtd_Sobra_Anterior: carryValue,
+            Qtd_Producao: 0,
+            Qtd_Perda: 0,
+            Qtd_Sobra_Atual: carryValue,
+            Qtd_Venda: carryValue
+        };
+        const result = await persistNBApontamentoRecord({
+            dateString: nextDate,
+            productId,
+            controlDayId: nextControlDay.Id,
+            values: payload
+        });
+        if (result) {
+            const normalizedId = normalizeNBRecordId(result);
+            if (normalizedId && !result.Id) result.Id = normalizedId;
+            if (normalizedId && !result.id) result.id = normalizedId;
+            nbApontamentosData.push(result);
+        }
+    }
+}
+async function normalizeNBCarryForwardAll() {
+    const activeProducts = nbProdutosData.filter(product => isNBRecordActive(product.Ativo));
+    const controlDates = nbControleDiasData
+        .map(day => day.Data)
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b));
+    for (const product of activeProducts) {
+        const firstDateWithRecord = controlDates.find(dateString => Boolean(getNBApontamento(dateString, product.Id)));
+        if (!firstDateWithRecord) continue;
+        // Propaga apenas os dias seguintes a partir do primeiro registro encontrado.
+        // O dia de origem mantém exatamente o que foi salvo pelo usuário.
+        await syncNBSobraCarryForwardFrom(firstDateWithRecord, product.Id);
+    }
 }
 function upsertLocalNBApontamento(dateString, productId, values) {
     let record = getNBApontamento(dateString, productId);
@@ -6182,6 +6226,7 @@ async function saveNBPanelCell(dateString, productId, cell) {
     if (preservedOpenCategoryId) setNBPanelOpenCategoryId(preservedOpenCategoryId);
     renderNBPanelTotals();
     showNBToast('Apontamento salvo com sucesso.');
+    void queueNBSobraCarryForwardPropagation(dateString, Number(productId), preservedOpenCategoryId);
 }
 async function handleNBFinanceSubmit(e) {
     e.preventDefault();
@@ -6424,6 +6469,11 @@ function renderNBProductsList() {
     container.style.maxHeight = needsScroll ? '300px' : '';
     container.style.overflowY = needsScroll ? 'auto' : '';
     container.style.paddingRight = needsScroll ? '0.5rem' : '';
+}
+async function handleNBCloseDay() {
+    void normalizeNBCarryForwardAll();
+    await fetchNBApontamentos();
+    renderNBModule();
 }
     // --- Funções de Carregamento de Dados (Fetch) ---
 // --- CARREGAMENTO OTIMIZADO ---
@@ -6702,7 +6752,6 @@ async function fetchRequisicoesItens() {
 async function initializeUserSession(user) {
     // 1. PRIMEIRO: Define quem é o usuário logado globalmente
     loggedInUser = user;
-    loggedInUser.Role = String(loggedInUser.Role || '').trim();
 
     // Atualiza nome e função na interface
     document.getElementById('logged-user-name').textContent = loggedInUser.Login;
@@ -6721,7 +6770,7 @@ async function initializeUserSession(user) {
     const clienteFilterWrapper = document.getElementById('dash-visit-cliente-wrapper');
     
     if (consultorFilterWrapper && clienteFilterWrapper) {
-        if (loggedInUser && (loggedInUser.Role === 'Admin' || loggedInUser.Role === 'Gestor' || loggedInUser.Role === 'Comercial')) {
+        if (loggedInUser && (loggedInUser.Role === 'Admin' || loggedInUser.Role === 'Gestor')) {
             consultorFilterWrapper.classList.remove('hidden');
             clienteFilterWrapper.classList.remove('hidden');
         } else {
@@ -6802,7 +6851,7 @@ async function initializeUserSession(user) {
             sessionStorage.setItem('activeSubTab_nosso-bolo', 'nb-painel-content');
         }
     } else {
-        const allowedPages = getAllowedNavPagesForRole(loggedInUser.Role);
+        const allowedPages = ['visitas', 'requisicao', 'clientes', 'reembolsos', 'validades'];
         document.querySelectorAll('.nav-link').forEach(link => {
             const target = link.dataset.target;
             link.style.display = allowedPages.includes(target) ? 'flex' : 'none';
@@ -6817,11 +6866,8 @@ async function initializeUserSession(user) {
     // --- CORREÇÃO DO F5 E CARREGAMENTO DE PÁGINA ---
     let savedPage = sessionStorage.getItem('currentPage');
     
-    // Define página padrão se não houver salva ou se a página salva não estiver liberada para o perfil
-    const allowedPages = getAllowedNavPagesForRole(loggedInUser.Role);
-    const defaultPage = getDefaultPageForRole(loggedInUser.Role);
-    savedPage = allowedPages.includes(savedPage) ? savedPage : defaultPage;
-    sessionStorage.setItem('currentPage', savedPage);
+    // Define página padrão se não houver salva
+    savedPage = savedPage || (loggedInUser.Role === 'Admin' ? 'dashboard' : (canAccessNB() ? 'nosso-bolo' : 'visitas'));
 
     // Importante: Chama o loadPageData para a página que vai abrir.
     // Isso garante que se for 'requisicao', ele baixe os dados e aplique a data padrão de 45 dias
@@ -7001,7 +7047,7 @@ function createConsultorCard(c) {
     const statusClass = c.Status === 'Ativo' ? 'bg-green-500' : 'bg-red-500';
 
     let actionIconsHTML = `
-        <a href="https://wa.me/${normalizeBrazilianPhoneDigits(c.Telefone || '')}" target="_blank" class="text-green-500 hover:text-green-600" title="WhatsApp">
+        <a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600" title="WhatsApp">
             <i class="fab fa-whatsapp fa-lg"></i>
         </a>
     `;
@@ -7058,7 +7104,7 @@ function createConsultorCard(c) {
         categoryIconHTML = getCategoryIcon(c.Categoria);
     }
     let actionIconsHTML = `
-        <a href="https://wa.me/${normalizeBrazilianPhoneDigits(c.Telefone || '')}" target="_blank" class="text-green-500 hover:text-green-600" title="WhatsApp">
+        <a href="https://wa.me/${c.Telefone || ''}" target="_blank" class="text-green-500 hover:text-green-600" title="WhatsApp">
             <i class="fab fa-whatsapp fa-lg"></i>
         </a> 
         <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.Endereco || '')}" target="_blank" class="text-blue-500 hover:text-blue-600" title="Ver no Mapa">
@@ -7508,7 +7554,7 @@ function applyAndRenderValidades() {
     }
 }
     // --- Lógica de Submissão de Formulários (CRUD) ---
-async function handleFormSubmit(e) {
+    async function handleFormSubmit(e) {
     e.preventDefault();
     const form = e.target;
     let id = form.dataset.id || (form.querySelector('input[type="hidden"]') ? form.querySelector('input[type="hidden"]').value : null);
@@ -7520,7 +7566,6 @@ async function handleFormSubmit(e) {
     showLoadingOverlay('Salvando...');
 
     try {
-        normalizeBrazilianPhoneInputs(form);
         // --- PREPARAÇÃO DOS DADOS (dentro do switch) ---
         switch (form.id) {
             case 'validade-form': {
@@ -7579,7 +7624,7 @@ async function handleFormSubmit(e) {
                     Cnpj: form.querySelector('#servico-cnpj').value,
                     Datacontratacao: form.querySelector('#servico-datacontratacao').value,
                     DataEntrega: form.querySelector('#servico-dataentrega').value || null,
-                    Contato: normalizeBrazilianPhoneDigits(form.querySelector('#servico-contato').value),
+                    Contato: form.querySelector('#servico-contato').value,
                     Valor: parseFloat(form.querySelector('#servico-valor').value) || 0,
                     Descricao: form.querySelector('#servico-descricao').value,
                     Observacao: form.querySelector('#servico-observacao').value,
@@ -7593,13 +7638,13 @@ async function handleFormSubmit(e) {
                 callback = async () => { await fetchServicos(); applyAndRenderServicos(); hideSubFormToggle('servicos-history-container', 'servico-form-container'); };
                 break;
             }
-    case 'chamado-form':
+            case 'chamado-form':
     id = form.dataset.id;
     endpoint = id ? `${TABLE_IDS.Chamados}/${id}` : TABLE_IDS.Chamados;
     body = {
         Codigo: form.querySelector('#chamado-codigo').value,
         Nome: form.querySelector('#chamado-nome').value,
-        Contato: normalizeBrazilianPhoneDigits(form.querySelector('#chamado-contato').value),
+        Contato: form.querySelector('#chamado-contato').value,
         Segmento: form.querySelector('#chamado-segmento').value,
         Demanda: form.querySelector('#chamado-demanda').value,
         Observacao: form.querySelector('#chamado-observacao').value,
@@ -7627,7 +7672,7 @@ async function handleFormSubmit(e) {
             case 'rh-form': {
                 const table = TABLE_IDS.Consultores;
                 endpoint = id ? `${table}/${id}` : table;
-                body = { Nome: form.querySelector('#rh-nome').value, DataNascimento: form.querySelector('#rh-nasc').value || null, Telefone: normalizeBrazilianPhoneDigits(form.querySelector('#rh-tel').value), Email: form.querySelector('#rh-email').value, Login: form.querySelector('#rh-login').value, InicioVinculo: form.querySelector('#rh-inicio').value || null, FimVinculo: form.querySelector('#rh-fim').value || null, CNPJ: form.querySelector('#rh-cnpj').value, RazaoSocial: form.querySelector('#rh-razao').value, ValorHora: parseFloat(form.querySelector('#rh-valor').value) || 0, Status: form.querySelector('#rh-status').value, Role: form.querySelector('#rh-role').value, Endereco: form.querySelector('#rh-endereco').value, Observacao: form.querySelector('#rh-obs').value };
+                body = { Nome: form.querySelector('#rh-nome').value, DataNascimento: form.querySelector('#rh-nasc').value || null, Telefone: form.querySelector('#rh-tel').value, Email: form.querySelector('#rh-email').value, Login: form.querySelector('#rh-login').value, InicioVinculo: form.querySelector('#rh-inicio').value || null, FimVinculo: form.querySelector('#rh-fim').value || null, CNPJ: form.querySelector('#rh-cnpj').value, RazaoSocial: form.querySelector('#rh-razao').value, ValorHora: parseFloat(form.querySelector('#rh-valor').value) || 0, Status: form.querySelector('#rh-status').value, Role: form.querySelector('#rh-role').value, Endereco: form.querySelector('#rh-endereco').value, Observacao: form.querySelector('#rh-obs').value };
                 const senha = form.querySelector('#rh-senha').value; if (senha) body.Senha = senha;
                 const fileInput = form.querySelector('input[type="file"]');
                 if (fileInput && fileInput.files[0]) {
@@ -7640,7 +7685,7 @@ async function handleFormSubmit(e) {
             case 'cliente-form': {
                 const table = TABLE_IDS.Clientes;
                 endpoint = id ? `${table}/${id}` : table;
-                body = { Nome: form.querySelector('#cliente-nome').value, RazaoSocial: form.querySelector('#cliente-razao').value, CNPJ: form.querySelector('#cliente-cnpj').value, Telefone: normalizeBrazilianPhoneDigits(form.querySelector('#cliente-tel').value), Email: form.querySelector('#cliente-email').value, HorasContratadas: parseInt(form.querySelector('#cliente-horas').value) || 0, Valor: parseFloat(form.querySelector('#cliente-valor').value) || 0, Status: form.querySelector('#cliente-status').value, Categoria: form.querySelector('#cliente-categoria').value, Responsavel: form.querySelector('#cliente-responsavel').value, CPFResponsavel: form.querySelector('#cliente-cpf').value, IPTU: form.querySelector('#cliente-iptu').value, SenhaPortal: form.querySelector('#cliente-senha-portal').value, Endereco: form.querySelector('#cliente-endereco').value, Observacao: form.querySelector('#cliente-obs').value };
+                body = { Nome: form.querySelector('#cliente-nome').value, RazaoSocial: form.querySelector('#cliente-razao').value, CNPJ: form.querySelector('#cliente-cnpj').value, Telefone: form.querySelector('#cliente-tel').value, Email: form.querySelector('#cliente-email').value, HorasContratadas: parseInt(form.querySelector('#cliente-horas').value) || 0, Valor: parseFloat(form.querySelector('#cliente-valor').value) || 0, Status: form.querySelector('#cliente-status').value, Categoria: form.querySelector('#cliente-categoria').value, Responsavel: form.querySelector('#cliente-responsavel').value, CPFResponsavel: form.querySelector('#cliente-cpf').value, IPTU: form.querySelector('#cliente-iptu').value, SenhaPortal: form.querySelector('#cliente-senha-portal').value, Endereco: form.querySelector('#cliente-endereco').value, Observacao: form.querySelector('#cliente-obs').value };
                 const fileInput = form.querySelector('input[type="file"]');
                 if (fileInput && fileInput.files[0]) {
                     const fileData = await uploadFile(table, 'Foto', fileInput.files[0]);
@@ -8411,7 +8456,7 @@ async function handleEditItemObservation(itemJoinId, currentObs) {
             const form = document.getElementById('chamado-form');
             form.reset();
             delete form.dataset.id;
-            document.getElementById('chamado-modal-title').textContent = "Novo Comercial";
+            document.getElementById('chamado-modal-title').textContent = "Novo Chamado";
             document.getElementById('chamado-status-wrapper').classList.add('hidden');
             document.getElementById('chamado-codigo').value = generateRandomCode();
             showModal(document.getElementById('chamado-form-modal'));
@@ -8832,7 +8877,7 @@ const pageWidth = doc.internal.pageSize.getWidth();
             const horaInicio = visita.HoraInicio ? visita.HoraInicio.substring(0, 5) : 'N/A';
             const horaFim = visita.HoraFim ? visita.HoraFim.substring(0, 5) : 'N/A';
             
-            const horarioText = `Data: ${new Date(visita.DataVisita+'T00:00:00').toLocaleDateString('pt-BR')}\nIní­cio: ${horaInicio}\nFim: ${horaFim}`;
+            const horarioText = `Data: ${new Date(visita.DataVisita+'T00:00:00').toLocaleDateString('pt-BR')}\nIni­cio: ${horaInicio}\nFim: ${horaFim}`;
             
             const atividadesText = (visita.Atividades || 'Nenhuma atividade.')
                 .split('\n')
@@ -8901,15 +8946,15 @@ function handleTableEdit(btn) {
     } 
     break; 
 }
-        case 'chamado': { 
+case 'chamado': { 
     const c = chamadosData.find(d => d.Id === id); 
     if (c) { 
         const form = document.getElementById('chamado-form');
         form.dataset.id = c.Id;
-        document.getElementById('chamado-modal-title').textContent = "Editar Comercial";
+        document.getElementById('chamado-modal-title').textContent = "Editar Chamado";
         form.querySelector('#chamado-codigo').value = c.Codigo || '';
         form.querySelector('#chamado-nome').value = c.Nome;
-        form.querySelector('#chamado-contato').value = formatBrazilianPhoneBR(c.Contato || '');
+        form.querySelector('#chamado-contato').value = c.Contato || '';
         form.querySelector('#chamado-segmento').value = c.Segmento || ''; 
         form.querySelector('#chamado-demanda').value = c.Demanda || ''; 
         form.querySelector('#chamado-observacao').value = c.Observacao || '';
@@ -8951,7 +8996,7 @@ function handleTableEdit(btn) {
                 f.querySelector('#servico-cnpj').value = s.Cnpj || '';
                 f.querySelector('#servico-datacontratacao').value = s.Datacontratacao;
                 f.querySelector('#servico-dataentrega').value = s.DataEntrega || '';
-                f.querySelector('#servico-contato').value = formatBrazilianPhoneBR(s.Contato || '');
+                f.querySelector('#servico-contato').value = s.Contato || '';
                 f.querySelector('#servico-valor').value = s.Valor || '';
                 f.querySelector('#servico-descricao').value = s.Descricao || '';
                 f.querySelector('#servico-observacao').value = s.Observacao || '';
@@ -8978,10 +9023,10 @@ function handleTableEdit(btn) {
 }
     }
 }
-function handleCardEdit() { if (!activeCard) return; hideModal(allElements.detailsModal); const isConsultor = activeCard.classList.contains('rh-card'); const formContainerId = isConsultor ? 'rh-form-container' : 'cliente-form-container'; const cardsContainerId = isConsultor ? 'rh-cards-container' : 'cliente-cards-container'; const form = document.getElementById(formContainerId).querySelector('form'); const data = activeCard.dataset; form.reset(); let hiddenIdInput = form.querySelector('input[type="hidden"]'); if (!hiddenIdInput) { hiddenIdInput = document.createElement('input'); hiddenIdInput.type = 'hidden'; hiddenIdInput.id = isConsultor ? 'rh-id' : 'cliente-id'; form.prepend(hiddenIdInput); } hiddenIdInput.value = data.id;  const fieldMapping = isConsultor 
+    function handleCardEdit() { if (!activeCard) return; hideModal(allElements.detailsModal); const isConsultor = activeCard.classList.contains('rh-card'); const formContainerId = isConsultor ? 'rh-form-container' : 'cliente-form-container'; const cardsContainerId = isConsultor ? 'rh-cards-container' : 'cliente-cards-container'; const form = document.getElementById(formContainerId).querySelector('form'); const data = activeCard.dataset; form.reset(); let hiddenIdInput = form.querySelector('input[type="hidden"]'); if (!hiddenIdInput) { hiddenIdInput = document.createElement('input'); hiddenIdInput.type = 'hidden'; hiddenIdInput.id = isConsultor ? 'rh-id' : 'cliente-id'; form.prepend(hiddenIdInput); } hiddenIdInput.value = data.id;  const fieldMapping = isConsultor 
         ? {'rh-nome':'nome', 'rh-nasc':'datanascimento', 'rh-tel':'telefone', 'rh-email':'email', 'rh-login':'login', 'rh-inicio':'iniciovinculo', 'rh-fim':'fimvinculo', 'rh-cnpj':'cnpj', 'rh-razao':'razaosocial', 'rh-valor':'valorhora', 'rh-status':'status', 'rh-role':'role', 'rh-endereco':'endereco', 'rh-obs':'observacao'} 
          : {'cliente-nome':'nome', 'cliente-razao':'razaosocial', 'cliente-cnpj':'cnpj', 'cliente-tel':'telefone', 'cliente-email':'email', 'cliente-horas':'horascontratadas', 'cliente-valor':'valor', 'cliente-status':'status', 'cliente-responsavel':'responsavel', 'cliente-cpf':'cpfresponsavel', 'cliente-iptu':'iptu', 'cliente-senha-portal':'senhaportal', 'cliente-endereco':'endereco', 'cliente-obs':'observacao'};for (const [fieldId, dataKey] of Object.entries(fieldMapping)) { const input = form.querySelector(`#${fieldId}`); if (input) { if (dataKey === 'role' && !data[dataKey]) {
-        input.value = 'Consultor'; } else { input.value = input.type === 'tel' ? formatBrazilianPhoneBR(data[dataKey] || '') : (data[dataKey] || ''); } } } if (!isConsultor) {
+        input.value = 'Consultor'; } else { input.value = data[dataKey] || ''; } } } if (!isConsultor) {
         const valorWrapper = document.getElementById('cliente-valor-wrapper');
         if (loggedInUser && loggedInUser.Role === 'Admin') {
             valorWrapper.classList.remove('hidden');
@@ -9098,7 +9143,7 @@ const openDetailsModal = (card) => {
         case 'requisicao': dataArray = requisicoesData; title = 'Detalhes da Requisição'; break;
         case 'reembolso': dataArray = reembolsosData; title = 'Detalhes do Reembolso'; break;
         case 'servico': dataArray = servicosData; title = 'Detalhes do Serviço'; break;
-        case 'chamado': dataArray = chamadosData; title = 'Detalhes do Comercial'; break;
+        case 'chamado': dataArray = chamadosData; title = 'Detalhes do Chamado'; break;
         default: return;
     }
 
@@ -9211,7 +9256,7 @@ const openDetailsModal = (card) => {
         if (type === 'chamado') {
              // --- CORREÇÃO AQUI: Troque 'chamado' por 'data' ---
              contentHTML = `
-                <p><strong>Cód. Comercial:</strong> ${data.Codigo || 'N/A'}</p>
+                <p><strong>Cód. Chamado:</strong> ${data.Codigo || 'N/A'}</p>
                 <p><strong>Status:</strong> ${data.Status || 'N/A'}</p>
                 <p><strong>Data Abertura:</strong> ${formatDateTime(data.Data)}</p>
                 <p><strong>Nome:</strong> ${data.Nome || 'N/A'}</p>
@@ -9847,8 +9892,8 @@ function applyFilters() {
         (!st || v.Status === st)
     );
 
-    // Lógica para Gestor/Comercial ver mês atual e o próximo (independente do status)
-    if (loggedInUser && (loggedInUser.Role === 'Gestor' || loggedInUser.Role === 'Comercial')) {
+    // Lógica para Gestor/Consultor ver mês atual e o próximo (independente do status)
+    if (loggedInUser && (loggedInUser.Role === 'Gestor' || loggedInUser.Role === 'Consultor')) {
         const today = new Date();
         const currentYear = today.getFullYear();
         const currentMonth = today.getMonth();
@@ -9930,9 +9975,9 @@ function renderKanbanBoard(d){
 function createKanbanCard(v){
     const{color,label}=sConf[v.Status] || {color: 'gray', label: v.Status}; 
     const dF=new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR'); 
-    const isAdmin = loggedInUser.Role === 'Admin';
-    const isGestor = loggedInUser.Role === 'Gestor' || loggedInUser.Role === 'Comercial';
-    const isConsultorOwner = (loggedInUser.Role === 'Consultor' || loggedInUser.Role === 'Comercial') && v.Consultores?.Id == loggedInUser.Id;
+     const isAdmin = loggedInUser.Role === 'Admin';
+    const isGestor = loggedInUser.Role === 'Gestor';
+    const isConsultorOwner = loggedInUser.Role === 'Consultor' && v.Consultores?.Id == loggedInUser.Id;
     const isAgendada = v.Status === 'Agendada';
     const canModify = isAdmin || (isGestor && isAgendada) || (isConsultorOwner && isAgendada);
 
@@ -10014,8 +10059,8 @@ function createKanbanCard(v){
         
         // --- INÍCIO DA ALTERAÇÃO ---
         const isAdmin = loggedInUser.Role === 'Admin';
-    const isGestor = loggedInUser.Role === 'Gestor' || loggedInUser.Role === 'Comercial';
-    const isConsultorOwner = (loggedInUser.Role === 'Consultor' || loggedInUser.Role === 'Comercial') && v.Consultores?.Id == loggedInUser.Id;
+        const isGestor = loggedInUser.Role === 'Gestor';
+        const isConsultorOwner = loggedInUser.Role === 'Consultor' && v.Consultores?.Id == loggedInUser.Id;
         const isAgendada = v.Status === 'Agendada';
 
         // Regra de permissão para modificar (editar/apagar)
@@ -10128,7 +10173,7 @@ function renderChamadosList(data) {
     data.forEach(c => {
         const codChamado = c.Codigo || `PONTES-${c.Id.toString().padStart(6, '0')}`;
         const actionsHTML = `
-            <a href="https://wa.me/${normalizeBrazilianPhoneDigits(c.Contato || '')}" target="_blank" class="text-green-500 hover:text-green-600" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+            <a href="https://wa.me/${c.Contato || ''}" target="_blank" class="text-green-500 hover:text-green-600" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
             <button class="table-details-btn text-gray-500" data-type="chamado" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
             <button class="table-edit-btn text-blue-500" data-type="chamado" title="Editar"><i class="fas fa-edit"></i></button>
             <button class="table-delete-btn text-red-500" data-type="chamado" title="Apagar"><i class="fas fa-trash"></i></button>
@@ -10241,7 +10286,7 @@ function createChamadoKanbanCard(c) {
     const statusClass = c.Status === 'Respondido' ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800';
     const codChamado = c.Codigo || `PONTES-${c.Id.toString().padStart(6, '0')}`;
     const actionsHTML = `
-        <a href="https://wa.me/${normalizeBrazilianPhoneDigits(c.Contato || '')}" target="_blank" class="text-green-500 hover:text-green-600" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+        <a href="https://wa.me/${c.Contato || ''}" target="_blank" class="text-green-500 hover:text-green-600" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
         <button class="table-details-btn text-gray-500" data-type="chamado" title="Ver Detalhes"><i class="fas fa-eye"></i></button>
         <button class="table-edit-btn text-blue-500" data-type="chamado" title="Editar"><i class="fas fa-edit"></i></button>
         <button class="table-delete-btn text-red-500" data-type="chamado" title="Apagar"><i class="fas fa-trash"></i></button>
@@ -11026,7 +11071,6 @@ function renderReembolsos(data = reembolsosData) {
 
   // --- Inicialização ---
 function initializeApp() {
-        setupBrazilianPhoneInputs();
         document.getElementById('nb-finance-form')?.addEventListener('submit', handleNBFinanceSubmit);
         document.getElementById('nb-panel-finance-btn')?.addEventListener('click', openNBPanelFinanceModal);
         document.getElementById('nb-panel-category-btn')?.addEventListener('click', openNBPanelCategoryModal);
@@ -11394,7 +11438,7 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
         const form = document.getElementById('chamado-form');
         form.reset();
         delete form.dataset.id;
-        document.getElementById('chamado-modal-title').textContent = "Novo Comercial";
+        document.getElementById('chamado-modal-title').textContent = "Novo Chamado";
         document.getElementById('chamado-status-wrapper').classList.add('hidden');
         document.getElementById('chamado-codigo').value = generateRandomCode();
         showModal(document.getElementById('chamado-form-modal'));
