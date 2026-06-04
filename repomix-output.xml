@@ -3981,21 +3981,29 @@ function getNBFinanceDraftSummary(dateString, prefix) {
     };
 }
 function getNBPanelDayTotals(dateString, groups = getVisibleNBPanelGroups()) {
+    // 1. Cálculos de quantidade (apenas para produtos das categorias marcadas)
     const products = groups.flatMap(group => group.products || []);
-    const productMap = new Map(products.map(product => [product.Id, product]));
     const records = products.map(product => getNBApontamento(dateString, product.Id)).filter(Boolean);
+    
     const producao = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Producao), 0);
     const venda = records.reduce((sum, record) => sum + computeNBVenda(record), 0);
     const sobraAnterior = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Anterior), 0);
     const perda = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Perda), 0);
     const sobraAtual = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Atual), 0);
     const disponivel = sobraAnterior + producao;
-    const faturamentoProdutos = records.reduce((sum, record) => {
-        const product = productMap.get(getNBLinkedProductId(record));
+
+    // 2. Cálculo do Faturamento Teórico (TODOS os apontamentos do dia, independente do filtro de categorias)
+    const allRecordsForDate = nbApontamentosData.filter(item => getNBLinkedDateValue(item) === dateString);
+    const allProductMap = new Map(nbProdutosData.map(product => [product.Id, product]));
+    
+    const faturamentoProdutos = allRecordsForDate.reduce((sum, record) => {
+        const product = allProductMap.get(getNBLinkedProductId(record));
         if (!product) return sum;
         return sum + (computeNBVenda(record) * Number(product.Preco_Venda || 0));
     }, 0);
+
     const encomendaTotals = getNBEncomendaRevenueTotalsForDate(dateString);
+    
     return {
         disponivel,
         producao,
@@ -5262,7 +5270,7 @@ function renderNBCharts() {
     const startDate = document.getElementById('nb-analytics-start')?.value || '';
     const endDate = document.getElementById('nb-analytics-end')?.value || '';
     const granularity = document.getElementById('nb-analytics-granularity')?.value || 'day';
-    const { records, revenue, loss, costOfGoods, categoryRevenue, productMap } = getNBMetrics(startDate, endDate);
+    const { records, encomendaPaymentsPeriod, revenue, loss, costOfGoods, categoryRevenue, productMap } = getNBMetrics(startDate, endDate);
     const totalDespesasPeriodo = getNBExpensePeriodTotals(startDate, endDate).total;
     const summaryRevenue = document.getElementById('nb-summary-revenue');
     const summaryLoss = document.getElementById('nb-summary-loss');
@@ -5302,6 +5310,28 @@ function renderNBCharts() {
         if (!groupedTimeline[key]) groupedTimeline[key] = { revenue: 0, cost: 0, label: formatNBMonthYearLabel(dateValue, false), tooltip: formatNBMonthYearLabel(dateValue, true) };
         groupedTimeline[key].revenue += computeNBVenda(record) * Number(product.Preco_Venda || 0);
         groupedTimeline[key].cost += computeNBVenda(record) * Number(product.Preco_Custo || 0);
+
+        // Adiciona o faturamento das encomendas na linha do tempo
+    if (encomendaPaymentsPeriod) {
+        encomendaPaymentsPeriod.forEach(payment => {
+            const dateValue = getNBEncomendaPaymentDateValue(payment);
+            if (!dateValue) return;
+            const key = getNBGroupKey(dateValue, granularity);
+            
+            if (!groupedTimeline[key]) {
+                // Tratativa de compatibilidade (já que existem duas funções renderNBCharts no seu código)
+                if (typeof buildPeriodMeta === 'function') {
+                    groupedTimeline[key] = { revenue: 0, cost: 0, ...buildPeriodMeta(dateValue) };
+                } else {
+                    const parsed = parseDateOnly(dateValue);
+                    let label = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                    let tooltip = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    groupedTimeline[key] = { revenue: 0, cost: 0, label, tooltip };
+                }
+            }
+            groupedTimeline[key].revenue += getNBEncomendaPaymentAmount(payment);
+        });
+    }
     });
     const timelineKeys = Object.keys(groupedTimeline).sort();
     const timelineLabels = timelineKeys.map(key => groupedTimeline[key].label);
@@ -5402,14 +5432,33 @@ function renderNBCharts() {
 }
 function getNBMetrics(startDate, endDate) {
     const productMap = new Map(nbProdutosData.map(product => [product.Id, product]));
+    
+    // 1. Filtra apontamentos dos produtos no período
     const records = nbApontamentosData.filter(item => {
         const date = getNBLinkedDateValue(item);
         return date && (!startDate || date >= startDate) && (!endDate || date <= endDate);
     });
+
+    // 2. Filtra pagamentos de encomendas no período
+    const encomendaPaymentsPeriod = nbEncomendaPagamentosData.filter(item => {
+        const date = getNBEncomendaPaymentDateValue(item);
+        if (!date || (startDate && date < startDate) || (endDate && date > endDate)) return false;
+        
+        // Ignora pagamentos de encomendas canceladas
+        const encomendaId = getNBLinkedEncomendaId(item);
+        if (encomendaId) {
+            const order = getNBEncomendaById(encomendaId);
+            if (order && getNBEncomendaBaseStatus(order).toLowerCase() === 'cancelada') return false;
+        }
+        return true;
+    });
+
     let revenue = 0;
     let loss = 0;
     let costOfGoods = 0;
     const categoryRevenue = {};
+
+    // Soma do faturamento e custos dos Produtos
     records.forEach(record => {
         const product = productMap.get(getNBLinkedProductId(record));
         if (!product) return;
@@ -5417,13 +5466,25 @@ function getNBMetrics(startDate, endDate) {
         const revenueValue = saleUnits * Number(product.Preco_Venda || 0);
         const lossValue = normalizeNBNumber(record.Qtd_Perda) * Number(product.Preco_Custo || 0);
         const costValue = saleUnits * Number(product.Preco_Custo || 0);
+        
         revenue += revenueValue;
         loss += lossValue;
         costOfGoods += costValue;
+        
         const categoryName = product.Categoria?.Nome || 'Sem categoria';
         categoryRevenue[categoryName] = (categoryRevenue[categoryName] || 0) + revenueValue;
     });
-    return { records, revenue, loss, costOfGoods, categoryRevenue, productMap };
+
+    // Soma do faturamento das Encomendas
+    const totalEncomendas = encomendaPaymentsPeriod.reduce((sum, item) => sum + getNBEncomendaPaymentAmount(item), 0);
+    revenue += totalEncomendas;
+    
+    // Adiciona "Encomendas" como uma fatia no gráfico de Rosca
+    if (totalEncomendas > 0) {
+        categoryRevenue['Encomendas'] = (categoryRevenue['Encomendas'] || 0) + totalEncomendas;
+    }
+
+    return { records, encomendaPaymentsPeriod, revenue, loss, costOfGoods, categoryRevenue, productMap };
 }
 function getNBGroupKey(dateString, granularity) {
     const date = parseDateOnly(dateString);
@@ -5436,7 +5497,7 @@ function renderNBCharts() {
     const startDate = document.getElementById('nb-analytics-start')?.value || '';
     const endDate = document.getElementById('nb-analytics-end')?.value || '';
     const granularity = document.getElementById('nb-analytics-granularity')?.value || 'day';
-    const { records, revenue, loss, costOfGoods, categoryRevenue, productMap } = getNBMetrics(startDate, endDate);
+    const { records, encomendaPaymentsPeriod, revenue, loss, costOfGoods, categoryRevenue, productMap } = getNBMetrics(startDate, endDate);
     const expenseTotalsPeriod = getNBExpensePeriodTotals(startDate, endDate);
     const summaryRevenue = document.getElementById('nb-summary-revenue');
     const summaryLoss = document.getElementById('nb-summary-loss');
@@ -5496,6 +5557,28 @@ function renderNBCharts() {
         }
         groupedTimeline[key].revenue += computeNBVenda(record) * Number(product.Preco_Venda || 0);
         groupedTimeline[key].cost += computeNBVenda(record) * Number(product.Preco_Custo || 0);
+
+        // Adiciona o faturamento das encomendas na linha do tempo
+    if (encomendaPaymentsPeriod) {
+        encomendaPaymentsPeriod.forEach(payment => {
+            const dateValue = getNBEncomendaPaymentDateValue(payment);
+            if (!dateValue) return;
+            const key = getNBGroupKey(dateValue, granularity);
+            
+            if (!groupedTimeline[key]) {
+                // Tratativa de compatibilidade (já que existem duas funções renderNBCharts no seu código)
+                if (typeof buildPeriodMeta === 'function') {
+                    groupedTimeline[key] = { revenue: 0, cost: 0, ...buildPeriodMeta(dateValue) };
+                } else {
+                    const parsed = parseDateOnly(dateValue);
+                    let label = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                    let tooltip = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    groupedTimeline[key] = { revenue: 0, cost: 0, label, tooltip };
+                }
+            }
+            groupedTimeline[key].revenue += getNBEncomendaPaymentAmount(payment);
+        });
+    }
     });
     const timelineKeys = Object.keys(groupedTimeline).sort();
     const timelineLabels = timelineKeys.map(key => groupedTimeline[key].label);
@@ -5633,7 +5716,7 @@ function renderNBCharts() {
     const startDate = document.getElementById('nb-analytics-start')?.value || '';
     const endDate = document.getElementById('nb-analytics-end')?.value || '';
     const granularity = document.getElementById('nb-analytics-granularity')?.value || 'day';
-    const { records, revenue, loss, costOfGoods, categoryRevenue, productMap } = getNBMetrics(startDate, endDate);
+    const { records, encomendaPaymentsPeriod, revenue, loss, costOfGoods, categoryRevenue, productMap } = getNBMetrics(startDate, endDate);
     const periodDays = getNBControleDaysInPeriod();
     const uniquePeriodDays = [...new Map(periodDays.map(day => [day.Data, day])).values()];
     const buildPeriodMeta = (dateString) => {
@@ -5727,6 +5810,27 @@ function renderNBCharts() {
         if (!groupedTimeline[key]) groupedTimeline[key] = { revenue: 0, cost: 0, ...buildPeriodMeta(dateValue) };
         groupedTimeline[key].revenue += computeNBVenda(record) * Number(product.Preco_Venda || 0);
         groupedTimeline[key].cost += computeNBVenda(record) * Number(product.Preco_Custo || 0);
+        // Adiciona o faturamento das encomendas na linha do tempo
+    if (encomendaPaymentsPeriod) {
+        encomendaPaymentsPeriod.forEach(payment => {
+            const dateValue = getNBEncomendaPaymentDateValue(payment);
+            if (!dateValue) return;
+            const key = getNBGroupKey(dateValue, granularity);
+            
+            if (!groupedTimeline[key]) {
+                // Tratativa de compatibilidade (já que existem duas funções renderNBCharts no seu código)
+                if (typeof buildPeriodMeta === 'function') {
+                    groupedTimeline[key] = { revenue: 0, cost: 0, ...buildPeriodMeta(dateValue) };
+                } else {
+                    const parsed = parseDateOnly(dateValue);
+                    let label = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                    let tooltip = parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    groupedTimeline[key] = { revenue: 0, cost: 0, label, tooltip };
+                }
+            }
+            groupedTimeline[key].revenue += getNBEncomendaPaymentAmount(payment);
+        });
+    }
     });
     const timelineKeys = Object.keys(groupedTimeline).sort();
     const timelineLabels = timelineKeys.map(key => groupedTimeline[key].label);
