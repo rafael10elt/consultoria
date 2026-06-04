@@ -1928,8 +1928,8 @@ body {
 <div id="chamados" class="page hidden">
     <div class="flex flex-col md:flex-row justify-between md:items-center mb-4">
         <div>
-            <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Chamados</h2>
-            <p class="text-gray-600 dark:text-gray-300">Gerenciamento de chamados e atendimento ao cliente.</p>
+            <h2 class="text-3xl font-bold text-gray-800 dark:text-white">Comercial</h2>
+            <p class="text-gray-600 dark:text-gray-300">Gestão de Leads.</p>
         </div>
         <div class="flex items-center space-x-2 mt-4 md:mt-0">
             <div class="p-1 bg-gray-200 dark:bg-gray-700 rounded-lg">
@@ -3813,6 +3813,9 @@ function getNBEncomendaDescription(record = {}) {
 function getNBEncomendaExpectedDate(record = {}) {
     return record.Previsao_Entrega || '';
 }
+function getNBEncomendaBaseStatus(record = {}) {
+    return String(record.Status_Encomenda || record.Status || 'Aberta').trim() || 'Aberta';
+}
 function getNBEncomendaPaymentAmount(record = {}) {
     return Number(record.Valor_Pago ?? 0);
 }
@@ -3839,6 +3842,23 @@ function getNBEncomendaPaymentsTotalsForDate(dateString) {
         total: totalsByForm.dinheiro,
         cashTotal: totalsByForm.dinheiro,
         electronicTotal: 0
+    };
+}
+function getNBEncomendaRevenuePaymentsForDate(dateString) {
+    return getNBEncomendaPaymentsForDate(dateString).filter(payment => {
+        const encomendaId = getNBLinkedEncomendaId(payment);
+        if (!encomendaId) return true;
+        const order = getNBEncomendaById(encomendaId);
+        if (!order) return true;
+        return getNBEncomendaBaseStatus(order).toLowerCase() !== 'cancelada';
+    });
+}
+function getNBEncomendaRevenueTotalsForDate(dateString) {
+    const records = getNBEncomendaRevenuePaymentsForDate(dateString);
+    const total = records.reduce((sum, item) => sum + getNBEncomendaPaymentAmount(item), 0);
+    return {
+        records,
+        total
     };
 }
 function getNBControlDayFinancialSnapshot(dateString) {
@@ -3970,15 +3990,12 @@ function getNBPanelDayTotals(dateString, groups = getVisibleNBPanelGroups()) {
     const perda = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Perda), 0);
     const sobraAtual = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Atual), 0);
     const disponivel = sobraAnterior + producao;
-    const revenueProducts = nbProdutosData.filter(product => product && product.Ativo !== false);
-    const revenueProductMap = new Map(revenueProducts.map(product => [product.Id, product]));
-    const revenueRecords = revenueProducts.map(product => getNBApontamento(dateString, product.Id)).filter(Boolean);
-    const faturamentoProdutos = revenueRecords.reduce((sum, record) => {
-        const product = revenueProductMap.get(getNBLinkedProductId(record));
+    const faturamentoProdutos = records.reduce((sum, record) => {
+        const product = productMap.get(getNBLinkedProductId(record));
         if (!product) return sum;
         return sum + (computeNBVenda(record) * Number(product.Preco_Venda || 0));
     }, 0);
-    const encomendaTotals = getNBEncomendaPaymentsTotalsForDate(dateString);
+    const encomendaTotals = getNBEncomendaRevenueTotalsForDate(dateString);
     return {
         disponivel,
         producao,
@@ -9071,7 +9088,7 @@ const pageWidth = doc.internal.pageSize.getWidth();
             const horaInicio = visita.HoraInicio ? visita.HoraInicio.substring(0, 5) : 'N/A';
             const horaFim = visita.HoraFim ? visita.HoraFim.substring(0, 5) : 'N/A';
             
-            const horarioText = `Data: ${new Date(visita.DataVisita+'T00:00:00').toLocaleDateString('pt-BR')}\nIní­cio: ${horaInicio}\nFim: ${horaFim}`;
+            const horarioText = `Data: ${new Date(visita.DataVisita+'T00:00:00').toLocaleDateString('pt-BR')}\nIni­cio: ${horaInicio}\nFim: ${horaFim}`;
             
             const atividadesText = (visita.Atividades || 'Nenhuma atividade.')
                 .split('\n')

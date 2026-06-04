@@ -3770,21 +3770,29 @@ function getNBFinanceDraftSummary(dateString, prefix) {
     };
 }
 function getNBPanelDayTotals(dateString, groups = getVisibleNBPanelGroups()) {
+    // 1. Cálculos de quantidade (apenas para produtos das categorias marcadas)
     const products = groups.flatMap(group => group.products || []);
-    const productMap = new Map(products.map(product => [product.Id, product]));
     const records = products.map(product => getNBApontamento(dateString, product.Id)).filter(Boolean);
+    
     const producao = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Producao), 0);
     const venda = records.reduce((sum, record) => sum + computeNBVenda(record), 0);
     const sobraAnterior = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Anterior), 0);
     const perda = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Perda), 0);
     const sobraAtual = records.reduce((sum, record) => sum + normalizeNBNumber(record.Qtd_Sobra_Atual), 0);
     const disponivel = sobraAnterior + producao;
-    const faturamentoProdutos = records.reduce((sum, record) => {
-        const product = productMap.get(getNBLinkedProductId(record));
+
+    // 2. Cálculo do Faturamento Teórico (TODOS os apontamentos do dia, independente do filtro de categorias)
+    const allRecordsForDate = nbApontamentosData.filter(item => getNBLinkedDateValue(item) === dateString);
+    const allProductMap = new Map(nbProdutosData.map(product => [product.Id, product]));
+    
+    const faturamentoProdutos = allRecordsForDate.reduce((sum, record) => {
+        const product = allProductMap.get(getNBLinkedProductId(record));
         if (!product) return sum;
         return sum + (computeNBVenda(record) * Number(product.Preco_Venda || 0));
     }, 0);
+
     const encomendaTotals = getNBEncomendaRevenueTotalsForDate(dateString);
+    
     return {
         disponivel,
         producao,
