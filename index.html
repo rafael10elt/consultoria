@@ -10941,7 +10941,11 @@ function renderReembolsos(data = reembolsosData) {
                     body: tableBody,
                     theme: 'grid',
                     headStyles: { fillColor: [191, 161, 106], textColor: [255, 255, 255] }, // Dourado do sistema
-                    foot: [[`Total - ${catName}`, '', catTotalQtd, f(catTotalValue)]],
+                    foot: [[
+                        { content: `Total - ${catName}`, colSpan: 2 }, 
+                        { content: catTotalQtd, styles: { halign: 'center' } }, 
+                        { content: f(catTotalValue), styles: { halign: 'right' } }
+                    ]],
                     footStyles: { fillColor: [243, 244, 246], textColor: [55, 55, 55], fontStyle: 'bold' },
                     columnStyles: {
                         0: { cellWidth: 'auto' },
@@ -10979,7 +10983,11 @@ function renderReembolsos(data = reembolsosData) {
                     body: tableBodyEnc,
                     theme: 'grid',
                     headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255] }, // Azul (diferencia dos produtos)
-                    foot: [[`Total - Encomendas`, '', '-', f(encTotalValue)]],
+                    foot: [[
+                        { content: `Total - Encomendas`, colSpan: 2 }, 
+                        { content: '-', styles: { halign: 'center' } }, 
+                        { content: f(encTotalValue), styles: { halign: 'right' } }
+                    ]],
                     footStyles: { fillColor: [243, 244, 246], textColor: [55, 55, 55], fontStyle: 'bold' },
                     columnStyles: {
                         0: { cellWidth: 'auto' },
