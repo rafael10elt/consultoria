@@ -10942,7 +10942,7 @@ function renderReembolsos(data = reembolsosData) {
                     theme: 'grid',
                     headStyles: { fillColor: [191, 161, 106], textColor: [255, 255, 255] }, // Dourado do sistema
                     foot: [[
-                        { content: `Total - ${catName}`, colSpan: 2 }, 
+                        { content: 'Total', colSpan: 2 }, 
                         { content: catTotalQtd, styles: { halign: 'center' } }, 
                         { content: f(catTotalValue), styles: { halign: 'right' } }
                     ]],
@@ -10984,7 +10984,7 @@ function renderReembolsos(data = reembolsosData) {
                     theme: 'grid',
                     headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255] }, // Azul (diferencia dos produtos)
                     foot: [[
-                        { content: `Total - Encomendas`, colSpan: 2 }, 
+                        { content: 'Total', colSpan: 2 }, 
                         { content: '-', styles: { halign: 'center' } }, 
                         { content: f(encTotalValue), styles: { halign: 'right' } }
                     ]],
