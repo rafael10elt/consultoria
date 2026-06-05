@@ -3909,6 +3909,25 @@ function getNBFinanceEntryTotal(record = {}) {
 function isNBOperatorRole() {
     return loggedInUser?.Role === 'Operador';
 }
+function getNBTheoricalRevenueForDate(dateString) {
+    const productMap = new Map(nbProdutosData.map(product => [product.Id, product]));
+    const apontamentos = nbApontamentosData.filter(item => getNBLinkedDateValue(item) === dateString);
+    
+    // Faturamento dos Produtos
+    let faturamentoProdutos = 0;
+    apontamentos.forEach(record => {
+        const product = productMap.get(getNBLinkedProductId(record));
+        if (!product) return;
+        const saleUnits = computeNBVenda(record);
+        faturamentoProdutos += saleUnits * Number(product.Preco_Venda || 0);
+    });
+    
+    // Faturamento das Encomendas
+    const encomendaTotals = getNBEncomendaRevenueTotalsForDate(dateString);
+    
+    // Total Teórico
+    return faturamentoProdutos + encomendaTotals.total;
+}
 function getNBFinanceDaySummary(dateString) {
     const financeRecord = getNBFinanceRecord(dateString) || {};
     const expenseRecords = getNBExpenseRecords(dateString);
@@ -3924,7 +3943,8 @@ function getNBFinanceDaySummary(dateString) {
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const faturamentoDinheiro = (caixaFinal + sangria + despesas + vales + encomendaTotals.cashTotal) - caixaInicial;
     const faturamentoTotal = faturamentoDinheiro + entradasPix + entradasApp + entradasMaquineta;
-    const faturamentoFinal = faturamentoTotal - faturamentoDinheiro;
+    const faturamentoTeórico = getNBTheoricalRevenueForDate(dateString);
+    const faturamentoFinal = faturamentoTotal - faturamentoTeórico;
     return {
         financeRecord,
         caixaInicial,
@@ -3962,7 +3982,8 @@ function getNBFinanceDraftSummary(dateString, prefix) {
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const faturamentoDinheiro = (caixaFinal + sangria + despesas + vales + encomendaTotals.cashTotal) - caixaInicial;
     const faturamentoTotal = faturamentoDinheiro + entradasPix + entradasApp + entradasMaquineta;
-    const faturamentoFinal = faturamentoTotal - faturamentoDinheiro;
+    const faturamentoTeórico = getNBTheoricalRevenueForDate(dateString);
+    const faturamentoFinal = faturamentoTotal - faturamentoTeórico;
     return {
         caixaInicial,
         caixaFinal,
@@ -3980,6 +4001,7 @@ function getNBFinanceDraftSummary(dateString, prefix) {
         status: financeRecord.Status || 'Aberto'
     };
 }
+
 function getNBPanelDayTotals(dateString, groups = getVisibleNBPanelGroups()) {
     // 1. Cálculos de quantidade (apenas para produtos das categorias marcadas)
     const products = groups.flatMap(group => group.products || []);

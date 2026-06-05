@@ -86,9 +86,11 @@ body {
             max-height: 250px;
             overflow-y: auto;
         }
-            #nb-top-products-week-list {
-                max-height: 250px;
+            #nb-top-products-week-list,
+            #nb-top-products-gestao-list {
+                max-height: 180px; /* Altura ideal para exibir +- 5 itens */
                 overflow-y: auto;
+                padding-right: 5px; /* Evita que a barra cole no texto */
             }
 /* Adicione este novo código no final da sua tag <style> */
 /* Limitar altura e permitir rolagem nos blocos principais */
@@ -493,7 +495,8 @@ body {
                                         <div class="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                                             <button type="button" data-nb-top-limit="5" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-brand-gold text-white">5</button>
                                             <button type="button" data-nb-top-limit="10" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200">10</button>
-                                            <button type="button" data-nb-top-limit="20" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200">20</button>
+                                          <button type="button" data-nb-top-limit="20" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200">20</button>
+                                          <button type="button" data-nb-top-limit="all" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200">Tudo</button>
                                         </div>
                                     </div>
                                     <ul id="nb-top-products-gestao-list" class="space-y-2"></ul>
@@ -3346,7 +3349,7 @@ function syncNBAnalyticsPresetButtons() {
 }
 function syncNBTopProductsLimitButtons() {
     document.querySelectorAll('[data-nb-top-limit]').forEach(btn => {
-        const active = Number(btn.dataset.nbTopLimit) === Number(nbTopProductsGestaoLimit);
+        const active = String(btn.dataset.nbTopLimit) === String(nbTopProductsGestaoLimit);
         btn.classList.toggle('bg-brand-gold', active);
         btn.classList.toggle('text-white', active);
         btn.classList.toggle('bg-white', !active);
@@ -3368,7 +3371,7 @@ function applyNBAnalyticsPreset(preset, render = true) {
     if (render) renderNBManagement();
 }
 function applyNBTopProductsLimit(limit, render = true) {
-    nbTopProductsGestaoLimit = Number(limit) || 5;
+    nbTopProductsGestaoLimit = limit === 'all' ? 'all' : (Number(limit) || 5);
     syncNBTopProductsLimitButtons();
     if (render) renderNBTopProductsGestao();
 }
@@ -5725,10 +5728,14 @@ function renderNBTopProductsGestao() {
             }
         }
     });
-    const sorted = Object.entries(salesByProduct)
+    let sorted = Object.entries(salesByProduct)
         .filter(([, v]) => v.total > 0)
-        .sort((a, b) => b[1].total - a[1].total)
-        .slice(0, nbTopProductsGestaoLimit);
+        .sort((a, b) => b[1].total - a[1].total);
+        
+    // Se não for "Tudo", corta a lista no número selecionado
+    if (nbTopProductsGestaoLimit !== 'all') {
+        sorted = sorted.slice(0, nbTopProductsGestaoLimit);
+    }
     if (sorted.length === 0) {
         list.innerHTML = '<li class="text-gray-500 dark:text-gray-400">Nenhuma venda registrada no período.</li>';
         return;
