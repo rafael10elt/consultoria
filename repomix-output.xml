@@ -297,9 +297,11 @@ body {
             max-height: 250px;
             overflow-y: auto;
         }
-            #nb-top-products-week-list {
-                max-height: 250px;
+            #nb-top-products-week-list,
+            #nb-top-products-gestao-list {
+                max-height: 180px; /* Altura ideal para exibir +- 5 itens */
                 overflow-y: auto;
+                padding-right: 5px; /* Evita que a barra cole no texto */
             }
 /* Adicione este novo código no final da sua tag <style> */
 /* Limitar altura e permitir rolagem nos blocos principais */
@@ -667,16 +669,16 @@ body {
                         <div id="nb-gestao-content" class="nb-tab-content hidden">
                             <div class="grid grid-cols-1 xl:grid-cols-4 gap-4 mb-6">
                                 <div class="xl:col-span-3 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div>
+                                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                                        <div class="md:col-span-3">
                                             <label for="nb-analytics-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período de</label>
                                             <input type="date" id="nb-analytics-start" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                         </div>
-                                        <div>
+                                        <div class="md:col-span-3">
                                             <label for="nb-analytics-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período até</label>
                                             <input type="date" id="nb-analytics-end" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                                         </div>
-                                        <div class="md:col-span-1 xl:col-span-1">
+                                        <div class="md:col-span-4">
                                             <span class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Período rápido</span>
                                             <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                                                 <button type="button" data-nb-analytics-preset="day" class="nb-analytics-preset-btn px-3 py-2 rounded-lg border text-sm font-medium transition">Dia</button>
@@ -685,6 +687,11 @@ body {
                                                 <button type="button" data-nb-analytics-preset="year" class="nb-analytics-preset-btn px-3 py-2 rounded-lg border text-sm font-medium transition">Ano</button>
                                             </div>
                                             <input type="hidden" id="nb-analytics-granularity" value="day">
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <button type="button" id="nb-generate-pdf-btn" class="w-full bg-brand-gold text-white px-4 py-2 rounded-lg shadow hover:bg-brand-gold-dark transition-colors flex items-center justify-center h-[42px]">
+                                                <i class="fas fa-file-pdf mr-2"></i>Gerar PDF
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -704,7 +711,8 @@ body {
                                         <div class="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                                             <button type="button" data-nb-top-limit="5" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-brand-gold text-white">5</button>
                                             <button type="button" data-nb-top-limit="10" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200">10</button>
-                                            <button type="button" data-nb-top-limit="20" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200">20</button>
+                                          <button type="button" data-nb-top-limit="20" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200">20</button>
+                                          <button type="button" data-nb-top-limit="all" class="nb-top-limit-btn px-3 py-2 text-sm font-medium bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-200">Tudo</button>
                                         </div>
                                     </div>
                                     <ul id="nb-top-products-gestao-list" class="space-y-2"></ul>
@@ -3557,7 +3565,7 @@ function syncNBAnalyticsPresetButtons() {
 }
 function syncNBTopProductsLimitButtons() {
     document.querySelectorAll('[data-nb-top-limit]').forEach(btn => {
-        const active = Number(btn.dataset.nbTopLimit) === Number(nbTopProductsGestaoLimit);
+        const active = String(btn.dataset.nbTopLimit) === String(nbTopProductsGestaoLimit);
         btn.classList.toggle('bg-brand-gold', active);
         btn.classList.toggle('text-white', active);
         btn.classList.toggle('bg-white', !active);
@@ -3579,7 +3587,7 @@ function applyNBAnalyticsPreset(preset, render = true) {
     if (render) renderNBManagement();
 }
 function applyNBTopProductsLimit(limit, render = true) {
-    nbTopProductsGestaoLimit = Number(limit) || 5;
+    nbTopProductsGestaoLimit = limit === 'all' ? 'all' : (Number(limit) || 5);
     syncNBTopProductsLimitButtons();
     if (render) renderNBTopProductsGestao();
 }
@@ -5936,10 +5944,14 @@ function renderNBTopProductsGestao() {
             }
         }
     });
-    const sorted = Object.entries(salesByProduct)
+    let sorted = Object.entries(salesByProduct)
         .filter(([, v]) => v.total > 0)
-        .sort((a, b) => b[1].total - a[1].total)
-        .slice(0, nbTopProductsGestaoLimit);
+        .sort((a, b) => b[1].total - a[1].total);
+        
+    // Se não for "Tudo", corta a lista no número selecionado
+    if (nbTopProductsGestaoLimit !== 'all') {
+        sorted = sorted.slice(0, nbTopProductsGestaoLimit);
+    }
     if (sorted.length === 0) {
         list.innerHTML = '<li class="text-gray-500 dark:text-gray-400">Nenhuma venda registrada no período.</li>';
         return;
@@ -10991,6 +11003,244 @@ function renderReembolsos(data = reembolsosData) {
     function toggleReportSubtype(){ const reportType = document.getElementById('report-type').value; const visitsFilters = document.getElementById('report-visits-filters'); let financeFilters = document.getElementById('report-finance-filters'); if (!financeFilters) { financeFilters = document.createElement('div'); financeFilters.id = 'report-finance-filters'; visitsFilters.parentElement.insertBefore(financeFilters, visitsFilters); financeFilters.innerHTML = ` <div> <label for="report-finance-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status</label> <select id="report-finance-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"> <option value="">Todos</option> <option value="Pago">Pago</option> <option value="Pendente">Pendente</option> </select> </div>`; } let visitsStatusFilter = document.getElementById('report-visits-status'); if (!visitsStatusFilter) { const statusDiv = document.createElement('div'); visitsFilters.appendChild(statusDiv); statusDiv.innerHTML = ` <label for="report-visits-status" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Status da Visita</label> <select id="report-visits-status" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"> <option value="">Todos</option> <option value="Agendada">Agendada</option> <option value="Em Andamento">Em Andamento</option> <option value="Concluí­da">Concluú­da</option> </select> `; } document.getElementById('report-subtype').parentElement.style.display = 'none'; if (reportType === 'visitas') { visitsFilters.classList.remove('hidden'); financeFilters.classList.add('hidden'); } else { visitsFilters.classList.add('hidden'); financeFilters.classList.remove('hidden'); } }
     function generatePdfReport(e){ e.preventDefault(); const startDate = document.getElementById('report-start-date').value; const endDate = document.getElementById('report-end-date').value; if (!startDate || !endDate) { alert('Por favor, preencha as datas de iní­cio e fim do perí­odo para gerar o relatório.'); return; } const { jsPDF } = window.jspdf; const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' }); const type = document.getElementById('report-type').value; doc.setFontSize(18); doc.text(`Relatório de ${type.charAt(0).toUpperCase() + type.slice(1)}`, 14, 22); doc.setFontSize(11); doc.setTextColor(100); doc.text(`Perí­odo: ${new Date(startDate+'T00:00:00').toLocaleDateString('pt-BR')} a ${new Date(endDate+'T00:00:00').toLocaleDateString('pt-BR')}`, 14, 30); if (type === 'financeiro') { const status = document.getElementById('report-finance-status').value; generateFinanceReport(doc, { startDate, endDate, status }); } else if (type === 'visitas') { const consultorId = document.getElementById('report-consultor').value; const clienteId = document.getElementById('report-cliente').value; const status = document.getElementById('report-visits-status').value; generateVisitReport(doc, { startDate, endDate, consultorId, clienteId, status }); } doc.save(`relatorio_${type}_${new Date().toISOString().slice(0,10)}.pdf`); hideModal(allElements.reportModal); }
     function generateFinanceReport(doc, filters) { const { startDate, endDate, status } = filters; const f = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); let finalY = 40; const baseReceitas = receitasData.filter(r => (!startDate || r.Vencimento >= startDate) && (!endDate || r.Vencimento <= endDate)); const baseCustos = custosData.filter(c => (!startDate || c.Vencimento >= startDate) && (!endDate || c.Vencimento <= endDate)); const drawTable = (title, head, body) => { if (body.length > 0) { doc.setFontSize(12); doc.text(title, 14, finalY); finalY += 2; doc.autoTable({ startY: finalY, head: [head], body: body, theme: 'striped', headStyles: { fillColor: [55, 55, 55] } }); finalY = doc.autoTable.previous.finalY + 10; } }; if (status === "" || status === "Todos") { const receitasPagas = baseReceitas.filter(r => r.Status === 'Pago'); const receitasPendentes = baseReceitas.filter(r => r.Status === 'Pendente'); const custosPagos = baseCustos.filter(c => c.Status === 'Pago'); const custosPendentes = baseCustos.filter(c => c.Status === 'Pendente'); drawTable('Receitas Pagas', ['Cliente', 'Vencimento', 'Valor'], receitasPagas.map(r => [r.Clientes?.Nome || 'N/A', new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)])); drawTable('Custos Pagos', ['Credor', 'Vencimento', 'Valor'], custosPagos.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)])); drawTable('Receitas Pendentes', ['Cliente', 'Vencimento', 'Valor'], receitasPendentes.map(r => [r.Clientes?.Nome || 'N/A', new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)])); drawTable('Custos Pendentes', ['Credor', 'Vencimento', 'Valor'], custosPendentes.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)])); } else { const filteredReceitas = baseReceitas.filter(r => r.Status === status); const filteredCustos = baseCustos.filter(c => c.Status === status); drawTable(`Receitas com Status: ${status}`, ['Cliente', 'Vencimento', 'Valor'], filteredReceitas.map(r => [r.Clientes?.Nome || 'N/A', new Date(r.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(r.Valor)])); drawTable(`Custos com Status: ${status}`, ['Credor', 'Vencimento', 'Valor'], filteredCustos.map(c => [c.Credor, new Date(c.Vencimento+'T00:00:00').toLocaleDateString('pt-BR'), f(c.Valor)])); } if (finalY > 250) doc.addPage(); const totalReceitas = baseReceitas.reduce((sum, r) => sum + r.Valor, 0); const totalCustos = baseCustos.reduce((sum, c) => sum + c.Valor, 0); const balanco = totalReceitas - totalCustos; doc.setFontSize(12); doc.text('Resumo Financeiro do Perí­odo', 14, finalY); doc.setFontSize(10); doc.text(`Total de Receitas: ${f(totalReceitas)}`, 14, finalY + 7); doc.text(`Total de Custos: ${f(totalCustos)}`, 14, finalY + 14); doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.text(`Balanço Final: ${f(balanco)}`, 14, finalY + 21); }
+    async function generateNBSalesReportPdf() {
+        const startDate = document.getElementById('nb-analytics-start')?.value || '';
+        const endDate = document.getElementById('nb-analytics-end')?.value || '';
+
+        if (!startDate || !endDate) {
+            showNBToast('Selecione o período (De e Até) para gerar o relatório.', 'warning');
+            return;
+        }
+
+        const confirmed = await showConfirmModal('Deseja gerar o relatório em PDF com as vendas do período selecionado?');
+        if (!confirmed) return;
+
+        showLoadingOverlay('Gerando Relatório...');
+
+        try {
+            // 1. Dicionários auxiliares
+            const productMap = new Map(nbProdutosData.map(p => [p.Id, p]));
+            const categoryMap = new Map(nbCategoriasData.map(c => [c.Id, c.Nome]));
+
+            // 2. Extração de Produtos Vendidos
+            const apontamentosPeriodo = nbApontamentosData.filter(item => {
+                const dt = getNBLinkedDateValue(item);
+                return dt && dt >= startDate && dt <= endDate;
+            });
+
+            const vendasProdutos = {}; // Agrupamento por Categoria -> Produto
+            
+            apontamentosPeriodo.forEach(record => {
+                const qtdVenda = computeNBVenda(record);
+                if (qtdVenda > 0) { // Ignora zerados
+                    const prodId = getNBLinkedProductId(record);
+                    const product = productMap.get(prodId);
+                    if (product) {
+                        const catId = getNBProductCategoryId(product);
+                        const catName = categoryMap.get(catId) || 'Sem Categoria';
+                        
+                        if (!vendasProdutos[catName]) vendasProdutos[catName] = {};
+                        if (!vendasProdutos[catName][prodId]) {
+                            vendasProdutos[catName][prodId] = {
+                                nome: product.Nome,
+                                preco: Number(product.Preco_Venda || 0),
+                                qtd: 0,
+                                total: 0
+                            };
+                        }
+                        
+                        vendasProdutos[catName][prodId].qtd += qtdVenda;
+                        vendasProdutos[catName][prodId].total += (qtdVenda * Number(product.Preco_Venda || 0));
+                    }
+                }
+            });
+
+            // 3. Extração de Encomendas (Apenas os Pagamentos recebidos no período)
+            const pagamentosEncomendaPeriodo = nbEncomendaPagamentosData.filter(item => {
+                const dt = getNBEncomendaPaymentDateValue(item);
+                if (!dt || dt < startDate || dt > endDate) return false;
+                
+                // Ignorar pagamentos de encomendas canceladas
+                const encId = getNBLinkedEncomendaId(item);
+                if (encId) {
+                    const enc = getNBEncomendaById(encId);
+                    if (enc && getNBEncomendaBaseStatus(enc).toLowerCase() === 'cancelada') return false;
+                }
+                return true;
+            });
+
+            const vendasEncomendas = [];
+            pagamentosEncomendaPeriodo.forEach(pay => {
+                const valor = getNBEncomendaPaymentAmount(pay);
+                if (valor > 0) {
+                    const encId = getNBLinkedEncomendaId(pay);
+                    const enc = getNBEncomendaById(encId);
+                    const cliente = enc ? getNBEncomendaCustomerName(enc) : 'Desconhecido';
+                    const dataPay = getNBEncomendaPaymentDateValue(pay);
+                    
+                    vendasEncomendas.push({
+                        nome: `Encomenda #${encId || '?'} - ${cliente} (${parseDateOnly(dataPay).toLocaleDateString('pt-BR')})`,
+                        preco: '-',
+                        qtd: '-',
+                        total: valor
+                    });
+                }
+            });
+
+            // 4. Criação do Documento PDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+            const pageWidth = doc.internal.pageSize.getWidth();
+            let currentY = 20;
+            const marginX = 14;
+
+            // Cabeçalho (Usando Texto para a Logo do "NOSSO BOLO")
+            doc.setFontSize(22);
+            doc.setTextColor(55, 55, 55);
+            doc.setFont('helvetica', 'bold');
+            doc.text('NOSSO BOLO', marginX, currentY); 
+            
+            doc.setFontSize(14);
+            doc.text('Relatório de Vendas', pageWidth - marginX, currentY, { align: 'right' });
+            
+            currentY += 10;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100);
+            const strDate = `${parseDateOnly(startDate).toLocaleDateString('pt-BR')} a ${parseDateOnly(endDate).toLocaleDateString('pt-BR')}`;
+            doc.text(`Período: ${strDate}`, marginX, currentY);
+            doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, pageWidth - marginX, currentY, { align: 'right' });
+            
+            currentY += 10;
+
+            let grandTotalQtd = 0;
+            let grandTotalValue = 0;
+
+            const f = v => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+            // 5. Tabelas por Categoria de Produtos
+            const categoriasKeys = Object.keys(vendasProdutos).sort();
+            
+            categoriasKeys.forEach(catName => {
+                const produtos = Object.values(vendasProdutos[catName]).sort((a, b) => b.total - a.total);
+                if (produtos.length === 0) return;
+
+                let catTotalQtd = 0;
+                let catTotalValue = 0;
+
+                const tableBody = produtos.map(p => {
+                    catTotalQtd += p.qtd;
+                    catTotalValue += p.total;
+                    return [p.nome, f(p.preco), p.qtd, f(p.total)];
+                });
+
+                grandTotalQtd += catTotalQtd;
+                grandTotalValue += catTotalValue;
+
+                // Nova página se não couber
+                if (currentY > 260) { doc.addPage(); currentY = 20; }
+
+                doc.setFontSize(12);
+                doc.setTextColor(55, 55, 55);
+                doc.setFont('helvetica', 'bold');
+                doc.text(catName, marginX, currentY);
+                currentY += 3;
+
+                doc.autoTable({
+                    startY: currentY,
+                    head: [['Produto', 'Preço Un.', 'Qtd.', 'Total']],
+                    body: tableBody,
+                    theme: 'grid',
+                    headStyles: { fillColor: [191, 161, 106], textColor: [255, 255, 255] }, // Dourado do sistema
+                    foot: [[
+                        { content: 'Total', colSpan: 2 }, 
+                        { content: catTotalQtd, styles: { halign: 'center' } }, 
+                        { content: f(catTotalValue), styles: { halign: 'right' } }
+                    ]],
+                    footStyles: { fillColor: [243, 244, 246], textColor: [55, 55, 55], fontStyle: 'bold' },
+                    columnStyles: {
+                        0: { cellWidth: 'auto' },
+                        1: { cellWidth: 35, halign: 'right' },
+                        2: { cellWidth: 20, halign: 'center' },
+                        3: { cellWidth: 35, halign: 'right' }
+                    },
+                    margin: { left: marginX, right: marginX },
+                });
+                
+                currentY = doc.lastAutoTable.finalY + 10;
+            });
+
+            // 6. Tabela de Encomendas Recebidas
+            if (vendasEncomendas.length > 0) {
+                let encTotalValue = 0;
+                const tableBodyEnc = vendasEncomendas.map(p => {
+                    encTotalValue += p.total;
+                    return [p.nome, p.preco, p.qtd, f(p.total)];
+                });
+
+                grandTotalValue += encTotalValue;
+
+                if (currentY > 250) { doc.addPage(); currentY = 20; }
+
+                doc.setFontSize(12);
+                doc.setTextColor(55, 55, 55);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Encomendas (Pagamentos Recebidos)', marginX, currentY);
+                currentY += 3;
+
+                doc.autoTable({
+                    startY: currentY,
+                    head: [['Descrição do Pagamento', 'Preço Un.', 'Qtd.', 'Total']],
+                    body: tableBodyEnc,
+                    theme: 'grid',
+                    headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255] }, // Azul (diferencia dos produtos)
+                    foot: [[
+                        { content: 'Total', colSpan: 2 }, 
+                        { content: '-', styles: { halign: 'center' } }, 
+                        { content: f(encTotalValue), styles: { halign: 'right' } }
+                    ]],
+                    footStyles: { fillColor: [243, 244, 246], textColor: [55, 55, 55], fontStyle: 'bold' },
+                    columnStyles: {
+                        0: { cellWidth: 'auto' },
+                        1: { cellWidth: 35, halign: 'center' },
+                        2: { cellWidth: 20, halign: 'center' },
+                        3: { cellWidth: 35, halign: 'right' }
+                    },
+                    margin: { left: marginX, right: marginX },
+                });
+                
+                currentY = doc.lastAutoTable.finalY + 10;
+            }
+
+            // 7. Bloco de Total Geral
+            if (currentY > 260) { doc.addPage(); currentY = 20; }
+            
+            doc.setFillColor(55, 55, 55);
+            doc.roundedRect(marginX, currentY, pageWidth - (marginX * 2), 14, 2, 2, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(13);
+            doc.setFont('helvetica', 'bold');
+            doc.text('TOTAL GERAL DE VENDAS DO PERÍODO', marginX + 5, currentY + 9.5);
+            doc.text(f(grandTotalValue), pageWidth - marginX - 5, currentY + 9.5, { align: 'right' });
+
+            // 8. Rodapé (Paginação)
+            const totalPages = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= totalPages; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(150);
+                doc.text(`Página ${i} de ${totalPages}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 10, { align: 'center' });
+            }
+
+            doc.save(`Relatorio_Vendas_NB_${startDate}_a_${endDate}.pdf`);
+
+        } catch (error) {
+            console.error('Erro ao gerar relatório de vendas:', error);
+            showNBToast('Ocorreu um erro ao gerar o relatório.', 'error');
+        } finally {
+            hideLoadingOverlay();
+        }
+    }
     function generateVisitReport(doc, filters) { const { startDate, endDate, consultorId, clienteId, status } = filters; let finalY = 40; let filteredVisitas = visitsData.filter(v => (!startDate || v.DataVisita >= startDate) && (!endDate || v.DataVisita <= endDate) && (!consultorId || v.Consultores?.Id == consultorId) && (!clienteId || v.Clientes?.Id == clienteId) ); if (consultorId) { const c = consultoresData.find(c => c.Id == consultorId); if(c) doc.text(`Consultor: ${c.Nome}`, 14, finalY); finalY += 8;} if (clienteId) { const c = clientesData.find(c => c.Id == clienteId); if(c) doc.text(`Cliente: ${c.Nome}`, 14, finalY); finalY += 8;} if (finalY > 40) finalY += 4; const drawTable = (title, data) => { if (data.length > 0) { doc.setFontSize(12); doc.text(title, 14, finalY); finalY += 2; doc.autoTable({ startY: finalY, head: [['Cliente', 'Consultor', 'Data', 'Horário']], body: data.map(v => [ v.Clientes?.Nome || 'N/A', v.Consultores?.Nome || 'N/A', new Date(v.DataVisita+'T00:00:00').toLocaleDateString('pt-BR'), `${v.HoraInicio} - ${v.HoraFim}`]), theme: 'striped', headStyles: { fillColor: [55, 55, 55] } }); finalY = doc.autoTable.previous.finalY + 10; } }; if (!status || status === "Todos") { const statusGroups = ['Agendada', 'Em Andamento', 'Concluí­da']; statusGroups.forEach(s => { const groupData = filteredVisitas.filter(v => v.Status === s); drawTable(`Visitas ${s}s`, groupData); }); } else { filteredVisitas = filteredVisitas.filter(v => v.Status === status); drawTable(`Visitas com Status: ${status}`, filteredVisitas); } if (filteredVisitas.length === 0) { doc.text('Nenhuma visita encontrada para os filtros selecionados.', 14, finalY); return; } if (finalY > 250) doc.addPage(); const totalMinutos = filteredVisitas.filter(v => v.Status === 'Conclui­da').reduce((sum, v) => sum + calculateDuration(v), 0); doc.setFontSize(12); doc.text('Resumo das Visitas', 14, finalY); doc.setFontSize(10); doc.text(`Total de Visitas no Relatório: ${filteredVisitas.length}`, 14, finalY + 7); doc.text(`Total de Horas Concluí­das: ${Math.floor(totalMinutos/60)}h ${Math.round(totalMinutos%60)}m`, 14, finalY + 14); }
     function handleTableDelete(button) {
     const dataContainer = button.closest('[data-id]');
@@ -11147,6 +11397,7 @@ function initializeApp() {
 
     document.getElementById('download-req-pdf-btn')?.addEventListener('click', generateRequisicaoReport);
     document.getElementById('filter-servico-cliente')?.addEventListener('input', applyAndRenderServicos);
+    document.getElementById('nb-generate-pdf-btn')?.addEventListener('click', generateNBSalesReportPdf);
     document.getElementById('show-servico-form')?.addEventListener('click', () => {
         // Ao abrir o formulário para um novo serviço, esconde o campo de status
         const statusWrapper = document.getElementById('servico-status-wrapper');
