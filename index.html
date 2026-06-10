@@ -5807,31 +5807,70 @@ function renderNBExpensesTable() {
     const tbody = document.getElementById('nb-expense-table-body');
     if (!tbody) return;
     const canManage = canAccessNBManagement();
+    
+    // Tabela superior (apenas a data selecionada para edição rápida)
     const rows = getNBExpenseRecords(nbSelectedDate).sort((a, b) => (a.Tipo || '').localeCompare(b.Tipo || '') || (a.Descricao || '').localeCompare(b.Descricao || ''));
     tbody.innerHTML = rows.map(item => `<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700"><td class="px-4 py-3">${item.Tipo}</td><td class="px-4 py-3">${item.Descricao || '-'}</td><td class="px-4 py-3">${formatCurrencyBR(item.Valor)}</td><td class="px-4 py-3 space-x-2">${canManage ? `<button type="button" class="nb-expense-edit-btn text-blue-500 hover:text-blue-700" data-id="${item.Id}" title="Editar"><i class="fas fa-edit"></i></button><button type="button" class="nb-expense-delete-btn text-red-500 hover:text-red-700" data-id="${item.Id}" title="Apagar"><i class="fas fa-trash"></i></button>` : '<span class="text-xs text-gray-400">Somente leitura</span>'}</td></tr>`).join('') || '<tr><td colspan="4" class="px-4 py-4 text-center text-gray-500">Nenhum lançamento para a data selecionada.</td></tr>';
+    
+    // Trata os Registros do Período (Lista Agrupada)
     const periodList = document.getElementById('nb-expense-period-list');
+    const periodRecords = getNBExpenseRecordsInPeriod().sort((a, b) => (getNBLinkedDateValue(b) || '').localeCompare(getNBLinkedDateValue(a) || '') || (b.Tipo || '').localeCompare(a.Tipo || '') || (b.Descricao || '').localeCompare(a.Descricao || ''));
+    
+    // Atualiza o Total Geral ao lado do botão Cancelar
+    const totalDisplay = document.getElementById('nb-expense-total-display');
+    if (totalDisplay) {
+        const totalPeriodo = periodRecords.reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+        totalDisplay.innerHTML = `Total do filtro: <span class="font-bold text-brand-gold ml-1">${formatCurrencyBR(totalPeriodo)}</span>`;
+    }
+
     if (periodList) {
-        const periodRecords = getNBExpenseRecordsInPeriod().sort((a, b) => (getNBLinkedDateValue(b) || '').localeCompare(getNBLinkedDateValue(a) || '') || (b.Tipo || '').localeCompare(a.Tipo || '') || (b.Descricao || '').localeCompare(a.Descricao || ''));
         const shouldScroll = periodRecords.length > 6;
         periodList.style.maxHeight = shouldScroll ? '520px' : '';
         periodList.style.overflowY = shouldScroll ? 'auto' : '';
         periodList.style.paddingRight = shouldScroll ? '0.5rem' : '';
-        periodList.innerHTML = periodRecords.map(item => `
-            <article class="rounded-lg border dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30 flex flex-col gap-2">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div>
-                        <p class="font-semibold text-gray-800 dark:text-white">${parseDateOnly(getNBLinkedDateValue(item)).toLocaleDateString('pt-BR')}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">${item.Tipo}</p>
-                    </div>
-                    <span class="text-sm font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(item.Valor)}</span>
+        
+        if (periodRecords.length === 0) {
+            periodList.innerHTML = '<div class="text-sm text-gray-500 dark:text-gray-400">Nenhuma despesa ou vale encontrado no período selecionado.</div>';
+            return;
+        }
+
+        // Agrupa os registros pela data
+        const grouped = {};
+        periodRecords.forEach(item => {
+            const dateVal = getNBLinkedDateValue(item);
+            if (!grouped[dateVal]) grouped[dateVal] = { items: [], total: 0 };
+            grouped[dateVal].items.push(item);
+            grouped[dateVal].total += Number(item.Valor || 0); // Soma incluindo PIX
+        });
+
+        // Renderiza cada grupo (Data + Total -> Itens)
+        periodList.innerHTML = Object.entries(grouped).map(([dateVal, group]) => `
+            <div class="mb-5 shadow-sm rounded-lg border dark:border-gray-700">
+                <!-- Cabeçalho / Divisor do Dia -->
+                <div class="flex justify-between items-center bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-t-lg border-b dark:border-gray-600">
+                    <span class="font-bold text-gray-800 dark:text-white">${parseDateOnly(dateVal).toLocaleDateString('pt-BR')}</span>
+                    <span class="font-bold text-brand-gold">${formatCurrencyBR(group.total)}</span>
                 </div>
-                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">${item.Descricao || '-'}</p>
-                <div class="flex gap-2 justify-end mt-2">
-                    <button type="button" class="nb-expense-edit-btn px-3 py-1 rounded bg-blue-100 text-blue-800 hover:bg-blue-200" data-id="${item.Id}"><i class="fas fa-edit"></i> Editar</button>
-                    <button type="button" class="nb-expense-delete-btn px-3 py-1 rounded bg-red-100 text-red-800 hover:bg-red-200" data-id="${item.Id}"><i class="fas fa-trash"></i> Apagar</button>
+                <!-- Itens do dia -->
+                <div class="bg-gray-50 dark:bg-gray-900/30 rounded-b-lg p-2 space-y-2">
+                    ${group.items.map(item => `
+                        <article class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 hover:bg-white dark:hover:bg-gray-800 rounded transition-colors border-b last:border-0 dark:border-gray-700">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[11px] uppercase font-bold tracking-wide px-2 py-0.5 rounded ${item.Tipo === 'PIX' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : (item.Tipo === 'Vale' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200')}">${item.Tipo}</span>
+                                    <span class="text-sm font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(item.Valor)}</span>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${item.Descricao || '-'}</p>
+                            </div>
+                            <div class="flex gap-2 justify-end mt-2 sm:mt-0">
+                                <button type="button" class="nb-expense-edit-btn px-2 py-1.5 rounded bg-blue-100 text-blue-800 hover:bg-blue-200 text-xs font-medium" data-id="${item.Id}"><i class="fas fa-edit mr-1"></i> Editar</button>
+                                <button type="button" class="nb-expense-delete-btn px-2 py-1.5 rounded bg-red-100 text-red-800 hover:bg-red-200 text-xs font-medium" data-id="${item.Id}"><i class="fas fa-trash mr-1"></i> Apagar</button>
+                            </div>
+                        </article>
+                    `).join('')}
                 </div>
-            </article>
-        `).join('') || '<div class="text-sm text-gray-500 dark:text-gray-400">Nenhuma despesa ou vale encontrado no período selecionado.</div>';
+            </div>
+        `).join('');
     }
 }
 function renderNBCategoriesList() {
