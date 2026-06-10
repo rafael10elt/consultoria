@@ -785,11 +785,33 @@ body {
                                         </div>
                                     </form>
                                     <div id="nb-finance-summary" class="mt-4 text-sm text-gray-600 dark:text-gray-300"></div>
-                                    <div class="mt-4">
+                                    <div class="mt-4 border-t dark:border-gray-700 pt-4">
                                         <div class="flex items-center justify-between mb-3">
-                                            <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Registros do período selecionado</h4>
-                                            <span class="text-xs text-brand-gold">Todos os registros entre as datas do filtro</span>
+                                            <div>
+                                                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Registros do período selecionado</h4>
+                                                <span class="text-xs text-brand-gold">Todos os registros entre as datas do filtro</span>
+                                            </div>
+                                            <button type="button" id="nb-btn-show-missing-days" class="px-3 py-1.5 text-xs font-medium text-white bg-blue-500 rounded hover:bg-blue-600 transition-colors">
+                                                <i class="fas fa-plus mr-1"></i> Criar Dia Faltante
+                                            </button>
                                         </div>
+                                        
+                                        <div id="nb-missing-days-container" class="hidden mb-4 p-3 bg-blue-50 dark:bg-gray-700/50 rounded-lg border border-blue-100 dark:border-gray-600 flex flex-col sm:flex-row items-end gap-3 animate-fade-in">
+                                            <div class="w-full sm:flex-1">
+                                                <label for="nb-missing-days-select" class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Selecione o dia sem registro no período:</label>
+                                                <select id="nb-missing-days-select" class="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2 dark:bg-gray-800 dark:border-gray-600 dark:text-white">
+                                                </select>
+                                            </div>
+                                            <div class="flex gap-2 w-full sm:w-auto">
+                                                <button type="button" id="nb-btn-cancel-missing-day" class="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500">
+                                                    Cancelar
+                                                </button>
+                                                <button type="button" id="nb-btn-create-missing-day" class="flex-1 sm:flex-none px-4 py-2 text-sm font-medium text-white bg-green-500 rounded-lg hover:bg-green-600">
+                                                    Criar Registro
+                                                </button>
+                                            </div>
+                                        </div>
+
                                         <div id="nb-finance-period-list" class="space-y-3"></div>
                                     </div>
                                 </div>
@@ -3779,6 +3801,100 @@ function getNBFinanceRecordsInPeriod() {
     return nbFinanceiroData
         .filter(item => isNBDateWithinRange(getNBLinkedDateValue(item), start, end))
         .sort((a, b) => (getNBLinkedDateValue(a) || '').localeCompare(getNBLinkedDateValue(b) || ''));
+}
+        // Retorna um array com as datas do período que NÃO têm registro financeiro
+function getNBMissingFinanceDates(startDate, endDate) {
+    const missingDates = [];
+    // Usa T00:00:00 para evitar problemas de fuso horário na iteração
+    let currentDate = new Date(startDate + 'T00:00:00');
+    const end = new Date(endDate + 'T00:00:00');
+
+    while (currentDate <= end) {
+        const dateString = toDateInputValue(currentDate);
+        if (!getNBFinanceRecord(dateString)) {
+            missingDates.push(dateString);
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+    return missingDates;
+}
+
+// Preenche o Select e mostra a área de criação
+function openMissingDaysCreator() {
+    const { start, end } = getNBAnalyticsPeriodRange();
+    
+    if (!start || !end) {
+        showNBToast('Por favor, defina um período (De / Até) nos filtros acima primeiro.', 'warning');
+        return;
+    }
+
+    const missingDates = getNBMissingFinanceDates(start, end);
+    
+    if (missingDates.length === 0) {
+        showNBToast('Todos os dias deste período já possuem registro financeiro.', 'info');
+        return;
+    }
+
+    const select = document.getElementById('nb-missing-days-select');
+    select.innerHTML = missingDates.map(dateStr => 
+        `<option value="${dateStr}">${parseDateOnly(dateStr).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })}</option>`
+    ).join('');
+
+    document.getElementById('nb-missing-days-container').classList.remove('hidden');
+    document.getElementById('nb-btn-show-missing-days').classList.add('hidden');
+}
+
+// Fecha a área de criação
+function closeMissingDaysCreator() {
+    document.getElementById('nb-missing-days-container').classList.add('hidden');
+    document.getElementById('nb-btn-show-missing-days').classList.remove('hidden');
+}
+
+// Cria o registro zerado no banco
+async function createMissingFinanceDay() {
+    if (!canAccessNBManagement()) return;
+    
+    const select = document.getElementById('nb-missing-days-select');
+    const dateString = select.value;
+    if (!dateString) return;
+
+    showLoadingOverlay('Criando registro financeiro...');
+    
+    try {
+        // Garante que existe um dia de controle para essa data
+        const controlDay = await ensureNBControlDay(dateString);
+        if (!controlDay) throw new Error("Falha ao criar Dia de Controle");
+
+        // Cria o payload zerado
+        const body = {
+            Caixa_Inicial: 0,
+            Caixa_Final: 0,
+            Sangria: 0,
+            Entrada_Dinheiro: 0,
+            Entrada_PIX: 0,
+            Entrada_App: 0,
+            Entrada_Maquineta: 0,
+            Status: 'Aberto',
+            Data: { Id: controlDay.Id }
+        };
+
+        const result = await nocoFetch(TABLE_IDS.NB_Financeiro, {
+            method: 'POST',
+            body: JSON.stringify(body)
+        });
+
+        if (result) {
+            await fetchNBFinanceiro(); // Atualiza os dados locais
+            closeMissingDaysCreator();
+            renderNBManagement(); // Re-renderiza a tela (gráficos e lista)
+            showNBToast(`Registro para ${parseDateOnly(dateString).toLocaleDateString('pt-BR')} criado com sucesso. Clique em Editar para preencher.`, 'success');
+        }
+    } catch (error) {
+        console.error(error);
+        showNBToast('Erro ao criar o registro.', 'error');
+    } finally {
+        hideLoadingOverlay();
+    }
 }
 function getNBExpenseRecordsInPeriod() {
     const { start, end } = getNBAnalyticsPeriodRange();
@@ -11255,6 +11371,10 @@ function renderReembolsos(data = reembolsosData) {
 
   // --- Inicialização ---
 function initializeApp() {
+   
+        document.getElementById('nb-btn-show-missing-days')?.addEventListener('click', openMissingDaysCreator);
+        document.getElementById('nb-btn-cancel-missing-day')?.addEventListener('click', closeMissingDaysCreator);
+        document.getElementById('nb-btn-create-missing-day')?.addEventListener('click', createMissingFinanceDay);
         document.getElementById('nb-finance-form')?.addEventListener('submit', handleNBFinanceSubmit);
         document.getElementById('nb-panel-finance-btn')?.addEventListener('click', openNBPanelFinanceModal);
         document.getElementById('nb-panel-category-btn')?.addEventListener('click', openNBPanelCategoryModal);

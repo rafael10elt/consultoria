@@ -610,12 +610,29 @@ body {
                                         <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Despesas e Vales</h3>
                                         <span class="text-sm text-brand-gold">Listagem de todos os registros do período selecionado</span>
                                     </div>
-                                    <form id="nb-expense-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                                    <form id="nb-expense-form" class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
                                         <input type="hidden" id="nb-expense-id">
-                                        <div><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo</label><select id="nb-expense-type" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"><option value="Despesa">Despesa</option><option value="Vale">Vale</option></select></div>
-                                        <div class="md:col-span-2"><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descrição</label><input type="text" id="nb-expense-description" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
-                                        <div><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor</label><input type="number" step="0.01" id="nb-expense-value" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
-                                        <div class="md:col-span-4 flex justify-end gap-2">
+                                        <div>
+                                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo</label>
+                                            <select id="nb-expense-type" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                <option value="Despesa">Despesa</option>
+                                                <option value="Vale">Vale</option>
+                                                <option value="PIX">PIX</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data</label>
+                                            <input type="date" id="nb-expense-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descrição</label>
+                                            <input type="text" id="nb-expense-description" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        </div>
+                                        <div>
+                                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor</label>
+                                            <input type="number" step="0.01" id="nb-expense-value" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                                        </div>
+                                        <div class="md:col-span-5 flex justify-end gap-2">
                                             <button type="button" id="nb-expense-cancel-btn" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
                                             <button type="submit" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Salvar Lançamento</button>
                                         </div>
@@ -5733,38 +5750,55 @@ function renderNBDiaryFeed() {
 function resetNBExpenseForm() {
     document.getElementById('nb-expense-id').value = '';
     document.getElementById('nb-expense-type').value = 'Despesa';
+    
+    // Por padrão, sugere a data que está sendo visualizada na gestão ou a data de hoje
+    const today = toDateInputValue(new Date());
+    document.getElementById('nb-expense-date').value = nbSelectedDate || today; 
+    
     document.getElementById('nb-expense-description').value = '';
     document.getElementById('nb-expense-value').value = '';
 }
-function renderNBExpensesTable() {
-    const tbody = document.getElementById('nb-expense-table-body');
-    if (!tbody) return;
-    const canManage = canAccessNBManagement();
-    const rows = getNBExpenseRecords(nbSelectedDate).sort((a, b) => (a.Tipo || '').localeCompare(b.Tipo || '') || (a.Descricao || '').localeCompare(b.Descricao || ''));
-    tbody.innerHTML = rows.map(item => `<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700"><td class="px-4 py-3">${item.Tipo}</td><td class="px-4 py-3">${item.Descricao || '-'}</td><td class="px-4 py-3">${formatCurrencyBR(item.Valor)}</td><td class="px-4 py-3 space-x-2">${canManage ? `<button type="button" class="nb-expense-edit-btn text-blue-500 hover:text-blue-700" data-id="${item.Id}" title="Editar"><i class="fas fa-edit"></i></button><button type="button" class="nb-expense-delete-btn text-red-500 hover:text-red-700" data-id="${item.Id}" title="Apagar"><i class="fas fa-trash"></i></button>` : '<span class="text-xs text-gray-400">Somente leitura</span>'}</td></tr>`).join('') || '<tr><td colspan="4" class="px-4 py-4 text-center text-gray-500">Nenhum lançamento para a data selecionada.</td></tr>';
-    const periodList = document.getElementById('nb-expense-period-list');
-    if (periodList) {
-        const periodRecords = getNBExpenseRecordsInPeriod().sort((a, b) => (getNBLinkedDateValue(b) || '').localeCompare(getNBLinkedDateValue(a) || '') || (b.Tipo || '').localeCompare(a.Tipo || '') || (b.Descricao || '').localeCompare(a.Descricao || ''));
-        const shouldScroll = periodRecords.length > 6;
-        periodList.style.maxHeight = shouldScroll ? '520px' : '';
-        periodList.style.overflowY = shouldScroll ? 'auto' : '';
-        periodList.style.paddingRight = shouldScroll ? '0.5rem' : '';
-        periodList.innerHTML = periodRecords.map(item => `
-            <article class="rounded-lg border dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30 flex flex-col gap-2">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div>
-                        <p class="font-semibold text-gray-800 dark:text-white">${parseDateOnly(getNBLinkedDateValue(item)).toLocaleDateString('pt-BR')}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">${item.Tipo}</p>
-                    </div>
-                    <span class="text-sm font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(item.Valor)}</span>
-                </div>
-                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">${item.Descricao || '-'}</p>
-                <div class="flex gap-2 justify-end mt-2">
-                    <button type="button" class="nb-expense-edit-btn px-3 py-1 rounded bg-blue-100 text-blue-800 hover:bg-blue-200" data-id="${item.Id}"><i class="fas fa-edit"></i> Editar</button>
-                    <button type="button" class="nb-expense-delete-btn px-3 py-1 rounded bg-red-100 text-red-800 hover:bg-red-200" data-id="${item.Id}"><i class="fas fa-trash"></i> Apagar</button>
-                </div>
-            </article>
-        `).join('') || '<div class="text-sm text-gray-500 dark:text-gray-400">Nenhuma despesa ou vale encontrado no período selecionado.</div>';
+
+async function handleNBExpenseSubmit(e) {
+    e.preventDefault();
+    if (!canAccessNBManagement()) return;
+    
+    // Pega a data informada no novo campo
+    const dateInput = document.getElementById('nb-expense-date').value;
+    if (!dateInput) {
+        showNBToast('Por favor, selecione uma data.', 'warning');
+        return;
+    }
+
+    // Validação: A data precisa estar dentro do filtro da aba gestão
+    const { start, end } = getNBAnalyticsPeriodRange();
+    if ((start && dateInput < start) || (end && dateInput > end)) {
+        showNBToast('A data escolhida está fora do período filtrado na aba Gestão.', 'warning');
+        return;
+    }
+
+    // Cria/garante o dia de controle para a data escolhida (e não mais nbSelectedDate)
+    const controlDay = await ensureNBControlDay(dateInput);
+    if (!controlDay) return;
+
+    const expenseId = document.getElementById('nb-expense-id').value;
+    const body = {
+        Tipo: document.getElementById('nb-expense-type').value,
+        Descricao: document.getElementById('nb-expense-description').value,
+        Valor: Number(document.getElementById('nb-expense-value').value || 0)
+    };
+
+    const result = await nocoFetch(expenseId ? `${TABLE_IDS.NB_Despesas_Vales}/${expenseId}` : TABLE_IDS.NB_Despesas_Vales, {
+        method: expenseId ? 'PATCH' : 'POST',
+        // Se for criação nova, vincula o ID do controle de dia correto
+        body: JSON.stringify(expenseId ? body : { ...body, Data: { Id: controlDay.Id } })
+    });
+
+    if (result) {
+        await fetchNBDespesasVales();
+        resetNBExpenseForm();
+        renderNBManagement();
+        showNBToast('Despesa/vale salvo com sucesso.');
     }
 }
 function renderNBCategoriesList() {
@@ -11387,8 +11421,10 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
                 const id = e.target.closest('.nb-expense-edit-btn').dataset.id;
                 const record = nbDespesasValesData.find(item => String(item.Id) === String(id));
                 if (record) {
-                    setNBSelectedDate(getNBLinkedDateValue(record));
+                    const recordDate = getNBLinkedDateValue(record);
+                    setNBSelectedDate(recordDate);
                     document.getElementById('nb-expense-id').value = record.Id;
+                    document.getElementById('nb-expense-date').value = recordDate || ''; // Adiciona a data no input
                     document.getElementById('nb-expense-type').value = record.Tipo;
                     document.getElementById('nb-expense-description').value = record.Descricao || '';
                     document.getElementById('nb-expense-value').value = record.Valor || '';
