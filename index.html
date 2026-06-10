@@ -3807,12 +3807,14 @@ function getNBControlDayFinancialSnapshot(dateString) {
     });
     const financeRecord = getNBFinanceRecord(dateString) || {};
     const expenseRecords = getNBExpenseRecords(dateString);
-    const despesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    // Remove as despesas do tipo PIX do somatório
+    const despesas = expenseRecords.filter(item => item.Tipo !== 'PIX' && item.Tipo !== 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const totalExpenses = despesas + vales;
     const encomendaTotals = getNBEncomendaPaymentsTotalsForDate(dateString);
     const entradas = getNBFinanceEntryTotal(financeRecord) + encomendaTotals.electronicTotal;
-    const faturamentoDinheiro = (Number(financeRecord.Caixa_Final || 0) + Number(financeRecord.Sangria || 0) + totalExpenses + encomendaTotals.cashTotal) - Number(financeRecord.Caixa_Inicial || 0);
+    // Nova Regra de Negócio: (Caixa Inicial + Sangria) - (Caixa Final + Despesas Exceto PIX)
+    const faturamentoDinheiro = (Number(financeRecord.Caixa_Inicial || 0) + Number(financeRecord.Sangria || 0)) - (Number(financeRecord.Caixa_Final || 0) + totalExpenses + encomendaTotals.cashTotal);
     const faturamentoTotal = faturamentoDinheiro + Number(financeRecord.Entrada_PIX || 0) + Number(financeRecord.Entrada_App || 0) + Number(financeRecord.Entrada_Maquineta || 0) + encomendaTotals.electronicTotal;
     const saidas = totalExpenses + Number(financeRecord.Sangria || 0);
     return {
@@ -3869,9 +3871,10 @@ function getNBFinanceDaySummary(dateString) {
     const entradasPix = Number(financeRecord.Entrada_PIX || 0) + encomendaTotals.pix;
     const entradasApp = Number(financeRecord.Entrada_App || 0) + encomendaTotals.app;
     const entradasMaquineta = Number(financeRecord.Entrada_Maquineta || 0) + encomendaTotals.maquineta;
-    const despesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    const despesas = expenseRecords.filter(item => item.Tipo !== 'PIX' && item.Tipo !== 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
-    const faturamentoDinheiro = (caixaFinal + sangria + despesas + vales + encomendaTotals.cashTotal) - caixaInicial;
+    // Nova Regra de Negócio
+    const faturamentoDinheiro = (caixaInicial + sangria) - (caixaFinal + despesas + vales + encomendaTotals.cashTotal);
     const faturamentoTotal = faturamentoDinheiro + entradasPix + entradasApp + entradasMaquineta;
     const faturamentoTeórico = getNBTheoricalRevenueForDate(dateString);
     const faturamentoFinal = faturamentoTotal - faturamentoTeórico;
@@ -3908,9 +3911,10 @@ function getNBFinanceDraftSummary(dateString, prefix) {
     const entradasPix = readDraftValue('entrada-pix', financeRecord.Entrada_PIX) + encomendaTotals.pix;
     const entradasApp = readDraftValue('entrada-app', financeRecord.Entrada_App) + encomendaTotals.app;
     const entradasMaquineta = readDraftValue('entrada-maquineta', financeRecord.Entrada_Maquineta) + encomendaTotals.maquineta;
-    const despesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    const despesas = expenseRecords.filter(item => item.Tipo !== 'PIX' && item.Tipo !== 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
-    const faturamentoDinheiro = (caixaFinal + sangria + despesas + vales + encomendaTotals.cashTotal) - caixaInicial;
+    // Nova Regra de Negócio
+    const faturamentoDinheiro = (caixaInicial + sangria) - (caixaFinal + despesas + vales + encomendaTotals.cashTotal);
     const faturamentoTotal = faturamentoDinheiro + entradasPix + entradasApp + entradasMaquineta;
     const faturamentoTeórico = getNBTheoricalRevenueForDate(dateString);
     const faturamentoFinal = faturamentoTotal - faturamentoTeórico;
@@ -3996,9 +4000,14 @@ function getNBFinanceDraftFieldValues(prefix, dateString) {
 }
 function buildNBFinancePayload(prefix, dateString, statusOverride = null) {
     const body = getNBFinanceDraftFieldValues(prefix, dateString);
-    const despesas = getNBExpenseRecords(dateString).filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    
+    // Filtra as despesas, excluindo as do tipo PIX
+    const despesas = getNBExpenseRecords(dateString).filter(item => item.Tipo !== 'PIX' && item.Tipo !== 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = getNBExpenseRecords(dateString).filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
-    body.Entrada_Dinheiro = (Number(body.Caixa_Final || 0) + Number(body.Sangria || 0) + despesas + vales) - Number(body.Caixa_Inicial || 0);
+    
+    // Nova Regra de Negócio antes de enviar pro Banco
+    body.Entrada_Dinheiro = (Number(body.Caixa_Inicial || 0) + Number(body.Sangria || 0)) - (Number(body.Caixa_Final || 0) + despesas + vales);
+    
     body.Status = statusOverride || getNBFinanceDayStatus(dateString);
     return body;
 }
