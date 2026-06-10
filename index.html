@@ -4010,6 +4010,21 @@ function syncNBPanelFinanceButtonVisibility() {
 }
 function openNBPanelFinanceModal() {
     if (!canAccessNB() || !isNBFinanceDayOpen(toDateInputValue(new Date()))) return;
+    
+    // Limpa os campos do modal para garantir que puxe os dados atuais do banco
+    const camposModal = [
+        'nb-panel-fin-caixa-inicial', 
+        'nb-panel-fin-caixa-final', 
+        'nb-panel-fin-sangria', 
+        'nb-panel-fin-entrada-pix', 
+        'nb-panel-fin-entrada-app', 
+        'nb-panel-fin-entrada-maquineta'
+    ];
+    camposModal.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+
     resetNBPanelExpenseForm();
     renderNBPanelFinanceModal();
     showModal(document.getElementById('nb-panel-finance-modal'));
@@ -4755,6 +4770,22 @@ async function deleteNBEncomendaCurrent() {
     }
 }
 function setNBSelectedDate(dateString) {
+    // Se a data mudar, limpamos os inputs do formulário para forçar a leitura do banco de dados na próxima renderização
+    if (nbSelectedDate !== dateString) {
+        const camposFinanceiro = [
+            'nb-fin-caixa-inicial', 
+            'nb-fin-caixa-final', 
+            'nb-fin-sangria', 
+            'nb-fin-entrada-pix', 
+            'nb-fin-entrada-app', 
+            'nb-fin-entrada-maquineta'
+        ];
+        camposFinanceiro.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+    }
+    
     nbSelectedDate = dateString;
     const label = document.getElementById('nb-financial-date-label');
     if (label) label.textContent = parseDateOnly(dateString).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
