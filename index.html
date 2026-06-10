@@ -5443,6 +5443,11 @@ function renderNBCharts() {
     nbDespesasValesData.filter(item => item.Tipo === 'Despesa').forEach(item => {
         const dateValue = getNBLinkedDateValue(item);
         if (!dateValue) return;
+        
+        // --- NOVA TRAVA: Garante que a despesa pertence ao período filtrado ---
+        if (startDate && dateValue < startDate) return;
+        if (endDate && dateValue > endDate) return;
+
         const key = getNBGroupKey(dateValue, granularity);
         if (!groupedRevenueExpenses[key]) {
             groupedRevenueExpenses[key] = { revenue: 0, expenses: 0, ...buildPeriodMeta(dateValue) };
