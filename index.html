@@ -641,20 +641,7 @@ body {
                                                 <button type="submit" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Salvar Lançamento</button>
                                             </div>
                                         </div>
-                                    </form>
-                                    <div class="relative overflow-x-auto">
-                                        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                                <tr>
-                                                    <th class="px-4 py-3">Tipo</th>
-                                                    <th class="px-4 py-3">Descrição</th>
-                                                    <th class="px-4 py-3">Valor</th>
-                                                    <th class="px-4 py-3">Ações</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="nb-expense-table-body"></tbody>
-                                        </table>
-                                    </div>
+                                    </form>                                    
                                     <div class="mt-4">
                                         <div class="flex items-center justify-between mb-3">
                                             <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Registros do período</h4>
@@ -5804,13 +5791,7 @@ function resetNBExpenseForm() {
     document.getElementById('nb-expense-value').value = '';
 }
 function renderNBExpensesTable() {
-    const tbody = document.getElementById('nb-expense-table-body');
-    if (!tbody) return;
     const canManage = canAccessNBManagement();
-    
-    // Tabela superior (apenas a data selecionada para edição rápida)
-    const rows = getNBExpenseRecords(nbSelectedDate).sort((a, b) => (a.Tipo || '').localeCompare(b.Tipo || '') || (a.Descricao || '').localeCompare(b.Descricao || ''));
-    tbody.innerHTML = rows.map(item => `<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700"><td class="px-4 py-3">${item.Tipo}</td><td class="px-4 py-3">${item.Descricao || '-'}</td><td class="px-4 py-3">${formatCurrencyBR(item.Valor)}</td><td class="px-4 py-3 space-x-2">${canManage ? `<button type="button" class="nb-expense-edit-btn text-blue-500 hover:text-blue-700" data-id="${item.Id}" title="Editar"><i class="fas fa-edit"></i></button><button type="button" class="nb-expense-delete-btn text-red-500 hover:text-red-700" data-id="${item.Id}" title="Apagar"><i class="fas fa-trash"></i></button>` : '<span class="text-xs text-gray-400">Somente leitura</span>'}</td></tr>`).join('') || '<tr><td colspan="4" class="px-4 py-4 text-center text-gray-500">Nenhum lançamento para a data selecionada.</td></tr>';
     
     // Trata os Registros do Período (Lista Agrupada)
     const periodList = document.getElementById('nb-expense-period-list');
@@ -5863,8 +5844,10 @@ function renderNBExpensesTable() {
                                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${item.Descricao || '-'}</p>
                             </div>
                             <div class="flex gap-2 justify-end mt-2 sm:mt-0">
+                                ${canManage ? `
                                 <button type="button" class="nb-expense-edit-btn px-2 py-1.5 rounded bg-blue-100 text-blue-800 hover:bg-blue-200 text-xs font-medium" data-id="${item.Id}"><i class="fas fa-edit mr-1"></i> Editar</button>
                                 <button type="button" class="nb-expense-delete-btn px-2 py-1.5 rounded bg-red-100 text-red-800 hover:bg-red-200 text-xs font-medium" data-id="${item.Id}"><i class="fas fa-trash mr-1"></i> Apagar</button>
+                                ` : '<span class="text-xs text-gray-400">Somente leitura</span>'}
                             </div>
                         </article>
                     `).join('')}
