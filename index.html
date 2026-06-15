@@ -5375,7 +5375,8 @@ function renderNBCharts() {
             label: parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
             tooltip: parsed.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
         };
-        const totalExpenses = financeSnapshot.despesas + financeSnapshot.vales;
+        // CORREÇÃO: Incluindo o PIX no total de despesas da Gestão
+        const totalExpenses = financeSnapshot.despesas + financeSnapshot.vales + financeSnapshot.despesasPix;
         const faturamentoTotal = financeSnapshot.faturamentoTotal; // Financeiro Real
         const lucroBruto = faturamentoTotal - controlSnapshot.costOfGoods;
         const resultadoFinanceiro = faturamentoTotal - controlSnapshot.loss - totalExpenses;
@@ -5464,7 +5465,8 @@ function renderNBCharts() {
 
     // Unifica o Gráfico de Faturamento (Teórico) vs Despesas
     const groupedRevenueExpenses = {};
-    nbDespesasValesData.filter(item => item.Tipo === 'Despesa' || item.Tipo === 'PIX').forEach(item => {
+    // CORREÇÃO: Garante que os 3 tipos entrem na coluna de despesas do Gráfico
+    nbDespesasValesData.filter(item => item.Tipo === 'Despesa' || item.Tipo === 'Vale' || item.Tipo === 'PIX').forEach(item => {
         const dateValue = getNBLinkedDateValue(item);
         if (!dateValue) return;
         
@@ -5567,9 +5569,8 @@ function renderNBCharts() {
 
     if (nbCategoryShareChart) { nbCategoryShareChart.data = categoryData; nbCategoryShareChart.options = donutOptions; nbCategoryShareChart.update(); } else { nbCategoryShareChart = new Chart(chart1Ctx, { type: 'doughnut', data: categoryData, options: donutOptions }); }
     if (nbTimelineChart) { nbTimelineChart.data = timelineData; nbTimelineChart.options = timelineOptions; nbTimelineChart.update(); } else { nbTimelineChart = new Chart(chart2Ctx, { type: 'bar', data: timelineData, options: timelineOptions }); }
-    if (nbProfitStackChart) { nbProfitStackChart.data = grossProfitData; nbProfitStackChart.options = grossProfitOptions; nbProfitStackChart.update(); } else { nbProfitStackChart = new Chart(chart3Ctx, { type: 'line', data: grossProfitData, options: grossProfitOptions }); }
-    if (nbRevenueExpensesChart) { nbRevenueExpensesChart.data = revenueExpensesData; nbRevenueExpensesChart.options = revenueExpensesOptions; nbRevenueExpensesChart.update(); } else { nbRevenueExpensesChart = new Chart(chart4Ctx, { type: 'line', data: revenueExpensesData, options: revenueExpensesOptions }); }
-    if (nbFinancePeriodChart) { nbFinancePeriodChart.data = financePeriodData; nbFinancePeriodChart.options = financePeriodOptions; nbFinancePeriodChart.update(); } else { nbFinancePeriodChart = new Chart(chart5Ctx, { type: 'bar', data: financePeriodData, options: financePeriodOptions }); }
+    if (nbProfitStackChart) { nbProfitStackChart.data = grossProfitData; nbProfitStackChart.options = grossProfitOptions; nbProfitStackChart.update(); } else { nbProfitStackChart = new Chart(chart3Ctx, { type: 'bar', data: grossProfitData, options: grossProfitOptions }); }
+    if (nbRevenueExpensesChart) { nbRevenueExpensesChart.data = revenueExpensesData; nbRevenueExpensesChart.options = revenueExpensesOptions; nbRevenueExpensesChart.update(); } else { nbRevenueExpensesChart = new Chart(chart4Ctx, { type: 'bar', data: revenueExpensesData, options: revenueExpensesOptions }); }    
 }
 function syncNBPanelDayMarkers() {
     const todayString = toDateInputValue(new Date());
