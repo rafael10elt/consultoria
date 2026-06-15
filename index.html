@@ -3834,7 +3834,8 @@ function getNBControlDayFinancialSnapshot(dateString) {
         faturamentoTotal,
         resultado: faturamentoTotal - loss - totalExpensesGeral
     };
-}function getNBFinanceEntryTotal(record = {}) {
+}
+    function getNBFinanceEntryTotal(record = {}) {
     return ['Entrada_Dinheiro', 'Entrada_PIX', 'Entrada_App', 'Entrada_Maquineta']
         .reduce((sum, key) => sum + Number(record[key] || 0), 0);
 }
@@ -3903,6 +3904,7 @@ function getNBFinanceDaySummary(dateString) {
         faturamentoFinal,
         status: financeRecord.Status || 'Aberto'
     };
+}
 function getNBFinanceDraftSummary(dateString, prefix) {
     const financeRecord = getNBFinanceRecord(dateString) || {};
     const expenseRecords = getNBExpenseRecords(dateString);
