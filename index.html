@@ -5402,7 +5402,7 @@ function renderNBCharts() {
     const summaryProfit = document.getElementById('nb-summary-profit');
     
     // Atualiza os resumos da Gestão com o Faturamento TEÓRICO (Produtos + Encomendas)
-    if (summaryRevenue) summaryRevenue.textContent = `Faturamento Teórico: ${formatCurrencyBR(revenue)}`;
+    if (summaryRevenue) summaryRevenue.textContent = `Faturamento Teórico (Vendas): ${formatCurrencyBR(revenue)}`;
     if (summaryLoss) summaryLoss.textContent = `Perdas: ${formatCurrencyBR(loss)}`;
     if (summaryExpenses) summaryExpenses.textContent = `Despesas: ${formatCurrencyBR(periodExpensesTotal)}`;
     if (summaryProfit) summaryProfit.textContent = `Lucro estimado: ${formatCurrencyBR(periodProfitTotal)}`;
