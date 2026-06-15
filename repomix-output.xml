@@ -821,29 +821,38 @@ body {
                                         <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Despesas e Vales</h3>
                                         <span class="text-sm text-brand-gold">Listagem de todos os registros do período selecionado</span>
                                     </div>
-                                    <form id="nb-expense-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                                    <form id="nb-expense-form" class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
                                         <input type="hidden" id="nb-expense-id">
-                                        <div><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo</label><select id="nb-expense-type" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"><option value="Despesa">Despesa</option><option value="Vale">Vale</option></select></div>
-                                        <div class="md:col-span-2"><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descrição</label><input type="text" id="nb-expense-description" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
-                                        <div><label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor</label><input type="number" step="0.01" id="nb-expense-value" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"></div>
-                                        <div class="md:col-span-4 flex justify-end gap-2">
-                                            <button type="button" id="nb-expense-cancel-btn" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
-                                            <button type="submit" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Salvar Lançamento</button>
+                                        <div>
+                                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Tipo</label>
+                                            <select id="nb-expense-type" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                                <option value="Despesa">Despesa</option>
+                                                <option value="Vale">Vale</option>
+                                                <option value="PIX">PIX</option>
+                                            </select>
                                         </div>
-                                    </form>
-                                    <div class="relative overflow-x-auto">
-                                        <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                                            <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                                <tr>
-                                                    <th class="px-4 py-3">Tipo</th>
-                                                    <th class="px-4 py-3">Descrição</th>
-                                                    <th class="px-4 py-3">Valor</th>
-                                                    <th class="px-4 py-3">Ações</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="nb-expense-table-body"></tbody>
-                                        </table>
-                                    </div>
+                                        <div>
+                                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Data</label>
+                                            <input type="date" id="nb-expense-date" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Descrição</label>
+                                            <input type="text" id="nb-expense-description" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                                        </div>
+                                        <div>
+                                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Valor</label>
+                                            <input type="number" step="0.01" id="nb-expense-value" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-brand-gold focus:border-brand-gold block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                                        </div>
+                                        <div class="md:col-span-5 flex justify-between items-center gap-2 mt-2">
+                                            <div id="nb-expense-total-display" class="text-sm text-gray-800 dark:text-gray-200">
+                                                <!-- Total será injetado aqui -->
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <button type="button" id="nb-expense-cancel-btn" class="px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">Cancelar</button>
+                                                <button type="submit" class="px-4 py-2 rounded-lg bg-brand-gold text-white hover:bg-brand-gold-dark">Salvar Lançamento</button>
+                                            </div>
+                                        </div>
+                                    </form>                                    
                                     <div class="mt-4">
                                         <div class="flex items-center justify-between mb-3">
                                             <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-200">Registros do período</h4>
@@ -4001,12 +4010,14 @@ function getNBControlDayFinancialSnapshot(dateString) {
     });
     const financeRecord = getNBFinanceRecord(dateString) || {};
     const expenseRecords = getNBExpenseRecords(dateString);
-    const despesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    // Remove as despesas do tipo PIX do somatório
+    const despesas = expenseRecords.filter(item => item.Tipo !== 'PIX' && item.Tipo !== 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const totalExpenses = despesas + vales;
     const encomendaTotals = getNBEncomendaPaymentsTotalsForDate(dateString);
     const entradas = getNBFinanceEntryTotal(financeRecord) + encomendaTotals.electronicTotal;
-    const faturamentoDinheiro = (Number(financeRecord.Caixa_Final || 0) + Number(financeRecord.Sangria || 0) + totalExpenses + encomendaTotals.cashTotal) - Number(financeRecord.Caixa_Inicial || 0);
+    // Nova Regra de Negócio: (Caixa Final + Despesas Exceto PIX) - (Caixa Inicial + Sangria)
+    const faturamentoDinheiro = (Number(financeRecord.Caixa_Final || 0) + totalExpenses + encomendaTotals.cashTotal) - (Number(financeRecord.Caixa_Inicial || 0) + Number(financeRecord.Sangria || 0));
     const faturamentoTotal = faturamentoDinheiro + Number(financeRecord.Entrada_PIX || 0) + Number(financeRecord.Entrada_App || 0) + Number(financeRecord.Entrada_Maquineta || 0) + encomendaTotals.electronicTotal;
     const saidas = totalExpenses + Number(financeRecord.Sangria || 0);
     return {
@@ -4063,9 +4074,10 @@ function getNBFinanceDaySummary(dateString) {
     const entradasPix = Number(financeRecord.Entrada_PIX || 0) + encomendaTotals.pix;
     const entradasApp = Number(financeRecord.Entrada_App || 0) + encomendaTotals.app;
     const entradasMaquineta = Number(financeRecord.Entrada_Maquineta || 0) + encomendaTotals.maquineta;
-    const despesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    const despesas = expenseRecords.filter(item => item.Tipo !== 'PIX' && item.Tipo !== 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
-    const faturamentoDinheiro = (caixaFinal + sangria + despesas + vales + encomendaTotals.cashTotal) - caixaInicial;
+    // Nova Regra de Negócio: (Caixa Final + Despesas(sem PIX) + Vales) - (Caixa Inicial + Sangria)
+    const faturamentoDinheiro = (caixaFinal + despesas + vales + encomendaTotals.cashTotal) - (caixaInicial + sangria);
     const faturamentoTotal = faturamentoDinheiro + entradasPix + entradasApp + entradasMaquineta;
     const faturamentoTeórico = getNBTheoricalRevenueForDate(dateString);
     const faturamentoFinal = faturamentoTotal - faturamentoTeórico;
@@ -4102,9 +4114,10 @@ function getNBFinanceDraftSummary(dateString, prefix) {
     const entradasPix = readDraftValue('entrada-pix', financeRecord.Entrada_PIX) + encomendaTotals.pix;
     const entradasApp = readDraftValue('entrada-app', financeRecord.Entrada_App) + encomendaTotals.app;
     const entradasMaquineta = readDraftValue('entrada-maquineta', financeRecord.Entrada_Maquineta) + encomendaTotals.maquineta;
-    const despesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    const despesas = expenseRecords.filter(item => item.Tipo !== 'PIX' && item.Tipo !== 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
-    const faturamentoDinheiro = (caixaFinal + sangria + despesas + vales + encomendaTotals.cashTotal) - caixaInicial;
+    // Nova Regra de Negócio
+    const faturamentoDinheiro = (caixaFinal + despesas + vales + encomendaTotals.cashTotal) - (caixaInicial + sangria);
     const faturamentoTotal = faturamentoDinheiro + entradasPix + entradasApp + entradasMaquineta;
     const faturamentoTeórico = getNBTheoricalRevenueForDate(dateString);
     const faturamentoFinal = faturamentoTotal - faturamentoTeórico;
@@ -4190,9 +4203,14 @@ function getNBFinanceDraftFieldValues(prefix, dateString) {
 }
 function buildNBFinancePayload(prefix, dateString, statusOverride = null) {
     const body = getNBFinanceDraftFieldValues(prefix, dateString);
-    const despesas = getNBExpenseRecords(dateString).filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    
+    // Filtra as despesas, excluindo as do tipo PIX
+    const despesas = getNBExpenseRecords(dateString).filter(item => item.Tipo !== 'PIX' && item.Tipo !== 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = getNBExpenseRecords(dateString).filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
-    body.Entrada_Dinheiro = (Number(body.Caixa_Final || 0) + Number(body.Sangria || 0) + despesas + vales) - Number(body.Caixa_Inicial || 0);
+    
+   // Nova Regra de Negócio antes de enviar pro Banco
+    body.Entrada_Dinheiro = (Number(body.Caixa_Final || 0) + despesas + vales) - (Number(body.Caixa_Inicial || 0) + Number(body.Sangria || 0));
+    
     body.Status = statusOverride || getNBFinanceDayStatus(dateString);
     return body;
 }
@@ -4204,6 +4222,21 @@ function syncNBPanelFinanceButtonVisibility() {
 }
 function openNBPanelFinanceModal() {
     if (!canAccessNB() || !isNBFinanceDayOpen(toDateInputValue(new Date()))) return;
+    
+    // Limpa os campos do modal para garantir que puxe os dados atuais do banco
+    const camposModal = [
+        'nb-panel-fin-caixa-inicial', 
+        'nb-panel-fin-caixa-final', 
+        'nb-panel-fin-sangria', 
+        'nb-panel-fin-entrada-pix', 
+        'nb-panel-fin-entrada-app', 
+        'nb-panel-fin-entrada-maquineta'
+    ];
+    camposModal.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+
     resetNBPanelExpenseForm();
     renderNBPanelFinanceModal();
     showModal(document.getElementById('nb-panel-finance-modal'));
@@ -4949,6 +4982,22 @@ async function deleteNBEncomendaCurrent() {
     }
 }
 function setNBSelectedDate(dateString) {
+    // Se a data mudar, limpamos os inputs do formulário para forçar a leitura do banco de dados na próxima renderização
+    if (nbSelectedDate !== dateString) {
+        const camposFinanceiro = [
+            'nb-fin-caixa-inicial', 
+            'nb-fin-caixa-final', 
+            'nb-fin-sangria', 
+            'nb-fin-entrada-pix', 
+            'nb-fin-entrada-app', 
+            'nb-fin-entrada-maquineta'
+        ];
+        camposFinanceiro.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+    }
+    
     nbSelectedDate = dateString;
     const label = document.getElementById('nb-financial-date-label');
     if (label) label.textContent = parseDateOnly(dateString).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
@@ -5605,6 +5654,11 @@ function renderNBCharts() {
     nbDespesasValesData.filter(item => item.Tipo === 'Despesa').forEach(item => {
         const dateValue = getNBLinkedDateValue(item);
         if (!dateValue) return;
+        
+        // --- NOVA TRAVA: Garante que a despesa pertence ao período filtrado ---
+        if (startDate && dateValue < startDate) return;
+        if (endDate && dateValue > endDate) return;
+
         const key = getNBGroupKey(dateValue, granularity);
         if (!groupedRevenueExpenses[key]) {
             groupedRevenueExpenses[key] = { revenue: 0, expenses: 0, ...buildPeriodMeta(dateValue) };
@@ -5944,38 +5998,78 @@ function renderNBDiaryFeed() {
 function resetNBExpenseForm() {
     document.getElementById('nb-expense-id').value = '';
     document.getElementById('nb-expense-type').value = 'Despesa';
+    
+    // Por padrão, sugere a data que está sendo visualizada na gestão ou a data de hoje
+    const today = toDateInputValue(new Date());
+    document.getElementById('nb-expense-date').value = nbSelectedDate || today; 
+    
     document.getElementById('nb-expense-description').value = '';
     document.getElementById('nb-expense-value').value = '';
 }
 function renderNBExpensesTable() {
-    const tbody = document.getElementById('nb-expense-table-body');
-    if (!tbody) return;
     const canManage = canAccessNBManagement();
-    const rows = getNBExpenseRecords(nbSelectedDate).sort((a, b) => (a.Tipo || '').localeCompare(b.Tipo || '') || (a.Descricao || '').localeCompare(b.Descricao || ''));
-    tbody.innerHTML = rows.map(item => `<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700"><td class="px-4 py-3">${item.Tipo}</td><td class="px-4 py-3">${item.Descricao || '-'}</td><td class="px-4 py-3">${formatCurrencyBR(item.Valor)}</td><td class="px-4 py-3 space-x-2">${canManage ? `<button type="button" class="nb-expense-edit-btn text-blue-500 hover:text-blue-700" data-id="${item.Id}" title="Editar"><i class="fas fa-edit"></i></button><button type="button" class="nb-expense-delete-btn text-red-500 hover:text-red-700" data-id="${item.Id}" title="Apagar"><i class="fas fa-trash"></i></button>` : '<span class="text-xs text-gray-400">Somente leitura</span>'}</td></tr>`).join('') || '<tr><td colspan="4" class="px-4 py-4 text-center text-gray-500">Nenhum lançamento para a data selecionada.</td></tr>';
+    
+    // Trata os Registros do Período (Lista Agrupada)
     const periodList = document.getElementById('nb-expense-period-list');
+    const periodRecords = getNBExpenseRecordsInPeriod().sort((a, b) => (getNBLinkedDateValue(b) || '').localeCompare(getNBLinkedDateValue(a) || '') || (b.Tipo || '').localeCompare(a.Tipo || '') || (b.Descricao || '').localeCompare(a.Descricao || ''));
+    
+    // Atualiza o Total Geral ao lado do botão Cancelar
+    const totalDisplay = document.getElementById('nb-expense-total-display');
+    if (totalDisplay) {
+        const totalPeriodo = periodRecords.reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+        totalDisplay.innerHTML = `Total do filtro: <span class="font-bold text-brand-gold ml-1">${formatCurrencyBR(totalPeriodo)}</span>`;
+    }
+
     if (periodList) {
-        const periodRecords = getNBExpenseRecordsInPeriod().sort((a, b) => (getNBLinkedDateValue(b) || '').localeCompare(getNBLinkedDateValue(a) || '') || (b.Tipo || '').localeCompare(a.Tipo || '') || (b.Descricao || '').localeCompare(a.Descricao || ''));
         const shouldScroll = periodRecords.length > 6;
         periodList.style.maxHeight = shouldScroll ? '520px' : '';
         periodList.style.overflowY = shouldScroll ? 'auto' : '';
         periodList.style.paddingRight = shouldScroll ? '0.5rem' : '';
-        periodList.innerHTML = periodRecords.map(item => `
-            <article class="rounded-lg border dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900/30 flex flex-col gap-2">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <div>
-                        <p class="font-semibold text-gray-800 dark:text-white">${parseDateOnly(getNBLinkedDateValue(item)).toLocaleDateString('pt-BR')}</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">${item.Tipo}</p>
-                    </div>
-                    <span class="text-sm font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(item.Valor)}</span>
+        
+        if (periodRecords.length === 0) {
+            periodList.innerHTML = '<div class="text-sm text-gray-500 dark:text-gray-400">Nenhuma despesa ou vale encontrado no período selecionado.</div>';
+            return;
+        }
+
+        // Agrupa os registros pela data
+        const grouped = {};
+        periodRecords.forEach(item => {
+            const dateVal = getNBLinkedDateValue(item);
+            if (!grouped[dateVal]) grouped[dateVal] = { items: [], total: 0 };
+            grouped[dateVal].items.push(item);
+            grouped[dateVal].total += Number(item.Valor || 0); // Soma incluindo PIX
+        });
+
+        // Renderiza cada grupo (Data + Total -> Itens)
+        periodList.innerHTML = Object.entries(grouped).map(([dateVal, group]) => `
+            <div class="mb-5 shadow-sm rounded-lg border dark:border-gray-700">
+                <!-- Cabeçalho / Divisor do Dia -->
+                <div class="flex justify-between items-center bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-t-lg border-b dark:border-gray-600">
+                    <span class="font-bold text-gray-800 dark:text-white">${parseDateOnly(dateVal).toLocaleDateString('pt-BR')}</span>
+                    <span class="font-bold text-brand-gold">${formatCurrencyBR(group.total)}</span>
                 </div>
-                <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">${item.Descricao || '-'}</p>
-                <div class="flex gap-2 justify-end mt-2">
-                    <button type="button" class="nb-expense-edit-btn px-3 py-1 rounded bg-blue-100 text-blue-800 hover:bg-blue-200" data-id="${item.Id}"><i class="fas fa-edit"></i> Editar</button>
-                    <button type="button" class="nb-expense-delete-btn px-3 py-1 rounded bg-red-100 text-red-800 hover:bg-red-200" data-id="${item.Id}"><i class="fas fa-trash"></i> Apagar</button>
+                <!-- Itens do dia -->
+                <div class="bg-gray-50 dark:bg-gray-900/30 rounded-b-lg p-2 space-y-2">
+                    ${group.items.map(item => `
+                        <article class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 hover:bg-white dark:hover:bg-gray-800 rounded transition-colors border-b last:border-0 dark:border-gray-700">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[11px] uppercase font-bold tracking-wide px-2 py-0.5 rounded ${item.Tipo === 'PIX' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : (item.Tipo === 'Vale' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200')}">${item.Tipo}</span>
+                                    <span class="text-sm font-semibold text-gray-800 dark:text-white">${formatCurrencyBR(item.Valor)}</span>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${item.Descricao || '-'}</p>
+                            </div>
+                            <div class="flex gap-2 justify-end mt-2 sm:mt-0">
+                                ${canManage ? `
+                                <button type="button" class="nb-expense-edit-btn px-2 py-1.5 rounded bg-blue-100 text-blue-800 hover:bg-blue-200 text-xs font-medium" data-id="${item.Id}"><i class="fas fa-edit mr-1"></i> Editar</button>
+                                <button type="button" class="nb-expense-delete-btn px-2 py-1.5 rounded bg-red-100 text-red-800 hover:bg-red-200 text-xs font-medium" data-id="${item.Id}"><i class="fas fa-trash mr-1"></i> Apagar</button>
+                                ` : '<span class="text-xs text-gray-400">Somente leitura</span>'}
+                            </div>
+                        </article>
+                    `).join('')}
                 </div>
-            </article>
-        `).join('') || '<div class="text-sm text-gray-500 dark:text-gray-400">Nenhuma despesa ou vale encontrado no período selecionado.</div>';
+            </div>
+        `).join('');
     }
 }
 function renderNBCategoriesList() {
@@ -6310,18 +6404,38 @@ async function handleNBFinanceSubmit(e) {
 async function handleNBExpenseSubmit(e) {
     e.preventDefault();
     if (!canAccessNBManagement()) return;
-    const controlDay = await ensureNBControlDay(nbSelectedDate);
+    
+    // Pega a data informada no novo campo
+    const dateInput = document.getElementById('nb-expense-date').value;
+    if (!dateInput) {
+        showNBToast('Por favor, selecione uma data.', 'warning');
+        return;
+    }
+
+    // Validação: A data precisa estar dentro do filtro da aba gestão
+    const { start, end } = getNBAnalyticsPeriodRange();
+    if ((start && dateInput < start) || (end && dateInput > end)) {
+        showNBToast('A data escolhida está fora do período filtrado na aba Gestão.', 'warning');
+        return;
+    }
+
+    // Cria/garante o dia de controle para a data escolhida (e não mais nbSelectedDate)
+    const controlDay = await ensureNBControlDay(dateInput);
     if (!controlDay) return;
+
     const expenseId = document.getElementById('nb-expense-id').value;
     const body = {
         Tipo: document.getElementById('nb-expense-type').value,
         Descricao: document.getElementById('nb-expense-description').value,
         Valor: Number(document.getElementById('nb-expense-value').value || 0)
     };
+
     const result = await nocoFetch(expenseId ? `${TABLE_IDS.NB_Despesas_Vales}/${expenseId}` : TABLE_IDS.NB_Despesas_Vales, {
         method: expenseId ? 'PATCH' : 'POST',
+        // Se for criação nova, vincula o ID do controle de dia correto
         body: JSON.stringify(expenseId ? body : { ...body, Data: { Id: controlDay.Id } })
     });
+
     if (result) {
         await fetchNBDespesasVales();
         resetNBExpenseForm();
@@ -6329,6 +6443,7 @@ async function handleNBExpenseSubmit(e) {
         showNBToast('Despesa/vale salvo com sucesso.');
     }
 }
+
 async function handleNBDiarySubmit(e) {
     e.preventDefault();
     if (!canAccessNBManagement()) return;
@@ -11598,8 +11713,10 @@ document.getElementById('show-reembolso-form')?.addEventListener('click', () => 
                 const id = e.target.closest('.nb-expense-edit-btn').dataset.id;
                 const record = nbDespesasValesData.find(item => String(item.Id) === String(id));
                 if (record) {
-                    setNBSelectedDate(getNBLinkedDateValue(record));
+                    const recordDate = getNBLinkedDateValue(record);
+                    setNBSelectedDate(recordDate);
                     document.getElementById('nb-expense-id').value = record.Id;
+                    document.getElementById('nb-expense-date').value = recordDate || ''; // Adiciona a data no input
                     document.getElementById('nb-expense-type').value = record.Tipo;
                     document.getElementById('nb-expense-description').value = record.Descricao || '';
                     document.getElementById('nb-expense-value').value = record.Valor || '';

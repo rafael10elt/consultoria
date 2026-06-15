@@ -6171,7 +6171,7 @@ async function saveNBPanelCell(dateString, productId, cell) {
     if (preservedOpenCategoryId) setNBPanelOpenCategoryId(preservedOpenCategoryId);
     renderNBPanelTotals();
     showNBToast('Apontamento salvo com sucesso.');
-    void queueNBSobraCarryForwardPropagation(dateString, Number(productId), preservedOpenCategoryId);
+    // void queueNBSobraCarryForwardPropagation(dateString, Number(productId), preservedOpenCategoryId);
 }
 async function handleNBFinanceSubmit(e) {
     e.preventDefault();
@@ -6437,7 +6437,7 @@ function renderNBProductsList() {
     container.style.paddingRight = needsScroll ? '0.5rem' : '';
 }
 async function handleNBCloseDay() {
-    void normalizeNBCarryForwardAll();
+    // void normalizeNBCarryForwardAll();
     await fetchNBApontamentos();
     renderNBModule();
 }
