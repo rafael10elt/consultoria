@@ -3799,16 +3799,20 @@ function getNBControlDayFinancialSnapshot(dateString) {
     });
     const financeRecord = getNBFinanceRecord(dateString) || {};
     const expenseRecords = getNBExpenseRecords(dateString);
-    // Remove as despesas do tipo PIX do somatório
-    const despesas = expenseRecords.filter(item => item.Tipo !== 'PIX' && item.Tipo !== 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    const despesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
-    const totalExpenses = despesas + vales;
+    const despesasPix = expenseRecords.filter(item => item.Tipo === 'PIX').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    
+    const totalExpensesCaixa = despesas + vales; // Afeta apenas o fechamento físico
+    const totalExpensesGeral = despesas + vales + despesasPix; // Afeta o lucro/gestão
+    
     const encomendaTotals = getNBEncomendaPaymentsTotalsForDate(dateString);
     const entradas = getNBFinanceEntryTotal(financeRecord) + encomendaTotals.electronicTotal;
-    // Nova Regra de Negócio: (Caixa Final + Despesas Exceto PIX) - (Caixa Inicial + Sangria)
-    const faturamentoDinheiro = (Number(financeRecord.Caixa_Final || 0) + totalExpenses + encomendaTotals.cashTotal) - (Number(financeRecord.Caixa_Inicial || 0) + Number(financeRecord.Sangria || 0));
+    
+    // O cálculo do dinheiro não usa o despesasPix
+    const faturamentoDinheiro = (Number(financeRecord.Caixa_Final || 0) + totalExpensesCaixa + encomendaTotals.cashTotal) - (Number(financeRecord.Caixa_Inicial || 0) + Number(financeRecord.Sangria || 0));
     const faturamentoTotal = faturamentoDinheiro + Number(financeRecord.Entrada_PIX || 0) + Number(financeRecord.Entrada_App || 0) + Number(financeRecord.Entrada_Maquineta || 0) + encomendaTotals.electronicTotal;
-    const saidas = totalExpenses + Number(financeRecord.Sangria || 0);
+    const saidas = totalExpensesCaixa + Number(financeRecord.Sangria || 0);
     return {
         dateString,
         revenue,
@@ -3816,14 +3820,15 @@ function getNBControlDayFinancialSnapshot(dateString) {
         costOfGoods,
         despesas,
         vales,
-        totalExpenses,
+        despesasPix,
+        totalExpenses: totalExpensesGeral,
         entradas,
         encomendaPaymentsTotal: encomendaTotals.total,
         encomendaPaymentsElectronicTotal: encomendaTotals.electronicTotal,
         saidas,
         faturamentoDinheiro,
         faturamentoTotal,
-        resultado: faturamentoTotal - loss - totalExpenses
+        resultado: faturamentoTotal - loss - totalExpensesGeral
     };
 }
 function getNBFinanceEntryTotal(record = {}) {
@@ -3863,7 +3868,8 @@ function getNBFinanceDaySummary(dateString) {
     const entradasPix = Number(financeRecord.Entrada_PIX || 0) + encomendaTotals.pix;
     const entradasApp = Number(financeRecord.Entrada_App || 0) + encomendaTotals.app;
     const entradasMaquineta = Number(financeRecord.Entrada_Maquineta || 0) + encomendaTotals.maquineta;
-    const despesas = expenseRecords.filter(item => item.Tipo !== 'PIX' && item.Tipo !== 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    const despesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    const despesasPix = expenseRecords.filter(item => item.Tipo === 'PIX').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     // Nova Regra de Negócio: (Caixa Final + Despesas(sem PIX) + Vales) - (Caixa Inicial + Sangria)
     const faturamentoDinheiro = (caixaFinal + despesas + vales + encomendaTotals.cashTotal) - (caixaInicial + sangria);
@@ -3903,7 +3909,8 @@ function getNBFinanceDraftSummary(dateString, prefix) {
     const entradasPix = readDraftValue('entrada-pix', financeRecord.Entrada_PIX) + encomendaTotals.pix;
     const entradasApp = readDraftValue('entrada-app', financeRecord.Entrada_App) + encomendaTotals.app;
     const entradasMaquineta = readDraftValue('entrada-maquineta', financeRecord.Entrada_Maquineta) + encomendaTotals.maquineta;
-    const despesas = expenseRecords.filter(item => item.Tipo !== 'PIX' && item.Tipo !== 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    const despesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    const despesasPix = expenseRecords.filter(item => item.Tipo === 'PIX').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     // Nova Regra de Negócio
     const faturamentoDinheiro = (caixaFinal + despesas + vales + encomendaTotals.cashTotal) - (caixaInicial + sangria);
@@ -3993,8 +4000,8 @@ function getNBFinanceDraftFieldValues(prefix, dateString) {
 function buildNBFinancePayload(prefix, dateString, statusOverride = null) {
     const body = getNBFinanceDraftFieldValues(prefix, dateString);
     
-    // Filtra as despesas, excluindo as do tipo PIX
-    const despesas = getNBExpenseRecords(dateString).filter(item => item.Tipo !== 'PIX' && item.Tipo !== 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
+    // Filtra as despesas, APENAS O QUE SAI DO CAIXA FÍSICO
+    const despesas = getNBExpenseRecords(dateString).filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = getNBExpenseRecords(dateString).filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     
    // Nova Regra de Negócio antes de enviar pro Banco
@@ -4192,7 +4199,7 @@ function getNBEncomendaDraftTotals(header = getNBEncomendaDraftHeader(), payment
 function getNBEncomendaResolvedStatus(header = getNBEncomendaDraftHeader(), totals = getNBEncomendaDraftTotals(header)) {
     const currentStatus = header?.Status_Encomenda || 'Aberta';
     if (currentStatus === 'Cancelada') return 'Cancelada';
-    if (currentStatus === 'Finalizada') return 'Finalizada';
+    // Removemos a trava do status Finalizada. Ele só será Finalizada se o pagamento constar como 'Pago'
     if (totals.statusPagamento === 'Pago') return 'Finalizada';
     return 'Aberta';
 }
@@ -4330,7 +4337,8 @@ function getNBEncomendaDisplayStatus(order, totalsOverride = null) {
     };
     const status = order?.Status_Encomenda || 'Aberta';
     if (status === 'Cancelada') return 'Cancelada';
-    if (status === 'Finalizada' || totals.statusPagamento === 'Pago') return 'Finalizada';
+    // Removemos a trava visual, forçando a checagem real do pagamento
+    if (totals.statusPagamento === 'Pago') return 'Finalizada';
     if (totals.statusPagamento === 'Parcial') return 'Parcial';
     return 'Aberta';
 }
@@ -5440,7 +5448,7 @@ function renderNBCharts() {
 
     // Unifica o Gráfico de Faturamento (Teórico) vs Despesas
     const groupedRevenueExpenses = {};
-    nbDespesasValesData.filter(item => item.Tipo === 'Despesa').forEach(item => {
+    nbDespesasValesData.filter(item => item.Tipo === 'Despesa' || item.Tipo === 'PIX').forEach(item => {
         const dateValue = getNBLinkedDateValue(item);
         if (!dateValue) return;
         
