@@ -3799,6 +3799,7 @@ function getNBControlDayFinancialSnapshot(dateString) {
     });
     const financeRecord = getNBFinanceRecord(dateString) || {};
     const expenseRecords = getNBExpenseRecords(dateString);
+    
     const despesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const despesasPix = expenseRecords.filter(item => item.Tipo === 'PIX').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
@@ -3809,9 +3810,12 @@ function getNBControlDayFinancialSnapshot(dateString) {
     const encomendaTotals = getNBEncomendaPaymentsTotalsForDate(dateString);
     const entradas = getNBFinanceEntryTotal(financeRecord) + encomendaTotals.electronicTotal;
     
-    // O cálculo do dinheiro não usa o despesasPix
-    const faturamentoDinheiro = (Number(financeRecord.Caixa_Final || 0) + totalExpensesCaixa + encomendaTotals.cashTotal) - (Number(financeRecord.Caixa_Inicial || 0) + Number(financeRecord.Sangria || 0));
+    // a ) Entrada em dinheiro = [Caixa final + sangria + despesa + vales] - [caixa inicial]
+    const faturamentoDinheiro = (Number(financeRecord.Caixa_Final || 0) + Number(financeRecord.Sangria || 0) + totalExpensesCaixa) - Number(financeRecord.Caixa_Inicial || 0);
+    
+    // b) faturamento real = Entrada em dinheiro + APP + Pix + cartões
     const faturamentoTotal = faturamentoDinheiro + Number(financeRecord.Entrada_PIX || 0) + Number(financeRecord.Entrada_App || 0) + Number(financeRecord.Entrada_Maquineta || 0) + encomendaTotals.electronicTotal;
+    
     const saidas = totalExpensesCaixa + Number(financeRecord.Sangria || 0);
     return {
         dateString,
@@ -3830,8 +3834,7 @@ function getNBControlDayFinancialSnapshot(dateString) {
         faturamentoTotal,
         resultado: faturamentoTotal - loss - totalExpensesGeral
     };
-}
-function getNBFinanceEntryTotal(record = {}) {
+}function getNBFinanceEntryTotal(record = {}) {
     return ['Entrada_Dinheiro', 'Entrada_PIX', 'Entrada_App', 'Entrada_Maquineta']
         .reduce((sum, key) => sum + Number(record[key] || 0), 0);
 }
@@ -3868,14 +3871,19 @@ function getNBFinanceDaySummary(dateString) {
     const entradasPix = Number(financeRecord.Entrada_PIX || 0) + encomendaTotals.pix;
     const entradasApp = Number(financeRecord.Entrada_App || 0) + encomendaTotals.app;
     const entradasMaquineta = Number(financeRecord.Entrada_Maquineta || 0) + encomendaTotals.maquineta;
+    
     const despesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const despesasPix = expenseRecords.filter(item => item.Tipo === 'PIX').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
-    // Nova Regra de Negócio: (Caixa Final + Despesas(sem PIX) + Vales) - (Caixa Inicial + Sangria)
-    const faturamentoDinheiro = (caixaFinal + despesas + vales + encomendaTotals.cashTotal) - (caixaInicial + sangria);
+    
+    // a ) Entrada em dinheiro = [Caixa final + sangria + despesa + vales] - [caixa inicial]
+    const faturamentoDinheiro = (caixaFinal + sangria + despesas + vales) - caixaInicial;
+    
+    // b) faturamento real = Entrada em dinheiro + APP + Pix + cartões
     const faturamentoTotal = faturamentoDinheiro + entradasPix + entradasApp + entradasMaquineta;
     const faturamentoTeórico = getNBTheoricalRevenueForDate(dateString);
     const faturamentoFinal = faturamentoTotal - faturamentoTeórico;
+    
     return {
         financeRecord,
         caixaInicial,
@@ -3887,6 +3895,7 @@ function getNBFinanceDaySummary(dateString) {
         entradasMaquineta,
         despesas,
         vales,
+        despesasPix,
         encomendaPaymentsTotal: encomendaTotals.total,
         encomendaPaymentsElectronicTotal: encomendaTotals.electronicTotal,
         faturamentoDinheiro,
@@ -3894,7 +3903,6 @@ function getNBFinanceDaySummary(dateString) {
         faturamentoFinal,
         status: financeRecord.Status || 'Aberto'
     };
-}
 function getNBFinanceDraftSummary(dateString, prefix) {
     const financeRecord = getNBFinanceRecord(dateString) || {};
     const expenseRecords = getNBExpenseRecords(dateString);
@@ -3909,14 +3917,19 @@ function getNBFinanceDraftSummary(dateString, prefix) {
     const entradasPix = readDraftValue('entrada-pix', financeRecord.Entrada_PIX) + encomendaTotals.pix;
     const entradasApp = readDraftValue('entrada-app', financeRecord.Entrada_App) + encomendaTotals.app;
     const entradasMaquineta = readDraftValue('entrada-maquineta', financeRecord.Entrada_Maquineta) + encomendaTotals.maquineta;
+    
     const despesas = expenseRecords.filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const despesasPix = expenseRecords.filter(item => item.Tipo === 'PIX').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = expenseRecords.filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
-    // Nova Regra de Negócio
-    const faturamentoDinheiro = (caixaFinal + despesas + vales + encomendaTotals.cashTotal) - (caixaInicial + sangria);
+    
+    // a ) Entrada em dinheiro = [Caixa final + sangria + despesa + vales] - [caixa inicial]
+    const faturamentoDinheiro = (caixaFinal + sangria + despesas + vales) - caixaInicial;
+    
+    // b) faturamento real = Entrada em dinheiro + APP + Pix + cartões
     const faturamentoTotal = faturamentoDinheiro + entradasPix + entradasApp + entradasMaquineta;
     const faturamentoTeórico = getNBTheoricalRevenueForDate(dateString);
     const faturamentoFinal = faturamentoTotal - faturamentoTeórico;
+    
     return {
         caixaInicial,
         caixaFinal,
@@ -3926,6 +3939,7 @@ function getNBFinanceDraftSummary(dateString, prefix) {
         entradasMaquineta,
         despesas,
         vales,
+        despesasPix,
         encomendaPaymentsTotal: encomendaTotals.total,
         encomendaPaymentsElectronicTotal: encomendaTotals.electronicTotal,
         faturamentoDinheiro,
@@ -4004,13 +4018,13 @@ function buildNBFinancePayload(prefix, dateString, statusOverride = null) {
     const despesas = getNBExpenseRecords(dateString).filter(item => item.Tipo === 'Despesa').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     const vales = getNBExpenseRecords(dateString).filter(item => item.Tipo === 'Vale').reduce((sum, item) => sum + Number(item.Valor || 0), 0);
     
-   // Nova Regra de Negócio antes de enviar pro Banco
-    body.Entrada_Dinheiro = (Number(body.Caixa_Final || 0) + despesas + vales) - (Number(body.Caixa_Inicial || 0) + Number(body.Sangria || 0));
+    // a ) Entrada em dinheiro = [Caixa final + sangria + despesa + vales] - [caixa inicial]
+    body.Entrada_Dinheiro = (Number(body.Caixa_Final || 0) + Number(body.Sangria || 0) + despesas + vales) - Number(body.Caixa_Inicial || 0);
     
     body.Status = statusOverride || getNBFinanceDayStatus(dateString);
     return body;
 }
-function syncNBPanelFinanceButtonVisibility() {
+    function syncNBPanelFinanceButtonVisibility() {
     const btn = document.getElementById('nb-panel-finance-btn');
     if (!btn) return;
     const today = toDateInputValue(new Date());
